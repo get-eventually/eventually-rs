@@ -15,3 +15,7 @@ categories = ["ddd", "event-sourcing", "cqrs", "aggregate"]
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
 
 [dependencies]
+async-trait = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.2"
