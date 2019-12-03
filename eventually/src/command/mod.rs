@@ -1,3 +1,5 @@
+pub mod r#static;
+
 use async_trait::async_trait;
 
 use crate::aggregate::Aggregate;

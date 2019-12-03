@@ -1,9 +1,17 @@
 #![allow(warnings, dead_code)]
 
-use eventually::aggregate::{
-    optional::{AsAggregate, OptionalAggregate},
-    referential::ReferentialAggregate,
-    Aggregate,
+use async_trait::async_trait;
+
+use eventually::{
+    aggregate::{
+        optional::{AsAggregate, OptionalAggregate},
+        referential::ReferentialAggregate,
+        Aggregate,
+    },
+    command::{
+        r#static::{AsHandler, StaticHandler as StaticCommandHandler},
+        AggregateEvent, AggregateState, Handler as CommandHandler,
+    },
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -45,6 +53,33 @@ impl OptionalAggregate for Point {
     }
 }
 
+#[derive(Debug)]
+pub enum PointCommand {
+    GoUp(i32),
+    GoDown(i32),
+    GoLeft(i32),
+    GoRight(i32),
+}
+
+#[async_trait]
+impl StaticCommandHandler for Point {
+    type Command = PointCommand;
+    type Aggregate = AsAggregate<Self>;
+    type Error = std::convert::Infallible;
+
+    async fn handle(
+        state: &AggregateState<Self::Aggregate>,
+        command: Self::Command,
+    ) -> Result<Vec<AggregateEvent<Self::Aggregate>>, Self::Error> {
+        Ok(vec![match command {
+            PointCommand::GoUp(y) => PointEvent::WentUp(y),
+            PointCommand::GoDown(y) => PointEvent::WentDown(y),
+            PointCommand::GoLeft(x) => PointEvent::WentLeft(x),
+            PointCommand::GoRight(x) => PointEvent::WentRight(x),
+        }])
+    }
+}
+
 fn main() {}
 
 #[cfg(test)]
@@ -72,6 +107,20 @@ mod tests {
                 .into_iter()
             ),
             Ok(Some(Point(10, 5)))
+        );
+    }
+
+    #[test]
+    fn it_handles_commands_correctly() {
+        let state = None;
+
+        let events =
+            tokio_test::block_on(Point::as_handler().handle(&state, PointCommand::GoDown(5)))
+                .unwrap();
+
+        assert_eq!(
+            AsAggregate::<Point>::fold(state, events.into_iter()).unwrap(),
+            Some(Point(0, -5))
         );
     }
 }
