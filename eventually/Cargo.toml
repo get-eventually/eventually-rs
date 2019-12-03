@@ -1,11 +1,11 @@
 [package]
 name = "eventually"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "github.com/ar3s3ru/eventually-rs"
+repository = "https://github.com/ar3s3ru/eventually-rs"
 
 description = """
 Work-in-progress crate to allow easy development of Event Sourced application.
