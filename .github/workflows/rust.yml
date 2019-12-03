@@ -1,6 +1,6 @@
 on: push
 
-name: Pipeline
+name: Rust (stable)
 
 jobs:
   check:
@@ -40,6 +40,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+
+      - name: Run cargo test --examples
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --examples
 
   lints:
       name: Lints
