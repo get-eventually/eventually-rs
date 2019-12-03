@@ -1,3 +1,5 @@
+pub mod optional;
+
 /// An Aggregate is an entity which State is composed of one or more
 /// Value-Objects, Entities or Aggregates.
 ///
