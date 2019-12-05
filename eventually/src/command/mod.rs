@@ -2,10 +2,7 @@ pub mod r#static;
 
 use async_trait::async_trait;
 
-use crate::aggregate::Aggregate;
-
-pub type AggregateState<A: Aggregate> = A::State;
-pub type AggregateEvent<A: Aggregate> = A::Event;
+use crate::aggregate::{Aggregate, EventOf, StateOf};
 
 #[async_trait]
 pub trait Handler {
@@ -15,7 +12,7 @@ pub trait Handler {
 
     async fn handle(
         &self,
-        state: &AggregateState<Self::Aggregate>,
+        state: &StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> Result<Vec<AggregateEvent<Self::Aggregate>>, Self::Error>;
+    ) -> Result<Vec<EventOf<Self::Aggregate>>, Self::Error>;
 }

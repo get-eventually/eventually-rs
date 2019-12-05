@@ -1,6 +1,12 @@
 pub mod optional;
 pub mod referential;
 
+/// State type of the Aggregate specified.
+pub type StateOf<A: Aggregate> = A::State;
+
+/// Event type of the Aggregate specified.
+pub type EventOf<A: Aggregate> = A::Event;
+
 /// An Aggregate is an entity which State is composed of one or more
 /// Value-Objects, Entities or Aggregates.
 ///
