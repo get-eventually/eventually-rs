@@ -1,6 +1,6 @@
 [package]
 name = "eventually"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
@@ -15,7 +15,7 @@ categories = ["ddd", "event-sourcing", "cqrs", "aggregate"]
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
 
 [dependencies]
-async-trait = "0.1"
+futures = "0.3"
 
 [dev-dependencies]
 tokio-test = "0.2"
