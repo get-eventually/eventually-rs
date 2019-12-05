@@ -6,11 +6,11 @@ use eventually::{
     aggregate::{
         optional::{AsAggregate, OptionalAggregate},
         referential::ReferentialAggregate,
-        Aggregate,
+        Aggregate, EventOf, StateOf,
     },
     command::{
         r#static::{AsHandler, StaticHandler as StaticCommandHandler},
-        AggregateEvent, AggregateState, Handler as CommandHandler,
+        Handler as CommandHandler,
     },
 };
 
@@ -68,9 +68,9 @@ impl StaticCommandHandler for Point {
     type Error = std::convert::Infallible;
 
     async fn handle(
-        state: &AggregateState<Self::Aggregate>,
+        state: &StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> Result<Vec<AggregateEvent<Self::Aggregate>>, Self::Error> {
+    ) -> Result<Vec<EventOf<Self::Aggregate>>, Self::Error> {
         Ok(vec![match command {
             PointCommand::GoUp(y) => PointEvent::WentUp(y),
             PointCommand::GoDown(y) => PointEvent::WentDown(y),
