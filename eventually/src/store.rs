@@ -11,10 +11,7 @@ pub trait ReadStore {
     fn stream(&self, source_id: Self::SourceId, from: Self::Offset) -> Self::Stream;
 }
 
-pub trait WriteStore {
-    type SourceId: Eq;
-    type Offset: PartialOrd;
-    type Event;
+pub trait WriteStore: ReadStore {
     type Error;
     type Result: Future<Output = Result<(), Self::Error>>;
 
