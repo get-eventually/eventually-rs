@@ -1,14 +1,30 @@
+use std::ops::{Deref, DerefMut};
+
 use super::Aggregate;
 
 pub trait Versioned {
     fn version(&self) -> u64;
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct State<T> {
     pub data: T,
     pub version: u64,
+}
+
+impl<T> Deref for State<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+impl<T> DerefMut for State<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
+    }
 }
 
 impl<T> From<T> for State<T> {
