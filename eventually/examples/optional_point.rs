@@ -83,6 +83,8 @@ fn main() {}
 mod tests {
     use super::*;
 
+    use eventually::aggregate::versioned::{AsAggregate as Versioned, State as VersionedState};
+
     #[test]
     fn it_applies_an_event_correctly() {
         assert_eq!(
@@ -118,6 +120,25 @@ mod tests {
         assert_eq!(
             AsAggregate::<Point>::fold(state, events.into_iter()).unwrap(),
             Some(Point(0, -5))
+        );
+    }
+
+    #[test]
+    fn it_folds_data_by_using_versioned_aggregate_trait() {
+        assert_eq!(
+            Versioned::<AsAggregate::<Point>>::fold(
+                VersionedState::default(),
+                vec![
+                    PointEvent::WentUp(10),
+                    PointEvent::WentRight(10),
+                    PointEvent::WentDown(5),
+                ]
+                .into_iter()
+            ),
+            Ok(VersionedState {
+                data: Some(Point(10, 5)),
+                version: 3,
+            })
         );
     }
 }
