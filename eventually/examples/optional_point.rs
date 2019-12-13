@@ -1,6 +1,6 @@
 #![allow(warnings, dead_code)]
 
-use async_trait::async_trait;
+use futures::future::{ok, Ready};
 
 use eventually::{
     aggregate::{
@@ -61,17 +61,14 @@ pub enum PointCommand {
     GoRight(i32),
 }
 
-#[async_trait]
 impl StaticCommandHandler for Point {
     type Command = PointCommand;
     type Aggregate = AsAggregate<Self>;
     type Error = std::convert::Infallible;
+    type Result = Ready<Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
-    async fn handle(
-        state: &StateOf<Self::Aggregate>,
-        command: Self::Command,
-    ) -> Result<Vec<EventOf<Self::Aggregate>>, Self::Error> {
-        Ok(vec![match command {
+    fn handle(state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
+        ok(vec![match command {
             PointCommand::GoUp(y) => PointEvent::WentUp(y),
             PointCommand::GoDown(y) => PointEvent::WentDown(y),
             PointCommand::GoLeft(x) => PointEvent::WentLeft(x),

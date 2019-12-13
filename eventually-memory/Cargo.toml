@@ -1,0 +1,17 @@
+[package]
+name = "eventually-memory"
+version = "0.3.0"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+futures = "0.3"
+eventually = { path = "../eventually" }
+
+[dev-dependencies]
+tokio-test = "0.2"
+criterion = "0.3"
+
+[[bench]]
+name = "bench"
+harness = false
