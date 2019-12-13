@@ -14,8 +14,18 @@ use eventually::{
     },
 };
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Point(i32, i32);
+
+impl Point {
+    pub fn x(&self) -> i32 {
+        self.0
+    }
+
+    pub fn y(&self) -> i32 {
+        self.1
+    }
+}
 
 #[derive(Debug)]
 pub enum PointEvent {
@@ -83,6 +93,10 @@ fn main() {}
 mod tests {
     use super::*;
 
+    use eventually::aggregate::versioned::{
+        AsAggregate as VersionedAggregate, State as VersionedState, Versioned,
+    };
+
     #[test]
     fn it_applies_an_event_correctly() {
         assert_eq!(
@@ -118,6 +132,33 @@ mod tests {
         assert_eq!(
             AsAggregate::<Point>::fold(state, events.into_iter()).unwrap(),
             Some(Point(0, -5))
+        );
+    }
+
+    #[test]
+    fn it_folds_data_by_using_versioned_aggregate_trait() {
+        let state = VersionedAggregate::<AsAggregate<Point>>::fold(
+            VersionedState::default(),
+            vec![
+                PointEvent::WentUp(10),
+                PointEvent::WentRight(10),
+                PointEvent::WentDown(5),
+            ]
+            .into_iter(),
+        )
+        .unwrap();
+
+        assert_eq!(Versioned::version(&state), 3);
+        // Testing that Deref is working appropriately
+        assert_eq!(state.as_ref().unwrap().x(), 10);
+        assert_eq!(state.as_ref().unwrap().y(), 5);
+
+        assert_eq!(
+            state,
+            VersionedState {
+                data: Some(Point(10, 5)),
+                version: 3,
+            }
         );
     }
 }

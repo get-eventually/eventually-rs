@@ -1,5 +1,6 @@
 pub mod optional;
 pub mod referential;
+pub mod versioned;
 
 /// State type of the Aggregate specified.
 pub type StateOf<A: Aggregate> = A::State;
