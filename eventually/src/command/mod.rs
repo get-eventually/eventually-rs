@@ -1,8 +1,13 @@
+pub mod dispatcher;
 pub mod r#static;
 
 use std::future::Future;
 
 use crate::aggregate::{Aggregate, EventOf, StateOf};
+
+pub type CommandOf<H: Handler> = H::Command;
+pub type AggregateOf<H: Handler> = H::Aggregate;
+pub type ErrorOf<H: Handler> = H::Error;
 
 pub trait Handler {
     type Command;
