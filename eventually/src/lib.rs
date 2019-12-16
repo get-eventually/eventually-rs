@@ -5,7 +5,7 @@ pub mod command;
 pub mod store;
 
 pub use {
-    aggregate::Aggregate,
+    aggregate::{util::AggregateExt, Aggregate},
     command::Handler as CommandHandler,
     store::{ReadStore, WriteStore},
 };
