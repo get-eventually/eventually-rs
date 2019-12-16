@@ -8,7 +8,7 @@ use std::{
 
 use futures::{
     future::{ok, Ready},
-    stream::{iter, pending, BoxStream, StreamExt},
+    stream::{empty, iter, BoxStream, StreamExt},
 };
 
 use eventually::store::{ReadStore, WriteStore};
@@ -55,7 +55,7 @@ where
                 )
                 .boxed()
             })
-            .unwrap_or_else(|| pending().boxed())
+            .unwrap_or_else(|| empty().boxed())
     }
 }
 
