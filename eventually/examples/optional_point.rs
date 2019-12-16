@@ -1,4 +1,4 @@
-#![allow(warnings, dead_code)]
+#![allow(warnings)]
 
 use futures::future::{ok, Ready};
 
@@ -6,7 +6,7 @@ use eventually::{
     aggregate::{
         optional::{AsAggregate, OptionalAggregate},
         referential::ReferentialAggregate,
-        Aggregate, EventOf, StateOf,
+        Aggregate, AggregateExt, EventOf, StateOf,
     },
     command::{
         r#static::{AsHandler, StaticHandler as StaticCommandHandler},

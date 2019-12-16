@@ -1,12 +1,18 @@
 pub mod optional;
 pub mod referential;
+pub mod util;
 pub mod versioned;
+
+pub use util::AggregateExt;
 
 /// State type of the Aggregate specified.
 pub type StateOf<A: Aggregate> = A::State;
 
 /// Event type of the Aggregate specified.
 pub type EventOf<A: Aggregate> = A::Event;
+
+/// Error type of the Aggregate specified.
+pub type ErrorOf<A: Aggregate> = A::Error;
 
 /// An Aggregate is an entity which State is composed of one or more
 /// Value-Objects, Entities or Aggregates.
@@ -42,15 +48,4 @@ pub trait Aggregate {
     /// Applies the changes described by the domain event in `Self::Event`
     /// to the current `state` of the `Aggregate`.
     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
-
-    /// Applies a stream of events to the current `Aggregate` state, returning
-    /// the updated state or an error, if any such happened.
-    fn fold<I>(mut state: Self::State, events: I) -> Result<Self::State, Self::Error>
-    where
-        I: Iterator<Item = Self::Event>,
-    {
-        events.fold(Ok(state), |previous, event| {
-            previous.and_then(|state| Self::apply(state, event))
-        })
-    }
 }

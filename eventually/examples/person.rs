@@ -1,6 +1,6 @@
 #![allow(warnings, dead_code)]
 
-use eventually::aggregate::Aggregate;
+use eventually::aggregate::{Aggregate, AggregateExt};
 
 #[derive(Debug, Clone, PartialEq)]
 /// Person is the main entity in our small domain.

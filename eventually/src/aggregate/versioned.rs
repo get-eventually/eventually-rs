@@ -6,8 +6,7 @@ pub trait Versioned {
     fn version(&self) -> u64;
 }
 
-#[derive(Clone, PartialEq)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, Clone, PartialEq)]
 pub struct State<T> {
     pub data: T,
     pub version: u64,
