@@ -79,7 +79,7 @@ impl std::fmt::Display for EventError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct State {
     id: String,
     x: i32,
@@ -148,5 +148,53 @@ impl StaticCommandHandler for CommandHandler {
                 Command::GoRight { v, .. } => ok(vec![Event::WentRight { v }]),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use eventually::command::dispatcher::{Dispatcher, Error};
+
+    #[test]
+    fn dispatcher_returns_a_command_failed_error_when_handler_fails() {
+        let store = eventually_memory::MemoryStore::<String, Event>::default();
+        let handler = CommandHandler::as_handler();
+
+        let mut dispatcher = Dispatcher::new(store, handler);
+
+        let result = tokio_test::block_on(dispatcher.dispatch(Command::GoUp {
+            id: "test".to_string(),
+            v: 10,
+        }));
+
+        assert_eq!(
+            result,
+            Err(Error::CommandFailed(CommandError::Unregistered(
+                "test".to_string()
+            )))
+        );
+    }
+
+    #[test]
+    fn dispatcher_returns_latest_state_if_no_error_has_happened() {
+        let store = eventually_memory::MemoryStore::<String, Event>::default();
+        let handler = CommandHandler::as_handler();
+
+        let mut dispatcher = Dispatcher::new(store, handler);
+
+        let result = tokio_test::block_on(dispatcher.dispatch(Command::Register {
+            id: "test".to_string(),
+        }));
+
+        assert_eq!(
+            result.unwrap().as_ref(),
+            Some(&State {
+                id: "test".to_string(),
+                x: 0,
+                y: 0
+            })
+        );
     }
 }
