@@ -2,7 +2,7 @@
 
 use eventually::aggregate::{
     optional::{AsAggregate, OptionalAggregate},
-    Aggregate,
+    Aggregate, AggregateExt,
 };
 
 #[derive(Debug, Clone, PartialEq)]

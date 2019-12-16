@@ -2,7 +2,7 @@
 
 use eventually::aggregate::{
     referential::{AsAggregate, ReferentialAggregate},
-    Aggregate,
+    Aggregate, AggregateExt,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -43,22 +43,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_folds_lots_of_events_together() {
-        let result = Point::default()
-            .fold(
-                vec![
-                    PointEvent::WentUp(10),
-                    PointEvent::WentRight(10),
-                    PointEvent::WentDown(5),
-                ]
-                .into_iter(),
-            )
-            .unwrap();
-
-        assert_eq!(result, Point(10, 5));
-    }
-
-    #[test]
     fn it_folds_data_by_using_aggregate_trait() {
         assert_eq!(
             AsAggregate::<Point>::fold(
@@ -70,14 +54,7 @@ mod tests {
                 ]
                 .into_iter(),
             ),
-            Point::default().fold(
-                vec![
-                    PointEvent::WentUp(10),
-                    PointEvent::WentRight(10),
-                    PointEvent::WentDown(5),
-                ]
-                .into_iter(),
-            )
+            Ok(Point(10, 5))
         );
     }
 }
