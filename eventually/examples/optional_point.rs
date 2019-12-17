@@ -1,8 +1,9 @@
 use futures::future::{ok, Ready};
 
 use eventually::{
-    aggregate::{optional::AsAggregate, EventOf, OptionalAggregate, ReferentialAggregate, StateOf},
+    aggregate::{EventOf, ReferentialAggregate, StateOf},
     command::r#static::StaticHandler as StaticCommandHandler,
+    optional::{AsAggregate, OptionalAggregate},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

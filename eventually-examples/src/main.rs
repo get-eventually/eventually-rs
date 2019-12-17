@@ -1,8 +1,6 @@
 use eventually::{
-    command::{
-        dispatcher::{Dispatcher, Error},
-        r#static::StaticHandler,
-    },
+    command::dispatcher::{Dispatcher, Error},
+    optional::Handler,
     versioned::HandlerExt,
 };
 
@@ -12,7 +10,7 @@ type DispatchError = Error<point::EventError, point::CommandError, std::convert:
 
 fn main() {
     let store = eventually_memory::MemoryStore::<String, point::Event>::default();
-    let handler = point::CommandHandler::as_handler().versioned();
+    let handler = point::CommandHandler.as_handler().versioned();
 
     let mut dispatcher = Dispatcher::new(store, handler);
 
