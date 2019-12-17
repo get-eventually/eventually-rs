@@ -4,7 +4,6 @@ use eventually::{
     aggregate::{
         optional::{AsAggregate, OptionalAggregate},
         referential::ReferentialAggregate,
-        versioned::AsAggregate as VersionedAggregate,
         EventOf, StateOf,
     },
     command::{dispatcher::Identifiable, r#static::StaticHandler as StaticCommandHandler},
@@ -127,12 +126,12 @@ impl OptionalAggregate for Root {
 pub struct CommandHandler;
 impl StaticCommandHandler for CommandHandler {
     type Command = Command;
-    type Aggregate = VersionedAggregate<AsAggregate<Root>>;
+    type Aggregate = AsAggregate<Root>;
     type Error = CommandError;
     type Result = Ready<Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
     fn handle(state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
-        match &state.data {
+        match state {
             None => match command {
                 Command::Register { id } => ok(vec![Event::Registered { id }]),
                 Command::GoUp { id, .. } => err(CommandError::Unregistered(id)),
