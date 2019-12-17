@@ -7,7 +7,7 @@ use futures::stream::StreamExt;
 use rand::prelude::*;
 
 use eventually::{
-    aggregate::{optional::AsAggregate, versioned::AsAggregate as VersionedAggregate},
+    aggregate::optional::AsAggregate,
     command::{
         dispatcher::Dispatcher,
         r#static::{AsHandler, StaticHandler},

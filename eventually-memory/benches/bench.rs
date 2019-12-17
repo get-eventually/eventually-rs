@@ -1,5 +1,3 @@
-#![allow(warnings)]
-
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use futures::stream::StreamExt;
@@ -14,20 +12,25 @@ enum Event {
     C,
 }
 
-fn insert_new_events(store: &mut MemoryStore<&'static str, Event>) {
-    tokio_test::block_on(store.append("benchtest", 0, vec![Event::A, Event::B, Event::C])).unwrap()
-}
-
 fn read_event_stream(store: &MemoryStore<&'static str, Event>, source_id: &'static str) {
     tokio_test::block_on(store.stream(source_id, 0).collect::<Vec<Event>>());
 }
 
 fn insert_elements(store: &mut MemoryStore<&'static str, Event>, name: &'static str, num: usize) {
-    tokio_test::block_on(store.append(
-        name,
-        0,
-        (0..=num).map(|_idx| Event::A).collect::<Vec<Event>>(),
-    ))
+    tokio_test::block_on(
+        store.append(
+            name,
+            0,
+            (0..=num)
+                .map(|idx| match idx % 3 {
+                    0 => Event::A,
+                    1 => Event::B,
+                    2 => Event::C,
+                    _ => panic!("unreachable code"),
+                })
+                .collect::<Vec<Event>>(),
+        ),
+    )
     .unwrap()
 }
 

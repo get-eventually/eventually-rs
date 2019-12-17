@@ -1,6 +1,9 @@
-use eventually::command::{
-    dispatcher::{Dispatcher, Error},
-    r#static::StaticHandler,
+use eventually::{
+    command::{
+        dispatcher::{Dispatcher, Error},
+        r#static::StaticHandler,
+    },
+    versioned::HandlerExt,
 };
 
 use rand::prelude::*;
@@ -9,7 +12,7 @@ type DispatchError = Error<point::EventError, point::CommandError, std::convert:
 
 fn main() {
     let store = eventually_memory::MemoryStore::<String, point::Event>::default();
-    let handler = point::CommandHandler::as_handler();
+    let handler = point::CommandHandler::as_handler().versioned();
 
     let mut dispatcher = Dispatcher::new(store, handler);
 

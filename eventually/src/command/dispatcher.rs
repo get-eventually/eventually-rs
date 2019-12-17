@@ -1,10 +1,8 @@
-use std::{future::Future, pin::Pin};
-
-use futures::StreamExt;
+use std::{error::Error as StdError, future::Future};
 
 use crate::{
     aggregate,
-    aggregate::{Aggregate, AggregateExt},
+    aggregate::AggregateExt,
     command,
     command::Handler as CommandHandler,
     store::{ReadStore, WriteStore},
@@ -19,26 +17,34 @@ pub trait Identifiable {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Error<A, C, RS> {
+pub enum Error<A, C, S> {
     RecreateStateFailed(A),
     CommandFailed(C),
     ApplyStateFailed(A),
-    AppendEventsFailed(RS),
+    AppendEventsFailed(S),
 }
 
-impl<A, C, RS> std::error::Error for Error<A, C, RS>
+impl<A, C, S> StdError for Error<A, C, S>
 where
-    A: std::error::Error,
-    C: std::error::Error,
-    RS: std::error::Error,
+    A: StdError + 'static,
+    C: StdError + 'static,
+    S: StdError + 'static,
 {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        Some(match self {
+            Error::RecreateStateFailed(e) => e,
+            Error::CommandFailed(e) => e,
+            Error::ApplyStateFailed(e) => e,
+            Error::AppendEventsFailed(e) => e,
+        })
+    }
 }
 
 impl<A, C, RS> std::fmt::Display for Error<A, C, RS>
 where
-    A: std::error::Error,
-    C: std::error::Error,
-    RS: std::error::Error,
+    A: StdError,
+    C: StdError,
+    RS: StdError,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -62,13 +68,13 @@ where
     <Store as ReadStore>::SourceId: Clone + Eq + Send,
     <Store as ReadStore>::Offset: Default + Send,
     <Store as ReadStore>::Stream: Send,
-    <Store as WriteStore>::Error: std::error::Error + Send + 'static,
+    <Store as WriteStore>::Error: StdError + Send + 'static,
     command::AggregateOf<Handler>: AggregateExt<Event = <Store as ReadStore>::Event> + Send,
     command::CommandOf<Handler>: Identifiable<SourceId = <Store as ReadStore>::SourceId> + Send,
     aggregate::EventOf<command::AggregateOf<Handler>>: Clone + Send,
     aggregate::StateOf<command::AggregateOf<Handler>>: Default + Send,
-    aggregate::ErrorOf<command::AggregateOf<Handler>>: std::error::Error + Send + 'static,
-    command::ErrorOf<Handler>: std::error::Error + Send + 'static,
+    aggregate::ErrorOf<command::AggregateOf<Handler>>: StdError + Send + 'static,
+    command::ErrorOf<Handler>: StdError + Send + 'static,
 {
     #[inline]
     pub fn new(store: Store, handler: Handler) -> Self {

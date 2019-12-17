@@ -1,9 +1,6 @@
-#![allow(warnings, dead_code)]
+#![allow(unused)]
 
-use eventually::aggregate::{
-    optional::{AsAggregate, OptionalAggregate},
-    Aggregate, AggregateExt,
-};
+use eventually::aggregate::OptionalAggregate;
 
 #[derive(Debug, Clone, PartialEq)]
 /// Person is the main entity in our small domain.
@@ -70,6 +67,8 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use eventually::{aggregate::optional::AsAggregate, AggregateExt};
 
     #[test]
     fn it_folds_multiple_events_correctly() {

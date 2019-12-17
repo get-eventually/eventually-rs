@@ -1,9 +1,4 @@
-#![allow(warnings, dead_code)]
-
-use eventually::aggregate::{
-    referential::{AsAggregate, ReferentialAggregate},
-    Aggregate, AggregateExt,
-};
+use eventually::aggregate::ReferentialAggregate;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Point(i32, i32);
@@ -41,6 +36,8 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use eventually::{aggregate::referential::AsAggregate, AggregateExt};
 
     #[test]
     fn it_folds_data_by_using_aggregate_trait() {
