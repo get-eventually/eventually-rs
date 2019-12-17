@@ -1,17 +1,8 @@
-#![allow(warnings)]
-
 use futures::future::{ok, Ready};
 
 use eventually::{
-    aggregate::{
-        optional::{AsAggregate, OptionalAggregate},
-        referential::ReferentialAggregate,
-        Aggregate, AggregateExt, EventOf, StateOf,
-    },
-    command::{
-        r#static::{AsHandler, StaticHandler as StaticCommandHandler},
-        Handler as CommandHandler,
-    },
+    aggregate::{optional::AsAggregate, EventOf, OptionalAggregate, ReferentialAggregate, StateOf},
+    command::r#static::StaticHandler as StaticCommandHandler,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -58,7 +49,7 @@ impl OptionalAggregate for Point {
         Point(0, 0).apply(event)
     }
 
-    fn apply_next(mut state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
         state.apply(event)
     }
 }
@@ -77,7 +68,7 @@ impl StaticCommandHandler for Point {
     type Error = std::convert::Infallible;
     type Result = Ready<Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
-    fn handle(state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
+    fn handle(_state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
         ok(vec![match command {
             PointCommand::GoUp(y) => PointEvent::WentUp(y),
             PointCommand::GoDown(y) => PointEvent::WentDown(y),
@@ -93,8 +84,9 @@ fn main() {}
 mod tests {
     use super::*;
 
-    use eventually::aggregate::versioned::{
-        AsAggregate as VersionedAggregate, State as VersionedState, Versioned,
+    use eventually::{
+        versioned::{AsAggregate as VersionedAggregate, Versioned},
+        Aggregate, AggregateExt, CommandHandler,
     };
 
     #[test]
@@ -138,7 +130,7 @@ mod tests {
     #[test]
     fn it_folds_data_by_using_versioned_aggregate_trait() {
         let state = VersionedAggregate::<AsAggregate<Point>>::fold(
-            VersionedState::default(),
+            Versioned::default(),
             vec![
                 PointEvent::WentUp(10),
                 PointEvent::WentRight(10),
@@ -148,17 +140,12 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(Versioned::version(&state), 3);
+        assert_eq!(state.version(), 3);
+
         // Testing that Deref is working appropriately
         assert_eq!(state.as_ref().unwrap().x(), 10);
         assert_eq!(state.as_ref().unwrap().y(), 5);
 
-        assert_eq!(
-            state,
-            VersionedState {
-                data: Some(Point(10, 5)),
-                version: 3,
-            }
-        );
+        assert_eq!(state.take(), Some(Point(10, 5)));
     }
 }

@@ -1,6 +1,6 @@
-#![allow(warnings, dead_code)]
+#![allow(unused)]
 
-use eventually::aggregate::{Aggregate, AggregateExt};
+use eventually::aggregate::Aggregate;
 
 #[derive(Debug, Clone, PartialEq)]
 /// Person is the main entity in our small domain.
@@ -76,6 +76,8 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use eventually::AggregateExt;
 
     #[test]
     fn it_fails_when_applying_non_initial_events_to_empty_state() {
