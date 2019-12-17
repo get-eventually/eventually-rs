@@ -148,14 +148,14 @@ impl<H: CommandHandler> CommandHandler for AsHandler<H> {
 ///     assert_eq!(
 ///         result,
 ///         // Wraps the Entity instance with version "1"
-///         Ok(Versioned::new(Entity::default(), 1)),
+///         Ok(Versioned::with_version(Entity::default(), 1)),
 ///     );
 ///
 ///     // If applied on a versioned state again, the version will increase
 ///     // from "1" to "2"
 ///     assert_eq!(
 ///         AsAggregate::<Entity>::apply(result.unwrap(), Event::SomeEvent),
-///         Ok(Versioned::new(Entity::default(), 2)),
+///         Ok(Versioned::with_version(Entity::default(), 2)),
 ///     );
 /// }
 /// ```
