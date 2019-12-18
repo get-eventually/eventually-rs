@@ -160,11 +160,70 @@ pub trait Aggregate {
     /// [`Error`]: ../aggregate/trait.Aggregate.html#associatedType.Error
     type Error;
 
+    /// Handles events when the [`State`] has not been found.
+    ///
+    /// [`State`]: trait.Aggregate.html#associatedType.State
     fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error>;
 
+    /// Handles events when the [`State`] has been found,
+    /// and updates it accordingly.
+    ///
+    /// [`State`]: trait.Aggregate.html#associatedType.State
     fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
 }
 
+/// Adapter for [`Aggregate`] types to the foundational [`eventually::Aggregate`] trait.
+///
+/// # Examples
+///
+/// ```
+/// use eventually::optional::Aggregate;
+///
+/// enum SomeEvent {
+///     Happened
+/// }
+///
+/// #[derive(Debug, PartialEq)]
+/// struct SomeState {
+///     // Some nice fields
+/// }
+///
+/// struct SomeAggregate;
+/// impl Aggregate for SomeAggregate {
+///     type State = SomeState;
+///     type Event = SomeEvent;
+///     type Error = std::convert::Infallible;
+///
+///     fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
+///         // Return an empty state, here you should create the initial
+///         // state based on the event received.
+///         Ok(SomeState {})
+///     }
+///
+///     fn apply_next(state: Self::State, _event: Self::Event) -> Result<Self::State, Self::Error> {
+///         // Return the same state, here you should update the state
+///         // based on the event received.
+///         Ok(state)
+///     }
+/// }
+///
+/// fn main() {
+///     use eventually::Aggregate;
+///     use eventually::optional::AsAggregate;
+///
+///     // To adapt SomeAggregate to `eventually::Aggregate`:
+///     let result = AsAggregate::<SomeAggregate>::apply(
+///         None,                   // This state will result in calling `SomeAggregate::apply_first`
+///         SomeEvent::Happened,
+///     );
+///
+///     // An `Option`-wrapped `SomeState` instance is returned.
+///     assert_eq!(result, Ok(Some(SomeState {})));
+/// }
+/// ```
+///
+/// [`Aggregate`]: trait.Aggregate.html
+/// [`eventually::Aggregate`]: ../aggregate/trait.Aggregate.html
 pub struct AsAggregate<T>(std::marker::PhantomData<T>);
 
 impl<A> aggregate::Aggregate for AsAggregate<A>
