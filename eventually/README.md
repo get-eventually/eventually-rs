@@ -1,6 +1,4 @@
-# eventually
+# Eventually
 
-![](https://github.com/ar3s3ru/eventually-rs/workflows/Pipeline/badge.svg)
-![](https://docs.rs/eventually/badge.svg)
+Collection of traits and other utilities to help you build your Event-sourced applications in Rust.
 
-Rust crate to provide abstractions for Event Sourced application ease of development.
