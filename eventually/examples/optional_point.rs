@@ -3,7 +3,7 @@ use futures::future::{ok, Ready};
 use eventually::{
     aggregate::{EventOf, ReferentialAggregate, StateOf},
     command::r#static::StaticHandler as StaticCommandHandler,
-    optional::{AsAggregate, OptionalAggregate},
+    optional::{Aggregate, AsAggregate},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -41,12 +41,12 @@ impl ReferentialAggregate for Point {
     }
 }
 
-impl OptionalAggregate for Point {
+impl Aggregate for Point {
     type State = Self;
     type Event = PointEvent;
     type Error = std::convert::Infallible;
 
-    fn initial(event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
         Point(0, 0).apply(event)
     }
 

@@ -3,7 +3,7 @@ use futures::future::{err, ok, Ready};
 use eventually::{
     aggregate::referential::ReferentialAggregate,
     command::dispatcher::Identifiable,
-    optional::{EventOf, Handler, OptionalAggregate, StateOf},
+    optional::{Aggregate, CommandHandler, EventOf, StateOf},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -101,13 +101,13 @@ impl ReferentialAggregate for State {
 }
 
 pub struct Root;
-impl OptionalAggregate for Root {
+impl Aggregate for Root {
     type State = State;
     type Event = Event;
     type Error = EventError;
 
     #[inline]
-    fn initial(event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
         match event {
             Event::Registered { id } => Ok(State { id, x: 0, y: 0 }),
             _ => Err(EventError::Unregistered),
@@ -120,14 +120,14 @@ impl OptionalAggregate for Root {
     }
 }
 
-pub struct CommandHandler;
-impl Handler for CommandHandler {
+pub struct Handler;
+impl CommandHandler for Handler {
     type Command = Command;
     type Aggregate = Root;
     type Error = CommandError;
     type Result = Ready<Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
-    fn handle_initial(&self, command: Self::Command) -> Self::Result {
+    fn handle_first(&self, command: Self::Command) -> Self::Result {
         match command {
             Command::Register { id } => ok(vec![Event::Registered { id }]),
             Command::GoUp { id, .. } => err(CommandError::Unregistered(id)),
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn dispatcher_returns_a_command_failed_error_when_handler_fails() {
         let store = eventually_memory::MemoryStore::<String, Event>::default();
-        let handler = CommandHandler.as_handler();
+        let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);
 
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn dispatcher_returns_latest_state_if_no_error_has_happened() {
         let store = eventually_memory::MemoryStore::<String, Event>::default();
-        let handler = CommandHandler.as_handler();
+        let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);
 

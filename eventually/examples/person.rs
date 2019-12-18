@@ -35,13 +35,13 @@ impl Aggregate for Person {
     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
         Ok(Some(match state {
             Some(state) => state.apply_next(event)?,
-            None => Self::initial(event)?,
+            None => Self::apply_first(event)?,
         }))
     }
 }
 
 impl Person {
-    fn initial(event: Event) -> Result<Self, Error> {
+    fn apply_first(event: Event) -> Result<Self, Error> {
         match event {
             Event::WasBorn { name, last_name } => Ok(Person {
                 name,
@@ -80,7 +80,7 @@ mod tests {
     use eventually::AggregateExt;
 
     #[test]
-    fn it_fails_when_applying_non_initial_events_to_empty_state() {
+    fn it_fails_when_applying_non_apply_first_events_to_empty_state() {
         assert_eq!(
             Person::apply(
                 None,

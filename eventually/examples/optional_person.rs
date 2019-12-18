@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use eventually::optional::OptionalAggregate;
+use eventually::optional::Aggregate;
 
 #[derive(Debug, Clone, PartialEq)]
 /// Person is the main entity in our small domain.
@@ -27,12 +27,12 @@ enum Error {
     PersonAlreadyExists,
 }
 
-impl OptionalAggregate for Person {
+impl Aggregate for Person {
     type State = Self;
     type Event = Event;
     type Error = Error;
 
-    fn initial(event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
         match event {
             Event::WasBorn { name, last_name } => Ok(Person {
                 name,
