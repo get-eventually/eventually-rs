@@ -7,16 +7,13 @@ use futures::stream::StreamExt;
 use rand::prelude::*;
 
 use eventually::{
-    aggregate::optional::AsAggregate,
-    command::{
-        dispatcher::Dispatcher,
-        r#static::{AsHandler, StaticHandler},
-    },
+    command::dispatcher::Dispatcher,
+    optional::{AsAggregate, AsHandler, CommandHandler},
 };
 use eventually_memory::MemoryStore;
 
 type DispatcherType =
-    Dispatcher<MemoryStore<std::string::String, point::Event>, AsHandler<point::CommandHandler>>;
+    Dispatcher<MemoryStore<std::string::String, point::Event>, AsHandler<point::Handler>>;
 
 fn dispatch(dispatcher: &mut DispatcherType, id: &'static str) {
     let mut rng = rand::thread_rng();
@@ -46,7 +43,7 @@ fn dispatch(dispatcher: &mut DispatcherType, id: &'static str) {
 
 fn benchmark(c: &mut Criterion) {
     let store = eventually_memory::MemoryStore::<String, point::Event>::default();
-    let handler = point::CommandHandler::as_handler();
+    let handler = point::Handler.as_handler();
 
     let mut dispatcher = Dispatcher::new(store, handler);
 

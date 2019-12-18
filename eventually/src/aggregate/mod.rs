@@ -4,9 +4,6 @@
 //! For ease of development, the following modules contain different
 //! traits for modeling [`Aggregate`]-compatible structures:
 //!
-//! * [`optional`], containing an [`Aggregate`]-compatible trait where [`State`]
-//! type should be [`Option`],
-//!
 //! * [`referential`], containing an [`Aggregate`]-compatible trait where
 //! the trait is implemented for `self`, thus making [`State`] as `Self`.
 //!
@@ -14,13 +11,10 @@
 //! [`State`]: trait.Aggregate.html#associatedtype.State
 //! [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
 //!
-//! [`optional`]: optional/index.html
 //! [`referential`]: referential/index.html
 
-pub mod optional;
 pub mod referential;
 
-pub use optional::OptionalAggregate;
 pub use referential::ReferentialAggregate;
 
 use std::{future::Future, pin::Pin};

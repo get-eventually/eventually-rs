@@ -13,7 +13,7 @@ use crate::{aggregate::StateOf, Aggregate, CommandHandler};
 /// [`CommandHandler`]: ../command/trait.Handler.html
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
 /// [`AsHandler`]: struct.AsHandler.html
-pub trait HandlerExt: CommandHandler + Sized {
+pub trait CommandHandlerExt: CommandHandler + Sized {
     /// Returns a decorated version of the [`CommandHandler`],
     /// in the form of [`AsHandler`] handler implementation.
     ///
@@ -26,7 +26,7 @@ pub trait HandlerExt: CommandHandler + Sized {
     }
 }
 
-impl<H> HandlerExt for H where H: CommandHandler + Sized {}
+impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 
 /// A [`CommandHandler`] decorator to support versioned [`Aggregate`].
 ///
@@ -75,7 +75,7 @@ impl<H> HandlerExt for H where H: CommandHandler + Sized {}
 /// # }
 /// #
 /// # fn main() {
-/// use eventually::versioned::HandlerExt;
+/// use eventually::versioned::CommandHandlerExt;
 ///
 /// let handler = MyHandler::new().versioned();
 /// # }

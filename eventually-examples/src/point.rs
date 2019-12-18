@@ -1,12 +1,9 @@
 use futures::future::{err, ok, Ready};
 
 use eventually::{
-    aggregate::{
-        optional::{AsAggregate, OptionalAggregate},
-        referential::ReferentialAggregate,
-        EventOf, StateOf,
-    },
-    command::{dispatcher::Identifiable, r#static::StaticHandler as StaticCommandHandler},
+    aggregate::referential::ReferentialAggregate,
+    command::dispatcher::Identifiable,
+    optional::{Aggregate, CommandHandler, EventOf, StateOf},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -104,13 +101,13 @@ impl ReferentialAggregate for State {
 }
 
 pub struct Root;
-impl OptionalAggregate for Root {
+impl Aggregate for Root {
     type State = State;
     type Event = Event;
     type Error = EventError;
 
     #[inline]
-    fn initial(event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
         match event {
             Event::Registered { id } => Ok(State { id, x: 0, y: 0 }),
             _ => Err(EventError::Unregistered),
@@ -123,29 +120,34 @@ impl OptionalAggregate for Root {
     }
 }
 
-pub struct CommandHandler;
-impl StaticCommandHandler for CommandHandler {
+pub struct Handler;
+impl CommandHandler for Handler {
     type Command = Command;
-    type Aggregate = AsAggregate<Root>;
+    type Aggregate = Root;
     type Error = CommandError;
     type Result = Ready<Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
-    fn handle(state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
-        match state {
-            None => match command {
-                Command::Register { id } => ok(vec![Event::Registered { id }]),
-                Command::GoUp { id, .. } => err(CommandError::Unregistered(id)),
-                Command::GoDown { id, .. } => err(CommandError::Unregistered(id)),
-                Command::GoLeft { id, .. } => err(CommandError::Unregistered(id)),
-                Command::GoRight { id, .. } => err(CommandError::Unregistered(id)),
-            },
-            Some(_state) => match command {
-                Command::Register { id } => err(CommandError::AlreadyRegistered(id)),
-                Command::GoUp { v, .. } => ok(vec![Event::WentUp { v }]),
-                Command::GoDown { v, .. } => ok(vec![Event::WentDown { v }]),
-                Command::GoLeft { v, .. } => ok(vec![Event::WentLeft { v }]),
-                Command::GoRight { v, .. } => ok(vec![Event::WentRight { v }]),
-            },
+    fn handle_first(&self, command: Self::Command) -> Self::Result {
+        match command {
+            Command::Register { id } => ok(vec![Event::Registered { id }]),
+            Command::GoUp { id, .. } => err(CommandError::Unregistered(id)),
+            Command::GoDown { id, .. } => err(CommandError::Unregistered(id)),
+            Command::GoLeft { id, .. } => err(CommandError::Unregistered(id)),
+            Command::GoRight { id, .. } => err(CommandError::Unregistered(id)),
+        }
+    }
+
+    fn handle_next(
+        &self,
+        _state: &StateOf<Self::Aggregate>,
+        command: Self::Command,
+    ) -> Self::Result {
+        match command {
+            Command::Register { id } => err(CommandError::AlreadyRegistered(id)),
+            Command::GoUp { v, .. } => ok(vec![Event::WentUp { v }]),
+            Command::GoDown { v, .. } => ok(vec![Event::WentDown { v }]),
+            Command::GoLeft { v, .. } => ok(vec![Event::WentLeft { v }]),
+            Command::GoRight { v, .. } => ok(vec![Event::WentRight { v }]),
         }
     }
 }
@@ -159,7 +161,7 @@ mod tests {
     #[test]
     fn dispatcher_returns_a_command_failed_error_when_handler_fails() {
         let store = eventually_memory::MemoryStore::<String, Event>::default();
-        let handler = CommandHandler::as_handler();
+        let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);
 
@@ -179,7 +181,7 @@ mod tests {
     #[test]
     fn dispatcher_returns_latest_state_if_no_error_has_happened() {
         let store = eventually_memory::MemoryStore::<String, Event>::default();
-        let handler = CommandHandler::as_handler();
+        let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);
 
