@@ -1,10 +1,9 @@
-use futures::future::{err, ok, Ready};
+use async_trait::async_trait;
 
-use eventually::{
-    aggregate::referential::ReferentialAggregate,
-    command::dispatcher::Identifiable,
-    optional::{Aggregate, CommandHandler, EventOf, StateOf},
-};
+use eventually::aggregate::referential::ReferentialAggregate;
+use eventually::command;
+use eventually::command::dispatcher::Identifiable;
+use eventually::optional::{Aggregate, CommandHandler, EventOf, StateOf};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -121,33 +120,37 @@ impl Aggregate for Root {
 }
 
 pub struct Handler;
+
+#[async_trait]
 impl CommandHandler for Handler {
     type Command = Command;
     type Aggregate = Root;
     type Error = CommandError;
-    type Result = Ready<Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
-    fn handle_first(&self, command: Self::Command) -> Self::Result {
+    async fn handle_first(
+        &self,
+        command: Self::Command,
+    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
         match command {
-            Command::Register { id } => ok(vec![Event::Registered { id }]),
-            Command::GoUp { id, .. } => err(CommandError::Unregistered(id)),
-            Command::GoDown { id, .. } => err(CommandError::Unregistered(id)),
-            Command::GoLeft { id, .. } => err(CommandError::Unregistered(id)),
-            Command::GoRight { id, .. } => err(CommandError::Unregistered(id)),
+            Command::Register { id } => Ok(vec![Event::Registered { id }]),
+            Command::GoUp { id, .. } => Err(CommandError::Unregistered(id)),
+            Command::GoDown { id, .. } => Err(CommandError::Unregistered(id)),
+            Command::GoLeft { id, .. } => Err(CommandError::Unregistered(id)),
+            Command::GoRight { id, .. } => Err(CommandError::Unregistered(id)),
         }
     }
 
-    fn handle_next(
+    async fn handle_next(
         &self,
         _state: &StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> Self::Result {
+    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
         match command {
-            Command::Register { id } => err(CommandError::AlreadyRegistered(id)),
-            Command::GoUp { v, .. } => ok(vec![Event::WentUp { v }]),
-            Command::GoDown { v, .. } => ok(vec![Event::WentDown { v }]),
-            Command::GoLeft { v, .. } => ok(vec![Event::WentLeft { v }]),
-            Command::GoRight { v, .. } => ok(vec![Event::WentRight { v }]),
+            Command::Register { id } => Err(CommandError::AlreadyRegistered(id)),
+            Command::GoUp { v, .. } => Ok(vec![Event::WentUp { v }]),
+            Command::GoDown { v, .. } => Ok(vec![Event::WentDown { v }]),
+            Command::GoLeft { v, .. } => Ok(vec![Event::WentLeft { v }]),
+            Command::GoRight { v, .. } => Ok(vec![Event::WentRight { v }]),
         }
     }
 }

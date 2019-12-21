@@ -1,15 +1,13 @@
-use std::future::Future;
+use async_trait::async_trait;
 
-use crate::{
-    aggregate::{Aggregate, EventOf, StateOf},
-    command::Handler,
-};
+use crate::aggregate::{Aggregate, EventOf, StateOf};
+use crate::command::{Handler, Result};
 
+#[async_trait]
 pub trait StaticHandler {
     type Command;
     type Aggregate: Aggregate;
     type Error;
-    type Result: Future<Output = Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
 
     fn as_handler() -> AsHandler<Self>
     where
@@ -18,11 +16,15 @@ pub trait StaticHandler {
         AsHandler(std::marker::PhantomData)
     }
 
-    fn handle(state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result;
+    async fn handle(
+        state: &StateOf<Self::Aggregate>,
+        command: Self::Command,
+    ) -> Result<EventOf<Self::Aggregate>, Self::Error>;
 }
 
 pub struct AsHandler<T>(std::marker::PhantomData<T>);
 
+#[async_trait]
 impl<T: StaticHandler> Handler for AsHandler<T>
 where
     T: Send + Sync,
@@ -32,9 +34,12 @@ where
     type Command = T::Command;
     type Aggregate = T::Aggregate;
     type Error = T::Error;
-    type Result = T::Result;
 
-    fn handle(&self, state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
-        T::handle(state, command)
+    async fn handle(
+        &self,
+        state: &StateOf<Self::Aggregate>,
+        command: Self::Command,
+    ) -> Result<EventOf<Self::Aggregate>, Self::Error> {
+        T::handle(state, command).await
     }
 }
