@@ -176,7 +176,7 @@ pub trait Aggregate {
 /// # Examples
 ///
 /// ```
-/// use eventually::optional::Aggregate;
+/// use eventually::optional::Aggregate as OptionalAggregate;
 ///
 /// enum SomeEvent {
 ///     Happened
@@ -188,7 +188,7 @@ pub trait Aggregate {
 /// }
 ///
 /// struct SomeAggregate;
-/// impl Aggregate for SomeAggregate {
+/// impl OptionalAggregate for SomeAggregate {
 ///     type State = SomeState;
 ///     type Event = SomeEvent;
 ///     type Error = std::convert::Infallible;
@@ -206,19 +206,17 @@ pub trait Aggregate {
 ///     }
 /// }
 ///
-/// fn main() {
-///     use eventually::Aggregate;
-///     use eventually::optional::AsAggregate;
+/// use eventually::Aggregate;
+/// use eventually::optional::AsAggregate;
 ///
-///     // To adapt SomeAggregate to `eventually::Aggregate`:
-///     let result = AsAggregate::<SomeAggregate>::apply(
-///         None,                   // This state will result in calling `SomeAggregate::apply_first`
-///         SomeEvent::Happened,
-///     );
+/// // To adapt SomeAggregate to `eventually::Aggregate`:
+/// let result = AsAggregate::<SomeAggregate>::apply(
+///     None,                   // This state will result in calling `SomeAggregate::apply_first`
+///     SomeEvent::Happened,
+/// );
 ///
-///     // An `Option`-wrapped `SomeState` instance is returned.
-///     assert_eq!(result, Ok(Some(SomeState {})));
-/// }
+/// // An `Option`-wrapped `SomeState` instance is returned.
+/// assert_eq!(result, Ok(Some(SomeState {})));
 /// ```
 ///
 /// [`Aggregate`]: trait.Aggregate.html

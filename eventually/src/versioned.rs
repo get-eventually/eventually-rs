@@ -158,25 +158,26 @@ where
 ///     }
 /// }
 ///
-/// fn main() {
-///     use eventually::versioned::{AsAggregate, Versioned};
+/// use eventually::versioned::{AsAggregate, Versioned};
 ///
-///     // Use by wrapping the original type in `AsAggregate::<T>`
-///     let result = AsAggregate::<Entity>::apply(Versioned::default(), Event::SomeEvent);
+/// // Use by wrapping the original type in `AsAggregate::<T>`
+/// let result = AsAggregate::<Entity>::apply(
+///     Versioned::default(),
+///     Versioned::from(Event::SomeEvent)
+/// );
 ///
-///     assert_eq!(
-///         result,
-///         // Wraps the Entity instance with version "1"
-///         Ok(Versioned::with_version(Entity::default(), 1)),
-///     );
+/// assert_eq!(
+///     result,
+///     // `Versioned::from` assigns the default version to the event, which is 0.
+///     // So, the state will take the same version.
+///     Ok(Versioned::with_version(Entity::default(), 0)),
+/// );
 ///
-///     // If applied on a versioned state again, the version will increase
-///     // from "1" to "2"
-///     assert_eq!(
-///         AsAggregate::<Entity>::apply(result.unwrap(), Event::SomeEvent),
-///         Ok(Versioned::with_version(Entity::default(), 2)),
-///     );
-/// }
+/// // If applying an event with version "1", the state will have version "1" too.
+/// assert_eq!(
+///     AsAggregate::<Entity>::apply(result.unwrap(), Versioned::with_version(Event::SomeEvent, 1)),
+///     Ok(Versioned::with_version(Entity::default(), 1)),
+/// );
 /// ```
 ///
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
