@@ -4,7 +4,11 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{aggregate::StateOf, Aggregate, CommandHandler};
+use async_trait::async_trait;
+
+use crate::aggregate::{EventOf, StateOf};
+use crate::command;
+use crate::{Aggregate, CommandHandler};
 
 /// Extension trait for [`CommandHandler`] to support a versioned [`Aggregate`].
 ///
@@ -38,8 +42,11 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 ///
 /// ```
 /// # use std::convert::Infallible;
-/// # use futures::future::Ready;
+/// #
+/// # use async_trait::async_trait;
+/// #
 /// # use eventually::{Aggregate, CommandHandler};
+/// # use eventually::command;
 /// #
 /// # enum Event {}
 /// # enum Command {}
@@ -63,22 +70,23 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// #     }
 /// # }
 /// #
+/// # #[async_trait]
 /// # impl CommandHandler for MyHandler {
 /// #     type Command = Command;
 /// #     type Aggregate = Entity;
 /// #     type Error = Infallible;
-/// #     type Result = Ready<Result<Vec<Event>, Self::Error>>;
 /// #
-/// #     fn handle(&self, state: &Entity, command: Self::Command) -> Self::Result {
+/// #     async fn handle(&self, state: &Entity, command: Self::Command) ->
+/// #         command::Result<Event, Self::Error>
+/// #     {
 /// #         unimplemented!()
 /// #     }
 /// # }
 /// #
-/// # fn main() {
 /// use eventually::versioned::CommandHandlerExt;
 ///
 /// let handler = MyHandler::new().versioned();
-/// # }
+/// #
 /// ```
 ///
 /// [`CommandHandler`]: ../command/trait.Handler.html
@@ -87,20 +95,31 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// [`AsAggregate`]: struct.AsAggregate.html
 pub struct AsHandler<H>(H);
 
-impl<H: CommandHandler> CommandHandler for AsHandler<H> {
+#[async_trait]
+impl<H> CommandHandler for AsHandler<H>
+where
+    H: CommandHandler + Send + Sync,
+    StateOf<H::Aggregate>: Send + Sync,
+    H::Command: Send,
+{
     type Command = H::Command;
     // Decorated Aggregate type
     type Aggregate = AsAggregate<H::Aggregate>;
     type Error = H::Error;
 
-    // NOTE: it'd be nicer if we could also map from the decorated Handler result
-    // to versioned events.
-    //
-    // That way, many events produced by a single command would yield the same version.
-    type Result = H::Result;
+    async fn handle(
+        &self,
+        state: &StateOf<Self::Aggregate>,
+        command: Self::Command,
+    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
+        let version = state.version();
 
-    fn handle(&self, state: &StateOf<Self::Aggregate>, command: Self::Command) -> Self::Result {
-        self.0.handle(state, command)
+        self.0.handle(state, command).await.map(|events| {
+            events
+                .into_iter()
+                .map(|event| Versioned::with_version(event, version + 1))
+                .collect()
+        })
     }
 }
 
@@ -139,25 +158,26 @@ impl<H: CommandHandler> CommandHandler for AsHandler<H> {
 ///     }
 /// }
 ///
-/// fn main() {
-///     use eventually::versioned::{AsAggregate, Versioned};
+/// use eventually::versioned::{AsAggregate, Versioned};
 ///
-///     // Use by wrapping the original type in `AsAggregate::<T>`
-///     let result = AsAggregate::<Entity>::apply(Versioned::default(), Event::SomeEvent);
+/// // Use by wrapping the original type in `AsAggregate::<T>`
+/// let result = AsAggregate::<Entity>::apply(
+///     Versioned::default(),
+///     Versioned::from(Event::SomeEvent)
+/// );
 ///
-///     assert_eq!(
-///         result,
-///         // Wraps the Entity instance with version "1"
-///         Ok(Versioned::with_version(Entity::default(), 1)),
-///     );
+/// assert_eq!(
+///     result,
+///     // `Versioned::from` assigns the default version to the event, which is 0.
+///     // So, the state will take the same version.
+///     Ok(Versioned::with_version(Entity::default(), 0)),
+/// );
 ///
-///     // If applied on a versioned state again, the version will increase
-///     // from "1" to "2"
-///     assert_eq!(
-///         AsAggregate::<Entity>::apply(result.unwrap(), Event::SomeEvent),
-///         Ok(Versioned::with_version(Entity::default(), 2)),
-///     );
-/// }
+/// // If applying an event with version "1", the state will have version "1" too.
+/// assert_eq!(
+///     AsAggregate::<Entity>::apply(result.unwrap(), Versioned::with_version(Event::SomeEvent, 1)),
+///     Ok(Versioned::with_version(Entity::default(), 1)),
+/// );
 /// ```
 ///
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
@@ -170,13 +190,13 @@ where
     A: Aggregate,
 {
     type State = Versioned<A::State>;
-    type Event = A::Event;
+    type Event = Versioned<A::Event>;
     type Error = A::Error;
 
     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-        let version = state.version();
+        let version = event.version();
 
-        A::apply(state.data, event).map(|state| Versioned::with_version(state, version + 1))
+        A::apply(state.data, event.take()).map(|state| Versioned::with_version(state, version))
     }
 }
 

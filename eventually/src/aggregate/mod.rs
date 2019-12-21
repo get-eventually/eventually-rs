@@ -17,7 +17,7 @@ pub mod referential;
 
 pub use referential::ReferentialAggregate;
 
-use std::{future::Future, pin::Pin};
+use async_trait::async_trait;
 
 use futures::{Stream, StreamExt};
 
@@ -93,6 +93,7 @@ pub trait Aggregate {
 /// Extension trait for [`Aggregate`] containing combinator functions.
 ///
 /// [`Aggregate`]: trait.Aggregate.html
+#[async_trait]
 pub trait AggregateExt: Aggregate {
     /// Applies a _synchronous_ stream of [`Event`]s to the current [`State`],
     /// returning the updated state or an error, if any such happened.
@@ -100,10 +101,10 @@ pub trait AggregateExt: Aggregate {
     /// [`Event`]: trait.Aggregate.html#associatedtype.Event
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     #[inline]
-    fn fold(
-        state: Self::State,
-        events: impl Iterator<Item = Self::Event>,
-    ) -> Result<Self::State, Self::Error> {
+    fn fold<I>(state: Self::State, events: I) -> Result<Self::State, Self::Error>
+    where
+        I: Iterator<Item = Self::Event>,
+    {
         events.fold(Ok(state), |previous, event| {
             previous.and_then(|state| Self::apply(state, event))
         })
@@ -116,18 +117,18 @@ pub trait AggregateExt: Aggregate {
     /// [`Event`]: trait.Aggregate.html#associatedtype.Event
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     #[inline]
-    fn async_fold<'a>(
-        state: Self::State,
-        events: impl Stream<Item = Self::Event> + Send + 'a,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::State, Self::Error>> + Send + 'a>>
+    async fn async_fold<S>(state: Self::State, events: S) -> Result<Self::State, Self::Error>
     where
-        Self::State: Send + 'a,
-        Self::Event: Send + 'a,
-        Self::Error: Send + 'a,
+        S: Stream<Item = Self::Event> + Send,
+        Self::State: Send,
+        Self::Event: Send,
+        Self::Error: Send,
     {
-        Box::pin(events.fold(Ok(state), |previous, event| {
-            async move { previous.and_then(|state| Self::apply(state, event)) }
-        }))
+        events
+            .fold(Ok(state), |previous, event| {
+                async move { previous.and_then(|state| Self::apply(state, event)) }
+            })
+            .await
     }
 }
 

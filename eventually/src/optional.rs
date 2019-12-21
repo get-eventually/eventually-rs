@@ -3,7 +3,7 @@
 //! [`Aggregate`]: ../aggregate/trait.Aggregate.html
 //! [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
 
-use std::future::Future;
+use async_trait::async_trait;
 
 use crate::{aggregate, command};
 
@@ -19,6 +19,7 @@ use crate::{aggregate, command};
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`command::Handler`]: ../command/trait.Handler.html
 /// [`as_handler`]: trait.CommandHandler.html#method.as_handler
+#[async_trait]
 pub trait CommandHandler {
     /// Commands to trigger a specific use-case on the context of an [`Aggregate`].
     ///
@@ -38,17 +39,6 @@ pub trait CommandHandler {
     /// [`Command`]: trait.CommandHandler.html#associatedType.Command
     type Error;
 
-    /// Result of the [`Command`] handling routine.
-    ///
-    /// Since a [`command::Handler`] usually performs `async` requests to
-    /// external services to handle a [`Command`], the `Result` is expressed
-    /// as a [`Future`].
-    ///
-    /// [`Command`]: trait.CommandHandler.html#associatedType.Command
-    /// [`command::Handler`]: ../command/trait.Handler.html
-    /// [`Future`]: https://doc.rust-lang.org/stable/core/future/trait.Future.html
-    type Result: Future<Output = Result<Vec<EventOf<Self::Aggregate>>, Self::Error>>;
-
     /// Handles a [`Command`] when the [`Aggregate`] state is not yet present.
     ///
     /// Usually this happens when the event store has no persisted event
@@ -56,15 +46,21 @@ pub trait CommandHandler {
     ///
     /// [`Command`]: trait.CommandHandler.html#associatedType.Command
     /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
-    fn handle_first(&self, command: Self::Command) -> Self::Result;
+    async fn handle_first(
+        &self,
+        command: Self::Command,
+    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error>;
 
     /// Handles a [`Command`] when the previous [`Aggregate`] state
     /// is already **present** and **available** to the command handler.
     ///
     /// [`Command`]: trait.CommandHandler.html#associatedType.Command
     /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
-    fn handle_next(&self, state: &StateOf<Self::Aggregate>, command: Self::Command)
-        -> Self::Result;
+    async fn handle_next(
+        &self,
+        state: &StateOf<Self::Aggregate>,
+        command: Self::Command,
+    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error>;
 
     /// Adapts the [`CommandHandler`] implementation to the [`command::Handler`]
     /// foundation trait, useful when needs to be used with a
@@ -93,24 +89,27 @@ pub trait CommandHandler {
 /// [`CommandHandler.as_handler`]: trait.CommandHandler.html#method.as_handler
 pub struct AsHandler<H>(H);
 
+#[async_trait]
 impl<H> command::Handler for AsHandler<H>
 where
-    H: CommandHandler,
+    H: CommandHandler + Send + Sync,
+    StateOf<H::Aggregate>: Send + Sync,
+    H::Command: Send,
 {
     type Command = H::Command;
     type Aggregate = AsAggregate<H::Aggregate>;
     type Error = H::Error;
-    type Result = H::Result;
 
-    fn handle(
+    async fn handle(
         &self,
         state: &aggregate::StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> Self::Result {
+    ) -> command::Result<aggregate::EventOf<Self::Aggregate>, Self::Error> {
         match state {
             None => self.0.handle_first(command),
             Some(state) => self.0.handle_next(state, command),
         }
+        .await
     }
 }
 
@@ -177,7 +176,7 @@ pub trait Aggregate {
 /// # Examples
 ///
 /// ```
-/// use eventually::optional::Aggregate;
+/// use eventually::optional::Aggregate as OptionalAggregate;
 ///
 /// enum SomeEvent {
 ///     Happened
@@ -189,7 +188,7 @@ pub trait Aggregate {
 /// }
 ///
 /// struct SomeAggregate;
-/// impl Aggregate for SomeAggregate {
+/// impl OptionalAggregate for SomeAggregate {
 ///     type State = SomeState;
 ///     type Event = SomeEvent;
 ///     type Error = std::convert::Infallible;
@@ -207,19 +206,17 @@ pub trait Aggregate {
 ///     }
 /// }
 ///
-/// fn main() {
-///     use eventually::Aggregate;
-///     use eventually::optional::AsAggregate;
+/// use eventually::Aggregate;
+/// use eventually::optional::AsAggregate;
 ///
-///     // To adapt SomeAggregate to `eventually::Aggregate`:
-///     let result = AsAggregate::<SomeAggregate>::apply(
-///         None,                   // This state will result in calling `SomeAggregate::apply_first`
-///         SomeEvent::Happened,
-///     );
+/// // To adapt SomeAggregate to `eventually::Aggregate`:
+/// let result = AsAggregate::<SomeAggregate>::apply(
+///     None,                   // This state will result in calling `SomeAggregate::apply_first`
+///     SomeEvent::Happened,
+/// );
 ///
-///     // An `Option`-wrapped `SomeState` instance is returned.
-///     assert_eq!(result, Ok(Some(SomeState {})));
-/// }
+/// // An `Option`-wrapped `SomeState` instance is returned.
+/// assert_eq!(result, Ok(Some(SomeState {})));
 /// ```
 ///
 /// [`Aggregate`]: trait.Aggregate.html
