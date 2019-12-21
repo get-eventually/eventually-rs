@@ -135,9 +135,9 @@ mod tests {
         let state = VersionedAggregate::<AsAggregate<Point>>::fold(
             Versioned::default(),
             vec![
-                PointEvent::WentUp(10),
-                PointEvent::WentRight(10),
-                PointEvent::WentDown(5),
+                Versioned::with_version(PointEvent::WentUp(10), 1),
+                Versioned::with_version(PointEvent::WentRight(10), 2),
+                Versioned::with_version(PointEvent::WentDown(5), 3),
             ]
             .into_iter(),
         )
