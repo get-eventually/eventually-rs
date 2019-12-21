@@ -17,9 +17,7 @@ pub mod referential;
 
 pub use referential::ReferentialAggregate;
 
-use std::{future::Future, pin::Pin};
-
-use futures::{Stream, StreamExt};
+use futures::{future::BoxFuture, Stream, StreamExt};
 
 /// Alias for the [`State`] type of an [`Aggregate`].
 ///
@@ -119,7 +117,7 @@ pub trait AggregateExt: Aggregate {
     fn async_fold<'a>(
         state: Self::State,
         events: impl Stream<Item = Self::Event> + Send + 'a,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::State, Self::Error>> + Send + 'a>>
+    ) -> BoxFuture<'a, Result<Self::State, Self::Error>>
     where
         Self::State: Send + 'a,
         Self::Event: Send + 'a,
