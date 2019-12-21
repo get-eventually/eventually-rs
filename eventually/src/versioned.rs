@@ -112,7 +112,14 @@ where
         state: &StateOf<Self::Aggregate>,
         command: Self::Command,
     ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
-        self.0.handle(state, command).await
+        let version = state.version();
+
+        self.0.handle(state, command).await.map(|events| {
+            events
+                .into_iter()
+                .map(|event| Versioned::with_version(event, version + 1))
+                .collect()
+        })
     }
 }
 
@@ -182,13 +189,13 @@ where
     A: Aggregate,
 {
     type State = Versioned<A::State>;
-    type Event = A::Event;
+    type Event = Versioned<A::Event>;
     type Error = A::Error;
 
     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-        let version = state.version();
+        let version = event.version();
 
-        A::apply(state.data, event).map(|state| Versioned::with_version(state, version + 1))
+        A::apply(state.data, event.take()).map(|state| Versioned::with_version(state, version))
     }
 }
 
