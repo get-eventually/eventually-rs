@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use futures::stream::StreamExt;
 
-use eventually::store::{ReadStore, WriteStore};
+use eventually::Store;
 use eventually_memory::MemoryStore;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -20,7 +20,6 @@ fn insert_elements(store: &mut MemoryStore<&'static str, Event>, name: &'static 
     tokio_test::block_on(
         store.append(
             name,
-            0,
             (0..=num)
                 .map(|idx| match idx % 3 {
                     0 => Event::A,
@@ -39,10 +38,10 @@ fn benchmark(c: &mut Criterion) {
 
     insert_elements(&mut store, "benchtest10", 10);
     insert_elements(&mut store, "benchtest100", 100);
-    insert_elements(&mut store, "benchtest1_000", 1000);
-    insert_elements(&mut store, "benchtest10_000", 10000);
-    insert_elements(&mut store, "benchtest100_000", 100000);
-    insert_elements(&mut store, "benchtest1_000_000", 1000000);
+    insert_elements(&mut store, "benchtest1_000", 1_000);
+    insert_elements(&mut store, "benchtest10_000", 10_000);
+    insert_elements(&mut store, "benchtest100_000", 100_000);
+    insert_elements(&mut store, "benchtest1_000_000", 1_000_000);
 
     c.bench_function("insert events 10", |b| {
         b.iter(|| insert_elements(black_box(&mut store), black_box("insert_benchtest10"), 10))
@@ -57,7 +56,7 @@ fn benchmark(c: &mut Criterion) {
             insert_elements(
                 black_box(&mut store),
                 black_box("insert_benchtest1_000"),
-                1000,
+                1_000,
             )
         })
     });
@@ -67,7 +66,7 @@ fn benchmark(c: &mut Criterion) {
             insert_elements(
                 black_box(&mut store),
                 black_box("insert_benchtest10_000"),
-                10000,
+                10_000,
             )
         })
     });
@@ -77,7 +76,7 @@ fn benchmark(c: &mut Criterion) {
             insert_elements(
                 black_box(&mut store),
                 black_box("insert_benchtest100_000"),
-                100000,
+                100_000,
             )
         })
     });
@@ -87,7 +86,7 @@ fn benchmark(c: &mut Criterion) {
             insert_elements(
                 black_box(&mut store),
                 black_box("insert_benchtest1_000_000"),
-                1000000,
+                1_000_000,
             )
         })
     });
