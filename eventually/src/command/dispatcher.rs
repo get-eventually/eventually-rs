@@ -1,12 +1,6 @@
 use std::{error::Error as StdError, future::Future};
 
-use crate::{
-    aggregate,
-    aggregate::AggregateExt,
-    command,
-    command::Handler as CommandHandler,
-    store::{ReadStore, WriteStore},
-};
+use crate::{aggregate, aggregate::AggregateExt, command, CommandHandler, Store as EventStore};
 
 pub type SourceIdOf<I: Identifiable> = I::SourceId;
 
@@ -64,13 +58,13 @@ pub struct Dispatcher<Store, Handler> {
 impl<Store, Handler> Dispatcher<Store, Handler>
 where
     Handler: CommandHandler + Send,
-    Store: WriteStore + Send,
-    <Store as ReadStore>::SourceId: Clone + Eq + Send,
-    <Store as ReadStore>::Offset: Default + Send,
-    <Store as ReadStore>::Stream: Send,
-    <Store as WriteStore>::Error: StdError + Send + 'static,
-    command::AggregateOf<Handler>: AggregateExt<Event = <Store as ReadStore>::Event> + Send,
-    command::CommandOf<Handler>: Identifiable<SourceId = <Store as ReadStore>::SourceId> + Send,
+    Store: EventStore + Send,
+    <Store as EventStore>::SourceId: Clone + Eq + Send,
+    <Store as EventStore>::Offset: Default + Send,
+    <Store as EventStore>::Stream: Send,
+    <Store as EventStore>::Error: StdError + Send + 'static,
+    command::AggregateOf<Handler>: AggregateExt<Event = <Store as EventStore>::Event> + Send,
+    command::CommandOf<Handler>: Identifiable<SourceId = <Store as EventStore>::SourceId> + Send,
     aggregate::EventOf<command::AggregateOf<Handler>>: Clone + Send,
     aggregate::StateOf<command::AggregateOf<Handler>>: Default + Send,
     aggregate::ErrorOf<command::AggregateOf<Handler>>: StdError + Send + 'static,
@@ -95,7 +89,7 @@ where
 
             let events = self
                 .store
-                .stream(id.clone(), <Store as ReadStore>::Offset::default());
+                .stream(id.clone(), <Store as EventStore>::Offset::default());
 
             let state = command::AggregateOf::<Handler>::async_fold(
                 aggregate::StateOf::<command::AggregateOf<Handler>>::default(),
@@ -115,7 +109,7 @@ where
                     .map_err(Error::ApplyStateFailed)?;
 
             self.store
-                .append(id, <Store as ReadStore>::Offset::default(), new_events)
+                .append(id, new_events)
                 .await
                 .map_err(Error::AppendEventsFailed)?;
 

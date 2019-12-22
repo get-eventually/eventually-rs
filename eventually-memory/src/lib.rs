@@ -4,12 +4,11 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use futures::{
-    future::{ok, Ready},
-    stream::{empty, iter, BoxStream, StreamExt},
-};
+use async_trait::async_trait;
 
-use eventually::store::{ReadStore, WriteStore};
+use futures::stream::{empty, iter, BoxStream, StreamExt};
+
+use eventually::Store;
 
 pub struct MemoryStore<SourceId, Event> {
     store: Arc<RwLock<HashMap<SourceId, Vec<Event>>>>,
@@ -26,15 +25,17 @@ where
     }
 }
 
-impl<SourceId, Event> ReadStore for MemoryStore<SourceId, Event>
+#[async_trait]
+impl<SourceId, Event> Store for MemoryStore<SourceId, Event>
 where
-    SourceId: Hash + Eq,
-    Event: Clone + Send + 'static,
+    SourceId: Hash + Eq + Send + Sync,
+    Event: Clone + Send + Sync + 'static,
 {
     type SourceId = SourceId;
     type Offset = usize;
     type Event = Event;
     type Stream = BoxStream<'static, Self::Event>;
+    type Error = std::convert::Infallible;
 
     fn stream(&self, source_id: Self::SourceId, from: Self::Offset) -> Self::Stream {
         let store = self.store.read().unwrap();
@@ -55,22 +56,12 @@ where
             })
             .unwrap_or_else(|| empty().boxed())
     }
-}
 
-impl<SourceId, Event> WriteStore for MemoryStore<SourceId, Event>
-where
-    SourceId: Hash + Eq,
-    Event: Clone + Send + 'static,
-{
-    type Error = std::convert::Infallible;
-    type Result = Ready<Result<(), Self::Error>>;
-
-    fn append(
+    async fn append(
         &mut self,
         source_id: Self::SourceId,
-        _from: Self::Offset,
         events: Vec<Self::Event>,
-    ) -> Self::Result {
+    ) -> Result<(), Self::Error> {
         let mut store = self.store.write().unwrap();
 
         store
@@ -80,7 +71,7 @@ where
             })
             .or_insert(events);
 
-        ok(())
+        Ok(())
     }
 }
 
@@ -101,16 +92,14 @@ mod tests {
     fn it_works() {
         let mut store = MemoryStore::<&'static str, Event>::default();
 
-        tokio_test::block_on(store.append("stream1", 0, vec![Event::A, Event::B, Event::C]))
-            .unwrap();
+        tokio_test::block_on(store.append("stream1", vec![Event::A, Event::B, Event::C])).unwrap();
 
         assert_eq!(
             tokio_test::block_on(store.stream("stream1", 0).collect::<Vec<Event>>()),
             vec![Event::A, Event::B, Event::C]
         );
 
-        tokio_test::block_on(store.append("stream1", 0, vec![Event::B, Event::C, Event::A]))
-            .unwrap();
+        tokio_test::block_on(store.append("stream1", vec![Event::B, Event::C, Event::A])).unwrap();
 
         assert_eq!(
             tokio_test::block_on(store.stream("stream1", 0).collect::<Vec<Event>>()),
