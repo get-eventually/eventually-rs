@@ -15,7 +15,7 @@
 
 pub mod referential;
 
-pub use referential::ReferentialAggregate;
+pub use referential::Aggregate as ReferentialAggregate;
 
 use async_trait::async_trait;
 
