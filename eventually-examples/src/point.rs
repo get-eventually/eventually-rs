@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use eventually::aggregate::referential::ReferentialAggregate;
+use eventually::aggregate::ReferentialAggregate;
 use eventually::command;
 use eventually::command::dispatcher::Identifiable;
 use eventually::optional::{Aggregate, CommandHandler, EventOf, StateOf};
