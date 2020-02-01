@@ -125,8 +125,8 @@ pub trait AggregateExt: Aggregate {
         Self::Error: Send,
     {
         events
-            .fold(Ok(state), |previous, event| {
-                async move { previous.and_then(|state| Self::apply(state, event)) }
+            .fold(Ok(state), |previous, event| async move {
+                previous.and_then(|state| Self::apply(state, event))
             })
             .await
     }
