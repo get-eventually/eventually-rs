@@ -2,7 +2,7 @@ use eventually::command::dispatcher::{Dispatcher, Error};
 use eventually::optional::CommandHandler;
 use eventually::versioned::{CommandHandlerExt, Versioned};
 
-use rand::prelude::*;
+use rand::prelude::Rng;
 
 type DispatchError = Error<point::EventError, point::CommandError, std::convert::Infallible>;
 
