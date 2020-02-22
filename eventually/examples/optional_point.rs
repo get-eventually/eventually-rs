@@ -87,10 +87,9 @@ fn main() {}
 mod tests {
     use super::*;
 
-    use eventually::{
-        versioned::{AsAggregate as VersionedAggregate, Versioned},
-        Aggregate, AggregateExt, CommandHandler,
-    };
+    use eventually::command::Handler as CommandHandler;
+    use eventually::versioned::{AsAggregate as VersionedAggregate, Versioned};
+    use eventually::{Aggregate, AggregateExt};
 
     #[test]
     fn it_applies_an_event_correctly() {
