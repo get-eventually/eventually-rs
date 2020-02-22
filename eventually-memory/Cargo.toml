@@ -7,7 +7,8 @@ edition = "2018"
 [dependencies]
 async-trait = "0.1"
 futures = "0.3"
-eventually = { path = "../eventually" }
+
+eventually-core = { path = "../eventually-core" }
 
 [dev-dependencies]
 tokio-test = "0.2"

@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use futures::stream::StreamExt;
 
-use eventually::Store;
+use eventually_core::store::Store;
 use eventually_memory::MemoryStore;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -13,7 +13,12 @@ enum Event {
 }
 
 fn read_event_stream(store: &MemoryStore<&'static str, Event>, source_id: &'static str) {
-    tokio_test::block_on(store.stream(source_id, 0).collect::<Vec<Event>>());
+    tokio_test::block_on(
+        store
+            .stream(source_id, 0)
+            .map(|result| result.unwrap())
+            .collect::<Vec<Event>>(),
+    );
 }
 
 fn insert_elements(store: &mut MemoryStore<&'static str, Event>, name: &'static str, num: usize) {

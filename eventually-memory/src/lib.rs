@@ -5,11 +5,11 @@ use std::{
 };
 
 use async_trait::async_trait;
-
 use futures::stream::{empty, iter, BoxStream, StreamExt};
 
-use eventually::Store;
+use eventually_core::store::Store;
 
+#[derive(Clone)]
 pub struct MemoryStore<SourceId, Event> {
     store: Arc<RwLock<HashMap<SourceId, Vec<Event>>>>,
 }
@@ -34,7 +34,7 @@ where
     type SourceId = SourceId;
     type Offset = usize;
     type Event = Event;
-    type Stream = BoxStream<'static, Self::Event>;
+    type Stream = BoxStream<'static, Result<Self::Event, std::convert::Infallible>>;
     type Error = std::convert::Infallible;
 
     fn stream(&self, source_id: Self::SourceId, from: Self::Offset) -> Self::Stream {
@@ -52,6 +52,7 @@ where
                             move |(idx, event)| if idx >= from { Some(event) } else { None },
                         ),
                 )
+                .map(Result::Ok)
                 .boxed()
             })
             .unwrap_or_else(|| empty().boxed())
@@ -95,24 +96,44 @@ mod tests {
         tokio_test::block_on(store.append("stream1", vec![Event::A, Event::B, Event::C])).unwrap();
 
         assert_eq!(
-            tokio_test::block_on(store.stream("stream1", 0).collect::<Vec<Event>>()),
+            tokio_test::block_on(
+                store
+                    .stream("stream1", 0)
+                    .map(|result| result.unwrap())
+                    .collect::<Vec<Event>>()
+            ),
             vec![Event::A, Event::B, Event::C]
         );
 
         tokio_test::block_on(store.append("stream1", vec![Event::B, Event::C, Event::A])).unwrap();
 
         assert_eq!(
-            tokio_test::block_on(store.stream("stream1", 0).collect::<Vec<Event>>()),
+            tokio_test::block_on(
+                store
+                    .stream("stream1", 0)
+                    .map(|result| result.unwrap())
+                    .collect::<Vec<Event>>()
+            ),
             vec![Event::A, Event::B, Event::C, Event::B, Event::C, Event::A]
         );
 
         assert_eq!(
-            tokio_test::block_on(store.stream("stream1", 3).collect::<Vec<Event>>()),
+            tokio_test::block_on(
+                store
+                    .stream("stream1", 3)
+                    .map(|result| result.unwrap())
+                    .collect::<Vec<Event>>()
+            ),
             vec![Event::B, Event::C, Event::A]
         );
 
         assert_eq!(
-            tokio_test::block_on(store.stream("stream1", 7).collect::<Vec<Event>>()),
+            tokio_test::block_on(
+                store
+                    .stream("stream1", 7)
+                    .map(|result| result.unwrap())
+                    .collect::<Vec<Event>>()
+            ),
             vec![]
         );
     }
