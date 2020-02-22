@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 
-use eventually::aggregate::ReferentialAggregate;
-use eventually::command;
-use eventually::command::dispatcher::Identifiable;
-use eventually::optional::{Aggregate, CommandHandler, EventOf, StateOf};
+use eventually_core::command;
+use eventually_util::aggregate::referential::Aggregate as ReferentialAggregate;
+use eventually_util::command::dispatcher::Identifiable;
+use eventually_util::optional::{Aggregate, CommandHandler, EventOf, StateOf};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -159,7 +159,7 @@ impl CommandHandler for Handler {
 mod tests {
     use super::*;
 
-    use eventually::command::dispatcher::{Dispatcher, Error};
+    use eventually_util::command::dispatcher::{Dispatcher, Error};
 
     #[test]
     fn dispatcher_returns_a_command_failed_error_when_handler_fails() {

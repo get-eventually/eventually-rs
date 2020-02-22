@@ -6,11 +6,9 @@ use futures::stream::StreamExt;
 
 use rand::prelude::*;
 
-use eventually::{
-    command::dispatcher::Dispatcher,
-    optional::{AsAggregate, AsHandler, CommandHandler},
-};
 use eventually_memory::MemoryStore;
+use eventually_util::command::dispatcher::Dispatcher;
+use eventually_util::optional::{AsAggregate, AsHandler, CommandHandler};
 
 type DispatcherType =
     Dispatcher<MemoryStore<std::string::String, point::Event>, AsHandler<point::Handler>>;

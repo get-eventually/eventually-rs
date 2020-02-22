@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 
-use crate::aggregate::{Aggregate, EventOf, StateOf};
-use crate::command::{Handler, Result};
+use eventually_core::aggregate::{Aggregate, EventOf, StateOf};
+use eventually_core::command::{Handler as CommandHandler, Result};
 
 #[async_trait]
-pub trait StaticHandler {
+pub trait Handler {
     type Command;
     type Aggregate: Aggregate;
     type Error;
@@ -25,7 +25,7 @@ pub trait StaticHandler {
 pub struct AsHandler<T>(std::marker::PhantomData<T>);
 
 #[async_trait]
-impl<T: StaticHandler> Handler for AsHandler<T>
+impl<T: Handler> CommandHandler for AsHandler<T>
 where
     T: Send + Sync,
     T::Command: Send + Sync,

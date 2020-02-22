@@ -1,6 +1,11 @@
+use std::fmt::Debug;
 use std::{error::Error as StdError, future::Future};
 
-use crate::{aggregate, aggregate::AggregateExt, command, CommandHandler, Store as EventStore};
+use futures::stream::{StreamExt, TryStream, TryStreamExt};
+
+use eventually_core::store::Store as EventStore;
+use eventually_core::{aggregate, aggregate::AggregateExt};
+use eventually_core::{command, command::Handler as CommandHandler};
 
 pub type SourceIdOf<I: Identifiable> = I::SourceId;
 
@@ -61,8 +66,9 @@ where
     Store: EventStore + Send,
     <Store as EventStore>::SourceId: Clone + Eq + Send,
     <Store as EventStore>::Offset: Default + Send,
-    <Store as EventStore>::Stream: Send,
+    <Store as EventStore>::Stream: TryStream + Send,
     <Store as EventStore>::Error: StdError + Send + 'static,
+    <<Store as EventStore>::Stream as TryStream>::Error: Debug,
     command::AggregateOf<Handler>: AggregateExt<Event = <Store as EventStore>::Event> + Send,
     command::CommandOf<Handler>: Identifiable<SourceId = <Store as EventStore>::SourceId> + Send,
     aggregate::EventOf<command::AggregateOf<Handler>>: Clone + Send,
@@ -93,7 +99,8 @@ where
 
             let state = command::AggregateOf::<Handler>::async_fold(
                 aggregate::StateOf::<command::AggregateOf<Handler>>::default(),
-                events,
+                // TODO: remove this unwrap and do some proper error handling
+                events.into_stream().map(|result| result.unwrap()),
             )
             .await
             .map_err(Error::RecreateStateFailed)?;

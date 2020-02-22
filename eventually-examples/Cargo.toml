@@ -9,10 +9,12 @@ edition = "2018"
 [dependencies]
 async-trait = "0.1"
 futures = "0.3"
-eventually = { path = "../eventually" }
-eventually-memory = { path = "../eventually-memory" }
 tokio-test = "0.2"
 rand = "0.7"
+
+eventually-core = { path = "../eventually-core" }
+eventually-util = { path = "../eventually-util" }
+eventually-memory = { path = "../eventually-memory" }
 
 [dev-dependencies]
 criterion = "0.3"

@@ -4,7 +4,7 @@
 //! [`Aggregate`]: ../trait.Aggregate.html
 //! [`State`]: ../trait.Aggregate.html#associatedType.State
 
-use crate::aggregate;
+use eventually_core::aggregate;
 
 /// An [`Aggregate`] representation where the [`State`]
 /// is the same as the aggregate root.
@@ -12,7 +12,7 @@ use crate::aggregate;
 /// # Examples
 ///
 /// ```
-/// use eventually::aggregate::referential::Aggregate;
+/// use eventually_util::aggregate::referential::Aggregate;
 ///
 /// struct MyState {
 ///     // Some fields

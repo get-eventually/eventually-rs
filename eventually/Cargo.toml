@@ -18,5 +18,8 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
 async-trait = "0.1"
 futures = "0.3"
 
+eventually-core = { path = "../eventually-core" }
+eventually-util = { path = "../eventually-util" }
+
 [dev-dependencies]
 tokio-test = "0.2"

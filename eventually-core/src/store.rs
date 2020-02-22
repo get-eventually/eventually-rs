@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 
-use futures::Stream;
+use futures::TryStream;
 
 /// Represents an Event Store, an append-only, ordered list of [`Events`]
 /// for a certain "source" (i.e. [`Aggregate`]).
@@ -14,7 +14,7 @@ pub trait Store {
     /// Type of the Source id, usually an [`Aggregate`] id.
     ///
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-    type SourceId: Eq;
+    type SourceId: PartialEq;
 
     /// Type of the memory offset supported by the `Store`.
     ///
@@ -36,7 +36,7 @@ pub trait Store {
     ///
     /// [`Stream`]: https://docs.rs/futures/stream/trait.Stream.html
     /// [`stream`]: trait.Store.html#method.stream
-    type Stream: Stream<Item = Self::Event>;
+    type Stream: TryStream<Ok = Self::Event>;
 
     /// Possible errors returned by the [`append`] method.
     ///

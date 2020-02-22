@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "eventually",
+    "eventually-core",
     "eventually-memory",
+    "eventually-util",
 
     # Examples crate
     "eventually-examples"

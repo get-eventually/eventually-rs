@@ -6,9 +6,8 @@ use std::ops::{Deref, DerefMut};
 
 use async_trait::async_trait;
 
-use crate::aggregate::{EventOf, StateOf};
-use crate::command;
-use crate::{Aggregate, CommandHandler};
+use eventually_core::aggregate::{Aggregate, EventOf, StateOf};
+use eventually_core::command::{Handler as CommandHandler, Result as CommandResult};
 
 /// Extension trait for [`CommandHandler`] to support a versioned [`Aggregate`].
 ///
@@ -45,8 +44,8 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// #
 /// # use async_trait::async_trait;
 /// #
-/// # use eventually::{Aggregate, CommandHandler};
-/// # use eventually::command;
+/// # use eventually_core::aggregate::Aggregate;
+/// # use eventually_core::command;
 /// #
 /// # enum Event {}
 /// # enum Command {}
@@ -71,7 +70,7 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// # }
 /// #
 /// # #[async_trait]
-/// # impl CommandHandler for MyHandler {
+/// # impl command::Handler for MyHandler {
 /// #     type Command = Command;
 /// #     type Aggregate = Entity;
 /// #     type Error = Infallible;
@@ -83,7 +82,7 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// #     }
 /// # }
 /// #
-/// use eventually::versioned::CommandHandlerExt;
+/// use eventually_util::versioned::CommandHandlerExt;
 ///
 /// let handler = MyHandler::new().versioned();
 /// #
@@ -111,7 +110,7 @@ where
         &self,
         state: &StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
+    ) -> CommandResult<EventOf<Self::Aggregate>, Self::Error> {
         let version = state.version();
 
         self.0.handle(state, command).await.map(|events| {
@@ -131,7 +130,8 @@ where
 ///
 /// ```
 /// use std::convert::Infallible;
-/// use eventually::Aggregate;
+///
+/// use eventually_core::aggregate::Aggregate;
 ///
 /// enum Event {
 ///     SomeEvent
@@ -158,7 +158,7 @@ where
 ///     }
 /// }
 ///
-/// use eventually::versioned::{AsAggregate, Versioned};
+/// use eventually_util::versioned::{AsAggregate, Versioned};
 ///
 /// // Use by wrapping the original type in `AsAggregate::<T>`
 /// let result = AsAggregate::<Entity>::apply(

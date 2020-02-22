@@ -1,6 +1,6 @@
-use eventually::command::dispatcher::{Dispatcher, Error};
-use eventually::optional::CommandHandler;
-use eventually::versioned::{CommandHandlerExt, Versioned};
+use eventually_util::command::dispatcher::{Dispatcher, Error};
+use eventually_util::optional::CommandHandler;
+use eventually_util::versioned::{CommandHandlerExt, Versioned};
 
 use rand::prelude::Rng;
 

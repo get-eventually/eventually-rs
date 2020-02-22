@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 
-use crate::{aggregate, command};
+use eventually_core::{aggregate, command};
 
 /// _Command Handler_ trait referring to [`Aggregate`] with [`Option`] state,
 /// a.k.a. [`Aggregate`].
@@ -176,7 +176,7 @@ pub trait Aggregate {
 /// # Examples
 ///
 /// ```
-/// use eventually::optional::Aggregate as OptionalAggregate;
+/// use eventually_util::optional::Aggregate as OptionalAggregate;
 ///
 /// enum SomeEvent {
 ///     Happened
@@ -206,8 +206,8 @@ pub trait Aggregate {
 ///     }
 /// }
 ///
-/// use eventually::Aggregate;
-/// use eventually::optional::AsAggregate;
+/// use eventually_core::aggregate::Aggregate;
+/// use eventually_util::optional::AsAggregate;
 ///
 /// // To adapt SomeAggregate to `eventually::Aggregate`:
 /// let result = AsAggregate::<SomeAggregate>::apply(

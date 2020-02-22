@@ -13,10 +13,6 @@
 //!
 //! [`referential`]: referential/index.html
 
-pub mod referential;
-
-pub use referential::Aggregate as ReferentialAggregate;
-
 use async_trait::async_trait;
 
 use futures::{Stream, StreamExt};
@@ -38,6 +34,12 @@ pub type EventOf<A: Aggregate> = A::Event;
 /// [`Error`]: trait.Aggregate.html#associatedtype.Error
 /// [`Aggregate`]: trait.Aggregate.html
 pub type ErrorOf<A: Aggregate> = A::Error;
+
+pub trait Identifiable {
+    type Id: PartialEq;
+
+    fn aggregate_id(&self) -> &Self::Id;
+}
 
 /// An Aggregate is an entity which [`State`] is composed of one or more
 /// _value-objects_, _entities_ or nested _aggregates_.

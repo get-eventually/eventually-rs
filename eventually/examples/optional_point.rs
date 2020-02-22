@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use eventually::aggregate::{EventOf, ReferentialAggregate, StateOf};
 use eventually::command;
-use eventually::command::r#static::StaticHandler as StaticCommandHandler;
+use eventually::command::r#static::Handler as StaticCommandHandler;
 use eventually::optional::{Aggregate, AsAggregate};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -87,10 +87,9 @@ fn main() {}
 mod tests {
     use super::*;
 
-    use eventually::{
-        versioned::{AsAggregate as VersionedAggregate, Versioned},
-        Aggregate, AggregateExt, CommandHandler,
-    };
+    use eventually::command::Handler as CommandHandler;
+    use eventually::versioned::{AsAggregate as VersionedAggregate, Versioned};
+    use eventually::{Aggregate, AggregateExt};
 
     #[test]
     fn it_applies_an_event_correctly() {
