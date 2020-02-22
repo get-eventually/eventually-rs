@@ -12,7 +12,7 @@ use eventually_core::aggregate;
 /// # Examples
 ///
 /// ```
-/// use eventually::aggregate::referential::Aggregate;
+/// use eventually_util::aggregate::referential::Aggregate;
 ///
 /// struct MyState {
 ///     // Some fields
