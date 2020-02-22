@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use eventually::aggregate::{EventOf, ReferentialAggregate, StateOf};
 use eventually::command;
-use eventually::command::r#static::StaticHandler as StaticCommandHandler;
+use eventually::command::r#static::Handler as StaticCommandHandler;
 use eventually::optional::{Aggregate, AsAggregate};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
