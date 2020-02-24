@@ -51,8 +51,14 @@ is being adopted:
 
 Eventually is a workspace containing different sub-crates, as follows:
 
-* [`eventually`](eventually): contains foundation traits and types for domain modeling
+* [`eventually`](eventually): crate containing the public API -- users should
+only depend on this crate.
+
+* [`eventually-core`](eventually-core): contains foundation traits and types for domain modeling
 and event store.
+
+* [`eventually-util`](eventually-util): contains set of extensions built on top
+of the foundation traits contained in the core crate.
 
 * [`eventually-memory`](eventually-memory): contains an in-memory event store implementation.
 
