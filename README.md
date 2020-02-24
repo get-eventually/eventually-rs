@@ -13,6 +13,11 @@
         <img alt="GitHub Workflow Status"
         src="https://img.shields.io/github/workflow/status/ar3s3ru/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
+    <!-- Codecov -->
+    <a href="https://codecov.io/gh/ar3s3ru/eventually-rs">
+            <img alt="Codecov"
+            src="https://img.shields.io/codecov/c/github/ar3s3ru/eventually-rs?style=flat-square">
+    </a>
     <!-- Crates.io -->
     <a href="https://crates.io/crates/eventually">
         <img alt="Crates.io"
@@ -46,8 +51,14 @@ is being adopted:
 
 Eventually is a workspace containing different sub-crates, as follows:
 
-* [`eventually`](eventually): contains foundation traits and types for domain modeling
+* [`eventually`](eventually): crate containing the public API -- users should
+only depend on this crate.
+
+* [`eventually-core`](eventually-core): contains foundation traits and types for domain modeling
 and event store.
+
+* [`eventually-util`](eventually-util): contains set of extensions built on top
+of the foundation traits contained in the core crate.
 
 * [`eventually-memory`](eventually-memory): contains an in-memory event store implementation.
 
@@ -101,7 +112,7 @@ impl Aggregate for OrderAggregate {
                 })),
                 _ => Err(OrderError::NotYetCreated),
             },
-            
+
             Some(mut state) => match event {
                 Created { .. } => Err(OrderError::AlreadyCreated),
                 ItemAdded { item, quantity } => {
