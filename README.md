@@ -13,6 +13,11 @@
         <img alt="GitHub Workflow Status"
         src="https://img.shields.io/github/workflow/status/ar3s3ru/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
+    <!-- Codecov -->
+    <a href="https://codecov.io/gh/ar3s3ru/eventually-rs">
+            <img alt="Codecov"
+            src="https://img.shields.io/codecov/c/github/ar3s3ru/eventually-rs?style=flat-square">
+    </a>
     <!-- Crates.io -->
     <a href="https://crates.io/crates/eventually">
         <img alt="Crates.io"
@@ -101,7 +106,7 @@ impl Aggregate for OrderAggregate {
                 })),
                 _ => Err(OrderError::NotYetCreated),
             },
-            
+
             Some(mut state) => match event {
                 Created { .. } => Err(OrderError::AlreadyCreated),
                 ItemAdded { item, quantity } => {
