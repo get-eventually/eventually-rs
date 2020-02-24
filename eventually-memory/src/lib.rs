@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    convert::Infallible,
     hash::Hash,
     sync::{Arc, RwLock},
 };
@@ -19,6 +20,15 @@ where
     SourceId: Hash + Eq,
 {
     fn default() -> Self {
+        MemoryStore::new()
+    }
+}
+
+impl<SourceId, Event> MemoryStore<SourceId, Event>
+where
+    SourceId: Hash + Eq,
+{
+    pub fn new() -> Self {
         MemoryStore {
             store: Arc::new(RwLock::new(HashMap::new())),
         }
@@ -34,27 +44,19 @@ where
     type SourceId = SourceId;
     type Offset = usize;
     type Event = Event;
-    type Stream = BoxStream<'static, Result<Self::Event, std::convert::Infallible>>;
-    type Error = std::convert::Infallible;
+    type Error = Infallible;
 
-    fn stream(&self, source_id: Self::SourceId, from: Self::Offset) -> Self::Stream {
-        let store = self.store.read().unwrap();
-
-        store
+    fn stream(
+        &self,
+        source_id: Self::SourceId,
+        from: Self::Offset,
+    ) -> BoxStream<'_, Result<Self::Event, Infallible>> {
+        self.store
+            .read()
+            .unwrap()
             .get(&source_id)
             .cloned()
-            .map(move |events| {
-                iter(
-                    events
-                        .into_iter()
-                        .enumerate()
-                        .filter_map(
-                            move |(idx, event)| if idx >= from { Some(event) } else { None },
-                        ),
-                )
-                .map(Result::Ok)
-                .boxed()
-            })
+            .map(move |events| events_stream_from_offset(from, events))
             .unwrap_or_else(|| empty().boxed())
     }
 
@@ -63,9 +65,9 @@ where
         source_id: Self::SourceId,
         events: Vec<Self::Event>,
     ) -> Result<(), Self::Error> {
-        let mut store = self.store.write().unwrap();
-
-        store
+        self.store
+            .write()
+            .unwrap()
             .entry(source_id)
             .and_modify(|vec| {
                 vec.extend(events.clone());
@@ -74,6 +76,26 @@ where
 
         Ok(())
     }
+}
+
+fn events_stream_from_offset<Event>(
+    from: usize,
+    events: Vec<Event>,
+) -> BoxStream<'static, Result<Event, Infallible>>
+where
+    Event: Send + 'static,
+{
+    iter(events.into_iter().enumerate().filter_map(
+        move |(idx, event)| {
+            if idx >= from {
+                Some(event)
+            } else {
+                None
+            }
+        },
+    ))
+    .map(Result::Ok)
+    .boxed()
 }
 
 #[cfg(test)]

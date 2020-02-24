@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::{error::Error as StdError, future::Future};
 
-use futures::stream::{StreamExt, TryStream, TryStreamExt};
+use futures::stream::{StreamExt, TryStreamExt};
 
 use eventually_core::store::Store as EventStore;
 use eventually_core::{aggregate, aggregate::AggregateExt};
@@ -66,9 +66,7 @@ where
     Store: EventStore + Send,
     <Store as EventStore>::SourceId: Clone + Eq + Send,
     <Store as EventStore>::Offset: Default + Send,
-    <Store as EventStore>::Stream: TryStream + Send,
     <Store as EventStore>::Error: StdError + Send + 'static,
-    <<Store as EventStore>::Stream as TryStream>::Error: Debug,
     command::AggregateOf<Handler>: AggregateExt<Event = <Store as EventStore>::Event> + Send,
     command::CommandOf<Handler>: Identifiable<SourceId = <Store as EventStore>::SourceId> + Send,
     aggregate::EventOf<command::AggregateOf<Handler>>: Clone + Send,
