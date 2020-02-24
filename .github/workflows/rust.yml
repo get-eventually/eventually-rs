@@ -81,3 +81,12 @@ jobs:
           with:
             token: ${{ secrets.GITHUB_TOKEN }}
             args: --all-features
+
+  benchmarks:
+    name: Run criterion.rs benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jasonwilliams/criterion-compare-action@move_to_actions
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
