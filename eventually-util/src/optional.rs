@@ -117,13 +117,13 @@ where
 ///
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`State`]: trait.Aggregate.html#associatedType.State
-pub type StateOf<A: Aggregate> = A::State;
+pub type StateOf<A> = <A as Aggregate>::State;
 
 /// Extract the [`Event`] from an [`Aggregate`].
 ///
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`Event`]: trait.Aggregate.html#associatedType.Event
-pub type EventOf<A: Aggregate> = A::Event;
+pub type EventOf<A> = <A as Aggregate>::Event;
 
 /// Variation of [`aggregate::Aggregate`] trait, useful when
 /// the Aggregate [`State`] is expressed as an [`Option`].
