@@ -21,19 +21,19 @@ use futures::{Stream, StreamExt};
 ///
 /// [`State`]: trait.Aggregate.html#associatedtype.State
 /// [`Aggregate`]: trait.Aggregate.html
-pub type StateOf<A: Aggregate> = A::State;
+pub type StateOf<A> = <A as Aggregate>::State;
 
 /// Alias for the [`Event`] type of an [`Aggregate`].
 ///
 /// [`Event`]: trait.Aggregate.html#associatedtype.Event
 /// [`Aggregate`]: trait.Aggregate.html
-pub type EventOf<A: Aggregate> = A::Event;
+pub type EventOf<A> = <A as Aggregate>::Event;
 
 /// Alias for the [`Error`] type of an [`Aggregate`].
 ///
 /// [`Error`]: trait.Aggregate.html#associatedtype.Error
 /// [`Aggregate`]: trait.Aggregate.html
-pub type ErrorOf<A: Aggregate> = A::Error;
+pub type ErrorOf<A> = <A as Aggregate>::Error;
 
 pub trait Identifiable {
     type Id: PartialEq;

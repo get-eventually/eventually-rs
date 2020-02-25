@@ -7,7 +7,7 @@ use eventually_core::store::Store as EventStore;
 use eventually_core::{aggregate, aggregate::AggregateExt};
 use eventually_core::{command, command::Handler as CommandHandler};
 
-pub type SourceIdOf<I: Identifiable> = I::SourceId;
+pub type SourceIdOf<T> = <T as Identifiable>::SourceId;
 
 pub trait Identifiable {
     type SourceId: Eq;
