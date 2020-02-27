@@ -8,7 +8,7 @@ use rand::prelude::*;
 
 use eventually::command::Dispatcher;
 use eventually::optional::{AsAggregate, AsHandler, CommandHandler};
-use eventually_memory::MemoryStore;
+use eventually_memory::Store as MemoryStore;
 
 type DispatcherType =
     Dispatcher<MemoryStore<std::string::String, point::Event>, AsHandler<point::Handler>>;
@@ -40,7 +40,7 @@ fn dispatch(dispatcher: &mut DispatcherType, id: &'static str) {
 }
 
 fn benchmark(c: &mut Criterion) {
-    let store = eventually_memory::MemoryStore::<String, point::Event>::default();
+    let store = MemoryStore::<String, point::Event>::default();
     let handler = point::Handler.as_handler();
 
     let mut dispatcher = Dispatcher::new(store, handler);

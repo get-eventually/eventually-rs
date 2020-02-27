@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn dispatcher_returns_a_command_failed_error_when_handler_fails() {
-        let store = eventually_memory::MemoryStore::<String, Event>::default();
+        let store = eventually_memory::Store::<String, Event>::default();
         let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn dispatcher_returns_latest_state_if_no_error_has_happened() {
-        let store = eventually_memory::MemoryStore::<String, Event>::default();
+        let store = eventually_memory::Store::<String, Event>::default();
         let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);

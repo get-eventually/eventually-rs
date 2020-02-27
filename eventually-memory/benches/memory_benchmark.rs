@@ -3,7 +3,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use futures::stream::StreamExt;
 
 use eventually_core::store::Store;
-use eventually_memory::MemoryStore;
+use eventually_memory::Store as MemoryStore;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 enum Event {
