@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 
-use eventually_core::command;
-use eventually_util::aggregate::referential::Aggregate as ReferentialAggregate;
-use eventually_util::command::dispatcher::Identifiable;
-use eventually_util::optional::{Aggregate, CommandHandler, EventOf, StateOf};
+use eventually::aggregate::referential::Aggregate as ReferentialAggregate;
+use eventually::command;
+use eventually::command::dispatcher::Identifiable;
+use eventually::optional::{Aggregate, CommandHandler, EventOf, StateOf};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -159,11 +159,11 @@ impl CommandHandler for Handler {
 mod tests {
     use super::*;
 
-    use eventually_util::command::dispatcher::{Dispatcher, Error};
+    use eventually::command::{dispatcher::Error, Dispatcher};
 
     #[test]
     fn dispatcher_returns_a_command_failed_error_when_handler_fails() {
-        let store = eventually_memory::MemoryStore::<String, Event>::default();
+        let store = eventually_memory::Store::<String, Event>::default();
         let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn dispatcher_returns_latest_state_if_no_error_has_happened() {
-        let store = eventually_memory::MemoryStore::<String, Event>::default();
+        let store = eventually_memory::Store::<String, Event>::default();
         let handler = Handler.as_handler();
 
         let mut dispatcher = Dispatcher::new(store, handler);

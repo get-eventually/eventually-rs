@@ -15,5 +15,5 @@ tokio-test = "0.2"
 criterion = "0.3"
 
 [[bench]]
-name = "bench"
+name = "memory_benchmark"
 harness = false

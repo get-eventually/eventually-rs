@@ -1,13 +1,13 @@
-use eventually_util::command::dispatcher::{Dispatcher, Error};
-use eventually_util::optional::CommandHandler;
-use eventually_util::versioned::{CommandHandlerExt, Versioned};
+use eventually::command::{dispatcher::Error, Dispatcher};
+use eventually::optional::CommandHandler;
+use eventually::versioned::{CommandHandlerExt, Versioned};
 
 use rand::prelude::Rng;
 
 type DispatchError = Error<point::EventError, point::CommandError, std::convert::Infallible>;
 
 fn main() {
-    let store = eventually_memory::MemoryStore::<String, Versioned<point::Event>>::default();
+    let store = eventually_memory::Store::<String, Versioned<point::Event>>::default();
     let handler = point::Handler.as_handler().versioned();
 
     let mut dispatcher = Dispatcher::new(store, handler);

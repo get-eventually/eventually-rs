@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 
-use futures::TryStream;
+use futures::stream::BoxStream;
 
 /// Represents an Event Store, an append-only, ordered list of [`Events`]
 /// for a certain "source" (i.e. [`Aggregate`]).
@@ -32,16 +32,10 @@ pub trait Store {
     /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedType.Event
     type Event;
 
-    /// Type of the [`Stream`] returned by the [`stream`] method.
-    ///
-    /// [`Stream`]: https://docs.rs/futures/stream/trait.Stream.html
-    /// [`stream`]: trait.Store.html#method.stream
-    type Stream: TryStream<Ok = Self::Event>;
-
-    /// Possible errors returned by the [`append`] method.
+    /// Possible errors returned by the `Store`.
     ///
     /// Usually, this should be an `enum` containing all the possible reasons
-    /// why the `Store` could fail.
+    /// why the `Store` could fail due to external failures.
     ///
     /// [`append`]: trait.Store.html#method.append
     type Error;
@@ -66,7 +60,11 @@ pub trait Store {
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedType.State
     /// [`Aggregate::async_fold`]: ../aggregate/trait.AggregateExt.html#method.async_fold
-    fn stream(&self, source_id: Self::SourceId, from: Self::Offset) -> Self::Stream;
+    fn stream<'store>(
+        &'store self,
+        source_id: Self::SourceId,
+        from: Self::Offset,
+    ) -> BoxStream<'store, Result<Self::Event, Self::Error>>;
 
     /// Appends a list of new events to the `Store`.
     ///
