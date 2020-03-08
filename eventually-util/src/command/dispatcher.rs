@@ -1,11 +1,15 @@
+use std::error::Error as StdError;
 use std::fmt::Debug;
-use std::{error::Error as StdError, future::Future};
+
+use async_trait::async_trait;
 
 use futures::stream::{StreamExt, TryStreamExt};
 
 use eventually_core::store::Store as EventStore;
 use eventually_core::{aggregate, aggregate::AggregateExt};
 use eventually_core::{command, command::Handler as CommandHandler};
+
+use crate::command::Dispatcher;
 
 pub type SourceIdOf<T> = <T as Identifiable>::SourceId;
 
@@ -56,14 +60,33 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct Dispatcher<Store, Handler> {
+pub struct DirectDispatcher<Store, Handler> {
     store: Store,
     handler: Handler,
 }
 
-impl<Store, Handler> Dispatcher<Store, Handler>
+impl<Store, Handler> DirectDispatcher<Store, Handler> {
+    #[inline]
+    pub fn new(store: Store, handler: Handler) -> Self {
+        DirectDispatcher { store, handler }
+    }
+}
+
+// impl<Store, Handler> Default for DirectDispatcher<Store, Handler>
+// where
+//     Store: Default,
+//     Handler: Default,
+// {
+//     #[inline]
+//     fn default() -> Self {
+//         DirectDispatcher::new(Store::default(), Handler::default())
+//     }
+// }
+
+#[async_trait]
+impl<Store, Handler> Dispatcher for DirectDispatcher<Store, Handler>
 where
-    Handler: CommandHandler + Send,
+    Handler: CommandHandler + Send + Sync,
     Store: EventStore + Send,
     <Store as EventStore>::SourceId: Clone + Eq + Send,
     <Store as EventStore>::Offset: Default + Send,
@@ -71,55 +94,47 @@ where
     command::AggregateOf<Handler>: AggregateExt<Event = <Store as EventStore>::Event> + Send,
     command::CommandOf<Handler>: Identifiable<SourceId = <Store as EventStore>::SourceId> + Send,
     aggregate::EventOf<command::AggregateOf<Handler>>: Clone + Send,
-    aggregate::StateOf<command::AggregateOf<Handler>>: Default + Send,
+    aggregate::StateOf<command::AggregateOf<Handler>>: Default + Send + Sync,
     aggregate::ErrorOf<command::AggregateOf<Handler>>: StdError + Send + 'static,
     command::ErrorOf<Handler>: StdError + Send + 'static,
 {
-    #[inline]
-    pub fn new(store: Store, handler: Handler) -> Self {
-        Dispatcher { store, handler }
-    }
+    type CommandHandler = Handler;
+    type Error =
+        Error<aggregate::ErrorOf<command::AggregateOf<Handler>>, Handler::Error, Store::Error>;
 
-    pub fn dispatch(
+    async fn dispatch(
         &mut self,
-        c: command::CommandOf<Handler>,
-    ) -> impl Future<
-        Output = Result<
-            aggregate::StateOf<command::AggregateOf<Handler>>,
-            Error<aggregate::ErrorOf<command::AggregateOf<Handler>>, Handler::Error, Store::Error>,
-        >,
-    > + '_ {
-        async move {
-            let id = c.source_id();
+        c: command::CommandOf<Self::CommandHandler>,
+    ) -> Result<aggregate::StateOf<command::AggregateOf<Self::CommandHandler>>, Self::Error> {
+        let id = c.source_id();
 
-            let events = self
-                .store
-                .stream(id.clone(), <Store as EventStore>::Offset::default());
+        let events = self
+            .store
+            .stream(id.clone(), <<Store as EventStore>::Offset>::default());
 
-            let state = command::AggregateOf::<Handler>::async_fold(
-                aggregate::StateOf::<command::AggregateOf<Handler>>::default(),
-                // TODO: remove this unwrap and do some proper error handling
-                events.into_stream().map(|result| result.unwrap()),
-            )
+        let state = command::AggregateOf::<Handler>::async_fold(
+            aggregate::StateOf::<command::AggregateOf<Handler>>::default(),
+            // TODO: remove this unwrap and do some proper error handling
+            events.into_stream().map(|result| result.unwrap()),
+        )
+        .await
+        .map_err(Error::RecreateStateFailed)?;
+
+        let new_events = self
+            .handler
+            .handle(&state, c)
             .await
-            .map_err(Error::RecreateStateFailed)?;
+            .map_err(Error::CommandFailed)?;
 
-            let new_events = self
-                .handler
-                .handle(&state, c)
-                .await
-                .map_err(Error::CommandFailed)?;
+        let new_state =
+            command::AggregateOf::<Handler>::fold(state, new_events.clone().into_iter())
+                .map_err(Error::ApplyStateFailed)?;
 
-            let new_state =
-                command::AggregateOf::<Handler>::fold(state, new_events.clone().into_iter())
-                    .map_err(Error::ApplyStateFailed)?;
+        self.store
+            .append(id, new_events)
+            .await
+            .map_err(Error::AppendEventsFailed)?;
 
-            self.store
-                .append(id, new_events)
-                .await
-                .map_err(Error::AppendEventsFailed)?;
-
-            Ok(new_state)
-        }
+        Ok(new_state)
     }
 }

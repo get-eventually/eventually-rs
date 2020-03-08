@@ -1,4 +1,5 @@
-use eventually::command::{dispatcher::Error, Dispatcher};
+use eventually::command::dispatcher::{DirectDispatcher, Error};
+use eventually::command::Dispatcher;
 use eventually::optional::CommandHandler;
 use eventually::versioned::{CommandHandlerExt, Versioned};
 
@@ -10,7 +11,7 @@ fn main() {
     let store = eventually_memory::Store::<String, Versioned<point::Event>>::default();
     let handler = point::Handler.as_handler().versioned();
 
-    let mut dispatcher = Dispatcher::new(store, handler);
+    let mut dispatcher = DirectDispatcher::new(store, handler);
 
     let result: Result<(), DispatchError> = tokio_test::block_on(async {
         println!(

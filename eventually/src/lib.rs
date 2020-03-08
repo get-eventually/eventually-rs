@@ -10,7 +10,8 @@ pub mod aggregate {
 
 pub mod command {
     pub use eventually_core::command::*;
-    pub use eventually_util::command::dispatcher::Dispatcher;
+    pub use eventually_util::command::dispatcher::DirectDispatcher;
+    pub use eventually_util::command::Dispatcher;
 
     pub use eventually_util::command::dispatcher;
     pub use eventually_util::command::r#static;

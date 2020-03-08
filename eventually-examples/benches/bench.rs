@@ -6,14 +6,15 @@ use futures::stream::StreamExt;
 
 use rand::prelude::*;
 
+use eventually::command::dispatcher::{DirectDispatcher, Error};
 use eventually::command::Dispatcher;
 use eventually::optional::{AsAggregate, AsHandler, CommandHandler};
 use eventually_memory::Store as MemoryStore;
 
-type DispatcherType =
-    Dispatcher<MemoryStore<std::string::String, point::Event>, AsHandler<point::Handler>>;
-
-fn dispatch(dispatcher: &mut DispatcherType, id: &'static str) {
+fn dispatch(
+    dispatcher: &mut impl Dispatcher<CommandHandler = AsHandler<point::Handler>>,
+    id: &'static str,
+) {
     let mut rng = rand::thread_rng();
     let random: i32 = rng.gen::<i32>() % 100;
     let choice: u8 = rng.gen::<u8>() % 4;
@@ -43,7 +44,7 @@ fn benchmark(c: &mut Criterion) {
     let store = MemoryStore::<String, point::Event>::default();
     let handler = point::Handler.as_handler();
 
-    let mut dispatcher = Dispatcher::new(store, handler);
+    let mut dispatcher = DirectDispatcher::new(store, handler);
 
     tokio_test::block_on(dispatcher.dispatch(point::Command::Register {
         id: "benchmark".to_string(),
