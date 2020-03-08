@@ -22,6 +22,7 @@ pub trait Handler {
     ) -> Result<EventOf<Self::Aggregate>, Self::Error>;
 }
 
+#[derive(Debug, Clone)]
 pub struct AsHandler<T>(std::marker::PhantomData<T>);
 
 #[async_trait]

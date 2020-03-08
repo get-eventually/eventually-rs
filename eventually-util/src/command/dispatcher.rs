@@ -55,6 +55,7 @@ where
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Dispatcher<Store, Handler> {
     store: Store,
     handler: Handler,
