@@ -159,14 +159,15 @@ impl CommandHandler for Handler {
 mod tests {
     use super::*;
 
-    use eventually::command::{dispatcher::Error, Dispatcher};
+    use eventually::command::dispatcher::{DirectDispatcher, Error};
+    use eventually::command::Dispatcher;
 
     #[test]
     fn dispatcher_returns_a_command_failed_error_when_handler_fails() {
         let store = eventually_memory::Store::<String, Event>::default();
         let handler = Handler.as_handler();
 
-        let mut dispatcher = Dispatcher::new(store, handler);
+        let mut dispatcher = DirectDispatcher::new(store, handler);
 
         let result = tokio_test::block_on(dispatcher.dispatch(Command::GoUp {
             id: "test".to_string(),
@@ -186,7 +187,7 @@ mod tests {
         let store = eventually_memory::Store::<String, Event>::default();
         let handler = Handler.as_handler();
 
-        let mut dispatcher = Dispatcher::new(store, handler);
+        let mut dispatcher = DirectDispatcher::new(store, handler);
 
         let result = tokio_test::block_on(dispatcher.dispatch(Command::Register {
             id: "test".to_string(),
