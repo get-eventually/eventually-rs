@@ -87,6 +87,7 @@ pub trait CommandHandler {
 /// [`CommandHandler`]: trait.CommandHandler.html
 /// [`command::Handler`]: ../command/trait.Handler.html
 /// [`CommandHandler.as_handler`]: trait.CommandHandler.html#method.as_handler
+#[derive(Debug, Clone)]
 pub struct AsHandler<H>(H);
 
 #[async_trait]
@@ -221,6 +222,7 @@ pub trait Aggregate {
 ///
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`eventually::Aggregate`]: ../aggregate/trait.Aggregate.html
+#[derive(Debug, Clone)]
 pub struct AsAggregate<T>(std::marker::PhantomData<T>);
 
 impl<A> aggregate::Aggregate for AsAggregate<A>

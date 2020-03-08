@@ -64,6 +64,7 @@ pub trait Aggregate: Sized {
 ///
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`eventually::Aggregate`]: ../trait.Aggregate.html
+#[derive(Debug, Clone)]
 pub struct AsAggregate<T>(std::marker::PhantomData<T>);
 
 impl<T> aggregate::Aggregate for AsAggregate<T>

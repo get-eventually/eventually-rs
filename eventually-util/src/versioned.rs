@@ -92,6 +92,7 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
 /// [`Versioned`]: struct.Versioned.html
 /// [`AsAggregate`]: struct.AsAggregate.html
+#[derive(Debug, Clone)]
 pub struct AsHandler<H>(H);
 
 #[async_trait]
@@ -183,6 +184,7 @@ where
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
 /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
 /// [`Versioned`]: struct.Versioned.html
+#[derive(Debug, Clone)]
 pub struct AsAggregate<A>(std::marker::PhantomData<A>);
 
 impl<A> Aggregate for AsAggregate<A>
