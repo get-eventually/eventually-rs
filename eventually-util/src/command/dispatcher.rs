@@ -72,16 +72,16 @@ impl<Store, Handler> DirectDispatcher<Store, Handler> {
     }
 }
 
-// impl<Store, Handler> Default for DirectDispatcher<Store, Handler>
-// where
-//     Store: Default,
-//     Handler: Default,
-// {
-//     #[inline]
-//     fn default() -> Self {
-//         DirectDispatcher::new(Store::default(), Handler::default())
-//     }
-// }
+impl<Store, Handler> Default for DirectDispatcher<Store, Handler>
+where
+    Store: Default,
+    Handler: Default,
+{
+    #[inline]
+    fn default() -> Self {
+        DirectDispatcher::new(Store::default(), Handler::default())
+    }
+}
 
 #[async_trait]
 impl<Store, Handler> Dispatcher for DirectDispatcher<Store, Handler>
