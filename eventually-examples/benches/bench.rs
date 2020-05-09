@@ -11,10 +11,10 @@ use eventually::command::Dispatcher;
 use eventually::optional::{AsAggregate, AsHandler, CommandHandler};
 use eventually_memory::Store as MemoryStore;
 
-fn dispatch(
-    dispatcher: &mut impl Dispatcher<CommandHandler = AsHandler<point::Handler>>,
-    id: &'static str,
-) {
+fn dispatch<D>(dispatcher: &mut D, id: &'static str)
+where
+    D: Dispatcher<CommandHandler = AsHandler<point::Handler>>,
+{
     let mut rng = rand::thread_rng();
     let random: i32 = rng.gen::<i32>() % 100;
     let choice: u8 = rng.gen::<u8>() % 4;
