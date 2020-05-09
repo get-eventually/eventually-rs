@@ -23,10 +23,15 @@
         <img alt="Crates.io"
         src="https://img.shields.io/crates/v/eventually?style=flat-square">
     </a>
+    <!-- Github pages docs -->
+    <a href="https://ar3s3ru.github.io/eventually-rs/eventually/">
+        <img alt="latest master docs"
+        src="https://img.shields.io/badge/docs-master-important?style=flat-square" />
+    </a>
     <!-- Docs.rs -->
     <a href="https://docs.rs/eventually">
         <img alt="docs.rs docs"
-        src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" />
+        src="https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=docs.rs&query=%24.crate.newest_version&url=https%3A%2F%2Fcrates.io%2Fapi%2Fv1%2Fcrates%2Feventually" />
     </a>
     <!-- License -->
     <a href="https://github.com/ar3s3ru/eventually-rs/blob/master/LICENSE">
@@ -36,6 +41,7 @@
 </div>
 
 <br />
+
 
 Collection of traits and other utilities to help you build your Event-sourced applications in Rust.
 
