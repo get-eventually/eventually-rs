@@ -1,9 +1,8 @@
-use async_trait::async_trait;
+use futures::future::BoxFuture;
 
 use eventually_core::aggregate::{Aggregate, EventOf, StateOf};
 use eventually_core::command::{Handler as CommandHandler, Result};
 
-#[async_trait]
 pub trait Handler {
     type Command;
     type Aggregate: Aggregate;
@@ -16,16 +15,15 @@ pub trait Handler {
         AsHandler(std::marker::PhantomData)
     }
 
-    async fn handle(
+    fn handle(
         state: &StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> Result<EventOf<Self::Aggregate>, Self::Error>;
+    ) -> BoxFuture<Result<EventOf<Self::Aggregate>, Self::Error>>;
 }
 
 #[derive(Debug, Clone)]
 pub struct AsHandler<T>(std::marker::PhantomData<T>);
 
-#[async_trait]
 impl<T: Handler> CommandHandler for AsHandler<T>
 where
     T: Send + Sync,
@@ -36,11 +34,11 @@ where
     type Aggregate = T::Aggregate;
     type Error = T::Error;
 
-    async fn handle(
-        &self,
-        state: &StateOf<Self::Aggregate>,
+    fn handle<'a, 'b: 'a>(
+        &'a self,
+        state: &'b StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> Result<EventOf<Self::Aggregate>, Self::Error> {
-        T::handle(state, command).await
+    ) -> BoxFuture<'a, Result<EventOf<Self::Aggregate>, Self::Error>> {
+        Box::pin(T::handle(state, command))
     }
 }

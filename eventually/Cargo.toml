@@ -15,11 +15,9 @@ categories = ["ddd", "event-sourcing", "cqrs", "aggregate"]
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
 
 [dependencies]
-async-trait = "0.1"
-futures = "0.3"
-
 eventually-core = { path = "../eventually-core" }
 eventually-util = { path = "../eventually-util" }
 
 [dev-dependencies]
+futures = { version = "0.3", features = ["async-await"] }
 tokio-test = "0.2"

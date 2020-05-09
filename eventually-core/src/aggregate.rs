@@ -13,8 +13,7 @@
 //!
 //! [`referential`]: referential/index.html
 
-use async_trait::async_trait;
-
+use futures::{future, future::BoxFuture};
 use futures::{Stream, StreamExt};
 
 /// Alias for the [`State`] type of an [`Aggregate`].
@@ -95,7 +94,6 @@ pub trait Aggregate {
 /// Extension trait for [`Aggregate`] containing combinator functions.
 ///
 /// [`Aggregate`]: trait.Aggregate.html
-#[async_trait]
 pub trait AggregateExt: Aggregate {
     /// Applies a _synchronous_ stream of [`Event`]s to the current [`State`],
     /// returning the updated state or an error, if any such happened.
@@ -119,18 +117,19 @@ pub trait AggregateExt: Aggregate {
     /// [`Event`]: trait.Aggregate.html#associatedtype.Event
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     #[inline]
-    async fn async_fold<S>(state: Self::State, events: S) -> Result<Self::State, Self::Error>
+    fn async_fold<'a, S>(
+        state: Self::State,
+        events: S,
+    ) -> BoxFuture<'a, Result<Self::State, Self::Error>>
     where
-        S: Stream<Item = Self::Event> + Send,
-        Self::State: Send,
-        Self::Event: Send,
-        Self::Error: Send,
+        S: Stream<Item = Self::Event> + Send + 'a,
+        Self::State: Send + 'a,
+        Self::Event: Send + 'a,
+        Self::Error: Send + 'a,
     {
-        events
-            .fold(Ok(state), |previous, event| async move {
-                previous.and_then(|state| Self::apply(state, event))
-            })
-            .await
+        Box::pin(events.fold(Ok(state), |previous, event| {
+            future::ready(previous.and_then(|state| Self::apply(state, event)))
+        }))
     }
 }
 

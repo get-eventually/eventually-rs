@@ -4,7 +4,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use async_trait::async_trait;
+use futures::future::BoxFuture;
 
 use eventually_core::aggregate::{Aggregate, EventOf, StateOf};
 use eventually_core::command::{Handler as CommandHandler, Result as CommandResult};
@@ -42,7 +42,7 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// ```
 /// # use std::convert::Infallible;
 /// #
-/// # use async_trait::async_trait;
+/// # use futures::future::BoxFuture;
 /// #
 /// # use eventually_core::aggregate::Aggregate;
 /// # use eventually_core::command;
@@ -69,14 +69,13 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 /// #     }
 /// # }
 /// #
-/// # #[async_trait]
 /// # impl command::Handler for MyHandler {
 /// #     type Command = Command;
 /// #     type Aggregate = Entity;
 /// #     type Error = Infallible;
 /// #
-/// #     async fn handle(&self, state: &Entity, command: Self::Command) ->
-/// #         command::Result<Event, Self::Error>
+/// #     fn handle<'a, 'b: 'a>(&'a self, state: &'b Entity, command: Self::Command) ->
+/// #         BoxFuture<'a, command::Result<Event, Self::Error>>
 /// #     {
 /// #         unimplemented!()
 /// #     }
@@ -95,7 +94,6 @@ impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
 #[derive(Debug, Clone)]
 pub struct AsHandler<H>(H);
 
-#[async_trait]
 impl<H> CommandHandler for AsHandler<H>
 where
     H: CommandHandler + Send + Sync,
@@ -107,18 +105,20 @@ where
     type Aggregate = AsAggregate<H::Aggregate>;
     type Error = H::Error;
 
-    async fn handle(
-        &self,
-        state: &StateOf<Self::Aggregate>,
+    fn handle<'a, 'b: 'a>(
+        &'a self,
+        state: &'b StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> CommandResult<EventOf<Self::Aggregate>, Self::Error> {
+    ) -> BoxFuture<'a, CommandResult<EventOf<Self::Aggregate>, Self::Error>> {
         let version = state.version();
 
-        self.0.handle(state, command).await.map(|events| {
-            events
-                .into_iter()
-                .map(|event| Versioned::with_version(event, version + 1))
-                .collect()
+        Box::pin(async move {
+            self.0.handle(state, command).await.map(|events| {
+                events
+                    .into_iter()
+                    .map(|event| Versioned::with_version(event, version + 1))
+                    .collect()
+            })
         })
     }
 }

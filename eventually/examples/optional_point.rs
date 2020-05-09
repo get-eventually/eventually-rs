@@ -1,4 +1,5 @@
-use async_trait::async_trait;
+use futures::future;
+use futures::future::BoxFuture;
 
 use eventually::aggregate::{EventOf, ReferentialAggregate, StateOf};
 use eventually::command;
@@ -62,22 +63,21 @@ pub enum PointCommand {
     GoRight(i32),
 }
 
-#[async_trait]
 impl StaticCommandHandler for Point {
     type Command = PointCommand;
     type Aggregate = AsAggregate<Self>;
     type Error = std::convert::Infallible;
 
-    async fn handle(
+    fn handle(
         _state: &StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
-        Ok(vec![match command {
+    ) -> BoxFuture<command::Result<EventOf<Self::Aggregate>, Self::Error>> {
+        Box::pin(future::ok(vec![match command {
             PointCommand::GoUp(y) => PointEvent::WentUp(y),
             PointCommand::GoDown(y) => PointEvent::WentDown(y),
             PointCommand::GoLeft(x) => PointEvent::WentLeft(x),
             PointCommand::GoRight(x) => PointEvent::WentRight(x),
-        }])
+        }]))
     }
 }
 

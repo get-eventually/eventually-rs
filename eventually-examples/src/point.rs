@@ -1,4 +1,5 @@
-use async_trait::async_trait;
+use futures::future;
+use futures::future::BoxFuture;
 
 use eventually::aggregate::referential::Aggregate as ReferentialAggregate;
 use eventually::command;
@@ -121,37 +122,36 @@ impl Aggregate for Root {
 
 pub struct Handler;
 
-#[async_trait]
 impl CommandHandler for Handler {
     type Command = Command;
     type Aggregate = Root;
     type Error = CommandError;
 
-    async fn handle_first(
+    fn handle_first(
         &self,
         command: Self::Command,
-    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
-        match command {
-            Command::Register { id } => Ok(vec![Event::Registered { id }]),
-            Command::GoUp { id, .. } => Err(CommandError::Unregistered(id)),
-            Command::GoDown { id, .. } => Err(CommandError::Unregistered(id)),
-            Command::GoLeft { id, .. } => Err(CommandError::Unregistered(id)),
-            Command::GoRight { id, .. } => Err(CommandError::Unregistered(id)),
-        }
+    ) -> BoxFuture<command::Result<EventOf<Self::Aggregate>, Self::Error>> {
+        Box::pin(match command {
+            Command::Register { id } => future::ok(vec![Event::Registered { id }]),
+            Command::GoUp { id, .. } => future::err(CommandError::Unregistered(id)),
+            Command::GoDown { id, .. } => future::err(CommandError::Unregistered(id)),
+            Command::GoLeft { id, .. } => future::err(CommandError::Unregistered(id)),
+            Command::GoRight { id, .. } => future::err(CommandError::Unregistered(id)),
+        })
     }
 
-    async fn handle_next(
-        &self,
-        _state: &StateOf<Self::Aggregate>,
+    fn handle_next<'a, 'b: 'a>(
+        &'a self,
+        _state: &'b StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error> {
-        match command {
-            Command::Register { id } => Err(CommandError::AlreadyRegistered(id)),
-            Command::GoUp { v, .. } => Ok(vec![Event::WentUp { v }]),
-            Command::GoDown { v, .. } => Ok(vec![Event::WentDown { v }]),
-            Command::GoLeft { v, .. } => Ok(vec![Event::WentLeft { v }]),
-            Command::GoRight { v, .. } => Ok(vec![Event::WentRight { v }]),
-        }
+    ) -> BoxFuture<'a, command::Result<EventOf<Self::Aggregate>, Self::Error>> {
+        Box::pin(match command {
+            Command::Register { id } => future::err(CommandError::AlreadyRegistered(id)),
+            Command::GoUp { v, .. } => future::ok(vec![Event::WentUp { v }]),
+            Command::GoDown { v, .. } => future::ok(vec![Event::WentDown { v }]),
+            Command::GoLeft { v, .. } => future::ok(vec![Event::WentLeft { v }]),
+            Command::GoRight { v, .. } => future::ok(vec![Event::WentRight { v }]),
+        })
     }
 }
 
