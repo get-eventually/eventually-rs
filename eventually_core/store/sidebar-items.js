@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Store","Represents an Event Store, an append-only, ordered list of [`Events`] for a certain \"source\" (i.e. [`Aggregate`])."]]});

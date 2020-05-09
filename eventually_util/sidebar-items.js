@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["aggregate",""],["command",""],["optional","Support for [`Aggregate`] with [`Option`] state."],["versioned","Versioning for [Optimistic Concurrency Control] support."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AsAggregate","An [`Aggregate`] decorator that supports versioning."],["AsHandler","A [`CommandHandler`] decorator to support versioned [`Aggregate`]."],["Versioned","Wrapper to embed version information for un-versioned data types."]],"trait":[["CommandHandlerExt","Extension trait for [`CommandHandler`] to support a versioned [`Aggregate`]."]]});
