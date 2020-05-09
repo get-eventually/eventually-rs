@@ -3,7 +3,7 @@
 //! [`Aggregate`]: ../aggregate/trait.Aggregate.html
 //! [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
 
-use async_trait::async_trait;
+use futures::future::BoxFuture;
 
 use eventually_core::{aggregate, command};
 
@@ -19,7 +19,6 @@ use eventually_core::{aggregate, command};
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`command::Handler`]: ../command/trait.Handler.html
 /// [`as_handler`]: trait.CommandHandler.html#method.as_handler
-#[async_trait]
 pub trait CommandHandler {
     /// Commands to trigger a specific use-case on the context of an [`Aggregate`].
     ///
@@ -46,21 +45,21 @@ pub trait CommandHandler {
     ///
     /// [`Command`]: trait.CommandHandler.html#associatedType.Command
     /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
-    async fn handle_first(
+    fn handle_first(
         &self,
         command: Self::Command,
-    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error>;
+    ) -> BoxFuture<command::Result<EventOf<Self::Aggregate>, Self::Error>>;
 
     /// Handles a [`Command`] when the previous [`Aggregate`] state
     /// is already **present** and **available** to the command handler.
     ///
     /// [`Command`]: trait.CommandHandler.html#associatedType.Command
     /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
-    async fn handle_next(
-        &self,
-        state: &StateOf<Self::Aggregate>,
+    fn handle_next<'a, 's: 'a>(
+        &'a self,
+        state: &'s StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> command::Result<EventOf<Self::Aggregate>, Self::Error>;
+    ) -> BoxFuture<'a, command::Result<EventOf<Self::Aggregate>, Self::Error>>;
 
     /// Adapts the [`CommandHandler`] implementation to the [`command::Handler`]
     /// foundation trait, useful when needs to be used with a
@@ -90,7 +89,6 @@ pub trait CommandHandler {
 #[derive(Debug, Clone)]
 pub struct AsHandler<H>(H);
 
-#[async_trait]
 impl<H> command::Handler for AsHandler<H>
 where
     H: CommandHandler + Send + Sync,
@@ -101,16 +99,15 @@ where
     type Aggregate = AsAggregate<H::Aggregate>;
     type Error = H::Error;
 
-    async fn handle(
-        &self,
-        state: &aggregate::StateOf<Self::Aggregate>,
+    fn handle<'a, 'b: 'a>(
+        &'a self,
+        state: &'b aggregate::StateOf<Self::Aggregate>,
         command: Self::Command,
-    ) -> command::Result<aggregate::EventOf<Self::Aggregate>, Self::Error> {
-        match state {
+    ) -> BoxFuture<command::Result<aggregate::EventOf<Self::Aggregate>, Self::Error>> {
+        Box::pin(match state {
             None => self.0.handle_first(command),
             Some(state) => self.0.handle_next(state, command),
-        }
-        .await
+        })
     }
 }
 

@@ -1,7 +1,6 @@
 //! Contains abstractions for the Event Store feature.
 
-use async_trait::async_trait;
-
+use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
 /// Represents an Event Store, an append-only, ordered list of [`Events`]
@@ -9,7 +8,6 @@ use futures::stream::BoxStream;
 ///
 /// [`Events`]: trait.Store.html#associatedType.Event
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-#[async_trait]
 pub trait Store {
     /// Type of the Source id, usually an [`Aggregate`] id.
     ///
@@ -60,20 +58,20 @@ pub trait Store {
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedType.State
     /// [`Aggregate::async_fold`]: ../aggregate/trait.AggregateExt.html#method.async_fold
-    fn stream<'store>(
-        &'store self,
+    fn stream(
+        &self,
         source_id: Self::SourceId,
         from: Self::Offset,
-    ) -> BoxStream<'store, Result<Self::Event, Self::Error>>;
+    ) -> BoxStream<Result<Self::Event, Self::Error>>;
 
     /// Appends a list of new events to the `Store`.
     ///
     /// An [`Error`] is returned if the append operation fails.
     ///
     /// [`Error`]: trait.Store.html#associatedType.Error
-    async fn append(
+    fn append(
         &mut self,
         source_id: Self::SourceId,
         events: Vec<Self::Event>,
-    ) -> Result<(), Self::Error>;
+    ) -> BoxFuture<Result<(), Self::Error>>;
 }

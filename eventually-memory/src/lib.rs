@@ -12,7 +12,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use async_trait::async_trait;
+use futures::future::BoxFuture;
 use futures::stream::{empty, iter, BoxStream, StreamExt};
 
 use eventually_core::store::Store as EventStore;
@@ -86,7 +86,6 @@ where
     }
 }
 
-#[async_trait]
 impl<SourceId, Event> EventStore for Store<SourceId, Event>
 where
     SourceId: Hash + Eq + Send + Sync,
@@ -101,7 +100,7 @@ where
         &self,
         source_id: Self::SourceId,
         from: Self::Offset,
-    ) -> BoxStream<'_, Result<Self::Event, Infallible>> {
+    ) -> BoxStream<Result<Self::Event, Infallible>> {
         self.store
             .read()
             .unwrap()
@@ -111,19 +110,21 @@ where
             .unwrap_or_else(|| empty().boxed())
     }
 
-    async fn append(
+    fn append(
         &mut self,
         source_id: Self::SourceId,
         events: Vec<Self::Event>,
-    ) -> Result<(), Self::Error> {
-        self.store
-            .write()
-            .unwrap()
-            .entry(source_id)
-            .and_modify(|vec| vec.extend(events.clone()))
-            .or_insert(events);
+    ) -> BoxFuture<Result<(), Self::Error>> {
+        Box::pin(async move {
+            self.store
+                .write()
+                .unwrap()
+                .entry(source_id)
+                .and_modify(|vec| vec.extend(events.clone()))
+                .or_insert(events);
 
-        Ok(())
+            Ok(())
+        })
     }
 }
 
