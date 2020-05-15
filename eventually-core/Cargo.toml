@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 futures = { version = "0.3", features = ["async-await"] }
+thiserror = "1.0"
