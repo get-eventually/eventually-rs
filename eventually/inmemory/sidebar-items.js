@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["EventStore","An in-memory [`EventStore`] implementation, backed by an [`HashMap`]."],["EventStoreBuilder","Builder for [`EventStore`] instances."]]});

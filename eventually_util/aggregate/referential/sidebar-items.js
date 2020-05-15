@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["AsAggregate","Adapter for [`Aggregate`] types to the foundational [`eventually::Aggregate`] trait."]],"trait":[["Aggregate","An [`Aggregate`] representation where the [`State`] is the same as the aggregate root."]]});

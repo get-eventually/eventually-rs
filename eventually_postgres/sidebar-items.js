@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["EventStore","[`EventStore`] implementation using a PostgreSQL backend."],["EventStoreBuilder","Builder type for [`EventStore`] instances."]]});

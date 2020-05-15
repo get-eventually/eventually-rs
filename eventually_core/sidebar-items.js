@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["aggregate","Foundation traits for creating Domain abstractions using the `Aggregate` pattern."],["command",""],["store","Contains abstractions for the Event Store feature."]]});
+initSidebarItems({"mod":[["aggregate","Foundation traits for creating Domain abstractions using the `Aggregate` pattern."],["repository","Contains the [Repository pattern] implementation for [`AggregateRoot`] instances."],["store","Contains the Event Store trait for storing and streaming Aggregate [`Event`]s."]]});

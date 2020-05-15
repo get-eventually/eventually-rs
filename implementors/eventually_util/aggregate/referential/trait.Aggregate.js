@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["point"] = [{"text":"impl <a class=\"trait\" href=\"eventually_util/aggregate/referential/trait.Aggregate.html\" title=\"trait eventually_util::aggregate::referential::Aggregate\">Aggregate</a> for <a class=\"struct\" href=\"point/struct.State.html\" title=\"struct point::State\">State</a>","synthetic":false,"types":["point::State"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

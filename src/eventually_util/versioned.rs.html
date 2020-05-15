@@ -254,230 +254,158 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Versioning for [Optimistic Concurrency Control] support.</span>
+<span class="doccomment">//! Contains support for _Optimistic Concurrency Control_ using</span>
+<span class="doccomment">//! _versioning attributes_.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! [Optimistic Concurrency Control]: https://en.wikipedia.org/wiki/Optimistic_concurrency_control</span>
+<span class="doccomment">//! Check out [`AggregateExt`] for more information.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`AggregateExt`]: trait.AggregateExt.html</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
 
+<span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">Identifiable</span>};
+
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
 
-<span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">EventOf</span>, <span class="ident">StateOf</span>};
-<span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">command</span>::{<span class="ident">Handler</span> <span class="kw">as</span> <span class="ident">CommandHandler</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">CommandResult</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
-<span class="doccomment">/// Extension trait for [`CommandHandler`] to support a versioned [`Aggregate`].</span>
+<span class="doccomment">/// Extension trait to add _Optimistic Concurrency Control_ support</span>
+<span class="doccomment">/// over an [`Aggregate`] using _versioning_.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// For more information, check [`AsHandler`].</span>
+<span class="doccomment">/// ## Usage</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [`CommandHandler`]: ../command/trait.Handler.html</span>
-<span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
-<span class="doccomment">/// [`AsHandler`]: struct.AsHandler.html</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">CommandHandlerExt</span>: <span class="ident">CommandHandler</span> <span class="op">+</span> <span class="ident">Sized</span> {
-    <span class="doccomment">/// Returns a decorated version of the [`CommandHandler`],</span>
-    <span class="doccomment">/// in the form of [`AsHandler`] handler implementation.</span>
+<span class="doccomment">/// Call [`versioned`] over an [`Aggregate`] instance to add versioning support.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```text</span>
+<span class="doccomment">/// use eventually_util::versioned::AggregateExt;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // Assuming `SomeAggregateExample` is an Aggregate</span>
+<span class="doccomment">/// let versioned_aggregate = SomeAggregateExample.versioned();</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/Aggregate.html</span>
+<span class="doccomment">/// [`versioned`]: trait.AggregateExt.html#method.versioned</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AggregateExt</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Sized</span> {
+    <span class="doccomment">/// Returns a _versioned_ flavour of an [`Aggregate`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Check [`AsHandler`] documentation for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`CommandHandler`]: ../command/trait.Handler.html</span>
-    <span class="doccomment">/// [`AsHandler`]: struct.AsHandler.html</span>
-    <span class="kw">fn</span> <span class="ident">versioned</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AsHandler</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">AsHandler</span>(<span class="self">self</span>)
+    <span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/Aggregate.html</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">versioned</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident">AsAggregate</span>(<span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="ident">CommandHandlerExt</span> <span class="kw">for</span> <span class="ident">H</span> <span class="kw">where</span> <span class="ident">H</span>: <span class="ident">CommandHandler</span> <span class="op">+</span> <span class="ident">Sized</span> {}
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">AggregateExt</span> <span class="kw">for</span> <span class="ident">T</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Sized</span> {}
 
-<span class="doccomment">/// A [`CommandHandler`] decorator to support versioned [`Aggregate`].</span>
+<span class="doccomment">/// _Newtype_ extension for [`Aggregate`] types to add support</span>
+<span class="doccomment">/// for _Optimistic Concurrency Control_ using _versioning_ for [`Event`]s</span>
+<span class="doccomment">/// and Aggregate [`State`].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// This decorator uses the [`AsAggregate`] decorator as its Aggregate.</span>
+<span class="doccomment">/// Check out [`AggregateExt`] for more information.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// For more information, check [`AsAggregate`] documentation.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use std::convert::Infallible;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # use futures::future::BoxFuture;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # use eventually_core::aggregate::Aggregate;</span>
-<span class="doccomment">/// # use eventually_core::command;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # enum Event {}</span>
-<span class="doccomment">/// # enum Command {}</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # struct Entity {}</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # impl Aggregate for Entity {</span>
-<span class="doccomment">/// #     type State = Self;</span>
-<span class="doccomment">/// #     type Event = Event;</span>
-<span class="doccomment">/// #     type Error = Infallible;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// #     fn apply(state: Self::State, event: Self::Event) -&gt; Result&lt;Self::State, Self::Error&gt; {</span>
-<span class="doccomment">/// #         unimplemented!()</span>
-<span class="doccomment">/// #     }</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # struct MyHandler;</span>
-<span class="doccomment">/// # impl MyHandler {</span>
-<span class="doccomment">/// #     fn new() -&gt; Self {</span>
-<span class="doccomment">/// #         MyHandler</span>
-<span class="doccomment">/// #     }</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// # impl command::Handler for MyHandler {</span>
-<span class="doccomment">/// #     type Command = Command;</span>
-<span class="doccomment">/// #     type Aggregate = Entity;</span>
-<span class="doccomment">/// #     type Error = Infallible;</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// #     fn handle&lt;&#39;a, &#39;b: &#39;a&gt;(&amp;&#39;a self, state: &amp;&#39;b Entity, command: Self::Command) -&gt;</span>
-<span class="doccomment">/// #         BoxFuture&lt;&#39;a, command::Result&lt;Event, Self::Error&gt;&gt;</span>
-<span class="doccomment">/// #     {</span>
-<span class="doccomment">/// #         unimplemented!()</span>
-<span class="doccomment">/// #     }</span>
-<span class="doccomment">/// # }</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// use eventually_util::versioned::CommandHandlerExt;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let handler = MyHandler::new().versioned();</span>
-<span class="doccomment">/// #</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`CommandHandler`]: ../command/trait.Handler.html</span>
-<span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
-<span class="doccomment">/// [`Versioned`]: struct.Versioned.html</span>
-<span class="doccomment">/// [`AsAggregate`]: struct.AsAggregate.html</span>
+<span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
+<span class="doccomment">/// [`Event`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.Event</span>
+<span class="doccomment">/// [`State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State</span>
+<span class="doccomment">/// [`AggregateExt`]: trait.AggregateExt.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsHandler</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">H</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">T</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="ident">CommandHandler</span> <span class="kw">for</span> <span class="ident">AsHandler</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Aggregate</span> <span class="kw">for</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">H</span>: <span class="ident">CommandHandler</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StateOf</span><span class="op">&lt;</span><span class="ident">H</span>::<span class="ident">Aggregate</span><span class="op">&gt;</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">H</span>::<span class="ident">Command</span>: <span class="ident">Send</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">T</span>::<span class="ident">State</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">T</span>::<span class="ident">Command</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="kw">type</span> <span class="ident">Command</span> <span class="op">=</span> <span class="ident">H</span>::<span class="ident">Command</span>;
-    <span class="comment">// Decorated Aggregate type</span>
-    <span class="kw">type</span> <span class="ident">Aggregate</span> <span class="op">=</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">H</span>::<span class="ident">Aggregate</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">H</span>::<span class="ident">Error</span>;
+    <span class="kw">type</span> <span class="ident">State</span> <span class="op">=</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">State</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Command</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Command</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">version</span>();
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>();
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">data</span>;
+
+        <span class="ident">T</span>::<span class="ident">apply</span>(<span class="ident">state</span>, <span class="ident">event</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">state</span><span class="op">|</span> <span class="ident">Versioned</span>::<span class="ident">new</span>(<span class="ident">state</span>, <span class="ident">version</span>))
+    }
+
+    <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">StateOf</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Aggregate</span><span class="op">&gt;</span>,
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span>::<span class="ident">State</span>,
         <span class="ident">command</span>: <span class="self">Self</span>::<span class="ident">Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">CommandResult</span><span class="op">&lt;</span><span class="ident">EventOf</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Aggregate</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="self">Self</span>: <span class="ident">Sized</span>,
+    {
         <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">version</span>();
 
         <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">handle</span>(<span class="ident">state</span>, <span class="ident">command</span>).<span class="kw">await</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">events</span><span class="op">|</span> {
                 <span class="ident">events</span>
                     .<span class="ident">into_iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> <span class="ident">Versioned</span>::<span class="ident">with_version</span>(<span class="ident">event</span>, <span class="ident">version</span> <span class="op">+</span> <span class="number">1</span>))
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> <span class="ident">Versioned</span>::<span class="ident">new</span>(<span class="ident">event</span>, <span class="ident">version</span> <span class="op">+</span> <span class="number">1</span>))
                     .<span class="ident">collect</span>()
             })
         })
     }
 }
 
-<span class="doccomment">/// An [`Aggregate`] decorator that supports versioning.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Versioned [`State`] is possible through the [`Versioned`] type wrapper.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use std::convert::Infallible;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// use eventually_core::aggregate::Aggregate;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// enum Event {</span>
-<span class="doccomment">///     SomeEvent</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[derive(Debug, PartialEq)]</span>
-<span class="doccomment">/// struct Entity {}</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl Default for Entity {</span>
-<span class="doccomment">///     fn default() -&gt; Self {</span>
-<span class="doccomment">///         Entity {}</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl Aggregate for Entity {</span>
-<span class="doccomment">///     type State = Self;</span>
-<span class="doccomment">///     type Event = Event;</span>
-<span class="doccomment">///     type Error = Infallible;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     fn apply(state: Self::State, event: Self::Event) -&gt; Result&lt;Self::State, Self::Error&gt; {</span>
-<span class="doccomment">///         // Simple dumb implementation, you&#39;ll probably want something</span>
-<span class="doccomment">///         // more interesting in your code ;-)</span>
-<span class="doccomment">///         Ok(state)</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// use eventually_util::versioned::{AsAggregate, Versioned};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Use by wrapping the original type in `AsAggregate::&lt;T&gt;`</span>
-<span class="doccomment">/// let result = AsAggregate::&lt;Entity&gt;::apply(</span>
-<span class="doccomment">///     Versioned::default(),</span>
-<span class="doccomment">///     Versioned::from(Event::SomeEvent)</span>
-<span class="doccomment">/// );</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// assert_eq!(</span>
-<span class="doccomment">///     result,</span>
-<span class="doccomment">///     // `Versioned::from` assigns the default version to the event, which is 0.</span>
-<span class="doccomment">///     // So, the state will take the same version.</span>
-<span class="doccomment">///     Ok(Versioned::with_version(Entity::default(), 0)),</span>
-<span class="doccomment">/// );</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // If applying an event with version &quot;1&quot;, the state will have version &quot;1&quot; too.</span>
-<span class="doccomment">/// assert_eq!(</span>
-<span class="doccomment">///     AsAggregate::&lt;Entity&gt;::apply(result.unwrap(), Versioned::with_version(Event::SomeEvent, 1)),</span>
-<span class="doccomment">///     Ok(Versioned::with_version(Entity::default(), 1)),</span>
-<span class="doccomment">/// );</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
-<span class="doccomment">/// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State</span>
-<span class="doccomment">/// [`Versioned`]: struct.Versioned.html</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">Aggregate</span> <span class="kw">for</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">A</span>: <span class="ident">Aggregate</span>,
-{
-    <span class="kw">type</span> <span class="ident">State</span> <span class="op">=</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">A</span>::<span class="ident">State</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">A</span>::<span class="ident">Event</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">A</span>::<span class="ident">Error</span>;
-
-    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">version</span>();
-
-        <span class="ident">A</span>::<span class="ident">apply</span>(<span class="ident">state</span>.<span class="ident">data</span>, <span class="ident">event</span>.<span class="ident">take</span>()).<span class="ident">map</span>(<span class="op">|</span><span class="ident">state</span><span class="op">|</span> <span class="ident">Versioned</span>::<span class="ident">with_version</span>(<span class="ident">state</span>, <span class="ident">version</span>))
-    }
-}
-
 <span class="doccomment">/// Wrapper to embed version information for un-versioned data types.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">serde</span>(<span class="ident">flatten</span>))]</span>
     <span class="ident">data</span>: <span class="ident">T</span>,
-    <span class="ident">version</span>: <span class="ident">u64</span>,
+    <span class="ident">version</span>: <span class="ident">u32</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Wraps data with the specified version information.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_version</span>(<span class="ident">data</span>: <span class="ident">T</span>, <span class="ident">version</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="ident">T</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Versioned</span> { <span class="ident">data</span>, <span class="ident">version</span> }
     }
 
     <span class="doccomment">/// Returns version information.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">version</span>
     }
 
     <span class="doccomment">/// Extracts the wrapped data from the instance.</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
         <span class="self">self</span>.<span class="ident">data</span>
     }
@@ -486,20 +414,23 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">T</span>;
 
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Target</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">data</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">data</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Versioned</span>::<span class="ident">with_version</span>(<span class="ident">data</span>, <span class="number">0</span>)
+        <span class="ident">Versioned</span>::<span class="ident">new</span>(<span class="ident">data</span>, <span class="number">0</span>)
     }
 }
 
@@ -507,8 +438,137 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Default</span>,
 {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">T</span>::<span class="ident">default</span>())
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Identifiable</span> <span class="kw">for</span> <span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Identifiable</span>,
+{
+    <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Id</span>;
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Id</span> {
+        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">id</span>()
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">AggregateExt</span>, <span class="ident">Versioned</span>};
+
+    <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateRoot</span>, <span class="ident">Identifiable</span>};
+
+    <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
+
+    <span class="kw">use</span> <span class="ident">tokio_test</span>::<span class="ident">block_on</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">aggregate_versioning_extension_works</span>() {
+        <span class="kw">let</span> <span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">PointAggregate</span>.<span class="ident">versioned</span>();
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">Versioned</span>::<span class="ident">from</span>(<span class="ident">Point</span> { <span class="ident">x</span>: <span class="number">0f32</span>, <span class="ident">y</span>: <span class="number">0f32</span> });
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">AggregateRoot</span>::<span class="ident">new</span>(<span class="ident">aggregate</span>, <span class="ident">state</span>);
+
+        <span class="ident">block_on</span>(<span class="kw">async</span> {
+            <span class="ident">root</span>.<span class="ident">handle</span>(<span class="ident">PointCommand</span>::<span class="ident">Rotate</span> {
+                <span class="ident">anchor</span>: (<span class="number">0f32</span>, <span class="number">0f32</span>),
+                <span class="ident">degrees</span>: <span class="number">90f32</span>,
+            })
+            .<span class="kw">await</span>
+            .<span class="ident">expect</span>(<span class="string">&quot;should be infallible&quot;</span>)
+            .<span class="ident">handle</span>(<span class="ident">PointCommand</span>::<span class="ident">Rotate</span> {
+                <span class="ident">anchor</span>: (<span class="number">0f32</span>, <span class="number">0f32</span>),
+                <span class="ident">degrees</span>: <span class="number">90f32</span>,
+            })
+            .<span class="kw">await</span>
+            .<span class="ident">expect</span>(<span class="string">&quot;should be infallible&quot;</span>)
+            .<span class="ident">handle</span>(<span class="ident">PointCommand</span>::<span class="ident">Rotate</span> {
+                <span class="ident">anchor</span>: (<span class="number">0f32</span>, <span class="number">0f32</span>),
+                <span class="ident">degrees</span>: <span class="number">90f32</span>,
+            })
+            .<span class="kw">await</span>
+            .<span class="ident">expect</span>(<span class="string">&quot;should be infallible&quot;</span>)
+            .<span class="ident">handle</span>(<span class="ident">PointCommand</span>::<span class="ident">Rotate</span> {
+                <span class="ident">anchor</span>: (<span class="number">0f32</span>, <span class="number">0f32</span>),
+                <span class="ident">degrees</span>: <span class="number">90f32</span>,
+            })
+            .<span class="kw">await</span>
+            .<span class="ident">expect</span>(<span class="string">&quot;should be infallible&quot;</span>)
+        });
+
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">root</span>.<span class="ident">state</span>(), <span class="kw-2">&amp;</span><span class="ident">Versioned</span>::<span class="ident">new</span>(<span class="ident">Point</span> { <span class="ident">x</span>: <span class="number">0f32</span>, <span class="ident">y</span>: <span class="number">0f32</span> }, <span class="number">4</span>))
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
+    <span class="kw">struct</span> <span class="ident">Point</span> {
+        <span class="ident">x</span>: <span class="ident">f32</span>,
+        <span class="ident">y</span>: <span class="ident">f32</span>,
+    }
+
+    <span class="comment">// We don&#39;t care about identity for this example.</span>
+    <span class="kw">impl</span> <span class="ident">Identifiable</span> <span class="kw">for</span> <span class="ident">Point</span> {
+        <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> ();
+
+        <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Id</span> {
+            ()
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+    <span class="kw">struct</span> <span class="ident">PointUpdated</span> {
+        <span class="ident">x</span>: <span class="ident">f32</span>,
+        <span class="ident">y</span>: <span class="ident">f32</span>,
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+    <span class="kw">enum</span> <span class="ident">PointCommand</span> {
+        <span class="ident">Rotate</span> { <span class="ident">anchor</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>), <span class="ident">degrees</span>: <span class="ident">f32</span> },
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+    <span class="kw">struct</span> <span class="ident">PointAggregate</span>;
+    <span class="kw">impl</span> <span class="ident">Aggregate</span> <span class="kw">for</span> <span class="ident">PointAggregate</span> {
+        <span class="kw">type</span> <span class="ident">State</span> <span class="op">=</span> <span class="ident">Point</span>;
+        <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">PointUpdated</span>;
+        <span class="kw">type</span> <span class="ident">Command</span> <span class="op">=</span> <span class="ident">PointCommand</span>;
+        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">Infallible</span>;
+
+        <span class="kw">fn</span> <span class="ident">apply</span>(<span class="kw-2">mut</span> <span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+            <span class="ident">state</span>.<span class="ident">x</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">x</span>;
+            <span class="ident">state</span>.<span class="ident">y</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">y</span>;
+
+            <span class="prelude-val">Ok</span>(<span class="ident">state</span>)
+        }
+
+        <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+            <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
+            <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span>::<span class="ident">State</span>,
+            <span class="ident">command</span>: <span class="self">Self</span>::<span class="ident">Command</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
+        <span class="kw">where</span>
+            <span class="self">Self</span>: <span class="ident">Sized</span>,
+        {
+            <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">ok</span>(<span class="kw">match</span> <span class="ident">command</span> {
+                <span class="ident">PointCommand</span>::<span class="ident">Rotate</span> { <span class="ident">anchor</span>, <span class="ident">degrees</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">angle</span> <span class="op">=</span> <span class="ident">degrees</span> <span class="op">*</span> <span class="ident">std</span>::<span class="ident">f32</span>::<span class="ident">consts</span>::<span class="ident">PI</span>;
+                    <span class="kw">let</span> (<span class="ident">center_x</span>, <span class="ident">center_y</span>) <span class="op">=</span> <span class="ident">anchor</span>;
+
+                    <span class="kw">let</span> <span class="ident">delta_x</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">x</span> <span class="op">-</span> <span class="ident">center_x</span>;
+                    <span class="kw">let</span> <span class="ident">delta_y</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">y</span> <span class="op">-</span> <span class="ident">center_y</span>;
+
+                    <span class="kw">let</span> <span class="ident">rotated_x</span> <span class="op">=</span> (<span class="ident">angle</span>.<span class="ident">cos</span>() <span class="op">*</span> <span class="ident">delta_x</span> <span class="op">-</span> <span class="ident">angle</span>.<span class="ident">sin</span>() <span class="op">*</span> <span class="ident">delta_y</span>) <span class="op">+</span> <span class="ident">center_x</span>;
+                    <span class="kw">let</span> <span class="ident">rotated_y</span> <span class="op">=</span> (<span class="ident">angle</span>.<span class="ident">sin</span>() <span class="op">*</span> <span class="ident">delta_x</span> <span class="op">-</span> <span class="ident">angle</span>.<span class="ident">cos</span>() <span class="op">*</span> <span class="ident">delta_y</span>) <span class="op">+</span> <span class="ident">center_y</span>;
+
+                    <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">PointUpdated</span> {
+                        <span class="ident">x</span>: <span class="ident">rotated_x</span>,
+                        <span class="ident">y</span>: <span class="ident">rotated_y</span>,
+                    }]
+                }
+            }))
+        }
     }
 }
 </pre></div>

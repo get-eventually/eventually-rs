@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Handler",""]],"type":[["AggregateOf",""],["CommandOf",""],["ErrorOf",""],["Result",""]]});

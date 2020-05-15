@@ -75,83 +75,89 @@
 <span id="75">75</span>
 <span id="76">76</span>
 <span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Contains abstractions for the Event Store feature.</span>
+<span class="doccomment">//! Contains the Event Store trait for storing and streaming Aggregate [`Event`]s.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
 
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">stream</span>::<span class="ident">BoxStream</span>;
 
-<span class="doccomment">/// Represents an Event Store, an append-only, ordered list of [`Events`]</span>
-<span class="doccomment">/// for a certain &quot;source&quot; (i.e. [`Aggregate`]).</span>
+<span class="doccomment">/// Stream type returned by the [`EventStore::stream`] method.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [`Events`]: trait.Store.html#associatedType.Event</span>
+<span class="doccomment">/// [`EventStore::stream`]: trait.EventStore.html#method.stream</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span>
+    <span class="ident">BoxStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">EventStore</span><span class="op">&gt;</span>::<span class="ident">Event</span>, <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">EventStore</span><span class="op">&gt;</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+
+<span class="doccomment">/// An Event Store is an append-only, ordered list of [`Event`]s</span>
+<span class="doccomment">/// for a certain &quot;source&quot; -- e.g. an [`Aggregate`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
 <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Store</span> {
-    <span class="doccomment">/// Type of the Source id, usually an [`Aggregate`] id.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventStore</span> {
+    <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
-    <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">PartialEq</span>;
+    <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
+    <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">Eq</span>;
 
-    <span class="doccomment">/// Type of the memory offset supported by the `Store`.</span>
+    <span class="doccomment">/// Offset type for getting a slice of the [`Event`]s in the Store.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// An offset is needed to get a slice of the events in the `Store`.</span>
+    <span class="doccomment">/// Check out [`stream`] for more info.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Check out [`Store::stream`] for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Store::stream`]: trait.Store.html#method.stream</span>
-    <span class="kw">type</span> <span class="ident">Offset</span>: <span class="ident">PartialOrd</span>;
+    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
+    <span class="doccomment">/// [`stream`]: trait.EventStore.html#method.stream</span>
+    <span class="kw">type</span> <span class="ident">Offset</span>: <span class="ident">Ord</span>;
 
-    <span class="doccomment">/// Type of the events supported by the `Store`.</span>
+    <span class="doccomment">/// Event to be stored in the `EventStore`, typically an [`Aggregate::Event`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Usually, they match the same type as [`Aggregate::Event`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedType.Event</span>
+    <span class="doccomment">/// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
-    <span class="doccomment">/// Possible errors returned by the `Store`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Usually, this should be an `enum` containing all the possible reasons</span>
-    <span class="doccomment">/// why the `Store` could fail due to external failures.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`append`]: trait.Store.html#method.append</span>
+    <span class="doccomment">/// Possible errors returned by the `EventStore` when requesting operations.</span>
     <span class="kw">type</span> <span class="ident">Error</span>;
 
-    <span class="doccomment">/// Allows to stream many [`Events`] from the `Store` back to the application,</span>
-    <span class="doccomment">/// by specifying the [`SourceId`] and the desired [`Offset`].</span>
+    <span class="doccomment">/// Appends a new list of [`Event`]s to the Event Store, for the Source</span>
+    <span class="doccomment">/// entity specified by [`SourceId`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// An asynchronous [`Stream`] is returned, yielding every `Event`</span>
-    <span class="doccomment">/// from the specified `Offset` in the same order as they were committed.</span>
+    <span class="doccomment">/// `append` is a transactional operation: it either appends all the events,</span>
+    <span class="doccomment">/// or none at all and returns an appropriate [`Error`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// To stream back all the events in the `Store` for a certain `Source`,</span>
-    <span class="doccomment">/// [`Offset`] should implement `Default`, and use such value (in case of numeric offsets,</span>
-    <span class="doccomment">/// this is most likely `0`).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// In case of an [`Aggregate`], it is possible to recreate its [`State`] by</span>
-    <span class="doccomment">/// supplying the returned [`Stream`] into [`Aggregate::async_fold`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Events`]: trait.Store.html#associatedType.Events</span>
-    <span class="doccomment">/// [`SourceId`]: trait.Store.html#associatedType.SourceId</span>
-    <span class="doccomment">/// [`Offset`]: trait.Store.html#associatedType.SourceId</span>
-    <span class="doccomment">/// [`Stream`]: https://docs.rs/futures/stream/trait.Stream.html</span>
-    <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
-    <span class="doccomment">/// [`State`]: ../aggregate/trait.Aggregate.html#associatedType.State</span>
-    <span class="doccomment">/// [`Aggregate::async_fold`]: ../aggregate/trait.AggregateExt.html#method.async_fold</span>
-    <span class="kw">fn</span> <span class="ident">stream</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">source_id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>,
-        <span class="ident">from</span>: <span class="self">Self</span>::<span class="ident">Offset</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxStream</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// Appends a list of new events to the `Store`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// An [`Error`] is returned if the append operation fails.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Error`]: trait.Store.html#associatedType.Error</span>
+    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
+    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
+    <span class="doccomment">/// [`Error`]: trait.EventStore.html#associatedtype.Error</span>
     <span class="kw">fn</span> <span class="ident">append</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">source_id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>,
+        <span class="ident">id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>,
         <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Streams a list of [`Event`]s from the `EventStore` back to the application,</span>
+    <span class="doccomment">/// by specifying the desired [`SourceId`] and [`Offset`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`SourceId`] will be used to request a particular `EventStream`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Offset`] will be used to specify a slice of the [`Event`]s to retrieve</span>
+    <span class="doccomment">/// from the `EventStore`. To request the whole list, use the [`Default`]</span>
+    <span class="doccomment">/// value for [`Offset`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
+    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
+    <span class="doccomment">/// [`Offset`]: trait.EventStore.html#associatedtype.Offset</span>
+    <span class="kw">fn</span> <span class="ident">stream</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>,
+        <span class="ident">from</span>: <span class="self">Self</span>::<span class="ident">Offset</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Drops all the [`Event`]s related to one `Source`, specified by</span>
+    <span class="doccomment">/// the provided [`SourceId`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
+    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
+    <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "eventually_core";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

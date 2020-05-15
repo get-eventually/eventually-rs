@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["dispatcher",""],["static",""]],"struct":[["DirectDispatcher",""]],"trait":[["Dispatcher",""],["Handler",""]],"type":[["AggregateOf",""],["CommandOf",""],["ErrorOf",""],["Result",""]]});

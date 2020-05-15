@@ -1,8 +1,7 @@
 var N = null;var sourcesIndex = {};
 sourcesIndex["eventually"] = {"name":"","files":["lib.rs"]};
-sourcesIndex["eventually_core"] = {"name":"","files":["aggregate.rs","command.rs","lib.rs","store.rs"]};
-sourcesIndex["eventually_memory"] = {"name":"","files":["lib.rs"]};
-sourcesIndex["eventually_util"] = {"name":"","dirs":[{"name":"aggregate","files":["mod.rs","referential.rs"]},{"name":"command","files":["dispatcher.rs","mod.rs","static.rs"]}],"files":["lib.rs","optional.rs","versioned.rs"]};
-sourcesIndex["main"] = {"name":"","files":["main.rs"]};
-sourcesIndex["point"] = {"name":"","files":["point.rs"]};
+sourcesIndex["eventually_core"] = {"name":"","files":["aggregate.rs","lib.rs","repository.rs","store.rs"]};
+sourcesIndex["eventually_postgres"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["eventually_test"] = {"name":"","files":["api.rs","config.rs","log.rs","main.rs","order.rs","state.rs"]};
+sourcesIndex["eventually_util"] = {"name":"","files":["inmemory.rs","lib.rs","optional.rs","versioned.rs"]};
 createSourceSidebar();

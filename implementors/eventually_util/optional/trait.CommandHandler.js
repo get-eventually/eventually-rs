@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["point"] = [{"text":"impl <a class=\"trait\" href=\"eventually_util/optional/trait.CommandHandler.html\" title=\"trait eventually_util::optional::CommandHandler\">CommandHandler</a> for <a class=\"struct\" href=\"point/struct.Handler.html\" title=\"struct point::Handler\">Handler</a>","synthetic":false,"types":["point::Handler"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

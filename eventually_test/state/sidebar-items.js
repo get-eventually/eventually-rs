@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AppState",""]],"type":[["OrderAggregate",""],["OrderRepository",""],["OrderStore",""]]});

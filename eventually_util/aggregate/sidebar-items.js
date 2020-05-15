@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["referential","Contains [`Aggregate`] variant where aggregate root and [`State`] are implemented by the same object."]]});

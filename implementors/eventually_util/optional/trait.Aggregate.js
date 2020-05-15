@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["point"] = [{"text":"impl <a class=\"trait\" href=\"eventually_util/optional/trait.Aggregate.html\" title=\"trait eventually_util::optional::Aggregate\">Aggregate</a> for <a class=\"struct\" href=\"point/struct.Root.html\" title=\"struct point::Root\">Root</a>","synthetic":false,"types":["point::Root"]}];
+implementors["eventually_test"] = [{"text":"impl <a class=\"trait\" href=\"eventually_util/optional/trait.Aggregate.html\" title=\"trait eventually_util::optional::Aggregate\">Aggregate</a> for <a class=\"struct\" href=\"eventually_test/order/struct.OrderAggregate.html\" title=\"struct eventually_test::order::OrderAggregate\">OrderAggregate</a>","synthetic":false,"types":["eventually_test::order::OrderAggregate"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
