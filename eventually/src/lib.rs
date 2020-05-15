@@ -1,20 +1,14 @@
-pub use eventually_core::aggregate::{Aggregate, AggregateExt};
-pub use eventually_core::store::Store;
+pub use eventually_core::aggregate::{
+    Aggregate, AggregateExt, AggregateId, AggregateRoot, Identifiable,
+};
+pub use eventually_core::repository::Repository;
+pub use eventually_core::store::EventStore;
 
 pub mod aggregate {
     pub use eventually_core::aggregate::*;
 
-    pub use eventually_util::aggregate::referential;
-    pub use eventually_util::aggregate::referential::Aggregate as ReferentialAggregate;
-}
-
-pub mod command {
-    pub use eventually_core::command::*;
-    pub use eventually_util::command::dispatcher::DirectDispatcher;
-    pub use eventually_util::command::Dispatcher;
-
-    pub use eventually_util::command::dispatcher;
-    pub use eventually_util::command::r#static;
+    pub use eventually_util::optional::Aggregate as Optional;
+    pub use eventually_util::versioned::AsAggregate as Versioned;
 }
 
 pub mod optional {
@@ -25,4 +19,6 @@ pub mod versioned {
     pub use eventually_util::versioned::*;
 }
 
-// TODO: use feature-flags and include eventually-memory in its own `pub mod memory`
+pub mod inmemory {
+    pub use eventually_util::inmemory::*;
+}

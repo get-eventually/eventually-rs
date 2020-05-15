@@ -14,6 +14,12 @@ Work-in-progress crate to allow easy development of Event Sourced application.
 categories = ["ddd", "event-sourcing", "cqrs", "aggregate"]
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
 
+[features]
+default = []
+serde = ["eventually-util/serde"]
+tokio = ["eventually-util/tokio"]
+full = ["serde", "tokio"]
+
 [dependencies]
 eventually-core = { path = "../eventually-core" }
 eventually-util = { path = "../eventually-util" }
