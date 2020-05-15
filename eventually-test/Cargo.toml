@@ -6,8 +6,8 @@ authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 
 [dependencies]
-eventually = { path = "../eventually", features = ["full"] }
-eventually-postgres = { path = "../eventually-postgres" }
+eventually = { version = "0.3.0", path = "../eventually", features = ["full"] }
+eventually-postgres = { version = "0.1.0", path = "../eventually-postgres" }
 
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.7"

@@ -18,8 +18,8 @@ tokio = ["eventually-util/tokio"]
 full = ["serde", "tokio"]
 
 [dependencies]
-eventually-core = { path = "../eventually-core" }
-eventually-util = { path = "../eventually-util" }
+eventually-core = { version = "0.3.0", path = "../eventually-core" }
+eventually-util = { version = "0.3.0", path = "../eventually-util" }
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }

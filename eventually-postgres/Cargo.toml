@@ -11,7 +11,7 @@ categories = ["web-programming", "asynchronous"]
 keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing", "cqrs", "es"]
 
 [dependencies]
-eventually = { path = "../eventually", features = ["serde"] }
+eventually = { version = "0.3", path = "../eventually", features = ["serde"] }
 
 futures = "0.3"
 serde = "1.0"
