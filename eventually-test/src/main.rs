@@ -1,5 +1,6 @@
 mod api;
 mod config;
+mod log;
 mod order;
 mod state;
 
@@ -20,6 +21,8 @@ use crate::order::OrderAggregate;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::init()?;
+
+    env_logger::builder().filter_level(config.log_level).init();
 
     // Open a connection with Postgres.
     let (client, connection) =
@@ -51,14 +54,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         store.create_stream().await?;
         store
     };
-    // let store = EventStore::<String, Versioned<OrderEvent>>::default();
-
-    // Need to create the backing table for the event store.
 
     // Creates a Repository to read and store OrderAggregates.
     let repository = Repository::new(aggregate.clone(), store.clone());
 
+    // Set up the HTTP router.
     let mut app = tide::new();
+
+    app.middleware(log::LogMiddleware::new());
 
     app.at("/orders/:id").nest({
         let mut api = tide::with_state(state::AppState {
