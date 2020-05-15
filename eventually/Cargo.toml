@@ -1,22 +1,25 @@
 [package]
 name = "eventually"
+description = "Crate for using Event Sourcing in Rust applications"
 version = "0.3.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/ar3s3ru/eventually-rs"
 
-description = """
-Work-in-progress crate to allow easy development of Event Sourced application.
-"""
+categories = ["rust-patterns", "web-programming", "asynchronous", "data-structures"]
+keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es", "domain", "events"]
 
-categories = ["ddd", "event-sourcing", "cqrs", "aggregate"]
-keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
+[features]
+default = []
+serde = ["eventually-util/serde"]
+tokio = ["eventually-util/tokio"]
+full = ["serde", "tokio"]
 
 [dependencies]
-eventually-core = { path = "../eventually-core" }
-eventually-util = { path = "../eventually-util" }
+eventually-core = { version = "0.3.0", path = "../eventually-core" }
+eventually-util = { version = "0.3.0", path = "../eventually-util" }
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }

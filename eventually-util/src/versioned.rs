@@ -1,226 +1,124 @@
-//! Versioning for [Optimistic Concurrency Control] support.
+//! Contains support for _Optimistic Concurrency Control_ using
+//! _versioning attributes_.
 //!
-//! [Optimistic Concurrency Control]: https://en.wikipedia.org/wiki/Optimistic_concurrency_control
+//! Check out [`AggregateExt`] for more information.
+//!
+//! [`AggregateExt`]: trait.AggregateExt.html
 
 use std::ops::{Deref, DerefMut};
 
+use eventually_core::aggregate::{Aggregate, Identifiable};
+
 use futures::future::BoxFuture;
 
-use eventually_core::aggregate::{Aggregate, EventOf, StateOf};
-use eventually_core::command::{Handler as CommandHandler, Result as CommandResult};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Extension trait for [`CommandHandler`] to support a versioned [`Aggregate`].
+/// Extension trait to add _Optimistic Concurrency Control_ support
+/// over an [`Aggregate`] using _versioning_.
 ///
-/// For more information, check [`AsHandler`].
+/// ## Usage
 ///
-/// [`CommandHandler`]: ../command/trait.Handler.html
-/// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-/// [`AsHandler`]: struct.AsHandler.html
-pub trait CommandHandlerExt: CommandHandler + Sized {
-    /// Returns a decorated version of the [`CommandHandler`],
-    /// in the form of [`AsHandler`] handler implementation.
+/// Call [`versioned`] over an [`Aggregate`] instance to add versioning support.
+///
+/// ```text
+/// use eventually_util::versioned::AggregateExt;
+///
+/// // Assuming `SomeAggregateExample` is an Aggregate
+/// let versioned_aggregate = SomeAggregateExample.versioned();
+/// ```
+///
+/// [`Aggregate`]: ../../eventually_core/aggregate/Aggregate.html
+/// [`versioned`]: trait.AggregateExt.html#method.versioned
+pub trait AggregateExt: Aggregate + Sized {
+    /// Returns a _versioned_ flavour of an [`Aggregate`].
     ///
-    /// Check [`AsHandler`] documentation for more information.
-    ///
-    /// [`CommandHandler`]: ../command/trait.Handler.html
-    /// [`AsHandler`]: struct.AsHandler.html
-    fn versioned(self) -> AsHandler<Self> {
-        AsHandler(self)
+    /// [`Aggregate`]: ../../eventually_core/aggregate/Aggregate.html
+    #[inline]
+    fn versioned(self) -> AsAggregate<Self> {
+        AsAggregate(self)
     }
 }
 
-impl<H> CommandHandlerExt for H where H: CommandHandler + Sized {}
+impl<T> AggregateExt for T where T: Aggregate + Sized {}
 
-/// A [`CommandHandler`] decorator to support versioned [`Aggregate`].
+/// _Newtype_ extension for [`Aggregate`] types to add support
+/// for _Optimistic Concurrency Control_ using _versioning_ for [`Event`]s
+/// and Aggregate [`State`].
 ///
-/// This decorator uses the [`AsAggregate`] decorator as its Aggregate.
+/// Check out [`AggregateExt`] for more information.
 ///
-/// For more information, check [`AsAggregate`] documentation.
-///
-/// # Examples
-///
-/// ```
-/// # use std::convert::Infallible;
-/// #
-/// # use futures::future::BoxFuture;
-/// #
-/// # use eventually_core::aggregate::Aggregate;
-/// # use eventually_core::command;
-/// #
-/// # enum Event {}
-/// # enum Command {}
-/// #
-/// # struct Entity {}
-/// #
-/// # impl Aggregate for Entity {
-/// #     type State = Self;
-/// #     type Event = Event;
-/// #     type Error = Infallible;
-/// #
-/// #     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-/// #         unimplemented!()
-/// #     }
-/// # }
-/// #
-/// # struct MyHandler;
-/// # impl MyHandler {
-/// #     fn new() -> Self {
-/// #         MyHandler
-/// #     }
-/// # }
-/// #
-/// # impl command::Handler for MyHandler {
-/// #     type Command = Command;
-/// #     type Aggregate = Entity;
-/// #     type Error = Infallible;
-/// #
-/// #     fn handle<'a, 'b: 'a>(&'a self, state: &'b Entity, command: Self::Command) ->
-/// #         BoxFuture<'a, command::Result<Event, Self::Error>>
-/// #     {
-/// #         unimplemented!()
-/// #     }
-/// # }
-/// #
-/// use eventually_util::versioned::CommandHandlerExt;
-///
-/// let handler = MyHandler::new().versioned();
-/// #
-/// ```
-///
-/// [`CommandHandler`]: ../command/trait.Handler.html
-/// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-/// [`Versioned`]: struct.Versioned.html
-/// [`AsAggregate`]: struct.AsAggregate.html
+/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
+/// [`Event`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.Event
+/// [`State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State
+/// [`AggregateExt`]: trait.AggregateExt.html
 #[derive(Debug, Clone)]
-pub struct AsHandler<H>(H);
+pub struct AsAggregate<T>(T);
 
-impl<H> CommandHandler for AsHandler<H>
+impl<T> Aggregate for AsAggregate<T>
 where
-    H: CommandHandler + Send + Sync,
-    StateOf<H::Aggregate>: Send + Sync,
-    H::Command: Send,
+    T: Aggregate + Send + Sync,
+    T::State: Send + Sync,
+    T::Command: Send + Sync,
 {
-    type Command = H::Command;
-    // Decorated Aggregate type
-    type Aggregate = AsAggregate<H::Aggregate>;
-    type Error = H::Error;
+    type State = Versioned<T::State>;
+    type Event = Versioned<T::Event>;
+    type Command = T::Command;
+    type Error = T::Error;
 
-    fn handle<'a, 'b: 'a>(
+    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+        let version = event.version();
+        let event = event.take();
+        let state = state.data;
+
+        T::apply(state, event).map(|state| Versioned::new(state, version))
+    }
+
+    fn handle<'a, 's: 'a>(
         &'a self,
-        state: &'b StateOf<Self::Aggregate>,
+        state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, CommandResult<EventOf<Self::Aggregate>, Self::Error>> {
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    where
+        Self: Sized,
+    {
         let version = state.version();
 
         Box::pin(async move {
             self.0.handle(state, command).await.map(|events| {
                 events
                     .into_iter()
-                    .map(|event| Versioned::with_version(event, version + 1))
+                    .map(|event| Versioned::new(event, version + 1))
                     .collect()
             })
         })
     }
 }
 
-/// An [`Aggregate`] decorator that supports versioning.
-///
-/// Versioned [`State`] is possible through the [`Versioned`] type wrapper.
-///
-/// # Examples
-///
-/// ```
-/// use std::convert::Infallible;
-///
-/// use eventually_core::aggregate::Aggregate;
-///
-/// enum Event {
-///     SomeEvent
-/// }
-///
-/// #[derive(Debug, PartialEq)]
-/// struct Entity {}
-///
-/// impl Default for Entity {
-///     fn default() -> Self {
-///         Entity {}
-///     }
-/// }
-///
-/// impl Aggregate for Entity {
-///     type State = Self;
-///     type Event = Event;
-///     type Error = Infallible;
-///
-///     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-///         // Simple dumb implementation, you'll probably want something
-///         // more interesting in your code ;-)
-///         Ok(state)
-///     }
-/// }
-///
-/// use eventually_util::versioned::{AsAggregate, Versioned};
-///
-/// // Use by wrapping the original type in `AsAggregate::<T>`
-/// let result = AsAggregate::<Entity>::apply(
-///     Versioned::default(),
-///     Versioned::from(Event::SomeEvent)
-/// );
-///
-/// assert_eq!(
-///     result,
-///     // `Versioned::from` assigns the default version to the event, which is 0.
-///     // So, the state will take the same version.
-///     Ok(Versioned::with_version(Entity::default(), 0)),
-/// );
-///
-/// // If applying an event with version "1", the state will have version "1" too.
-/// assert_eq!(
-///     AsAggregate::<Entity>::apply(result.unwrap(), Versioned::with_version(Event::SomeEvent, 1)),
-///     Ok(Versioned::with_version(Entity::default(), 1)),
-/// );
-/// ```
-///
-/// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-/// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
-/// [`Versioned`]: struct.Versioned.html
-#[derive(Debug, Clone)]
-pub struct AsAggregate<A>(std::marker::PhantomData<A>);
-
-impl<A> Aggregate for AsAggregate<A>
-where
-    A: Aggregate,
-{
-    type State = Versioned<A::State>;
-    type Event = Versioned<A::Event>;
-    type Error = A::Error;
-
-    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-        let version = event.version();
-
-        A::apply(state.data, event.take()).map(|state| Versioned::with_version(state, version))
-    }
-}
-
 /// Wrapper to embed version information for un-versioned data types.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Versioned<T> {
+    #[cfg_attr(feature = "serde", serde(flatten))]
     data: T,
-    version: u64,
+    version: u32,
 }
 
 impl<T> Versioned<T> {
     /// Wraps data with the specified version information.
-    pub fn with_version(data: T, version: u64) -> Self {
+    #[inline]
+    pub fn new(data: T, version: u32) -> Self {
         Versioned { data, version }
     }
 
     /// Returns version information.
-    pub fn version(&self) -> u64 {
+    #[inline]
+    pub fn version(&self) -> u32 {
         self.version
     }
 
     /// Extracts the wrapped data from the instance.
+    #[inline]
     pub fn take(self) -> T {
         self.data
     }
@@ -229,20 +127,23 @@ impl<T> Versioned<T> {
 impl<T> Deref for Versioned<T> {
     type Target = T;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.data
     }
 }
 
 impl<T> DerefMut for Versioned<T> {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.data
     }
 }
 
 impl<T> From<T> for Versioned<T> {
+    #[inline]
     fn from(data: T) -> Self {
-        Versioned::with_version(data, 0)
+        Versioned::new(data, 0)
     }
 }
 
@@ -250,7 +151,136 @@ impl<T> Default for Versioned<T>
 where
     T: Default,
 {
+    #[inline]
     fn default() -> Self {
         Self::from(T::default())
+    }
+}
+
+impl<T> Identifiable for Versioned<T>
+where
+    T: Identifiable,
+{
+    type Id = T::Id;
+
+    #[inline]
+    fn id(&self) -> Self::Id {
+        self.data.id()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AggregateExt, Versioned};
+
+    use eventually_core::aggregate::{Aggregate, AggregateRoot, Identifiable};
+
+    use futures::future::BoxFuture;
+
+    use tokio_test::block_on;
+
+    #[test]
+    fn aggregate_versioning_extension_works() {
+        let aggregate = PointAggregate.versioned();
+        let state = Versioned::from(Point { x: 0f32, y: 0f32 });
+        let mut root = AggregateRoot::new(aggregate, state);
+
+        block_on(async {
+            root.handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+            .handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+            .handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+            .handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+        });
+
+        assert_eq!(root.state(), &Versioned::new(Point { x: 0f32, y: 0f32 }, 4))
+    }
+
+    #[derive(Debug, PartialEq, Clone, Copy, Default)]
+    struct Point {
+        x: f32,
+        y: f32,
+    }
+
+    // We don't care about identity for this example.
+    impl Identifiable for Point {
+        type Id = ();
+
+        fn id(&self) -> Self::Id {
+            ()
+        }
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct PointUpdated {
+        x: f32,
+        y: f32,
+    }
+
+    #[derive(Debug)]
+    enum PointCommand {
+        Rotate { anchor: (f32, f32), degrees: f32 },
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct PointAggregate;
+    impl Aggregate for PointAggregate {
+        type State = Point;
+        type Event = PointUpdated;
+        type Command = PointCommand;
+        type Error = std::convert::Infallible;
+
+        fn apply(mut state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+            state.x = event.x;
+            state.y = event.y;
+
+            Ok(state)
+        }
+
+        fn handle<'a, 's: 'a>(
+            &'a self,
+            state: &'s Self::State,
+            command: Self::Command,
+        ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+        where
+            Self: Sized,
+        {
+            Box::pin(futures::future::ok(match command {
+                PointCommand::Rotate { anchor, degrees } => {
+                    let angle = degrees * std::f32::consts::PI;
+                    let (center_x, center_y) = anchor;
+
+                    let delta_x = state.x - center_x;
+                    let delta_y = state.y - center_y;
+
+                    let rotated_x = (angle.cos() * delta_x - angle.sin() * delta_y) + center_x;
+                    let rotated_y = (angle.sin() * delta_x - angle.cos() * delta_y) + center_y;
+
+                    vec![PointUpdated {
+                        x: rotated_x,
+                        y: rotated_y,
+                    }]
+                }
+            }))
+        }
     }
 }

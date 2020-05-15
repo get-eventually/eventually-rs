@@ -2,9 +2,7 @@
 members = [
     "eventually",
     "eventually-core",
-    "eventually-memory",
+    "eventually-postgres",
     "eventually-util",
-
-    # Examples crate
-    "eventually-examples"
+    "eventually-test"
 ]

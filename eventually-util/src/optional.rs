@@ -1,239 +1,164 @@
-//! Support for [`Aggregate`] with [`Option`] state.
+//! Contains a different flavour of the [`Aggregate`] trait,
+//! while still maintaining compatibility through [`AsAggregate`] type.
 //!
-//! [`Aggregate`]: ../aggregate/trait.Aggregate.html
-//! [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
+//! Check out [`optional::Aggregate`] for more information.
+//!
+//! [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
+//! [`AsAggregate`]: struct.AsAggregate.html
+//! [`optional::Aggregate`]: trait.Aggregate.html
+
+use eventually_core::aggregate::Identifiable;
 
 use futures::future::BoxFuture;
 
-use eventually_core::{aggregate, command};
+/// An `Option`-flavoured, [`Aggregate`]-compatible trait
+/// to model Aggregates having an optional [`State`].
+///
+/// Use [`as_aggregate`] to get an [`Aggregate`]-compatible instance
+/// of this trait.
+///
+/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
+/// [`State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State
+/// [`as_aggregate`]: trait.Aggregate.html#method.as_aggregate
+pub trait Aggregate {
+    /// State of the Aggregate.
+    ///
+    /// Check out [`Aggregate::State`] for more information.
+    ///
+    /// [`Aggregate::State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State
+    type State: Identifiable;
 
-/// _Command Handler_ trait referring to [`Aggregate`] with [`Option`] state,
-/// a.k.a. [`Aggregate`].
-///
-/// Implementations of this trait can be adapted back into the [`command::Handler`]
-/// foundation trait by using [`as_handler`], in cases where the implementation
-/// has compile-time known size.
-///
-/// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-/// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
-/// [`Aggregate`]: trait.Aggregate.html
-/// [`command::Handler`]: ../command/trait.Handler.html
-/// [`as_handler`]: trait.CommandHandler.html#method.as_handler
-pub trait CommandHandler {
-    /// Commands to trigger a specific use-case on the context of an [`Aggregate`].
+    /// Events produced and supported by the Aggregate.
     ///
-    /// Most often than not, this type should be an `enum` containing
-    /// all supported operations -- that are not queries -- for the specified [`Aggregate`].
+    /// Check out [`Aggregate::Event`] for more information.
     ///
-    /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
+    /// [`Aggregate::Event`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.Event
+    type Event;
+
+    /// Commands supported by the Aggregate.
+    ///
+    /// Check out [`Aggregate::Command`] for more information.
+    ///
+    /// [`Aggregate::Command`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.Command
     type Command;
 
-    /// _Domain entity_ produced, updated or, in some way, affected by a [`Command`].
+    /// Error produced by the the Aggregate while applying [`Event`]s
+    /// or handling [`Command`]s.
     ///
-    /// [`Command`]: trait.CommandHandler.html#associatedType.Command
-    type Aggregate: Aggregate;
-
-    /// Possible expected errors to be returned when handling a [`Command`] fails.
-    ///
-    /// [`Command`]: trait.CommandHandler.html#associatedType.Command
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     type Error;
 
-    /// Handles a [`Command`] when the [`Aggregate`] state is not yet present.
+    /// Applies the specified [`Event`] when the [`State`] is empty.
     ///
-    /// Usually this happens when the event store has no persisted event
-    /// for this aggregate yet.
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error>;
+
+    /// Applies the specified [`Event`] on a pre-existing [`State`] value.
     ///
-    /// [`Command`]: trait.CommandHandler.html#associatedType.Command
-    /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
+
+    /// Handles the specified [`Command`] when the [`State`] is empty.
+    ///
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
     fn handle_first(
         &self,
         command: Self::Command,
-    ) -> BoxFuture<command::Result<EventOf<Self::Aggregate>, Self::Error>>;
+    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>
+    where
+        Self: Sized;
 
-    /// Handles a [`Command`] when the previous [`Aggregate`] state
-    /// is already **present** and **available** to the command handler.
+    /// Handles the specified [`Command`] on a pre-existing [`State`] value.
     ///
-    /// [`Command`]: trait.CommandHandler.html#associatedType.Command
-    /// [`Aggregate`]: trait.CommandHandler.html#associatedType.Aggregate
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Event
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
     fn handle_next<'a, 's: 'a>(
         &'a self,
-        state: &'s StateOf<Self::Aggregate>,
+        state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, command::Result<EventOf<Self::Aggregate>, Self::Error>>;
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    where
+        Self: Sized;
 
-    /// Adapts the [`CommandHandler`] implementation to the [`command::Handler`]
-    /// foundation trait, useful when needs to be used with a
-    /// [`command::Dispatcher`].
+    /// Translates the current [`optional::Aggregate`] instance into
+    /// a _newtype instance_ compatible with the core [`Aggregate`] trait.
     ///
-    /// This method is only available when the `Self` has
-    /// compile-time known size.
-    ///
-    /// [`CommandHandler`]: trait.CommandHandler.html
-    /// [`command::Handler`]: ../command/trait.Handler.html
-    /// [`command::Dispatcher`]: ../command/dispatcher/struct.Dispatcher.html
-    fn as_handler(self) -> AsHandler<Self>
+    /// [`optional::Aggregate`]: trait.Aggregate.html
+    /// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
+    #[inline]
+    fn as_aggregate(self) -> AsAggregate<Self>
     where
         Self: Sized,
     {
-        AsHandler(self)
+        AsAggregate::from(self)
     }
 }
 
-/// Adapter for [`CommandHandler`] implementators to [`command::Handler`] trait.
+/// _Newtype pattern_ to ensure compatibility between [`optional::Aggregate`] trait
+/// and the core [`Aggregate`] trait.
 ///
-/// Use [`CommandHandler.as_handler`] to construct this object.
+/// ## Usage
 ///
-/// [`CommandHandler`]: trait.CommandHandler.html
-/// [`command::Handler`]: ../command/trait.Handler.html
-/// [`CommandHandler.as_handler`]: trait.CommandHandler.html#method.as_handler
+/// 1. Use `From<Aggregate>` trait implementation:
+///     ```text
+///     use eventually_util::optional::AsAggregate;
+///
+///     let aggregate = AsAggregate::from(MyOptionalAggregate);
+///     ```
+/// 2. Use the [`Aggregate::as_aggregate`] method:
+///     ```text
+///     let aggregate = MyOptionalAggregate.as_aggregate();
+///     ```
+///
+/// [`optional::Aggregate`]: trait.Aggregate.html
+/// [`Aggregate::as_aggregate`]: trait.Aggregate.html#method.as_aggregate
+/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
 #[derive(Debug, Clone)]
-pub struct AsHandler<H>(H);
+pub struct AsAggregate<A>(A);
 
-impl<H> command::Handler for AsHandler<H>
+impl<A> From<A> for AsAggregate<A> {
+    #[inline]
+    fn from(value: A) -> Self {
+        AsAggregate(value)
+    }
+}
+
+impl<A> eventually_core::aggregate::Aggregate for AsAggregate<A>
 where
-    H: CommandHandler + Send + Sync,
-    StateOf<H::Aggregate>: Send + Sync,
-    H::Command: Send,
+    A: Aggregate,
+    A: Send + Sync,
+    A::Command: Send + Sync,
+    A::State: Identifiable + Send + Sync,
+    <A::State as Identifiable>::Id: Default,
 {
-    type Command = H::Command;
-    type Aggregate = AsAggregate<H::Aggregate>;
-    type Error = H::Error;
+    type State = Option<A::State>;
+    type Event = A::Event;
+    type Command = A::Command;
+    type Error = A::Error;
 
-    fn handle<'a, 'b: 'a>(
+    #[inline]
+    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+        match state {
+            None => A::apply_first(event).map(Some),
+            Some(state) => A::apply_next(state, event).map(Some),
+        }
+    }
+
+    fn handle<'a, 's: 'a>(
         &'a self,
-        state: &'b aggregate::StateOf<Self::Aggregate>,
+        state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<command::Result<aggregate::EventOf<Self::Aggregate>, Self::Error>> {
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    where
+        Self: Sized,
+    {
         Box::pin(match state {
             None => self.0.handle_first(command),
             Some(state) => self.0.handle_next(state, command),
         })
-    }
-}
-
-/// Extract the [`State`] from an [`Aggregate`].
-///
-/// [`Aggregate`]: trait.Aggregate.html
-/// [`State`]: trait.Aggregate.html#associatedType.State
-pub type StateOf<A> = <A as Aggregate>::State;
-
-/// Extract the [`Event`] from an [`Aggregate`].
-///
-/// [`Aggregate`]: trait.Aggregate.html
-/// [`Event`]: trait.Aggregate.html#associatedType.Event
-pub type EventOf<A> = <A as Aggregate>::Event;
-
-/// Variation of [`aggregate::Aggregate`] trait, useful when
-/// the Aggregate [`State`] is expressed as an [`Option`].
-///
-/// Implementors of this trait can be adapted to the foundation [`aggregate::Aggregate`]
-/// trait by using the [`AsAggregate`] adapter.
-///
-/// [`aggregate::Aggregate`]: ../aggregate/trait.Aggregate.html
-/// [`State`]: ../aggregate/trait.Aggregate.html#associatedType.State
-/// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
-/// [`AsAggregate`]: struct.AsAggregate.html
-pub trait Aggregate {
-    /// State of the Aggregate.
-    ///
-    /// **DO NOT** use an [`Option`] here: this type is thought
-    /// to be as the `T` type in `Option<T>`.
-    ///
-    /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
-    type State;
-
-    /// Event of the Aggregate.
-    ///
-    /// Check out [`Event`] documentation for more information.
-    ///
-    /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedType.Event
-    type Event;
-
-    /// Error occurring when appling an [`Event`] to an Aggregate.
-    ///
-    /// Check out [`Error`] documentation for more information.
-    ///
-    /// [`Event`]: trait.Aggregate.html#associatedType.Event
-    /// [`Error`]: ../aggregate/trait.Aggregate.html#associatedType.Error
-    type Error;
-
-    /// Handles events when the [`State`] has not been found.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedType.State
-    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error>;
-
-    /// Handles events when the [`State`] has been found,
-    /// and updates it accordingly.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedType.State
-    fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
-}
-
-/// Adapter for [`Aggregate`] types to the foundational [`eventually::Aggregate`] trait.
-///
-/// # Examples
-///
-/// ```
-/// use eventually_util::optional::Aggregate as OptionalAggregate;
-///
-/// enum SomeEvent {
-///     Happened
-/// }
-///
-/// #[derive(Debug, PartialEq)]
-/// struct SomeState {
-///     // Some nice fields
-/// }
-///
-/// struct SomeAggregate;
-/// impl OptionalAggregate for SomeAggregate {
-///     type State = SomeState;
-///     type Event = SomeEvent;
-///     type Error = std::convert::Infallible;
-///
-///     fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
-///         // Return an empty state, here you should create the initial
-///         // state based on the event received.
-///         Ok(SomeState {})
-///     }
-///
-///     fn apply_next(state: Self::State, _event: Self::Event) -> Result<Self::State, Self::Error> {
-///         // Return the same state, here you should update the state
-///         // based on the event received.
-///         Ok(state)
-///     }
-/// }
-///
-/// use eventually_core::aggregate::Aggregate;
-/// use eventually_util::optional::AsAggregate;
-///
-/// // To adapt SomeAggregate to `eventually::Aggregate`:
-/// let result = AsAggregate::<SomeAggregate>::apply(
-///     None,                   // This state will result in calling `SomeAggregate::apply_first`
-///     SomeEvent::Happened,
-/// );
-///
-/// // An `Option`-wrapped `SomeState` instance is returned.
-/// assert_eq!(result, Ok(Some(SomeState {})));
-/// ```
-///
-/// [`Aggregate`]: trait.Aggregate.html
-/// [`eventually::Aggregate`]: ../aggregate/trait.Aggregate.html
-#[derive(Debug, Clone)]
-pub struct AsAggregate<T>(std::marker::PhantomData<T>);
-
-impl<A> aggregate::Aggregate for AsAggregate<A>
-where
-    A: Aggregate,
-{
-    type State = Option<A::State>;
-    type Event = A::Event;
-    type Error = A::Error;
-
-    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-        Ok(Some(match state {
-            None => A::apply_first(event)?,
-            Some(state) => A::apply_next(state, event)?,
-        }))
     }
 }

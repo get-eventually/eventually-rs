@@ -45,6 +45,30 @@
 
 Collection of traits and other utilities to help you build your Event-sourced applications in Rust.
 
+## Usage
+
+Add `eventually` into your project dependencies:
+
+```toml
+[dependencies]
+eventually = "0.3"
+```
+
+Check out [`eventually-test`](eventually-test) crate to see how to use the different
+components offered by the crate.
+
+## Project Layout
+
+Eventually is a workspace containing different sub-crates, as follows:
+
+* [`eventually`](eventually): crate containing the public API -- users should only depend on this crate,
+* [`eventually-core`](eventually-core): contains foundation traits and types to use Event Sourcing,
+* [`eventually-util`](eventually-util): contains set of extensions built on top
+of the foundation traits contained in the core crate,
+* [`eventually-postgres`](eventually-postgres): contains a PostgreSQL-backed Event Store implementation, to permanently store Domain Events,
+* [`eventually-test`](eventually-test): contains an _HTTP service_ example application build using `eventually` and [`tide`](https://github.com/http-rs/tide).
+
+
 ## Versioning
 
 This library is **actively being developed**, and prior to `v1` release the following [Semantic versioning]()
@@ -52,92 +76,6 @@ is being adopted:
 
 * Breaking changes are tagged with a new `MINOR` release
 * New features, patches and documentation are tagged with a new `PATCH` release
-
-## Project Layout
-
-Eventually is a workspace containing different sub-crates, as follows:
-
-* [`eventually`](eventually): crate containing the public API -- users should
-only depend on this crate.
-
-* [`eventually-core`](eventually-core): contains foundation traits and types for domain modeling
-and event store.
-
-* [`eventually-util`](eventually-util): contains set of extensions built on top
-of the foundation traits contained in the core crate.
-
-* [`eventually-memory`](eventually-memory): contains an in-memory event store implementation.
-
-* [`eventually-examples`](eventually-examples): contains different examples on how to use
-the library.
-
-## Examples
-
-### A simple Order aggregate
-
-```rust
-use chrono::{DateTime, Utc};
-
-use eventually::Aggregate;
-
-enum OrderEvent {
-    Created { id: String, on: DateTime<Utc> },
-    ItemAdded { item: String, quantity: u32 },
-    Purchased { on: DateTime<Utc> },
-}
-
-struct OrderState {
-    id: String,
-    created_at: DateTime<Utc>,
-    items: Vec<(String, u32)>,
-    purchased_on: Option<DateTime<Utc>>,
-}
-
-enum OrderError {
-    AlreadyCreated,
-    NotYetCreated,
-    AlreadyPurchased,
-}
-
-struct OrderAggregate;
-impl Aggregate for OrderAggregate {
-    type State = Option<OrderState>;
-    type Event = OrderEvent;
-    type Error = OrderError;
-
-    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-        use OrderEvent::*;
-
-        match state {
-            None => match event {
-                Created { id, on } => Ok(Some(OrderState {
-                    id,
-                    created_at: on,
-                    items: Vec::new(),
-                    purchased_on: None,
-                })),
-                _ => Err(OrderError::NotYetCreated),
-            },
-
-            Some(mut state) => match event {
-                Created { .. } => Err(OrderError::AlreadyCreated),
-                ItemAdded { item, quantity } => {
-                    if state.purchased_on.is_none() {
-                        state.items.push((item, quantity));
-                        Ok(state)
-                    } else {
-                        Err(OrderError::AlreadyPurchased)
-                    }
-                },
-                Purchased { on } => {
-                    state.purchased_on = Some(on);
-                    Ok(state)
-                },
-            }
-        }
-    }
-}
-```
 
 ## License
 

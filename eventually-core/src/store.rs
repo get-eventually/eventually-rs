@@ -1,77 +1,80 @@
-//! Contains abstractions for the Event Store feature.
+//! Contains the Event Store trait for storing and streaming Aggregate [`Event`]s.
+//!
+//! [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
 
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
-/// Represents an Event Store, an append-only, ordered list of [`Events`]
-/// for a certain "source" (i.e. [`Aggregate`]).
+/// Stream type returned by the [`EventStore::stream`] method.
 ///
-/// [`Events`]: trait.Store.html#associatedType.Event
+/// [`EventStore::stream`]: trait.EventStore.html#method.stream
+pub type EventStream<'a, S> =
+    BoxStream<'a, Result<<S as EventStore>::Event, <S as EventStore>::Error>>;
+
+/// An Event Store is an append-only, ordered list of [`Event`]s
+/// for a certain "source" -- e.g. an [`Aggregate`].
+///
+/// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-pub trait Store {
-    /// Type of the Source id, usually an [`Aggregate`] id.
+pub trait EventStore {
+    /// Type of the Source id, typically an [`AggregateId`].
     ///
-    /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-    type SourceId: PartialEq;
+    /// [`AggregateId`]: ../aggregate/type.AggregateId.html
+    type SourceId: Eq;
 
-    /// Type of the memory offset supported by the `Store`.
+    /// Offset type for getting a slice of the [`Event`]s in the Store.
     ///
-    /// An offset is needed to get a slice of the events in the `Store`.
+    /// Check out [`stream`] for more info.
     ///
-    /// Check out [`Store::stream`] for more information.
-    ///
-    /// [`Store::stream`]: trait.Store.html#method.stream
-    type Offset: PartialOrd;
+    /// [`Event`]: trait.EventStore.html#associatedtype.Event
+    /// [`stream`]: trait.EventStore.html#method.stream
+    type Offset: Ord;
 
-    /// Type of the events supported by the `Store`.
+    /// Event to be stored in the `EventStore`, typically an [`Aggregate::Event`].
     ///
-    /// Usually, they match the same type as [`Aggregate::Event`].
-    ///
-    /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedType.Event
+    /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     type Event;
 
-    /// Possible errors returned by the `Store`.
-    ///
-    /// Usually, this should be an `enum` containing all the possible reasons
-    /// why the `Store` could fail due to external failures.
-    ///
-    /// [`append`]: trait.Store.html#method.append
+    /// Possible errors returned by the `EventStore` when requesting operations.
     type Error;
 
-    /// Allows to stream many [`Events`] from the `Store` back to the application,
-    /// by specifying the [`SourceId`] and the desired [`Offset`].
+    /// Appends a new list of [`Event`]s to the Event Store, for the Source
+    /// entity specified by [`SourceId`].
     ///
-    /// An asynchronous [`Stream`] is returned, yielding every `Event`
-    /// from the specified `Offset` in the same order as they were committed.
+    /// `append` is a transactional operation: it either appends all the events,
+    /// or none at all and returns an appropriate [`Error`].
     ///
-    /// To stream back all the events in the `Store` for a certain `Source`,
-    /// [`Offset`] should implement `Default`, and use such value (in case of numeric offsets,
-    /// this is most likely `0`).
-    ///
-    /// In case of an [`Aggregate`], it is possible to recreate its [`State`] by
-    /// supplying the returned [`Stream`] into [`Aggregate::async_fold`].
-    ///
-    /// [`Events`]: trait.Store.html#associatedType.Events
-    /// [`SourceId`]: trait.Store.html#associatedType.SourceId
-    /// [`Offset`]: trait.Store.html#associatedType.SourceId
-    /// [`Stream`]: https://docs.rs/futures/stream/trait.Stream.html
-    /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-    /// [`State`]: ../aggregate/trait.Aggregate.html#associatedType.State
-    /// [`Aggregate::async_fold`]: ../aggregate/trait.AggregateExt.html#method.async_fold
-    fn stream(
-        &self,
-        source_id: Self::SourceId,
-        from: Self::Offset,
-    ) -> BoxStream<Result<Self::Event, Self::Error>>;
-
-    /// Appends a list of new events to the `Store`.
-    ///
-    /// An [`Error`] is returned if the append operation fails.
-    ///
-    /// [`Error`]: trait.Store.html#associatedType.Error
+    /// [`Event`]: trait.EventStore.html#associatedtype.Event
+    /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
+    /// [`Error`]: trait.EventStore.html#associatedtype.Error
     fn append(
         &mut self,
-        source_id: Self::SourceId,
+        id: Self::SourceId,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<(), Self::Error>>;
+
+    /// Streams a list of [`Event`]s from the `EventStore` back to the application,
+    /// by specifying the desired [`SourceId`] and [`Offset`].
+    ///
+    /// [`SourceId`] will be used to request a particular `EventStream`.
+    ///
+    /// [`Offset`] will be used to specify a slice of the [`Event`]s to retrieve
+    /// from the `EventStore`. To request the whole list, use the [`Default`]
+    /// value for [`Offset`].
+    ///
+    /// [`Event`]: trait.EventStore.html#associatedtype.Event
+    /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
+    /// [`Offset`]: trait.EventStore.html#associatedtype.Offset
+    fn stream(
+        &self,
+        id: Self::SourceId,
+        from: Self::Offset,
+    ) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
+
+    /// Drops all the [`Event`]s related to one `Source`, specified by
+    /// the provided [`SourceId`].
+    ///
+    /// [`Event`]: trait.EventStore.html#associatedtype.Event
+    /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
+    fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>>;
 }
