@@ -4,6 +4,7 @@ version = "0.3.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
+readme = "../README.md"
 
 [dependencies]
 futures = { version = "0.3", features = ["async-await"] }
