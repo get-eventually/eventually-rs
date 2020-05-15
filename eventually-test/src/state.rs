@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use eventually::aggregate::Versioned;
+use eventually::inmemory::EventStore;
 use eventually::optional::AsAggregate as Optional;
 use eventually::versioned::Versioned as VersionedData;
 use eventually::Repository;
-use eventually_postgres::EventStore;
+// use eventually_postgres::EventStore;
 
 use tokio::sync::RwLock;
 

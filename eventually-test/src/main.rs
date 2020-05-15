@@ -9,9 +9,10 @@ use std::sync::Arc;
 use envconfig::Envconfig;
 
 use eventually::aggregate::Optional;
+use eventually::inmemory::EventStoreBuilder;
 use eventually::versioned::AggregateExt;
 use eventually::Repository;
-use eventually_postgres::EventStoreBuilder;
+// use eventually_postgres::EventStoreBuilder;
 
 use tokio::sync::RwLock;
 
@@ -24,50 +25,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     env_logger::builder().filter_level(config.log_level).init();
 
-    // Open a connection with Postgres.
-    let (client, connection) =
-        tokio_postgres::connect(&config.postgres_dsn(), tokio_postgres::NoTls)
-            .await
-            .map_err(|err| {
-                eprintln!("failed to connect to Postgres: {}", err);
-                err
-            })?;
-
-    // The connection, responsible for the actual IO, must be handled by a different
-    // execution context.
-    tokio::spawn(async move {
-        if let Err(e) = connection.await {
-            eprintln!("connection error: {}", e);
-        }
-    });
-
-    // Use an EventStoreBuilder to build multiple EventStore instances.
-    let event_store_builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
-
     // Aggregate target: in this case it's empty, but usually it would use
     // some domain services or internal repositories.
     let aggregate = Arc::new(OrderAggregate.as_aggregate().versioned());
 
+    // // Open a connection with Postgres.
+    // let (client, connection) =
+    //     tokio_postgres::connect(&config.postgres_dsn(), tokio_postgres::NoTls)
+    //         .await
+    //         .map_err(|err| {
+    //             eprintln!("failed to connect to Postgres: {}", err);
+    //             err
+    //         })?;
+
+    // // The connection, responsible for the actual IO, must be handled by a different
+    // // execution context.
+    // tokio::spawn(async move {
+    //     if let Err(e) = connection.await {
+    //         eprintln!("connection error: {}", e);
+    //     }
+    // });
+
+    // // Use an EventStoreBuilder to build multiple EventStore instances.
+    // let event_store_builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
+
     // Event store for the OrderAggregate.
-    let store = {
-        let store = event_store_builder.aggregate_stream(&aggregate, "orders");
-        store.create_stream().await?;
-        store
-    };
+    // let store = {
+    //     let store = event_store_builder.aggregate_stream(&aggregate, "orders");
+    //     store.create_stream().await?;
+    //     store
+    // };
+    let store = EventStoreBuilder::for_aggregate(&aggregate);
 
     // Creates a Repository to read and store OrderAggregates.
-    let repository = Repository::new(aggregate.clone(), store.clone());
+    let repository = Arc::new(RwLock::new(Repository::new(
+        aggregate.clone(),
+        store.clone(),
+    )));
 
     // Set up the HTTP router.
     let mut app = tide::new();
 
-    app.middleware(log::LogMiddleware::new());
+    app.middleware(log::Middleware::new());
 
     app.at("/orders/:id").nest({
         let mut api = tide::with_state(state::AppState {
-            store: store,
-            aggregate: aggregate,
-            repository: Arc::new(RwLock::new(repository)),
+            store,
+            aggregate,
+            repository,
         });
 
         api.at("/").get(api::get_order);

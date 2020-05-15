@@ -5,6 +5,7 @@ use std::convert::Infallible;
 use std::hash::Hash;
 use std::sync::Arc;
 
+use eventually_core::aggregate::{Aggregate, AggregateId};
 use eventually_core::store::EventStream;
 
 use futures::future::BoxFuture;
@@ -50,6 +51,25 @@ where
             .into_iter()
             .filter(move |(offset, _)| offset >= &from)
             .flat_map(|(_, events)| events)
+    }
+}
+
+/// Builder for [`EventStore`] instances.
+///
+/// [`EventStore`]: struct.EventStore.html
+pub struct EventStoreBuilder;
+
+impl EventStoreBuilder {
+    /// Builds a new [`EventStore`] instance compatible with the provided [`Aggregate`].
+    ///
+    /// [`Aggregate`]: ../../eventually-core/aggregate/trait.Aggregate.html
+    #[inline]
+    pub fn for_aggregate<T>(_: &T) -> EventStore<AggregateId<T>, T::Event>
+    where
+        T: Aggregate,
+        AggregateId<T>: Hash + Eq,
+    {
+        Default::default()
     }
 }
 
