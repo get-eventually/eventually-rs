@@ -104,13 +104,13 @@ pub trait Aggregate {
 /// ## Usage
 ///
 /// 1. Use `From<Aggregate>` trait implementation:
-///     ```no_run
+///     ```text
 ///     use eventually_util::optional::AsAggregate;
 ///
 ///     let aggregate = AsAggregate::from(MyOptionalAggregate);
 ///     ```
 /// 2. Use the [`Aggregate::as_aggregate`] method:
-///     ```no_run
+///     ```text
 ///     let aggregate = MyOptionalAggregate.as_aggregate();
 ///     ```
 ///

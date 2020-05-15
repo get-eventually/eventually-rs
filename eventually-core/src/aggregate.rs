@@ -161,13 +161,13 @@ impl<T> AggregateExt for T where T: Aggregate {}
 /// `AggregateRoot` can be initialized in two ways:
 ///
 /// 1. Using the `From<Aggregate>` method:
-///     ```no_run
+///     ```text
 ///     let root = AggregateRoot::from(aggregate);
 ///     ```
 ///
 /// 2. Using the [`AggregateExt`] extension trait to call [`root()`] on the [`Aggregate`]
 /// instance:
-///     ```no_run
+///     ```text
 ///     // This will result in a Clone of the Aggregate instance.
 ///     let root = aggregate.root();
 ///     ```

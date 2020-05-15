@@ -31,7 +31,7 @@ impl EventStoreBuilder {
     ///
     /// ## Usage
     ///
-    /// ```no_run
+    /// ```text
     /// // Open a connection with Postgres.
     /// let (client, connection) =
     ///     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
@@ -91,7 +91,7 @@ impl EventStoreBuilder {
     ///
     /// ## Usage
     ///
-    /// ```no_run
+    /// ```text
     /// // Open a connection with Postgres.
     /// let (client, connection) =
     ///     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)

@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Call [`versioned`] over an [`Aggregate`] instance to add versioning support.
 ///
-/// ```no_run
+/// ```text
 /// use eventually_util::versioned::AggregateExt;
 ///
 /// // Assuming `SomeAggregateExample` is an Aggregate
