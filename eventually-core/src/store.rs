@@ -5,6 +5,12 @@
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
+/// Stream type returned by the [`EventStore::stream`] method.
+///
+/// [`EventStore::stream`]: trait.EventStore.html#method.stream
+pub type EventStream<'a, S> =
+    BoxStream<'a, Result<<S as EventStore>::Event, <S as EventStore>::Error>>;
+
 /// An Event Store is an append-only, ordered list of [`Event`]s
 /// for a certain "source" -- e.g. an [`Aggregate`].
 ///
@@ -63,7 +69,7 @@ pub trait EventStore {
         &self,
         id: Self::SourceId,
         from: Self::Offset,
-    ) -> BoxFuture<Result<BoxStream<Result<Self::Event, Self::Error>>, Self::Error>>;
+    ) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
 
     /// Drops all the [`Event`]s related to one `Source`, specified by
     /// the provided [`SourceId`].

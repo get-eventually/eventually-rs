@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use eventually_core::aggregate::{Aggregate, AggregateId};
+use eventually_core::store::EventStream;
 use eventually_util::versioned::Versioned;
 
 use futures::future::BoxFuture;
-use futures::stream::{BoxStream, StreamExt, TryStreamExt};
+use futures::stream::{StreamExt, TryStreamExt};
 
 use serde::{Deserialize, Serialize};
 
@@ -236,7 +237,7 @@ where
         &self,
         id: Self::SourceId,
         from: Self::Offset,
-    ) -> BoxFuture<Result<BoxStream<Result<Self::Event, Self::Error>>, Self::Error>> {
+    ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
         Box::pin(async move {
             let params: Params = &[&id, &(from as u32)];
 
@@ -271,6 +272,7 @@ where
 type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
 
 #[inline]
+#[allow(trivial_casts)]
 fn slice_iter<'a>(s: Params<'a>) -> impl ExactSizeIterator<Item = &'a dyn ToSql> + 'a {
     s.iter().map(|s| *s as _)
 }

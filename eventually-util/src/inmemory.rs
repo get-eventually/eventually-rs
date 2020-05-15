@@ -5,13 +5,15 @@ use std::convert::Infallible;
 use std::hash::Hash;
 use std::sync::Arc;
 
+use eventually_core::store::EventStream;
+
+use futures::future::BoxFuture;
+use futures::stream::{empty, iter, StreamExt};
+
 #[cfg(not(feature = "tokio"))]
 use std::sync::RwLock;
 #[cfg(feature = "tokio")]
 use tokio::sync::RwLock;
-
-use futures::future::BoxFuture;
-use futures::stream::{empty, iter, BoxStream, StreamExt};
 
 #[derive(Debug)]
 struct EventsHolder<Event> {
@@ -109,7 +111,7 @@ where
         &self,
         id: Self::SourceId,
         from: Self::Offset,
-    ) -> BoxFuture<Result<BoxStream<Result<Self::Event, Self::Error>>, Self::Error>> {
+    ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
         Box::pin(async move {
             #[cfg(not(feature = "tokio"))]
             let reader = self.backend.read().unwrap();
