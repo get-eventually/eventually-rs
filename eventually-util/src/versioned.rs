@@ -168,3 +168,119 @@ where
         self.data.id()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{AggregateExt, Versioned};
+
+    use eventually_core::aggregate::{Aggregate, AggregateRoot, Identifiable};
+
+    use futures::future::BoxFuture;
+
+    use tokio_test::block_on;
+
+    #[test]
+    fn aggregate_versioning_extension_works() {
+        let aggregate = PointAggregate.versioned();
+        let state = Versioned::from(Point { x: 0f32, y: 0f32 });
+        let mut root = AggregateRoot::new(aggregate, state);
+
+        block_on(async {
+            root.handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+            .handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+            .handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+            .handle(PointCommand::Rotate {
+                anchor: (0f32, 0f32),
+                degrees: 90f32,
+            })
+            .await
+            .expect("should be infallible")
+        });
+
+        assert_eq!(root.state(), &Versioned::new(Point { x: 0f32, y: 0f32 }, 4))
+    }
+
+    #[derive(Debug, PartialEq, Clone, Copy, Default)]
+    struct Point {
+        x: f32,
+        y: f32,
+    }
+
+    // We don't care about identity for this example.
+    impl Identifiable for Point {
+        type Id = ();
+
+        fn id(&self) -> Self::Id {
+            ()
+        }
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct PointUpdated {
+        x: f32,
+        y: f32,
+    }
+
+    #[derive(Debug)]
+    enum PointCommand {
+        Rotate { anchor: (f32, f32), degrees: f32 },
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct PointAggregate;
+    impl Aggregate for PointAggregate {
+        type State = Point;
+        type Event = PointUpdated;
+        type Command = PointCommand;
+        type Error = std::convert::Infallible;
+
+        fn apply(mut state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+            state.x = event.x;
+            state.y = event.y;
+
+            Ok(state)
+        }
+
+        fn handle<'a, 's: 'a>(
+            &'a self,
+            state: &'s Self::State,
+            command: Self::Command,
+        ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+        where
+            Self: Sized,
+        {
+            Box::pin(futures::future::ok(match command {
+                PointCommand::Rotate { anchor, degrees } => {
+                    let angle = degrees * std::f32::consts::PI;
+                    let (center_x, center_y) = anchor;
+
+                    let delta_x = state.x - center_x;
+                    let delta_y = state.y - center_y;
+
+                    let rotated_x = (angle.cos() * delta_x - angle.sin() * delta_y) + center_x;
+                    let rotated_y = (angle.sin() * delta_x - angle.cos() * delta_y) + center_y;
+
+                    vec![PointUpdated {
+                        x: rotated_x,
+                        y: rotated_y,
+                    }]
+                }
+            }))
+        }
+    }
+}
