@@ -1,8 +1,9 @@
 [package]
 name = "eventually-util"
-version = "0.1.0"
-authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+version = "0.3.0"
 edition = "2018"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+license = "MIT"
 
 [features]
 default = []
