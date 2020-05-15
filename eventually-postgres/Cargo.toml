@@ -1,13 +1,17 @@
 [package]
 name = "eventually-postgres"
+description = "Event Store implementation using PostgreSQL for the Eventually crate"
 version = "0.1.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
+repository = "https://github.com/ar3s3ru/eventually-rs"
+
+categories = ["web-programming", "asynchronous"]
+keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing", "cqrs", "es"]
 
 [dependencies]
-eventually-core = { path = "../eventually-core" }
-eventually-util = { path = "../eventually-util", features = ["serde"] }
+eventually = { path = "../eventually", features = ["serde"] }
 
 futures = "0.3"
 serde = "1.0"

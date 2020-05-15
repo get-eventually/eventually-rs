@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use eventually_core::aggregate::{Aggregate, AggregateId};
-use eventually_core::store::EventStream;
-use eventually_util::versioned::Versioned;
+use eventually::store::EventStream;
+use eventually::versioned::Versioned;
+use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
@@ -194,7 +194,7 @@ where
     }
 }
 
-impl<Id, Event> eventually_core::store::EventStore for EventStore<Id, Versioned<Event>>
+impl<Id, Event> eventually::EventStore for EventStore<Id, Versioned<Event>>
 where
     Id: ToSql + Eq + Send + Sync,
     Event: Serialize + Send + Sync,

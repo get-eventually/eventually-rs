@@ -1,5 +1,6 @@
 [package]
 name = "eventually"
+description = "Crate for using Event Sourcing in Rust applications"
 version = "0.3.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
@@ -7,12 +8,8 @@ license = "MIT"
 readme = "../README.md"
 repository = "https://github.com/ar3s3ru/eventually-rs"
 
-description = """
-Work-in-progress crate to allow easy development of Event Sourced application.
-"""
-
-categories = ["ddd", "event-sourcing", "cqrs", "aggregate"]
-keywords = ["architecture", "ddd", "event-sourcing", "cqrs"]
+categories = ["rust-patterns", "web-programming", "asynchronous", "data-structures"]
+keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es", "domain", "events"]
 
 [features]
 default = []
