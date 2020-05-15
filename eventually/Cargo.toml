@@ -9,7 +9,7 @@ readme = "../README.md"
 repository = "https://github.com/ar3s3ru/eventually-rs"
 
 categories = ["rust-patterns", "web-programming", "asynchronous", "data-structures"]
-keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es", "domain", "events"]
+keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [features]
 default = []
