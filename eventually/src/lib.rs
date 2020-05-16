@@ -13,6 +13,11 @@ pub mod aggregate {
 
 pub mod store {
     pub use eventually_core::store::*;
+
+    #[cfg(feature = "tokio")]
+    pub mod notify {
+        pub use eventually_util::notify::*;
+    }
 }
 
 pub mod optional {
