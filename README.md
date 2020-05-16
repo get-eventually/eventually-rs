@@ -38,6 +38,11 @@
         <img alt="GitHub license"
         src="https://img.shields.io/github/license/ar3s3ru/eventually-rs?style=flat-square">
     </a>
+    <!-- Gitter -->
+    <a href="https://gitter.im/eventually-rs/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
+        <img alt="Gitter"
+         src="https://img.shields.io/gitter/room/eventually-rs/community?style=flat-square">
+    </a>
 </div>
 
 <br />
