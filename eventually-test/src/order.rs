@@ -34,10 +34,10 @@ impl OrderItems {
     fn insert_or_merge(self, item: OrderItem) -> Self {
         let mut list: Vec<OrderItem> = self.into();
 
-         list.iter_mut()
-             .find(|it| item.item_sku == it.item_sku)
-             .map(|it| it.quantity += item.quantity)
-             .or_else(|| Some(list.push(item)));
+        list.iter_mut()
+            .find(|it| item.item_sku == it.item_sku)
+            .map(|it| it.quantity += item.quantity)
+            .or_else(|| Some(list.push(item)));
 
         OrderItems::from(list)
     }
