@@ -236,11 +236,6 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">FmtResult</span>};
 
@@ -276,17 +271,12 @@
 
 <span class="kw">impl</span> <span class="ident">OrderItems</span> {
     <span class="kw">fn</span> <span class="ident">insert_or_merge</span>(<span class="self">self</span>, <span class="ident">item</span>: <span class="ident">OrderItem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="comment">// Why doesn&#39;t this work?</span>
-        <span class="comment">// list.iter_mut()</span>
-        <span class="comment">//     .find(|it| item.item_sku == it.item_sku)</span>
-        <span class="comment">//     .map_or_else(|| list.push(item), |it| it.quantity += item.quantity);</span>
-
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into</span>();
 
-        <span class="kw">match</span> <span class="ident">list</span>.<span class="ident">iter_mut</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">item_sku</span> <span class="op">=</span><span class="op">=</span> <span class="ident">it</span>.<span class="ident">item_sku</span>) {
-            <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">it</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">it</span>.<span class="ident">quantity</span> <span class="op">+</span><span class="op">=</span> <span class="ident">item</span>.<span class="ident">quantity</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">item</span>),
-        }
+         <span class="ident">list</span>.<span class="ident">iter_mut</span>()
+             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">item_sku</span> <span class="op">=</span><span class="op">=</span> <span class="ident">it</span>.<span class="ident">item_sku</span>)
+             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">it</span>.<span class="ident">quantity</span> <span class="op">+</span><span class="op">=</span> <span class="ident">item</span>.<span class="ident">quantity</span>)
+             .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">item</span>)));
 
         <span class="ident">OrderItems</span>::<span class="ident">from</span>(<span class="ident">list</span>)
     }
