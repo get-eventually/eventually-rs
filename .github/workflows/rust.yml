@@ -1,6 +1,9 @@
-on: push
-
 name: Rust (stable)
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   check:
