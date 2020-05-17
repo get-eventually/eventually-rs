@@ -32,17 +32,12 @@ impl From<OrderItems> for Vec<OrderItem> {
 
 impl OrderItems {
     fn insert_or_merge(self, item: OrderItem) -> Self {
-        // Why doesn't this work?
-        // list.iter_mut()
-        //     .find(|it| item.item_sku == it.item_sku)
-        //     .map_or_else(|| list.push(item), |it| it.quantity += item.quantity);
-
         let mut list: Vec<OrderItem> = self.into();
 
-        match list.iter_mut().find(|it| item.item_sku == it.item_sku) {
-            Some(mut it) => it.quantity += item.quantity,
-            None => list.push(item),
-        }
+         list.iter_mut()
+             .find(|it| item.item_sku == it.item_sku)
+             .map(|it| it.quantity += item.quantity)
+             .or_else(|| Some(list.push(item)));
 
         OrderItems::from(list)
     }
