@@ -173,16 +173,16 @@ where
     /// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
     pub async fn create_stream(&self) -> Result<(), Error> {
         let query = format!(
-            "CREATE TABLE IF NOT EXISTS {} (
+            "CREATE TABLE IF NOT EXISTS {table_name} (
                 event_id SERIAL PRIMARY KEY,
                 committed_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
                 aggregate_id VARCHAR NOT NULL,
                 version OID NOT NULL,
                 \"offset\" OID NOT NULL,
                 event JSONB NOT NULL,
-                CONSTRAINT versioned UNIQUE (aggregate_id, version, \"offset\")
+                CONSTRAINT {table_name}_versioned UNIQUE (aggregate_id, version, \"offset\")
             )",
-            self.table_name
+            table_name = self.table_name
         );
 
         self.client
