@@ -9,10 +9,9 @@ use std::sync::Arc;
 use envconfig::Envconfig;
 
 use eventually::aggregate::Optional;
-use eventually::inmemory::EventStoreBuilder;
 use eventually::versioned::AggregateExt;
 use eventually::Repository;
-// use eventually_postgres::EventStoreBuilder;
+use eventually_postgres::EventStoreBuilder;
 
 use tokio::sync::RwLock;
 
@@ -29,33 +28,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // some domain services or internal repositories.
     let aggregate = Arc::new(OrderAggregate.as_aggregate().versioned());
 
-    // // Open a connection with Postgres.
-    // let (client, connection) =
-    //     tokio_postgres::connect(&config.postgres_dsn(), tokio_postgres::NoTls)
-    //         .await
-    //         .map_err(|err| {
-    //             eprintln!("failed to connect to Postgres: {}", err);
-    //             err
-    //         })?;
+    // Open a connection with Postgres.
+    let (client, connection) =
+        tokio_postgres::connect(&config.postgres_dsn(), tokio_postgres::NoTls)
+            .await
+            .map_err(|err| {
+                eprintln!("failed to connect to Postgres: {}", err);
+                err
+            })?;
 
-    // // The connection, responsible for the actual IO, must be handled by a different
-    // // execution context.
-    // tokio::spawn(async move {
-    //     if let Err(e) = connection.await {
-    //         eprintln!("connection error: {}", e);
-    //     }
-    // });
+    // The connection, responsible for the actual IO, must be handled by a different
+    // execution context.
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            eprintln!("connection error: {}", e);
+        }
+    });
 
-    // // Use an EventStoreBuilder to build multiple EventStore instances.
-    // let event_store_builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
+    // Use an EventStoreBuilder to build multiple EventStore instances.
+    let event_store_builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
 
     // Event store for the OrderAggregate.
-    // let store = {
-    //     let store = event_store_builder.aggregate_stream(&aggregate, "orders");
-    //     store.create_stream().await?;
-    //     store
-    // };
-    let store = EventStoreBuilder::for_aggregate(&aggregate);
+    let store = {
+        let store = event_store_builder.aggregate_stream(&aggregate, "orders");
+        store.create_stream().await?;
+        store
+    };
 
     // Creates a Repository to read and store OrderAggregates.
     let repository = Arc::new(RwLock::new(Repository::new(
