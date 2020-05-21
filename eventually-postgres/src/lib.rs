@@ -163,7 +163,7 @@ pub struct EventStore<Id, Event> {
 
 impl<Id, Event> EventStore<Id, Event>
 where
-    Id: ToSql + Eq + Send + Sync,
+    Id: ToString + Eq + Send + Sync,
 {
     /// Creates a new table in the database for the provided Stream name
     /// during initialization.
@@ -196,7 +196,7 @@ where
 
 impl<Id, Event> eventually::EventStore for EventStore<Id, Versioned<Event>>
 where
-    Id: ToSql + Eq + Send + Sync,
+    Id: ToString + Eq + Send + Sync,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
@@ -225,8 +225,11 @@ where
             let tx = tx.transaction().await?;
 
             for (i, version, event) in serialized {
-                tx.execute(&*self.append_query, &[&id, &event, &version, &(i as u32)])
-                    .await?;
+                tx.execute(
+                    &*self.append_query,
+                    &[&id.to_string(), &event, &version, &(i as u32)],
+                )
+                .await?;
             }
 
             tx.commit().await
@@ -239,7 +242,7 @@ where
         from: Self::Offset,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
         Box::pin(async move {
-            let params: Params = &[&id, &(from as u32)];
+            let params: Params = &[&id.to_string(), &(from as u32)];
 
             Ok(self
                 .client
@@ -262,7 +265,7 @@ where
             self.client
                 .read()
                 .await
-                .execute(&*self.remove_query, &[&id])
+                .execute(&*self.remove_query, &[&id.to_string()])
                 .await
                 .map(|_| ())
         })
