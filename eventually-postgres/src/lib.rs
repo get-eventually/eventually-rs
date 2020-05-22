@@ -1,3 +1,59 @@
+//! [`eventually`] type implementations for PostgreSQL.
+//!
+//! ## Event Store
+//!
+//! This crate includes an [`EventStore`] implementation using PostgreSQL
+//! as backend data source.
+//!
+//! Example usage:
+//!
+//! ```no_run
+//! # use std::sync::Arc;
+//! # use tokio::sync::RwLock;
+//! # use eventually_postgres::EventStoreBuilder;
+//! #
+//! # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
+//! // Open a connection with Postgres.
+//! let (client, connection) =
+//!     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
+//!         .await
+//!         .map_err(|err| {
+//!             eprintln!("failed to connect to Postgres: {}", err);
+//!             err
+//!         })?;
+//!
+//! // The connection, responsible for the actual IO, must be handled by a different
+//! // execution context.
+//! tokio::spawn(async move {
+//!     if let Err(e) = connection.await {
+//!         eprintln!("connection error: {}", e);
+//!     }
+//! });
+//!
+//! // A domain event example -- it is deliberately simple.
+//! #[derive(Debug, Clone)]
+//! struct SomeEvent;
+//!
+//! // Use an EventStoreBuilder to build multiple EventStore instances.
+//! let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
+//!
+//! // Events should be versioned to be used with the Postgres Event Store.
+//! use eventually::versioned::Versioned;
+//!
+//! // Event store for the events.
+//! let store = {
+//!     let store = builder.event_stream::<String, Versioned<SomeEvent>>("orders");
+//!     store.create_stream().await?;
+//!     store
+//! };
+//!
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! [`eventually`]: https://docs.rs/eventually
+//! [`EventStore`]: struct.EventStore.html
+
 use std::sync::Arc;
 
 use eventually::store::EventStream;
@@ -29,40 +85,6 @@ impl From<Arc<RwLock<Client>>> for EventStoreBuilder {
 impl EventStoreBuilder {
     /// Creates a new [`EventStore`] instance using the specified stream name
     /// as the Postgres backend table.
-    ///
-    /// ## Usage
-    ///
-    /// ```text
-    /// // Open a connection with Postgres.
-    /// let (client, connection) =
-    ///     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
-    ///         .await
-    ///         .map_err(|err| {
-    ///             eprintln!("failed to connect to Postgres: {}", err);
-    ///             err
-    ///         })?;
-    ///
-    /// // The connection, responsible for the actual IO, must be handled by a different
-    /// // execution context.
-    /// tokio::spawn(async move {
-    ///     if let Err(e) = connection.await {
-    ///         eprintln!("connection error: {}", e);
-    ///     }
-    /// });
-    ///
-    /// // Use an EventStoreBuilder to build multiple EventStore instances.
-    /// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
-    ///
-    /// // Events should be versioned to be used with the Postgres Event Store.
-    /// use eventually_util::versioned::Versioned;
-    ///
-    /// // Event store for the events.
-    /// let store = {
-    ///     let store = builder.event_stream::<String, Versioned<SomeEvent>>("orders");
-    ///     store.create_stream().await?;
-    ///     store
-    /// };
-    /// ```
     ///
     /// [`EventStore`]: struct.EventStore.html
     #[inline]
@@ -173,16 +195,16 @@ where
     /// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
     pub async fn create_stream(&self) -> Result<(), Error> {
         let query = format!(
-            "CREATE TABLE IF NOT EXISTS {} (
+            "CREATE TABLE IF NOT EXISTS {table_name} (
                 event_id SERIAL PRIMARY KEY,
                 committed_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
                 aggregate_id VARCHAR NOT NULL,
                 version OID NOT NULL,
                 \"offset\" OID NOT NULL,
                 event JSONB NOT NULL,
-                CONSTRAINT versioned UNIQUE (aggregate_id, version, \"offset\")
+                CONSTRAINT {table_name}_versioned UNIQUE (aggregate_id, version, \"offset\")
             )",
-            self.table_name
+            table_name = self.table_name
         );
 
         self.client

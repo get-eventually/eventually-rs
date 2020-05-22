@@ -1,7 +1,7 @@
 [package]
 name = "eventually-postgres"
 description = "Event Store implementation using PostgreSQL for the Eventually crate"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
