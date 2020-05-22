@@ -279,7 +279,85 @@
 <span id="279">279</span>
 <span id="280">280</span>
 <span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Event Store</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This crate includes an [`EventStore`] implementation using PostgreSQL</span>
+<span class="doccomment">//! as backend data source.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Example usage:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```no_run</span>
+<span class="doccomment">//! # use std::sync::Arc;</span>
+<span class="doccomment">//! # use tokio::sync::RwLock;</span>
+<span class="doccomment">//! # use eventually_postgres::EventStoreBuilder;</span>
+<span class="doccomment">//! #</span>
+<span class="doccomment">//! # async fn dox() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {</span>
+<span class="doccomment">//! // Open a connection with Postgres.</span>
+<span class="doccomment">//! let (client, connection) =</span>
+<span class="doccomment">//!     tokio_postgres::connect(&quot;postgres://user@pass:localhost:5432/db&quot;, tokio_postgres::NoTls)</span>
+<span class="doccomment">//!         .await</span>
+<span class="doccomment">//!         .map_err(|err| {</span>
+<span class="doccomment">//!             eprintln!(&quot;failed to connect to Postgres: {}&quot;, err);</span>
+<span class="doccomment">//!             err</span>
+<span class="doccomment">//!         })?;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // The connection, responsible for the actual IO, must be handled by a different</span>
+<span class="doccomment">//! // execution context.</span>
+<span class="doccomment">//! tokio::spawn(async move {</span>
+<span class="doccomment">//!     if let Err(e) = connection.await {</span>
+<span class="doccomment">//!         eprintln!(&quot;connection error: {}&quot;, e);</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! });</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // A domain event example -- it is deliberately simple.</span>
+<span class="doccomment">//! #[derive(Debug, Clone)]</span>
+<span class="doccomment">//! struct SomeEvent;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // Use an EventStoreBuilder to build multiple EventStore instances.</span>
+<span class="doccomment">//! let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // Events should be versioned to be used with the Postgres Event Store.</span>
+<span class="doccomment">//! use eventually::versioned::Versioned;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // Event store for the events.</span>
+<span class="doccomment">//! let store = {</span>
+<span class="doccomment">//!     let store = builder.event_stream::&lt;String, Versioned&lt;SomeEvent&gt;&gt;(&quot;orders&quot;);</span>
+<span class="doccomment">//!     store.create_stream().await?;</span>
+<span class="doccomment">//!     store</span>
+<span class="doccomment">//! };</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Ok(())</span>
+<span class="doccomment">//! # }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`eventually`]: https://docs.rs/eventually</span>
+<span class="doccomment">//! [`EventStore`]: struct.EventStore.html</span>
+
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::<span class="ident">EventStream</span>;
@@ -311,40 +389,6 @@
 <span class="kw">impl</span> <span class="ident">EventStoreBuilder</span> {
     <span class="doccomment">/// Creates a new [`EventStore`] instance using the specified stream name</span>
     <span class="doccomment">/// as the Postgres backend table.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Usage</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// // Open a connection with Postgres.</span>
-    <span class="doccomment">/// let (client, connection) =</span>
-    <span class="doccomment">///     tokio_postgres::connect(&quot;postgres://user@pass:localhost:5432/db&quot;, tokio_postgres::NoTls)</span>
-    <span class="doccomment">///         .await</span>
-    <span class="doccomment">///         .map_err(|err| {</span>
-    <span class="doccomment">///             eprintln!(&quot;failed to connect to Postgres: {}&quot;, err);</span>
-    <span class="doccomment">///             err</span>
-    <span class="doccomment">///         })?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // The connection, responsible for the actual IO, must be handled by a different</span>
-    <span class="doccomment">/// // execution context.</span>
-    <span class="doccomment">/// tokio::spawn(async move {</span>
-    <span class="doccomment">///     if let Err(e) = connection.await {</span>
-    <span class="doccomment">///         eprintln!(&quot;connection error: {}&quot;, e);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">/// });</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Use an EventStoreBuilder to build multiple EventStore instances.</span>
-    <span class="doccomment">/// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Events should be versioned to be used with the Postgres Event Store.</span>
-    <span class="doccomment">/// use eventually_util::versioned::Versioned;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Event store for the events.</span>
-    <span class="doccomment">/// let store = {</span>
-    <span class="doccomment">///     let store = builder.event_stream::&lt;String, Versioned&lt;SomeEvent&gt;&gt;(&quot;orders&quot;);</span>
-    <span class="doccomment">///     store.create_stream().await?;</span>
-    <span class="doccomment">///     store</span>
-    <span class="doccomment">/// };</span>
-    <span class="doccomment">/// ```</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
@@ -455,16 +499,16 @@
     <span class="doccomment">/// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">create_stream</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
-            <span class="string">&quot;CREATE TABLE IF NOT EXISTS {} (
+            <span class="string">&quot;CREATE TABLE IF NOT EXISTS {table_name} (
                 event_id SERIAL PRIMARY KEY,
                 committed_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
                 aggregate_id VARCHAR NOT NULL,
                 version OID NOT NULL,
                 \&quot;offset\&quot; OID NOT NULL,
                 event JSONB NOT NULL,
-                CONSTRAINT versioned UNIQUE (aggregate_id, version, \&quot;offset\&quot;)
+                CONSTRAINT {table_name}_versioned UNIQUE (aggregate_id, version, \&quot;offset\&quot;)
             )&quot;</span>,
-            <span class="self">self</span>.<span class="ident">table_name</span>
+            <span class="ident">table_name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table_name</span>
         );
 
         <span class="self">self</span>.<span class="ident">client</span>
