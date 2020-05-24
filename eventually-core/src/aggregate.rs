@@ -5,33 +5,10 @@ use std::sync::Arc;
 
 use futures::future::BoxFuture;
 
-/// A trait for data structures that can be identified by an id.
-pub trait Identifiable {
-    /// Type of the data id.
-    /// An id must support total equality.
-    type Id: Eq;
-
-    /// Data structure id accessor.
-    fn id(&self) -> Self::Id;
-}
-
-impl<State> Identifiable for Option<State>
-where
-    State: Identifiable,
-    State::Id: Default,
-{
-    type Id = State::Id;
-
-    #[inline]
-    fn id(&self) -> Self::Id {
-        self.as_ref().map_or_else(Self::Id::default, |id| id.id())
-    }
-}
-
-/// A short extractor type for the Aggregate id, found in the Aggregate [`State`].
+/// A short extractor type for the Aggregate [`Id`].
 ///
-/// [`State`]: trait.Aggregate.html#associatedtype.State
-pub type AggregateId<A> = <<A as Aggregate>::State as Identifiable>::Id;
+/// [`Id`]: trait.Aggregate.html#associatedtype.Id
+pub type AggregateId<A> = <A as Aggregate>::Id;
 
 /// An Aggregate manages a domain entity [`State`], acting as a _transaction boundary_.
 ///
@@ -42,8 +19,12 @@ pub type AggregateId<A> = <<A as Aggregate>::State as Identifiable>::Id;
 /// [`State`]: trait.Aggregate.html#associatedtype.State
 /// [`Command`]: trait.Aggregate.html#associatedtype.Command
 pub trait Aggregate {
+    /// Aggregate identifier: this should represent an unique identifier to refer
+    /// to a unique Aggregate instance.
+    type Id: Eq;
+
     /// State of the Aggregate: this should represent the Domain Entity data structure.
-    type State: Identifiable;
+    type State: Default;
 
     /// Represents a specific, domain-related change to the Aggregate [`State`].
     ///
@@ -81,55 +62,18 @@ pub trait Aggregate {
     /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     fn handle<'a, 's: 'a>(
         &'a self,
+        id: &'s Self::Id,
         state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized;
-}
-
-impl<T> Aggregate for Arc<T>
-where
-    T: Aggregate,
-{
-    type State = T::State;
-    type Event = T::Event;
-    type Command = T::Command;
-    type Error = T::Error;
-
-    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
-        T::apply(state, event)
-    }
-
-    fn handle<'agg, 'st: 'agg>(
-        &'agg self,
-        state: &'st Self::State,
-        command: Self::Command,
-    ) -> BoxFuture<'agg, Result<Vec<Self::Event>, Self::Error>>
-    where
-        Self: Sized,
-    {
-        T::handle(self, state, command)
-    }
 }
 
 /// Extension trait with some handy methods to use with [`Aggregate`]s.
 ///
 /// [`Aggregate`]: trait.Aggregate.html
 pub trait AggregateExt: Aggregate {
-    /// Constructs a new, empty [`AggregateRoot`] using the current [`Aggregate`].
-    ///
-    /// [`Aggregate`]: trait.Aggregate.html
-    /// [`AggregateRoot`]: struct.AggregateRoot.html
-    #[inline]
-    fn root(&self) -> AggregateRoot<Self>
-    where
-        Self: Sized + Clone,
-        Self::State: Default,
-    {
-        AggregateRoot::from(self.clone())
-    }
-
     /// Applies a list of [`Event`]s from an `Iterator`
     /// to the current Aggregate [`State`].
     ///
@@ -149,55 +93,84 @@ pub trait AggregateExt: Aggregate {
 
 impl<T> AggregateExt for T where T: Aggregate {}
 
+/// Builder type for new [`AggregateRoot`] instances.
+///
+/// [`AggregateRoot`]: struct.AggregateRoot.html
+#[derive(Debug, Clone)]
+pub struct AggregateRootBuilder<T> {
+    aggregate: Arc<T>,
+}
+
+impl<T> From<Arc<T>> for AggregateRootBuilder<T>
+where
+    T: Aggregate,
+{
+    #[inline]
+    fn from(aggregate: Arc<T>) -> Self {
+        Self { aggregate }
+    }
+}
+
+impl<T> AggregateRootBuilder<T>
+where
+    T: Aggregate,
+{
+    /// Builds a new [`AggregateRoot`] instance for the specified Aggregate [`Id`].
+    ///
+    /// [`Id`]: trait.Aggregate.html#associatedtype.Id
+    /// [`AggregateRoot`]: struct.AggregateRoot.html
+    #[inline]
+    pub fn build(&self, id: T::Id) -> AggregateRoot<T> {
+        self.build_with_state(id, Default::default())
+    }
+
+    /// Builds a new [`AggregateRoot`] instance for the specified Aggregate
+    /// with a specified [`State`] value.
+    ///
+    /// [`AggregateRoot`]: struct.AggregateRoot.html
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    #[inline]
+    pub fn build_with_state(&self, id: T::Id, state: T::State) -> AggregateRoot<T> {
+        AggregateRoot {
+            id,
+            state,
+            aggregate: self.aggregate.clone(),
+            to_commit: None,
+        }
+    }
+}
+
 /// An `AggregateRoot` represents an handler to the [`Aggregate`] it's managing,
 /// such as:
 ///
-/// * Owning the current, local Aggregate [`State`],
+/// * Owning its [`State`] and [`Id`],
 /// * Proxying [`Command`]s to the [`Aggregate`] using the current [`State`],
 /// * Keeping a list of [`Event`]s to commit after [`Command`] execution.
 ///
 /// ## Initialize
 ///
-/// `AggregateRoot` can be initialized in two ways:
+/// An `AggregateRoot` can only be initialized using the [`AggregateRootBuilder`].
 ///
-/// 1. Using the `From<Aggregate>` method:
-///     ```text
-///     let root = AggregateRoot::from(aggregate);
-///     ```
-///
-/// 2. Using the [`AggregateExt`] extension trait to call [`root()`] on the [`Aggregate`]
-/// instance:
-///     ```text
-///     // This will result in a Clone of the Aggregate instance.
-///     let root = aggregate.root();
-///     ```
+/// Check [`AggregateRootBuilder::build`] for more information.
 ///
 /// [`Aggregate`]: trait.Aggregate.html
 /// [`AggregateExt`]: trait.AggregateExt.html
 /// [`root()`]: trait.AggregateExt.html#method.root
+/// [`Id`]: trait.Aggregate.html@associatedtype.Id
 /// [`Event`]: trait.Aggregate.html#associatedtype.Event
 /// [`State`]: trait.Aggregate.html#associatedtype.State
 /// [`Command`]: trait.Aggregate.html#associatedtype.Event
+/// [`AggregateRootBuilder`]: struct.AggregateRootBuilder.html
+/// [`AggregateRootBuilder::build`]: struct.AggregateRootBuilder.html#method.build
 #[derive(Debug)]
 pub struct AggregateRoot<T>
 where
     T: Aggregate + 'static,
 {
-    pub(crate) state: T::State,
-    aggregate: T,
-    pub(crate) to_commit: Option<Vec<T::Event>>,
-}
-
-impl<T> Identifiable for AggregateRoot<T>
-where
-    T: Aggregate,
-{
-    type Id = AggregateId<T>;
-
-    #[inline]
-    fn id(&self) -> Self::Id {
-        self.state.id()
-    }
+    id: T::Id,
+    state: T::State,
+    aggregate: Arc<T>,
+    to_commit: Option<Vec<T::Event>>,
 }
 
 impl<T> PartialEq for AggregateRoot<T>
@@ -207,17 +180,6 @@ where
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.id() == other.id()
-    }
-}
-
-impl<T> From<T> for AggregateRoot<T>
-where
-    T: Aggregate,
-    T::State: Default,
-{
-    #[inline]
-    fn from(aggregate: T) -> Self {
-        Self::new(aggregate, Default::default())
     }
 }
 
@@ -232,28 +194,28 @@ where
     pub fn state(&self) -> &T::State {
         &self.state
     }
-}
 
-impl<T> AggregateRoot<T>
-where
-    T: Aggregate,
-{
-    /// Creates a new `AggregateRoot` instance wrapping the specified [`State`].
+    /// Returns a reference to the Aggregate [`Id`] that represents
+    /// the entity wrapped by this [`AggregateRoot`] instance.
     ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// [`Id`]: trait.Aggregate.html#associatedtype.Id
+    /// [`AggregateRoot`]: struct.AggregateRoot.html
     #[inline]
-    pub fn new(aggregate: T, state: T::State) -> Self {
-        Self {
-            state,
-            aggregate,
-            to_commit: None,
-        }
+    pub fn id(&self) -> &T::Id {
+        &self.id
+    }
+
+    /// Takes the list of events to commit from the current instance,
+    /// resetting it to `None`.
+    #[inline]
+    pub(crate) fn take_events_to_commit(&mut self) -> Option<Vec<T::Event>> {
+        std::mem::replace(&mut self.to_commit, None)
     }
 }
 
 impl<T> AggregateRoot<T>
 where
-    T: AggregateExt,
+    T: Aggregate,
     T::Event: Clone,
     T::State: Clone,
 {
@@ -266,9 +228,18 @@ where
     /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     /// [`Aggregate::handle`]: trait.Aggregate.html#method.handle
     pub async fn handle(&mut self, command: T::Command) -> Result<&mut Self, T::Error> {
-        let mut events = self.aggregate.handle(self.state(), command).await?;
+        let events = self
+            .aggregate
+            .handle(self.id(), self.state(), command)
+            .await?;
 
-        self.state = T::fold(self.state.clone(), events.clone().into_iter())?;
+        if events.is_none() {
+            return Ok(self);
+        }
+
+        let mut events = events.unwrap();
+
+        self.state = <T as AggregateExt>::fold(self.state.clone(), events.clone().into_iter())?;
         self.to_commit = Some(match self.to_commit.take() {
             None => events,
             Some(mut list) => {

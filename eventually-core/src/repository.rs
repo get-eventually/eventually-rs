@@ -15,7 +15,7 @@ use futures::stream::TryStreamExt;
 
 use thiserror::Error as ThisError;
 
-use crate::aggregate::{Aggregate, AggregateId, AggregateRoot, Identifiable};
+use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
 use crate::store::EventStore;
 
 /// Error type returned by the [`Repository`].
@@ -24,23 +24,21 @@ use crate::store::EventStore;
 #[derive(Debug, ThisError, PartialEq, Eq)]
 pub enum Error<A, S>
 where
-    A: Aggregate + Debug,
-    S: EventStore + Debug,
-    A::Error: StdError + 'static,
-    S::Error: StdError + 'static,
+    A: StdError + 'static,
+    S: StdError + 'static,
 {
     /// Error returned by the [`Aggregate`], usually when recreating the [`State`].
     ///
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
     #[error("failed to rebuild aggregate state: {0}")]
-    Aggregate(#[source] A::Error),
+    Aggregate(#[source] A),
 
     /// Error returned by the underlying [`EventStore`].
     ///
     /// [`EventStore`]: ../store/trait.EventStore.html
     #[error("event store failed: {0}")]
-    Store(#[source] S::Error),
+    Store(#[source] S),
 
     /// Error returned by [`add`] method when trying to add an [`AggregateRoot`]
     /// that has no [`Event`]s to be flushed to the [`EventStore`].
@@ -57,7 +55,8 @@ where
 /// Result type returned by the [`Repository`].
 ///
 /// [`Repository`]: ../struct.Repository.html
-pub type Result<T, A, S> = std::result::Result<T, Error<A, S>>;
+pub type Result<T, A, S> =
+    std::result::Result<T, Error<<A as Aggregate>::Error, <S as EventStore>::Error>>;
 
 /// Implementation of the [Repository pattern] for storing, retrieving
 /// and deleting [`Aggregate`]s.
@@ -79,14 +78,14 @@ pub struct Repository<T, Store>
 where
     T: Aggregate + 'static,
 {
-    aggregate: T,
+    builder: AggregateRootBuilder<T>,
     store: Store,
 }
 
 impl<T, Store> Repository<T, Store>
 where
     T: Aggregate,
-    Store: EventStore<SourceId = AggregateId<T>, Event = T::Event>,
+    Store: EventStore<SourceId = T::Id, Event = T::Event>,
 {
     /// Creates a new `Repository` instance, using the [`Aggregate`]
     /// and [`EventStore`] provided.
@@ -94,19 +93,18 @@ where
     /// [`EventStore`]: ../store/trait.EventStore.html
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     #[inline]
-    pub fn new(aggregate: T, store: Store) -> Self {
-        Repository { aggregate, store }
+    pub fn new(builder: AggregateRootBuilder<T>, store: Store) -> Self {
+        Repository { builder, store }
     }
 }
 
 impl<T, Store> Repository<T, Store>
 where
     T: Aggregate + Debug + Clone,
+    T::Id: Clone,
     T::Event: Clone,
-    T::State: Default + Identifiable,
     T::Error: StdError + 'static,
-    AggregateId<T>: Default,
-    Store: EventStore<SourceId = AggregateId<T>, Event = T::Event> + Debug,
+    Store: EventStore<SourceId = T::Id, Event = T::Event> + Debug,
     Store::Offset: Default,
     Store::Error: StdError + 'static,
 {
@@ -121,10 +119,9 @@ where
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
-    pub async fn get(&self, id: AggregateId<T>) -> Result<Option<AggregateRoot<T>>, T, Store> {
-        Ok(self
-            .store
-            .stream(id, Store::Offset::default())
+    pub async fn get(&self, id: T::Id) -> Result<AggregateRoot<T>, T, Store> {
+        self.store
+            .stream(id.clone(), Store::Offset::default())
             .await
             .map_err(Error::Store)?
             // Re-map any errors from the Stream into a Repository error
@@ -133,14 +130,13 @@ where
             //
             // However, since the Event Store might not have any Events yet,
             // use an Option<T::State> with the initial value set to None...
-            .try_fold(None, |state, event| {
-                let state = state.unwrap_or_else(T::State::default);
-                future::ready(T::apply(state, event).map(Some).map_err(Error::Aggregate))
+            .try_fold(T::State::default(), |state, event| {
+                future::ready(T::apply(state, event).map_err(Error::Aggregate))
             })
-            .await?
+            .await
             // ...and map the State to a new AggregateRoot only if there is
             // at least one Event coming from the Event Stream.
-            .map(|state| AggregateRoot::new(self.aggregate.clone(), state)))
+            .map(|state| self.builder.build_with_state(id, state))
     }
 
     /// Adds a new [`State`] of the [`Aggregate`] into the `Repository`,
@@ -155,16 +151,22 @@ where
     /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
-        if root.to_commit.is_none() {
+        let events_to_commit = root.take_events_to_commit();
+
+        if events_to_commit.is_none() {
+            return Err(Error::NoEvents);
+        }
+
+        let events_to_commit = events_to_commit.unwrap();
+
+        if events_to_commit.is_empty() {
             return Err(Error::NoEvents);
         }
 
         self.store
-            .append(root.id(), root.to_commit.unwrap())
+            .append(root.id().clone(), events_to_commit)
             .await
             .map_err(Error::Store)?;
-
-        root.to_commit = None;
 
         Ok(root)
     }
@@ -174,7 +176,7 @@ where
     ///
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`AggregateId`]: ../aggregate/type.AggregateId.html
-    pub async fn remove(&mut self, id: AggregateId<T>) -> Result<(), T, Store> {
+    pub async fn remove(&mut self, id: T::Id) -> Result<(), T, Store> {
         self.store.remove(id).await.map_err(Error::Store)
     }
 }
