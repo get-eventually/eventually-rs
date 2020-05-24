@@ -20,4 +20,9 @@ parking_lot = "0.10.2"
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]
+criterion = "0.3"
 tokio-test = "0.2"
+
+[[bench]]
+name = "event-store-inmemory-bench"
+harness = false
