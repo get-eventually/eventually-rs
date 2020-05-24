@@ -7,7 +7,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use eventually_core::aggregate::{Aggregate, Identifiable};
+use eventually_core::aggregate::Aggregate;
 
 use futures::future::BoxFuture;
 
@@ -58,9 +58,11 @@ pub struct AsAggregate<T>(T);
 impl<T> Aggregate for AsAggregate<T>
 where
     T: Aggregate + Send + Sync,
+    T::Id: Send + Sync,
     T::State: Send + Sync,
     T::Command: Send + Sync,
 {
+    type Id = T::Id;
     type State = Versioned<T::State>;
     type Event = Versioned<T::Event>;
     type Command = T::Command;
@@ -76,21 +78,24 @@ where
 
     fn handle<'a, 's: 'a>(
         &'a self,
+        id: &'s Self::Id,
         state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized,
     {
         let version = state.version();
 
         Box::pin(async move {
-            self.0.handle(state, command).await.map(|events| {
+            let result = self.0.handle(id, state, command).await?;
+
+            Ok(result.map(|events| {
                 events
                     .into_iter()
                     .map(|event| Versioned::new(event, version + 1))
                     .collect()
-            })
+            }))
         })
     }
 }
@@ -157,23 +162,13 @@ where
     }
 }
 
-impl<T> Identifiable for Versioned<T>
-where
-    T: Identifiable,
-{
-    type Id = T::Id;
-
-    #[inline]
-    fn id(&self) -> Self::Id {
-        self.data.id()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{AggregateExt, Versioned};
 
-    use eventually_core::aggregate::{Aggregate, AggregateRoot, Identifiable};
+    use eventually_core::aggregate::{Aggregate, AggregateRootBuilder};
+
+    use std::sync::Arc;
 
     use futures::future::BoxFuture;
 
@@ -181,9 +176,9 @@ mod tests {
 
     #[test]
     fn aggregate_versioning_extension_works() {
-        let aggregate = PointAggregate.versioned();
+        let aggregate = Arc::new(PointAggregate.versioned());
         let state = Versioned::from(Point { x: 0f32, y: 0f32 });
-        let mut root = AggregateRoot::new(aggregate, state);
+        let mut root = AggregateRootBuilder::from(aggregate).build_with_state((), state);
 
         block_on(async {
             root.handle(PointCommand::Rotate {
@@ -221,15 +216,6 @@ mod tests {
         y: f32,
     }
 
-    // We don't care about identity for this example.
-    impl Identifiable for Point {
-        type Id = ();
-
-        fn id(&self) -> Self::Id {
-            ()
-        }
-    }
-
     #[derive(Debug, Clone, Copy)]
     struct PointUpdated {
         x: f32,
@@ -244,6 +230,7 @@ mod tests {
     #[derive(Debug, Clone, Copy)]
     struct PointAggregate;
     impl Aggregate for PointAggregate {
+        type Id = ();
         type State = Point;
         type Event = PointUpdated;
         type Command = PointCommand;
@@ -258,13 +245,14 @@ mod tests {
 
         fn handle<'a, 's: 'a>(
             &'a self,
+            _id: &'s Self::Id,
             state: &'s Self::State,
             command: Self::Command,
-        ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+        ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
         where
             Self: Sized,
         {
-            Box::pin(futures::future::ok(match command {
+            Box::pin(futures::future::ok(Some(match command {
                 PointCommand::Rotate { anchor, degrees } => {
                     let angle = degrees * std::f32::consts::PI;
                     let (center_x, center_y) = anchor;
@@ -280,7 +268,7 @@ mod tests {
                         y: rotated_y,
                     }]
                 }
-            }))
+            })))
         }
     }
 }

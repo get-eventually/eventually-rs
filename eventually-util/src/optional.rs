@@ -7,8 +7,6 @@
 //! [`AsAggregate`]: struct.AsAggregate.html
 //! [`optional::Aggregate`]: trait.Aggregate.html
 
-use eventually_core::aggregate::Identifiable;
-
 use futures::future::BoxFuture;
 
 /// An `Option`-flavoured, [`Aggregate`]-compatible trait
@@ -21,12 +19,19 @@ use futures::future::BoxFuture;
 /// [`State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State
 /// [`as_aggregate`]: trait.Aggregate.html#method.as_aggregate
 pub trait Aggregate {
+    /// Identifier type of the Aggregate.
+    ///
+    /// Check out [`Aggregate::Id`] for more information.
+    ///
+    /// [`Aggregate::State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State
+    type Id: Eq;
+
     /// State of the Aggregate.
     ///
     /// Check out [`Aggregate::State`] for more information.
     ///
     /// [`Aggregate::State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State
-    type State: Identifiable;
+    type State;
 
     /// Events produced and supported by the Aggregate.
     ///
@@ -65,10 +70,11 @@ pub trait Aggregate {
     ///
     /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     /// [`State`]: trait.Aggregate.html#associatedtype.State
-    fn handle_first(
-        &self,
+    fn handle_first<'s, 'a: 's>(
+        &'s self,
+        id: &'a Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'s, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized;
 
@@ -78,9 +84,10 @@ pub trait Aggregate {
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     fn handle_next<'a, 's: 'a>(
         &'a self,
+        id: &'a Self::Id,
         state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized;
 
@@ -131,10 +138,11 @@ impl<A> eventually_core::aggregate::Aggregate for AsAggregate<A>
 where
     A: Aggregate,
     A: Send + Sync,
+    A::Id: Send + Sync,
     A::Command: Send + Sync,
-    A::State: Identifiable + Send + Sync,
-    <A::State as Identifiable>::Id: Default,
+    A::State: Send + Sync,
 {
+    type Id = A::Id;
     type State = Option<A::State>;
     type Event = A::Event;
     type Command = A::Command;
@@ -150,15 +158,16 @@ where
 
     fn handle<'a, 's: 'a>(
         &'a self,
+        id: &'s Self::Id,
         state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized,
     {
         Box::pin(match state {
-            None => self.0.handle_first(command),
-            Some(state) => self.0.handle_next(state, command),
+            None => self.0.handle_first(id, command),
+            Some(state) => self.0.handle_next(id, state, command),
         })
     }
 }
