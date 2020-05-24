@@ -5,6 +5,9 @@ use std::sync::Arc;
 
 use futures::future::BoxFuture;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// A short extractor type for the Aggregate [`Id`].
 ///
 /// [`Id`]: trait.Aggregate.html#associatedtype.Id
@@ -163,13 +166,20 @@ where
 /// [`AggregateRootBuilder`]: struct.AggregateRootBuilder.html
 /// [`AggregateRootBuilder::build`]: struct.AggregateRootBuilder.html#method.build
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct AggregateRoot<T>
 where
     T: Aggregate + 'static,
 {
     id: T::Id,
+
+    #[cfg_attr(feature = "serde", serde(flatten))]
     state: T::State,
+
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
     aggregate: Arc<T>,
+
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
     to_commit: Option<Vec<T::Event>>,
 }
 

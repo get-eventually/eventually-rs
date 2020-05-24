@@ -8,6 +8,11 @@ license = "MIT"
 readme = "../README.md"
 repository = "https://github.com/ar3s3ru/eventually-rs"
 
+[features]
+default = []
+full = ["serde"]
+
 [dependencies]
 futures = { version = "0.3", features = ["async-await"] }
+serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "1.0"
