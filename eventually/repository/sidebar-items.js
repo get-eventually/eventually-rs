@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Error type returned by the [`Repository`]."]],"struct":[["Repository","Implementation of the [Repository pattern] for storing, retrieving and deleting [`Aggregate`]s."]],"type":[["Result","Result type returned by the [`Repository`]."]]});
