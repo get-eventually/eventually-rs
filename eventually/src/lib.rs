@@ -11,6 +11,10 @@ pub mod aggregate {
     pub use eventually_util::versioned::AsAggregate as Versioned;
 }
 
+pub mod repository {
+    pub use eventually_core::repository::*;
+}
+
 pub mod store {
     pub use eventually_core::store::*;
 }

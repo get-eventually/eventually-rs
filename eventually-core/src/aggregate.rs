@@ -5,6 +5,9 @@ use std::sync::Arc;
 
 use futures::future::BoxFuture;
 
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 /// A short extractor type for the Aggregate [`Id`].
 ///
 /// [`Id`]: trait.Aggregate.html#associatedtype.Id
@@ -163,13 +166,20 @@ where
 /// [`AggregateRootBuilder`]: struct.AggregateRootBuilder.html
 /// [`AggregateRootBuilder::build`]: struct.AggregateRootBuilder.html#method.build
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct AggregateRoot<T>
 where
     T: Aggregate + 'static,
 {
     id: T::Id,
+
+    #[cfg_attr(feature = "serde", serde(flatten))]
     state: T::State,
+
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
     aggregate: Arc<T>,
+
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
     to_commit: Option<Vec<T::Event>>,
 }
 
@@ -233,20 +243,18 @@ where
             .handle(self.id(), self.state(), command)
             .await?;
 
-        if events.is_none() {
-            return Ok(self);
+        // Only apply new events if the command handling actually
+        // produced new ones.
+        if let Some(mut events) = events {
+            self.state = T::fold(self.state.clone(), events.clone().into_iter())?;
+            self.to_commit = Some(match self.to_commit.take() {
+                None => events,
+                Some(mut list) => {
+                    list.append(&mut events);
+                    list
+                }
+            });
         }
-
-        let mut events = events.unwrap();
-
-        self.state = <T as AggregateExt>::fold(self.state.clone(), events.clone().into_iter())?;
-        self.to_commit = Some(match self.to_commit.take() {
-            None => events,
-            Some(mut list) => {
-                list.append(&mut events);
-                list
-            }
-        });
 
         Ok(self)
     }

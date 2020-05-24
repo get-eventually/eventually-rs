@@ -1,13 +1,18 @@
 [package]
 name = "eventually-core"
 description = "Foundation crate for using Event Sourcing in Rust applications"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 readme = "../README.md"
 repository = "https://github.com/ar3s3ru/eventually-rs"
 
+[features]
+default = []
+full = ["serde"]
+
 [dependencies]
 futures = { version = "0.3", features = ["async-await"] }
+serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "1.0"

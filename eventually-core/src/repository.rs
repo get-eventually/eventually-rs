@@ -39,17 +39,6 @@ where
     /// [`EventStore`]: ../store/trait.EventStore.html
     #[error("event store failed: {0}")]
     Store(#[source] S),
-
-    /// Error returned by [`add`] method when trying to add an [`AggregateRoot`]
-    /// that has no [`Event`]s to be flushed to the [`EventStore`].
-    ///
-    /// [`add`]: struct.Repository.html#method.add
-    /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
-    /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
-    /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
-    /// [`EventStore`]: ../store/trait.EventStore.html
-    #[error("no events to commit")]
-    NoEvents,
 }
 
 /// Result type returned by the [`Repository`].
@@ -153,20 +142,14 @@ where
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
         let events_to_commit = root.take_events_to_commit();
 
-        if events_to_commit.is_none() {
-            return Err(Error::NoEvents);
+        if let Some(events) = events_to_commit {
+            if !events.is_empty() {
+                self.store
+                    .append(root.id().clone(), events)
+                    .await
+                    .map_err(Error::Store)?;
+            }
         }
-
-        let events_to_commit = events_to_commit.unwrap();
-
-        if events_to_commit.is_empty() {
-            return Err(Error::NoEvents);
-        }
-
-        self.store
-            .append(root.id().clone(), events_to_commit)
-            .await
-            .map_err(Error::Store)?;
 
         Ok(root)
     }

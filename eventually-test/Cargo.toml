@@ -1,13 +1,13 @@
 [package]
 name = "eventually-test"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 
 [dependencies]
-eventually = { version = "0.3.0", path = "../eventually", features = ["full"] }
-eventually-postgres = { version = "0.1.0", path = "../eventually-postgres" }
+eventually = { version = "0.4", path = "../eventually", features = ["full"] }
+eventually-postgres = { version = "0.1", path = "../eventually-postgres" }
 
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.7"
@@ -17,6 +17,6 @@ futures = "0.3"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tide = "0.8"
+tide = "0.8.0"
 tokio = { version = "0.2", features = ["macros", "sync"] }
 tokio-postgres = "0.5"
