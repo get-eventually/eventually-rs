@@ -11,10 +11,7 @@ use eventually_core::store::EventStream;
 use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt};
 
-#[cfg(not(feature = "tokio"))]
-use std::sync::RwLock;
-#[cfg(feature = "tokio")]
-use tokio::sync::RwLock;
+use parking_lot::RwLock;
 
 #[derive(Debug)]
 struct EventsHolder<Event> {
@@ -113,12 +110,8 @@ where
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
-            #[cfg(not(feature = "tokio"))]
-            let mut writer = self.backend.write().unwrap();
-            #[cfg(feature = "tokio")]
-            let mut writer = self.backend.write().await;
-
-            writer
+            self.backend
+                .write()
                 .entry(id)
                 .and_modify(|holder| holder.append(events.clone()))
                 .or_insert_with(|| EventsHolder::from(events));
@@ -133,12 +126,9 @@ where
         from: Self::Offset,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
         Box::pin(async move {
-            #[cfg(not(feature = "tokio"))]
-            let reader = self.backend.read().unwrap();
-            #[cfg(feature = "tokio")]
-            let reader = self.backend.read().await;
-
-            Ok(reader
+            Ok(self
+                .backend
+                .read()
                 .get(&id)
                 .map(move |holder| iter(holder.stream(from)).map(Ok).boxed())
                 .unwrap_or_else(|| empty().boxed()))
@@ -147,12 +137,7 @@ where
 
     fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
-            #[cfg(not(feature = "tokio"))]
-            let mut writer = self.backend.write().unwrap();
-            #[cfg(feature = "tokio")]
-            let mut writer = self.backend.write().await;
-
-            writer.remove(&id);
+            self.backend.write().remove(&id);
 
             Ok(())
         })

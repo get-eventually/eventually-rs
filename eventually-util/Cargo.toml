@@ -10,14 +10,14 @@ repository = "https://github.com/ar3s3ru/eventually-rs"
 
 [features]
 default = []
-full = ["serde", "tokio"]
+full = ["serde"]
 
 [dependencies]
 eventually-core = { version = "0.4", path = "../eventually-core" }
 
 futures = { version = "0.3", features = ["async-await"] }
+parking_lot = "0.10.2"
 serde = { version = "1.0", features = ["derive"], optional = true }
-tokio = { version = "0.2", features = ["sync"], optional = true }
 
 [dev-dependencies]
 tokio-test = "0.2"

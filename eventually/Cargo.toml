@@ -14,8 +14,7 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 [features]
 default = []
 serde = ["eventually-core/serde", "eventually-util/serde"]
-tokio = ["eventually-util/tokio"]
-full = ["serde", "tokio"]
+full = ["serde"]
 
 [dependencies]
 eventually-core = { version = "0.4", path = "../eventually-core" }
