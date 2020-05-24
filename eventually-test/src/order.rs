@@ -7,7 +7,6 @@ use futures::{future, future::BoxFuture};
 use serde::{Deserialize, Serialize};
 
 use eventually::optional::Aggregate;
-use eventually::Identifiable;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderItem {
@@ -46,43 +45,22 @@ impl OrderItems {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "state")]
 pub enum OrderState {
-    Editable {
-        id: String,
-        created_at: DateTime<Utc>,
-        updated_at: DateTime<Utc>,
-        items: Vec<OrderItem>,
-    },
-
-    Complete {
-        id: String,
-        created_at: DateTime<Utc>,
-        items: Vec<OrderItem>,
-        completed_at: DateTime<Utc>,
-    },
-
-    Cancelled {
-        id: String,
-        created_at: DateTime<Utc>,
-        items: Vec<OrderItem>,
-        cancelled_at: DateTime<Utc>,
-    },
+    Editable { updated_at: DateTime<Utc> },
+    Complete { at: DateTime<Utc> },
+    Cancelled { at: DateTime<Utc> },
 }
 
-impl Identifiable for OrderState {
-    type Id = String;
-
-    fn id(&self) -> Self::Id {
-        match self {
-            OrderState::Editable { id, .. } => id.clone(),
-            OrderState::Complete { id, .. } => id.clone(),
-            OrderState::Cancelled { id, .. } => id.clone(),
-        }
-    }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Order {
+    id: String,
+    created_at: DateTime<Utc>,
+    items: Vec<OrderItem>,
+    state: OrderState,
 }
 
 #[derive(Debug)]
 pub enum OrderCommand {
-    Create { id: String },
+    Create,
     AddItem { item: OrderItem },
     Complete,
     Cancel,
@@ -134,105 +112,108 @@ impl std::error::Error for OrderError {}
 #[derive(Debug, Clone, Copy)]
 pub struct OrderAggregate;
 impl Aggregate for OrderAggregate {
-    type State = OrderState;
+    type Id = String;
+    type State = Order;
     type Event = OrderEvent;
     type Command = OrderCommand;
     type Error = OrderError;
 
     fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error> {
         if let OrderEvent::Created { id, at } = event {
-            return Ok(OrderState::Editable {
+            return Ok(Order {
                 id,
                 created_at: at,
-                updated_at: at,
                 items: Vec::new(),
+                state: OrderState::Editable { updated_at: at },
             });
         }
 
         Err(OrderError::NotYetCreated)
     }
 
-    fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply_next(mut state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
         match event {
-            OrderEvent::ItemAdded { item, at } => match state {
-                OrderState::Editable {
-                    id,
-                    created_at,
-                    items,
-                    ..
-                } => Ok(OrderState::Editable {
-                    id,
-                    created_at,
-                    updated_at: at,
-                    items: OrderItems::from(items).insert_or_merge(item).into(),
-                }),
-                _ => Err(OrderError::NotEditable),
-            },
-            OrderEvent::Completed { at } => match state {
-                OrderState::Editable {
-                    id,
-                    created_at,
-                    items,
-                    ..
-                } => Ok(OrderState::Complete {
-                    id,
-                    created_at,
-                    completed_at: at,
-                    items,
-                }),
-                OrderState::Complete { .. } => Err(OrderError::AlreadyCompleted),
-                _ => Err(OrderError::NotEditable),
-            },
-            OrderEvent::Cancelled { at } => match state {
-                OrderState::Editable {
-                    id,
-                    created_at,
-                    items,
-                    ..
-                } => Ok(OrderState::Cancelled {
-                    id,
-                    created_at,
-                    items,
-                    cancelled_at: at,
-                }),
-                OrderState::Cancelled { .. } => Err(OrderError::AlreadyCancelled),
-                _ => Err(OrderError::NotEditable),
-            },
-            _ => Err(OrderError::AlreadyCreated),
+            OrderEvent::Created { .. } => Err(OrderError::AlreadyCreated),
+
+            OrderEvent::ItemAdded { item, at } => {
+                if let OrderState::Editable { .. } = state.state {
+                    state.state = OrderState::Editable { updated_at: at };
+                    state.items = OrderItems::from(state.items).insert_or_merge(item).into();
+                    return Ok(state);
+                }
+
+                Err(OrderError::NotEditable)
+            }
+
+            OrderEvent::Completed { at } => {
+                if let OrderState::Complete { .. } = state.state {
+                    return Err(OrderError::AlreadyCompleted);
+                }
+
+                if let OrderState::Editable { .. } = state.state {
+                    state.state = OrderState::Complete { at };
+                    return Ok(state);
+                }
+
+                Err(OrderError::NotEditable)
+            }
+
+            OrderEvent::Cancelled { at } => {
+                if let OrderState::Cancelled { .. } = state.state {
+                    return Err(OrderError::AlreadyCancelled);
+                }
+
+                if let OrderState::Editable { .. } = state.state {
+                    state.state = OrderState::Cancelled { at };
+                    return Ok(state);
+                }
+
+                Err(OrderError::NotEditable)
+            }
         }
     }
 
-    fn handle_first(
-        &self,
+    fn handle_first<'a, 's: 'a>(
+        &'a self,
+        id: &'s Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized,
     {
-        Box::pin(match command {
-            OrderCommand::Create { id } => {
-                future::ok(vec![OrderEvent::Created { id, at: Utc::now() }])
+        Box::pin(async move {
+            if let OrderCommand::Create = command {
+                return Ok(Some(vec![OrderEvent::Created {
+                    id: id.clone(),
+                    at: Utc::now(),
+                }]));
             }
-            _ => future::err(OrderError::NotYetCreated),
+
+            Err(OrderError::NotYetCreated)
         })
     }
 
-    fn handle_next<'agg, 'st: 'agg>(
-        &'agg self,
-        _state: &'st Self::State,
+    fn handle_next<'a, 's: 'a>(
+        &'a self,
+        _id: &'a Self::Id,
+        _state: &'s Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'agg, Result<Vec<Self::Event>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized,
     {
         Box::pin(match command {
-            OrderCommand::Create { .. } => future::err(OrderError::AlreadyCreated),
-            OrderCommand::AddItem { item } => future::ok(vec![OrderEvent::ItemAdded {
+            OrderCommand::Create => future::err(OrderError::AlreadyCreated),
+            OrderCommand::AddItem { item } => future::ok(Some(vec![OrderEvent::ItemAdded {
                 item,
                 at: Utc::now(),
-            }]),
-            OrderCommand::Complete => future::ok(vec![OrderEvent::Completed { at: Utc::now() }]),
-            OrderCommand::Cancel => future::ok(vec![OrderEvent::Cancelled { at: Utc::now() }]),
+            }])),
+            OrderCommand::Complete => {
+                future::ok(Some(vec![OrderEvent::Completed { at: Utc::now() }]))
+            }
+            OrderCommand::Cancel => {
+                future::ok(Some(vec![OrderEvent::Cancelled { at: Utc::now() }]))
+            }
         })
     }
 }

@@ -10,7 +10,7 @@ use envconfig::Envconfig;
 
 use eventually::aggregate::Optional;
 use eventually::versioned::AggregateExt;
-use eventually::Repository;
+use eventually::{AggregateRootBuilder, Repository};
 use eventually_postgres::EventStoreBuilder;
 
 use tokio::sync::RwLock;
@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Aggregate target: in this case it's empty, but usually it would use
     // some domain services or internal repositories.
-    let aggregate = Arc::new(OrderAggregate.as_aggregate().versioned());
+    let aggregate = OrderAggregate.as_aggregate().versioned();
 
     // Open a connection with Postgres.
     let (client, connection) =
@@ -55,9 +55,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         store
     };
 
+    // Builder for all new AggregateRoot instances.
+    let aggregate_root_builder = AggregateRootBuilder::from(Arc::new(aggregate));
+
     // Creates a Repository to read and store OrderAggregates.
     let repository = Arc::new(RwLock::new(Repository::new(
-        aggregate.clone(),
+        aggregate_root_builder.clone(),
         store.clone(),
     )));
 
@@ -69,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.at("/orders/:id").nest({
         let mut api = tide::with_state(state::AppState {
             store,
-            aggregate,
+            builder: aggregate_root_builder,
             repository,
         });
 

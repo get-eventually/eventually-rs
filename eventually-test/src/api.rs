@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 
 use eventually::versioned::Versioned;
-use eventually::{AggregateExt, EventStore};
+use eventually::EventStore;
 
 use futures::StreamExt;
 
@@ -60,21 +60,21 @@ pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error>
         .await
         .map_err(Error::from)?;
 
-    if root.is_none() {
+    if root.state().is_none() {
         return Ok(Response::new(StatusCode::NotFound));
     }
 
     Response::new(StatusCode::Ok)
-        .body_json(root.unwrap().state())
+        .body_json(root.state())
         .map_err(Error::from)
 }
 
 pub(crate) async fn create_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
 
-    let mut root = req.state().aggregate.root();
+    let mut root = req.state().builder.build(id);
 
-    root.handle(OrderCommand::Create { id })
+    root.handle(OrderCommand::Create)
         .await
         .map_err(|err| Error::new(StatusCode::BadRequest, err))?;
 
@@ -97,7 +97,7 @@ pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Respons
 
     let id: String = req.param("id")?;
 
-    let root = req
+    let mut root = req
         .state()
         .repository
         .read()
@@ -106,11 +106,9 @@ pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Respons
         .await
         .map_err(Error::from)?;
 
-    if root.is_none() {
+    if root.state().is_none() {
         return Ok(Response::new(StatusCode::NotFound));
     }
-
-    let mut root = root.unwrap();
 
     root.handle(OrderCommand::AddItem { item })
         .await
@@ -133,7 +131,7 @@ pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Respons
 pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
 
-    let root = req
+    let mut root = req
         .state()
         .repository
         .read()
@@ -142,11 +140,9 @@ pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, E
         .await
         .map_err(Error::from)?;
 
-    if root.is_none() {
+    if root.state().is_none() {
         return Ok(Response::new(StatusCode::NotFound));
     }
-
-    let mut root = root.unwrap();
 
     root.handle(OrderCommand::Complete)
         .await
@@ -169,7 +165,7 @@ pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, E
 pub(crate) async fn cancel_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
 
-    let root = req
+    let mut root = req
         .state()
         .repository
         .read()
@@ -178,11 +174,9 @@ pub(crate) async fn cancel_order(req: Request<AppState>) -> Result<Response, Err
         .await
         .map_err(Error::from)?;
 
-    if root.is_none() {
+    if root.state().is_none() {
         return Ok(Response::new(StatusCode::NotFound));
     }
-
-    let mut root = root.unwrap();
 
     root.handle(OrderCommand::Cancel)
         .await
