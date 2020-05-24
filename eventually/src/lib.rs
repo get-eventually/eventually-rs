@@ -1,5 +1,5 @@
 pub use eventually_core::aggregate::{
-    Aggregate, AggregateExt, AggregateId, AggregateRoot, Identifiable,
+    Aggregate, AggregateExt, AggregateId, AggregateRoot, AggregateRootBuilder,
 };
 pub use eventually_core::repository::Repository;
 pub use eventually_core::store::EventStore;
