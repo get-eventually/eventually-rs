@@ -17,8 +17,11 @@ use tokio::sync::RwLock;
 use crate::config::Config;
 use crate::order::OrderAggregate;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    smol::run(run())
+}
+
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::init()?;
 
     env_logger::builder().filter_level(config.log_level).init();

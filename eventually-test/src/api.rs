@@ -60,12 +60,8 @@ pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error>
         .await
         .map_err(Error::from)?;
 
-    if root.state().is_none() {
-        return Ok(Response::new(StatusCode::NotFound));
-    }
-
     Response::new(StatusCode::Ok)
-        .body_json(root.state())
+        .body_json(&root)
         .map_err(Error::from)
 }
 
@@ -88,7 +84,7 @@ pub(crate) async fn create_order(req: Request<AppState>) -> Result<Response, Err
         .map_err(Error::from)?;
 
     Response::new(StatusCode::Created)
-        .body_json(root.state())
+        .body_json(&root)
         .map_err(Error::from)
 }
 
@@ -106,10 +102,6 @@ pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Respons
         .await
         .map_err(Error::from)?;
 
-    if root.state().is_none() {
-        return Ok(Response::new(StatusCode::NotFound));
-    }
-
     root.handle(OrderCommand::AddItem { item })
         .await
         .map_err(|err| Error::new(StatusCode::Forbidden, err))?;
@@ -124,7 +116,7 @@ pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Respons
         .map_err(Error::from)?;
 
     Response::new(StatusCode::Accepted)
-        .body_json(root.state())
+        .body_json(&root)
         .map_err(Error::from)
 }
 
@@ -140,10 +132,6 @@ pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, E
         .await
         .map_err(Error::from)?;
 
-    if root.state().is_none() {
-        return Ok(Response::new(StatusCode::NotFound));
-    }
-
     root.handle(OrderCommand::Complete)
         .await
         .map_err(|err| Error::new(StatusCode::Forbidden, err))?;
@@ -158,7 +146,7 @@ pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, E
         .map_err(Error::from)?;
 
     Response::new(StatusCode::Accepted)
-        .body_json(root.state())
+        .body_json(&root)
         .map_err(Error::from)
 }
 
@@ -174,10 +162,6 @@ pub(crate) async fn cancel_order(req: Request<AppState>) -> Result<Response, Err
         .await
         .map_err(Error::from)?;
 
-    if root.state().is_none() {
-        return Ok(Response::new(StatusCode::NotFound));
-    }
-
     root.handle(OrderCommand::Cancel)
         .await
         .map_err(|err| Error::new(StatusCode::Forbidden, err))?;
@@ -192,6 +176,6 @@ pub(crate) async fn cancel_order(req: Request<AppState>) -> Result<Response, Err
         .map_err(Error::from)?;
 
     Response::new(StatusCode::Accepted)
-        .body_json(root.state())
+        .body_json(&root)
         .map_err(Error::from)
 }
