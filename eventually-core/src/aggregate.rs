@@ -229,6 +229,12 @@ where
     pub(crate) fn take_events_to_commit(&mut self) -> Option<Vec<T::Event>> {
         std::mem::replace(&mut self.to_commit, None)
     }
+
+    #[inline]
+    pub(crate) fn with_version(mut self, version: u32) -> Self {
+        self.version = version;
+        self
+    }
 }
 
 impl<T> AggregateRoot<T>

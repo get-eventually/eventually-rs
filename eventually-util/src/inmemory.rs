@@ -40,15 +40,17 @@ impl<Event> EventsHolder<Event>
 where
     Event: Clone,
 {
-    fn append(&mut self, events: Vec<Event>) {
+    fn append(&mut self, version: u32, events: Vec<Event>) {
         let offset = self.global_offset + 1;
+
+        // FIXME: introduce check against offset and desired version.
 
         let mut persisted_events = events
             .into_iter()
             .enumerate()
             .map(|(i, event)| {
                 PersistedEvent::from(event)
-                    .with_version(offset)
+                    .with_version(version)
                     .with_sequence_number(i as u32)
             })
             .collect::<Vec<PersistedEvent<Event>>>();
@@ -123,13 +125,14 @@ where
     fn append(
         &mut self,
         id: Self::SourceId,
+        version: u32,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
             self.backend
                 .write()
                 .entry(id)
-                .and_modify(|holder| holder.append(events.clone()))
+                .and_modify(|holder| holder.append(version, events.clone()))
                 .or_insert_with(|| EventsHolder::from(events));
 
             Ok(())
@@ -179,13 +182,13 @@ mod tests {
     #[test]
     fn append() {
         let mut store = InMemoryStore::<&'static str, Event>::default();
-        append_to(&mut store, "test-append");
+        append_to(&mut store, "test-append", 1);
     }
 
     #[test]
     fn remove() {
         let mut store = InMemoryStore::<&'static str, Event>::default();
-        append_to(&mut store, "test-remove");
+        append_to(&mut store, "test-remove", 1);
 
         assert!(block_on(store.remove("test-remove")).is_ok());
         assert!(block_on(stream_to_vec_from(&store, "test-remove", 0)).is_empty());
@@ -200,9 +203,9 @@ mod tests {
         let combined = vec![Event::A, Event::B, Event::C, Event::B, Event::A];
 
         // Offset 1
-        assert!(block_on(store.append("test-stream", events_1.clone())).is_ok());
+        assert!(block_on(store.append("test-stream", 1, events_1.clone())).is_ok());
         // Offset 2
-        assert!(block_on(store.append("test-stream", events_2.clone())).is_ok());
+        assert!(block_on(store.append("test-stream", 2, events_2.clone())).is_ok());
 
         assert_eq!(
             combined,
@@ -215,10 +218,10 @@ mod tests {
         );
     }
 
-    fn append_to(store: &mut InMemoryStore<&'static str, Event>, id: &'static str) {
+    fn append_to(store: &mut InMemoryStore<&'static str, Event>, id: &'static str, version: u32) {
         let events = vec![Event::A, Event::B, Event::C];
 
-        assert!(block_on(store.append(id, events.clone())).is_ok());
+        assert!(block_on(store.append(id, version, events.clone())).is_ok());
         assert_eq!(events, block_on(stream_to_vec_from(&store, id, 0)));
     }
 

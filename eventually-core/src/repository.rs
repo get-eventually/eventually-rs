@@ -115,7 +115,7 @@ where
             .map_err(Error::Store)
             // Try to fold all the Events into an Aggregate State.
             .try_fold(
-                (0u32, T::State::default()),
+                (0, T::State::default()),
                 |(version, state), event| async move {
                     // Always consider the max version number for the next version.
                     let new_version = std::cmp::max(event.version(), version);
@@ -142,18 +142,21 @@ where
     /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
+        let mut version = root.version();
         let events_to_commit = root.take_events_to_commit();
 
         if let Some(events) = events_to_commit {
             if !events.is_empty() {
+                version += 1;
+
                 self.store
-                    .append(root.id().clone(), events)
+                    .append(root.id().clone(), version, events)
                     .await
                     .map_err(Error::Store)?;
             }
         }
 
-        Ok(root)
+        Ok(root.with_version(version))
     }
 
     /// Removes the specified [`Aggregate`] from the `Repository`,

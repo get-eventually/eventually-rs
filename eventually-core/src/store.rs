@@ -99,6 +99,7 @@ pub trait EventStore {
     fn append(
         &mut self,
         id: Self::SourceId,
+        version: u32,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<(), Self::Error>>;
 

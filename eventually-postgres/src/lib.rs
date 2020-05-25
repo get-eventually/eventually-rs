@@ -228,16 +228,13 @@ where
     fn append(
         &mut self,
         id: Self::SourceId,
+        version: u32,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<(), Self::Error>> {
         let serialized = events
             .into_iter()
             .enumerate()
-            .map(|(i, event)| {
-                // FIXME: use the appropriate version coming from the input.
-                let version = 0;
-                serde_json::to_value(event).map(|value| (i, version, value))
-            })
+            .map(|(i, event)| serde_json::to_value(event).map(|value| (i, value)))
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
 
@@ -245,7 +242,7 @@ where
             let mut tx = self.client.write().await;
             let tx = tx.transaction().await?;
 
-            for (i, version, event) in serialized {
+            for (i, event) in serialized {
                 tx.execute(
                     &*self.append_query,
                     &[&id.to_string(), &event, &version, &(i as u32)],
