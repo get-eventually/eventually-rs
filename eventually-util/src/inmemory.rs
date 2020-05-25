@@ -5,8 +5,8 @@ use std::convert::Infallible;
 use std::hash::Hash;
 use std::sync::Arc;
 
-use eventually_core::aggregate::{Aggregate, AggregateId};
-use eventually_core::store::EventStream;
+use eventually_core::aggregate::Aggregate;
+use eventually_core::store::{EventStream, PersistedEvent, Select};
 
 use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt};
@@ -15,18 +15,23 @@ use parking_lot::RwLock;
 
 #[derive(Debug)]
 struct EventsHolder<Event> {
-    global_offset: usize,
-    events: Vec<(usize, Vec<Event>)>,
+    global_offset: u32,
+    events: Vec<PersistedEvent<Event>>,
 }
 
 impl<Event> From<Vec<Event>> for EventsHolder<Event> {
     fn from(events: Vec<Event>) -> Self {
-        let mut blocks = Vec::new();
-        blocks.push((1, events));
-
         Self {
             global_offset: 1,
-            events: blocks,
+            events: events
+                .into_iter()
+                .enumerate()
+                .map(|(i, event)| {
+                    PersistedEvent::from(event)
+                        .with_version(1)
+                        .with_sequence_number(i as u32)
+                })
+                .collect(),
         }
     }
 }
@@ -38,16 +43,28 @@ where
     fn append(&mut self, events: Vec<Event>) {
         let offset = self.global_offset + 1;
 
-        self.events.push((offset, events));
+        let mut persisted_events = events
+            .into_iter()
+            .enumerate()
+            .map(|(i, event)| {
+                PersistedEvent::from(event)
+                    .with_version(offset)
+                    .with_sequence_number(i as u32)
+            })
+            .collect::<Vec<PersistedEvent<Event>>>();
+
+        self.events.append(&mut persisted_events);
         self.global_offset = offset;
     }
 
-    fn stream(&self, from: usize) -> impl Iterator<Item = Event> {
+    fn stream(&self, select: Select) -> impl Iterator<Item = PersistedEvent<Event>> {
         self.events
             .clone() // Should be moved inside the block flat-mapping if possible
             .into_iter()
-            .filter(move |(offset, _)| offset >= &from)
-            .flat_map(|(_, events)| events)
+            .filter(move |event| match select {
+                Select::All => true,
+                Select::From(from) => event.version() >= from,
+            })
     }
 }
 
@@ -61,10 +78,10 @@ impl EventStoreBuilder {
     ///
     /// [`Aggregate`]: ../../eventually-core/aggregate/trait.Aggregate.html
     #[inline]
-    pub fn for_aggregate<T>(_: &T) -> EventStore<AggregateId<T>, T::Event>
+    pub fn for_aggregate<T>(_: &T) -> EventStore<T::Id, T::Event>
     where
         T: Aggregate,
-        AggregateId<T>: Hash + Eq,
+        T::Id: Hash + Eq,
     {
         Default::default()
     }
@@ -100,7 +117,6 @@ where
     Event: Sync + Send + Clone,
 {
     type SourceId = Id;
-    type Offset = usize;
     type Event = Event;
     type Error = Infallible;
 
@@ -123,14 +139,14 @@ where
     fn stream(
         &self,
         id: Self::SourceId,
-        from: Self::Offset,
+        select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
         Box::pin(async move {
             Ok(self
                 .backend
                 .read()
                 .get(&id)
-                .map(move |holder| iter(holder.stream(from)).map(Ok).boxed())
+                .map(move |holder| iter(holder.stream(select)).map(Ok).boxed())
                 .unwrap_or_else(|| empty().boxed()))
         })
     }
@@ -147,7 +163,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::EventStore as InMemoryStore;
-    use eventually_core::store::EventStore;
+    use eventually_core::store::{EventStore, Select};
 
     use futures::StreamExt;
 
@@ -206,16 +222,18 @@ mod tests {
         assert_eq!(events, block_on(stream_to_vec_from(&store, id, 0)));
     }
 
+    // TODO: should stream the PersistedEvent, and make assertions based on
+    // the persisted event value.
     async fn stream_to_vec_from(
         store: &InMemoryStore<&'static str, Event>,
         id: &'static str,
-        from: usize,
+        from: u32,
     ) -> Vec<Event> {
         store
-            .stream(id, from)
+            .stream(id, Select::From(from))
             .await
             .expect("should be infallible")
-            .map(|event| event.expect("should be infallible"))
+            .map(|event| event.expect("should be infallible").take())
             .collect::<Vec<Event>>()
             .await
     }

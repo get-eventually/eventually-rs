@@ -56,8 +56,7 @@
 
 use std::sync::Arc;
 
-use eventually::store::EventStream;
-use eventually::versioned::Versioned;
+use eventually::store::{EventStream, PersistedEvent, Select};
 use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;
@@ -216,15 +215,14 @@ where
     }
 }
 
-impl<Id, Event> eventually::EventStore for EventStore<Id, Versioned<Event>>
+impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
     Id: ToString + Eq + Send + Sync,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
     type SourceId = Id;
-    type Offset = usize;
-    type Event = Versioned<Event>;
+    type Event = Event;
     type Error = Error;
 
     fn append(
@@ -236,8 +234,9 @@ where
             .into_iter()
             .enumerate()
             .map(|(i, event)| {
-                let version = event.version();
-                serde_json::to_value(event.take()).map(|value| (i, version, value))
+                // FIXME: use the appropriate version coming from the input.
+                let version = 0;
+                serde_json::to_value(event).map(|value| (i, version, value))
             })
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
@@ -261,10 +260,15 @@ where
     fn stream(
         &self,
         id: Self::SourceId,
-        from: Self::Offset,
+        select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
+        let from = match select {
+            Select::All => 0u32,
+            Select::From(v) => v,
+        };
+
         Box::pin(async move {
-            let params: Params = &[&id.to_string(), &(from as u32)];
+            let params: Params = &[&id.to_string(), &from];
 
             Ok(self
                 .client
@@ -273,10 +277,13 @@ where
                 .query_raw(&*self.stream_query, slice_iter(params))
                 .await?
                 .map_ok(|row| {
-                    let event = serde_json::from_value(row.get("event")).unwrap();
+                    let event: Event = serde_json::from_value(row.get("event")).unwrap();
                     let version: u32 = row.get("version");
+                    let sequence_number: u32 = row.get("offset");
 
-                    Versioned::new(event, version)
+                    PersistedEvent::from(event)
+                        .with_version(version)
+                        .with_sequence_number(sequence_number)
                 })
                 .boxed())
         })

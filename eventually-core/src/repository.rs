@@ -10,13 +10,12 @@
 use std::error::Error as StdError;
 use std::fmt::Debug;
 
-use futures::future;
 use futures::stream::TryStreamExt;
 
 use thiserror::Error as ThisError;
 
 use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
-use crate::store::EventStore;
+use crate::store::{EventStore, Select};
 
 /// Error type returned by the [`Repository`].
 ///
@@ -94,7 +93,6 @@ where
     T::Event: Clone,
     T::Error: StdError + 'static,
     Store: EventStore<SourceId = T::Id, Event = T::Event> + Debug,
-    Store::Offset: Default,
     Store::Error: StdError + 'static,
 {
     /// Returns the [`Aggregate`] from the `Repository` with the specified id,
@@ -110,22 +108,26 @@ where
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     pub async fn get(&self, id: T::Id) -> Result<AggregateRoot<T>, T, Store> {
         self.store
-            .stream(id.clone(), Store::Offset::default())
+            .stream(id.clone(), Select::All)
             .await
             .map_err(Error::Store)?
             // Re-map any errors from the Stream into a Repository error
             .map_err(Error::Store)
             // Try to fold all the Events into an Aggregate State.
-            //
-            // However, since the Event Store might not have any Events yet,
-            // use an Option<T::State> with the initial value set to None...
-            .try_fold(T::State::default(), |state, event| {
-                future::ready(T::apply(state, event).map_err(Error::Aggregate))
-            })
+            .try_fold(
+                (0u32, T::State::default()),
+                |(version, state), event| async move {
+                    // Always consider the max version number for the next version.
+                    let new_version = std::cmp::max(event.version(), version);
+                    let state = T::apply(state, event.take()).map_err(Error::Aggregate)?;
+
+                    Ok((new_version, state))
+                },
+            )
             .await
             // ...and map the State to a new AggregateRoot only if there is
             // at least one Event coming from the Event Stream.
-            .map(|state| self.builder.build_with_state(id, state))
+            .map(|(version, state)| self.builder.build_with_state(id, version, state))
     }
 
     /// Adds a new [`State`] of the [`Aggregate`] into the `Repository`,

@@ -9,7 +9,6 @@ use std::sync::Arc;
 use envconfig::Envconfig;
 
 use eventually::aggregate::Optional;
-use eventually::versioned::AggregateExt;
 use eventually::{AggregateRootBuilder, Repository};
 use eventually_postgres::EventStoreBuilder;
 
@@ -26,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Aggregate target: in this case it's empty, but usually it would use
     // some domain services or internal repositories.
-    let aggregate = OrderAggregate.as_aggregate().versioned();
+    let aggregate = OrderAggregate.as_aggregate();
 
     // Open a connection with Postgres.
     let (client, connection) =
@@ -81,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         api.at("/add-item").post(api::add_order_item);
         api.at("/complete").post(api::complete_order);
         api.at("/cancel").post(api::cancel_order);
-        api.at("/history").get(api::history);
+        // api.at("/history").get(api::history);
 
         api
     });

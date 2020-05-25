@@ -124,7 +124,7 @@ where
     /// [`AggregateRoot`]: struct.AggregateRoot.html
     #[inline]
     pub fn build(&self, id: T::Id) -> AggregateRoot<T> {
-        self.build_with_state(id, Default::default())
+        self.build_with_state(id, 0, Default::default())
     }
 
     /// Builds a new [`AggregateRoot`] instance for the specified Aggregate
@@ -133,9 +133,10 @@ where
     /// [`AggregateRoot`]: struct.AggregateRoot.html
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     #[inline]
-    pub fn build_with_state(&self, id: T::Id, state: T::State) -> AggregateRoot<T> {
+    pub fn build_with_state(&self, id: T::Id, version: u32, state: T::State) -> AggregateRoot<T> {
         AggregateRoot {
             id,
+            version,
             state,
             aggregate: self.aggregate.clone(),
             to_commit: None,
@@ -172,6 +173,7 @@ where
     T: Aggregate + 'static,
 {
     id: T::Id,
+    version: u32,
 
     #[cfg_attr(feature = "serde", serde(flatten))]
     state: T::State,
@@ -197,14 +199,6 @@ impl<T> AggregateRoot<T>
 where
     T: Aggregate,
 {
-    /// Returns a reference to the current Aggregate [`State`].
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    #[inline]
-    pub fn state(&self) -> &T::State {
-        &self.state
-    }
-
     /// Returns a reference to the Aggregate [`Id`] that represents
     /// the entity wrapped by this [`AggregateRoot`] instance.
     ///
@@ -213,6 +207,20 @@ where
     #[inline]
     pub fn id(&self) -> &T::Id {
         &self.id
+    }
+
+    /// Returns the current version of the Aggregate.
+    #[inline]
+    pub fn version(&self) -> u32 {
+        self.version
+    }
+
+    /// Returns a reference to the current Aggregate [`State`].
+    ///
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    #[inline]
+    pub fn state(&self) -> &T::State {
+        &self.state
     }
 
     /// Takes the list of events to commit from the current instance,
