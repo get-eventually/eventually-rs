@@ -37,12 +37,9 @@
 //! // Use an EventStoreBuilder to build multiple EventStore instances.
 //! let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
 //!
-//! // Events should be versioned to be used with the Postgres Event Store.
-//! use eventually::versioned::Versioned;
-//!
 //! // Event store for the events.
 //! let store = {
-//!     let store = builder.event_stream::<String, Versioned<SomeEvent>>("orders");
+//!     let store = builder.event_stream::<String, SomeEvent>("orders");
 //!     store.create_stream().await?;
 //!     store
 //! };
@@ -134,9 +131,7 @@ impl EventStoreBuilder {
     /// // Use an EventStoreBuilder to build multiple EventStore instances.
     /// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
     ///
-    /// // Aggregates should be versioned to be used with the Postgres Event Store.
-    /// use eventually_util::versioned::AggregateExt;
-    /// let aggregate = SomeAggregate.versioned();
+    /// let aggregate = SomeAggregate;
     ///
     /// // Event store for the events.
     /// let store = {
@@ -260,7 +255,7 @@ where
         select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
         let from = match select {
-            Select::All => 0u32,
+            Select::All => 0,
             Select::From(v) => v,
         };
 
@@ -275,12 +270,10 @@ where
                 .await?
                 .map_ok(|row| {
                     let event: Event = serde_json::from_value(row.get("event")).unwrap();
-                    let version: u32 = row.get("version");
-                    let sequence_number: u32 = row.get("offset");
 
                     PersistedEvent::from(event)
-                        .with_version(version)
-                        .with_sequence_number(sequence_number)
+                        .with_version(row.get("version"))
+                        .with_sequence_number(row.get("offset"))
                 })
                 .boxed())
         })

@@ -23,15 +23,7 @@ impl<Event> From<Vec<Event>> for EventsHolder<Event> {
     fn from(events: Vec<Event>) -> Self {
         Self {
             global_offset: 1,
-            events: events
-                .into_iter()
-                .enumerate()
-                .map(|(i, event)| {
-                    PersistedEvent::from(event)
-                        .with_version(1)
-                        .with_sequence_number(i as u32)
-                })
-                .collect(),
+            events: into_persisted_events(1, events),
         }
     }
 }
@@ -45,15 +37,7 @@ where
 
         // FIXME: introduce check against offset and desired version.
 
-        let mut persisted_events = events
-            .into_iter()
-            .enumerate()
-            .map(|(i, event)| {
-                PersistedEvent::from(event)
-                    .with_version(version)
-                    .with_sequence_number(i as u32)
-            })
-            .collect::<Vec<PersistedEvent<Event>>>();
+        let mut persisted_events = into_persisted_events(version, events);
 
         self.events.append(&mut persisted_events);
         self.global_offset = offset;
@@ -68,6 +52,18 @@ where
                 Select::From(from) => event.version() >= from,
             })
     }
+}
+
+fn into_persisted_events<T>(version: u32, events: Vec<T>) -> Vec<PersistedEvent<T>> {
+    events
+        .into_iter()
+        .enumerate()
+        .map(|(i, event)| {
+            PersistedEvent::from(event)
+                .with_version(version)
+                .with_sequence_number(i as u32)
+        })
+        .collect()
 }
 
 /// Builder for [`EventStore`] instances.
@@ -166,7 +162,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::EventStore as InMemoryStore;
-    use eventually_core::store::{EventStore, Select};
+    use eventually_core::store::{EventStore, PersistedEvent, Select};
 
     use futures::StreamExt;
 
@@ -200,21 +196,41 @@ mod tests {
 
         let events_1 = vec![Event::A, Event::B, Event::C];
         let events_2 = vec![Event::B, Event::A];
-        let combined = vec![Event::A, Event::B, Event::C, Event::B, Event::A];
 
-        // Offset 1
         assert!(block_on(store.append("test-stream", 1, events_1.clone())).is_ok());
-        // Offset 2
         assert!(block_on(store.append("test-stream", 2, events_2.clone())).is_ok());
 
         assert_eq!(
-            combined,
-            block_on(stream_to_vec_from(&store, "test-stream", 1))
+            block_on(stream_to_vec_from(&store, "test-stream", 1)),
+            vec![
+                PersistedEvent::from(Event::A)
+                    .with_version(1)
+                    .with_sequence_number(0),
+                PersistedEvent::from(Event::B)
+                    .with_version(1)
+                    .with_sequence_number(1),
+                PersistedEvent::from(Event::C)
+                    .with_version(1)
+                    .with_sequence_number(2),
+                PersistedEvent::from(Event::B)
+                    .with_version(2)
+                    .with_sequence_number(0),
+                PersistedEvent::from(Event::A)
+                    .with_version(2)
+                    .with_sequence_number(1)
+            ]
         );
 
         assert_eq!(
-            events_2,
-            block_on(stream_to_vec_from(&store, "test-stream", 2))
+            block_on(stream_to_vec_from(&store, "test-stream", 2)),
+            vec![
+                PersistedEvent::from(Event::B)
+                    .with_version(2)
+                    .with_sequence_number(0),
+                PersistedEvent::from(Event::A)
+                    .with_version(2)
+                    .with_sequence_number(1)
+            ]
         );
     }
 
@@ -222,7 +238,20 @@ mod tests {
         let events = vec![Event::A, Event::B, Event::C];
 
         assert!(block_on(store.append(id, version, events.clone())).is_ok());
-        assert_eq!(events, block_on(stream_to_vec_from(&store, id, 0)));
+        assert_eq!(
+            block_on(stream_to_vec_from(&store, id, 0)),
+            vec![
+                PersistedEvent::from(Event::A)
+                    .with_version(1)
+                    .with_sequence_number(0),
+                PersistedEvent::from(Event::B)
+                    .with_version(1)
+                    .with_sequence_number(1),
+                PersistedEvent::from(Event::C)
+                    .with_version(1)
+                    .with_sequence_number(2)
+            ]
+        );
     }
 
     // TODO: should stream the PersistedEvent, and make assertions based on
@@ -231,13 +260,13 @@ mod tests {
         store: &InMemoryStore<&'static str, Event>,
         id: &'static str,
         from: u32,
-    ) -> Vec<Event> {
+    ) -> Vec<PersistedEvent<Event>> {
         store
             .stream(id, Select::From(from))
             .await
             .expect("should be infallible")
-            .map(|event| event.expect("should be infallible").take())
-            .collect::<Vec<Event>>()
+            .map(|event| event.expect("should be infallible"))
+            .collect()
             .await
     }
 }

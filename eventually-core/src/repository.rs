@@ -147,6 +147,7 @@ where
 
         if let Some(events) = events_to_commit {
             if !events.is_empty() {
+                // Version is incremented at each events flush.
                 version += 1;
 
                 self.store

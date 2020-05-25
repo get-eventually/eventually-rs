@@ -147,7 +147,7 @@ where
 /// An `AggregateRoot` represents an handler to the [`Aggregate`] it's managing,
 /// such as:
 ///
-/// * Owning its [`State`] and [`Id`],
+/// * Owning its [`State`], [`Id`] and version,
 /// * Proxying [`Command`]s to the [`Aggregate`] using the current [`State`],
 /// * Keeping a list of [`Event`]s to commit after [`Command`] execution.
 ///
@@ -230,6 +230,7 @@ where
         std::mem::replace(&mut self.to_commit, None)
     }
 
+    /// Returns a new `AggregateRoot` having the specified version.
     #[inline]
     pub(crate) fn with_version(mut self, version: u32) -> Self {
         self.version = version;
