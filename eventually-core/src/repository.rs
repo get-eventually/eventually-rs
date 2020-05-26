@@ -15,12 +15,12 @@ use futures::stream::TryStreamExt;
 use thiserror::Error as ThisError;
 
 use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
-use crate::store::{EventStore, Select};
+use crate::store::{AppendError, EventStore, Select};
 
 /// Error type returned by the [`Repository`].
 ///
 /// [`Repository`]: trait.Repository.html
-#[derive(Debug, ThisError, PartialEq, Eq)]
+#[derive(Debug, ThisError)]
 pub enum Error<A, S>
 where
     A: StdError + 'static,
@@ -38,6 +38,9 @@ where
     /// [`EventStore`]: ../store/trait.EventStore.html
     #[error("event store failed: {0}")]
     Store(#[source] S),
+
+    #[error("version conflict detected: {0}")]
+    Conflict(#[source] AppendError<S>),
 }
 
 /// Result type returned by the [`Repository`].
@@ -153,7 +156,10 @@ where
                 self.store
                     .append(root.id().clone(), version, events)
                     .await
-                    .map_err(Error::Store)?;
+                    .map_err(|err| match err {
+                        AppendError::Conflict { .. } => Error::Conflict(err),
+                        AppendError::Inner(err) => Error::Store(err),
+                    })?;
             }
         }
 

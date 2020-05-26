@@ -7,6 +7,8 @@ use futures::stream::BoxStream;
 
 use serde::{Deserialize, Serialize};
 
+use thiserror::Error;
+
 /// An [`Event`] wrapper for events that have been
 /// successfully committed to the [`EventStore`].
 ///
@@ -96,6 +98,25 @@ pub enum Select {
 pub type EventStream<'a, S> =
     BoxStream<'a, Result<PersistedEvent<<S as EventStore>::Event>, <S as EventStore>::Error>>;
 
+/// Error variant returned by [`append`] in [`EventStore`] implementations.
+///
+/// [`append`]: trait.EventStore.html#method.append
+/// [`EventStore`]: trait.EventStore.html
+#[derive(Debug, Clone, Error)]
+pub enum AppendError<Inner>
+where
+    Inner: std::error::Error + 'static,
+{
+    /// Error returned when a version conflict has been detected, using
+    /// the version contained in the variant.
+    #[error("event store detected a conflict for version: {version}")]
+    Conflict { version: u32 },
+
+    /// Unknown, implementation-specific error that can be handled by this crate.
+    #[error(transparent)]
+    Inner(#[from] Inner),
+}
+
 /// An Event Store is an append-only, ordered list of [`Event`]s
 /// for a certain "source" -- e.g. an [`Aggregate`].
 ///
@@ -113,28 +134,31 @@ pub trait EventStore {
     type Event;
 
     /// Possible errors returned by the `EventStore` when requesting operations.
-    type Error;
+    type Error: std::error::Error;
 
     /// Appends a new list of [`Event`]s to the Event Store, for the Source
     /// entity specified by [`SourceId`].
     ///
     /// `append` is a transactional operation: it either appends all the events,
-    /// or none at all and returns an appropriate [`Error`].
+    /// or none at all and returns an [`AppendError`].
     ///
     /// The desired version for the new [`Event`]s to append must be specified.
+    /// If the version is not the one expected from the Store, implementations
+    /// should raise an [`AppendError::Conflict`] error.
     ///
     /// Implementations could decide to return an error if the expected
     /// version is different from the one supplied in the method invocation.
     ///
     /// [`Event`]: trait.EventStore.html#associatedtype.Event
     /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
-    /// [`Error`]: trait.EventStore.html#associatedtype.Error
+    /// [`AppendError`]: enum.AppendError.html
+    /// [`AppendError::Conflict`]: enum.AppendError.html
     fn append(
         &mut self,
         id: Self::SourceId,
         version: u32,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), Self::Error>>;
+    ) -> BoxFuture<Result<(), AppendError<Self::Error>>>;
 
     /// Streams a list of [`Event`]s from the `EventStore` back to the application,
     /// by specifying the desired [`SourceId`] and [`Offset`].

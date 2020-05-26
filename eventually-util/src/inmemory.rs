@@ -6,53 +6,12 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 use eventually_core::aggregate::Aggregate;
-use eventually_core::store::{EventStream, PersistedEvent, Select};
+use eventually_core::store::{AppendError, EventStream, PersistedEvent, Select};
 
 use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt};
 
 use parking_lot::RwLock;
-
-#[derive(Debug)]
-struct EventsHolder<Event> {
-    global_offset: u32,
-    events: Vec<PersistedEvent<Event>>,
-}
-
-impl<Event> From<Vec<Event>> for EventsHolder<Event> {
-    fn from(events: Vec<Event>) -> Self {
-        Self {
-            global_offset: 1,
-            events: into_persisted_events(1, events),
-        }
-    }
-}
-
-impl<Event> EventsHolder<Event>
-where
-    Event: Clone,
-{
-    fn append(&mut self, version: u32, events: Vec<Event>) {
-        let offset = self.global_offset + 1;
-
-        // FIXME: introduce check against offset and desired version.
-
-        let mut persisted_events = into_persisted_events(version, events);
-
-        self.events.append(&mut persisted_events);
-        self.global_offset = offset;
-    }
-
-    fn stream(&self, select: Select) -> impl Iterator<Item = PersistedEvent<Event>> {
-        self.events
-            .clone() // Should be moved inside the block flat-mapping if possible
-            .into_iter()
-            .filter(move |event| match select {
-                Select::All => true,
-                Select::From(from) => event.version() >= from,
-            })
-    }
-}
 
 fn into_persisted_events<T>(version: u32, events: Vec<T>) -> Vec<PersistedEvent<T>> {
     events
@@ -94,7 +53,7 @@ pub struct EventStore<Id, Event>
 where
     Id: Hash + Eq,
 {
-    backend: Arc<RwLock<HashMap<Id, EventsHolder<Event>>>>,
+    backend: Arc<RwLock<HashMap<Id, Vec<PersistedEvent<Event>>>>>,
 }
 
 impl<Id, Event> Default for EventStore<Id, Event>
@@ -123,13 +82,15 @@ where
         id: Self::SourceId,
         version: u32,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), Self::Error>> {
+    ) -> BoxFuture<Result<(), AppendError<Self::Error>>> {
         Box::pin(async move {
+            let mut persisted_events = into_persisted_events(version, events);
+
             self.backend
                 .write()
                 .entry(id)
-                .and_modify(|holder| holder.append(version, events.clone()))
-                .or_insert_with(|| EventsHolder::from(events));
+                .and_modify(|events| events.append(&mut persisted_events))
+                .or_insert_with(|| persisted_events);
 
             Ok(())
         })
@@ -145,7 +106,17 @@ where
                 .backend
                 .read()
                 .get(&id)
-                .map(move |holder| iter(holder.stream(select)).map(Ok).boxed())
+                .map(move |events| {
+                    let stream = events
+                        .clone()
+                        .into_iter()
+                        .filter(move |event| match select {
+                            Select::All => true,
+                            Select::From(v) => event.version() >= v,
+                        });
+
+                    iter(stream).map(Ok).boxed()
+                })
                 .unwrap_or_else(|| empty().boxed()))
         })
     }
@@ -254,8 +225,6 @@ mod tests {
         );
     }
 
-    // TODO: should stream the PersistedEvent, and make assertions based on
-    // the persisted event value.
     async fn stream_to_vec_from(
         store: &InMemoryStore<&'static str, Event>,
         id: &'static str,

@@ -53,7 +53,7 @@
 
 use std::sync::Arc;
 
-use eventually::store::{EventStream, PersistedEvent, Select};
+use eventually::store::{AppendError, EventStream, PersistedEvent, Select};
 use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;
@@ -225,7 +225,7 @@ where
         id: Self::SourceId,
         version: u32,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), Self::Error>> {
+    ) -> BoxFuture<Result<(), AppendError<Self::Error>>> {
         let serialized = events
             .into_iter()
             .enumerate()
@@ -235,17 +235,18 @@ where
 
         Box::pin(async move {
             let mut tx = self.client.write().await;
-            let tx = tx.transaction().await?;
+            let tx = tx.transaction().await.map_err(AppendError::Inner)?;
 
             for (i, event) in serialized {
                 tx.execute(
                     &*self.append_query,
                     &[&id.to_string(), &event, &version, &(i as u32)],
                 )
-                .await?;
+                .await
+                .map_err(AppendError::Inner)?;
             }
 
-            tx.commit().await
+            tx.commit().await.map_err(AppendError::Inner)
         })
     }
 
