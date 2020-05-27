@@ -6,7 +6,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 use eventually_core::aggregate::Aggregate;
-use eventually_core::store::{AppendError, EventStream, PersistedEvent, Select};
+use eventually_core::store::{EventStream, PersistedEvent, Select};
 
 use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt};
@@ -82,7 +82,7 @@ where
         id: Self::SourceId,
         version: u32,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), AppendError<Self::Error>>> {
+    ) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
             let mut persisted_events = into_persisted_events(version, events);
 

@@ -7,24 +7,21 @@
 //! [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
 //! [Repository pattern]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern
 
-use std::error::Error as StdError;
 use std::fmt::Debug;
 
 use futures::stream::TryStreamExt;
 
-use thiserror::Error as ThisError;
-
 use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
-use crate::store::{AppendError, EventStore, Select};
+use crate::store::{EventStore, Select};
 
 /// Error type returned by the [`Repository`].
 ///
 /// [`Repository`]: trait.Repository.html
-#[derive(Debug, ThisError)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error<A, S>
 where
-    A: StdError + 'static,
-    S: StdError + 'static,
+    A: std::error::Error + 'static,
+    S: std::error::Error + 'static,
 {
     /// Error returned by the [`Aggregate`], usually when recreating the [`State`].
     ///
@@ -38,9 +35,6 @@ where
     /// [`EventStore`]: ../store/trait.EventStore.html
     #[error("event store failed: {0}")]
     Store(#[source] S),
-
-    #[error("version conflict detected: {0}")]
-    Conflict(#[source] AppendError<S>),
 }
 
 /// Result type returned by the [`Repository`].
@@ -94,9 +88,9 @@ where
     T: Aggregate + Debug + Clone,
     T::Id: Clone,
     T::Event: Clone,
-    T::Error: StdError + 'static,
+    T::Error: std::error::Error + 'static,
     Store: EventStore<SourceId = T::Id, Event = T::Event> + Debug,
-    Store::Error: StdError + 'static,
+    Store::Error: std::error::Error + 'static,
 {
     /// Returns the [`Aggregate`] from the `Repository` with the specified id,
     /// if any.
@@ -156,10 +150,7 @@ where
                 self.store
                     .append(root.id().clone(), version, events)
                     .await
-                    .map_err(|err| match err {
-                        AppendError::Conflict { .. } => Error::Conflict(err),
-                        AppendError::Inner(err) => Error::Store(err),
-                    })?;
+                    .map_err(Error::Store)?;
             }
         }
 

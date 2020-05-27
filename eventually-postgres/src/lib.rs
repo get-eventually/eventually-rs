@@ -66,6 +66,24 @@ use tokio::sync::RwLock;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::{Client, Error};
 
+use thiserror::Error;
+
+/// Error type returned by the [`EventStore`] implementation, which is
+/// a _newtype_ wrapper around `tokio_postgres::Error`.
+///
+/// [`EventStore`]: struct.EventStore.html
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct EventStoreError(#[from] Error);
+
+impl AppendError for EventStoreError {
+    #[inline]
+    fn is_conflict_error(&self) -> bool {
+        // TODO: implement this
+        false
+    }
+}
+
 /// Builder type for [`EventStore`] instances.
 ///
 /// [`EventStore`]: struct.EventStore.html
@@ -218,14 +236,14 @@ where
 {
     type SourceId = Id;
     type Event = Event;
-    type Error = Error;
+    type Error = EventStoreError;
 
     fn append(
         &mut self,
         id: Self::SourceId,
         version: u32,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), AppendError<Self::Error>>> {
+    ) -> BoxFuture<Result<(), Self::Error>> {
         let serialized = events
             .into_iter()
             .enumerate()
@@ -235,7 +253,7 @@ where
 
         Box::pin(async move {
             let mut tx = self.client.write().await;
-            let tx = tx.transaction().await.map_err(AppendError::Inner)?;
+            let tx = tx.transaction().await.map_err(EventStoreError::from)?;
 
             for (i, event) in serialized {
                 tx.execute(
@@ -243,10 +261,10 @@ where
                     &[&id.to_string(), &event, &version, &(i as u32)],
                 )
                 .await
-                .map_err(AppendError::Inner)?;
+                .map_err(EventStoreError::from)?;
             }
 
-            tx.commit().await.map_err(AppendError::Inner)
+            tx.commit().await.map_err(EventStoreError::from)
         })
     }
 
@@ -268,7 +286,8 @@ where
                 .read()
                 .await
                 .query_raw(&*self.stream_query, slice_iter(params))
-                .await?
+                .await
+                .map_err(EventStoreError::from)?
                 .map_ok(|row| {
                     let event: Event = serde_json::from_value(row.get("event")).unwrap();
 
@@ -276,6 +295,7 @@ where
                         .with_version(row.get("version"))
                         .with_sequence_number(row.get("offset"))
                 })
+                .map_err(EventStoreError::from)
                 .boxed())
         })
     }
@@ -288,6 +308,7 @@ where
                 .execute(&*self.remove_query, &[&id.to_string()])
                 .await
                 .map(|_| ())
+                .map_err(EventStoreError::from)
         })
     }
 }

@@ -7,8 +7,6 @@ use futures::stream::BoxStream;
 
 use serde::{Deserialize, Serialize};
 
-use thiserror::Error;
-
 /// An [`Event`] wrapper for events that have been
 /// successfully committed to the [`EventStore`].
 ///
@@ -98,23 +96,22 @@ pub enum Select {
 pub type EventStream<'a, S> =
     BoxStream<'a, Result<PersistedEvent<<S as EventStore>::Event>, <S as EventStore>::Error>>;
 
-/// Error variant returned by [`append`] in [`EventStore`] implementations.
+/// Error type returned by [`append`] in [`EventStore`] implementations.
 ///
 /// [`append`]: trait.EventStore.html#method.append
 /// [`EventStore`]: trait.EventStore.html
-#[derive(Debug, Clone, Error)]
-pub enum AppendError<Inner>
-where
-    Inner: std::error::Error + 'static,
-{
-    /// Error returned when a version conflict has been detected, using
-    /// the version contained in the variant.
-    #[error("event store detected a conflict for version: {version}")]
-    Conflict { version: u32 },
+pub trait AppendError: std::error::Error {
+    /// Returns true if the error is due to a version conflict
+    /// during [`append`].
+    ///
+    /// [`append`]: trait.EventStore.html#method.append
+    fn is_conflict_error(&self) -> bool;
+}
 
-    /// Unknown, implementation-specific error that can be handled by this crate.
-    #[error(transparent)]
-    Inner(#[from] Inner),
+impl AppendError for std::convert::Infallible {
+    fn is_conflict_error(&self) -> bool {
+        false
+    }
 }
 
 /// An Event Store is an append-only, ordered list of [`Event`]s
@@ -134,7 +131,7 @@ pub trait EventStore {
     type Event;
 
     /// Possible errors returned by the `EventStore` when requesting operations.
-    type Error: std::error::Error;
+    type Error: AppendError;
 
     /// Appends a new list of [`Event`]s to the Event Store, for the Source
     /// entity specified by [`SourceId`].
@@ -158,7 +155,7 @@ pub trait EventStore {
         id: Self::SourceId,
         version: u32,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), AppendError<Self::Error>>>;
+    ) -> BoxFuture<Result<(), Self::Error>>;
 
     /// Streams a list of [`Event`]s from the `EventStore` back to the application,
     /// by specifying the desired [`SourceId`] and [`Offset`].
