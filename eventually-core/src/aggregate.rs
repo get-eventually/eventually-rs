@@ -8,6 +8,8 @@ use futures::future::BoxFuture;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
+use crate::versioning::Versioned;
+
 /// A short extractor type for the Aggregate [`Id`].
 ///
 /// [`Id`]: trait.Aggregate.html#associatedtype.Id
@@ -195,6 +197,16 @@ where
     }
 }
 
+impl<T> Versioned for AggregateRoot<T>
+where
+    T: Aggregate,
+{
+    #[inline]
+    fn version(&self) -> u32 {
+        self.version
+    }
+}
+
 impl<T> AggregateRoot<T>
 where
     T: Aggregate,
@@ -207,12 +219,6 @@ where
     #[inline]
     pub fn id(&self) -> &T::Id {
         &self.id
-    }
-
-    /// Returns the current version of the Aggregate.
-    #[inline]
-    pub fn version(&self) -> u32 {
-        self.version
     }
 
     /// Returns a reference to the current Aggregate [`State`].

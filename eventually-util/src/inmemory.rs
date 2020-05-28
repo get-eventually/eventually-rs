@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use eventually_core::aggregate::Aggregate;
 use eventually_core::store::{EventStream, PersistedEvent, Select};
+use eventually_core::versioning::Versioned;
 
 use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt};

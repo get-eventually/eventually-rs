@@ -13,6 +13,7 @@ use futures::stream::TryStreamExt;
 
 use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
 use crate::store::{EventStore, Select};
+use crate::versioning::Versioned;
 
 /// Error type returned by the [`Repository`].
 ///

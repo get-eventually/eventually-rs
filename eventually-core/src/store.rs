@@ -7,6 +7,8 @@ use futures::stream::BoxStream;
 
 use serde::{Deserialize, Serialize};
 
+use crate::versioning::Versioned;
+
 /// An [`Event`] wrapper for events that have been
 /// successfully committed to the [`EventStore`].
 ///
@@ -34,6 +36,13 @@ impl<T> From<T> for PersistedEvent<T> {
     }
 }
 
+impl<T> Versioned for PersistedEvent<T> {
+    #[inline]
+    fn version(&self) -> u32 {
+        self.version
+    }
+}
+
 impl<T> PersistedEvent<T> {
     /// Updates the event version to the one specified.
     #[inline]
@@ -47,12 +56,6 @@ impl<T> PersistedEvent<T> {
     pub fn with_sequence_number(mut self, sequence_number: u32) -> Self {
         self.sequence_number = sequence_number;
         self
-    }
-
-    /// Returns the event version.
-    #[inline]
-    pub fn version(&self) -> u32 {
-        self.version
     }
 
     /// Returns the event sequence number.
