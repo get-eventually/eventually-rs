@@ -36,12 +36,16 @@
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">repository</span>::<span class="ident">Repository</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">store</span>::<span class="ident">EventStore</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">versioning</span>::<span class="ident">Versioned</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">aggregate</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::<span class="kw-2">*</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">optional</span>::<span class="ident">Aggregate</span> <span class="kw">as</span> <span class="ident">Optional</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">versioned</span>::<span class="ident">AsAggregate</span> <span class="kw">as</span> <span class="ident">Versioned</span>;
+}
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">versioning</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">versioning</span>::<span class="kw-2">*</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">repository</span> {
@@ -54,10 +58,6 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">optional</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">optional</span>::<span class="kw-2">*</span>;
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">versioned</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">versioned</span>::<span class="kw-2">*</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">inmemory</span> {

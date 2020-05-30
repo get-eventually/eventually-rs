@@ -163,6 +163,10 @@
 <span id="163">163</span>
 <span id="164">164</span>
 <span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Contains the [Repository pattern] implementation for [`AggregateRoot`]</span>
 <span class="doccomment">//! instances.</span>
@@ -173,25 +177,22 @@
 <span class="doccomment">//! [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html</span>
 <span class="doccomment">//! [Repository pattern]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">StdError</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
 
-<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">stream</span>::<span class="ident">TryStreamExt</span>;
 
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">ThisError</span>;
-
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootBuilder</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">store</span>::<span class="ident">EventStore</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">store</span>::{<span class="ident">EventStore</span>, <span class="ident">Select</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">versioning</span>::<span class="ident">Versioned</span>;
 
 <span class="doccomment">/// Error type returned by the [`Repository`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Repository`]: trait.Repository.html</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">ThisError</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">A</span>, <span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">A</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">A</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">S</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="doccomment">/// Error returned by the [`Aggregate`], usually when recreating the [`State`].</span>
     <span class="doccomment">///</span>
@@ -258,10 +259,9 @@
     <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">Id</span>: <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">Event</span>: <span class="ident">Clone</span>,
-    <span class="ident">T</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">T</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Id</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Debug</span>,
-    <span class="ident">Store</span>::<span class="ident">Offset</span>: <span class="ident">Default</span>,
-    <span class="ident">Store</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">Store</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="doccomment">/// Returns the [`Aggregate`] from the `Repository` with the specified id,</span>
     <span class="doccomment">/// if any.</span>
@@ -276,22 +276,26 @@
     <span class="doccomment">/// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">T</span>::<span class="ident">Id</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">store</span>
-            .<span class="ident">stream</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">Store</span>::<span class="ident">Offset</span>::<span class="ident">default</span>())
+            .<span class="ident">stream</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">Select</span>::<span class="ident">All</span>)
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">Store</span>)<span class="question-mark">?</span>
             <span class="comment">// Re-map any errors from the Stream into a Repository error</span>
             .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">Store</span>)
             <span class="comment">// Try to fold all the Events into an Aggregate State.</span>
-            <span class="comment">//</span>
-            <span class="comment">// However, since the Event Store might not have any Events yet,</span>
-            <span class="comment">// use an Option&lt;T::State&gt; with the initial value set to None...</span>
-            .<span class="ident">try_fold</span>(<span class="ident">T</span>::<span class="ident">State</span>::<span class="ident">default</span>(), <span class="op">|</span><span class="ident">state</span>, <span class="ident">event</span><span class="op">|</span> {
-                <span class="ident">future</span>::<span class="ident">ready</span>(<span class="ident">T</span>::<span class="ident">apply</span>(<span class="ident">state</span>, <span class="ident">event</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">Aggregate</span>))
-            })
+            .<span class="ident">try_fold</span>(
+                (<span class="number">0</span>, <span class="ident">T</span>::<span class="ident">State</span>::<span class="ident">default</span>()),
+                <span class="op">|</span>(<span class="ident">version</span>, <span class="ident">state</span>), <span class="ident">event</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+                    <span class="comment">// Always consider the max version number for the next version.</span>
+                    <span class="kw">let</span> <span class="ident">new_version</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">max</span>(<span class="ident">event</span>.<span class="ident">version</span>(), <span class="ident">version</span>);
+                    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">apply</span>(<span class="ident">state</span>, <span class="ident">event</span>.<span class="ident">take</span>()).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">Aggregate</span>)<span class="question-mark">?</span>;
+
+                    <span class="prelude-val">Ok</span>((<span class="ident">new_version</span>, <span class="ident">state</span>))
+                },
+            )
             .<span class="kw">await</span>
             <span class="comment">// ...and map the State to a new AggregateRoot only if there is</span>
             <span class="comment">// at least one Event coming from the Event Stream.</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">state</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">build_with_state</span>(<span class="ident">id</span>, <span class="ident">state</span>))
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">version</span>, <span class="ident">state</span>)<span class="op">|</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">build_with_state</span>(<span class="ident">id</span>, <span class="ident">version</span>, <span class="ident">state</span>))
     }
 
     <span class="doccomment">/// Adds a new [`State`] of the [`Aggregate`] into the `Repository`,</span>
@@ -306,18 +310,22 @@
     <span class="doccomment">/// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
     <span class="doccomment">/// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">root</span>: <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">version</span>();
         <span class="kw">let</span> <span class="ident">events_to_commit</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">take_events_to_commit</span>();
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">events</span>) <span class="op">=</span> <span class="ident">events_to_commit</span> {
             <span class="kw">if</span> <span class="op">!</span><span class="ident">events</span>.<span class="ident">is_empty</span>() {
+                <span class="comment">// Version is incremented at each events flush.</span>
+                <span class="ident">version</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+
                 <span class="self">self</span>.<span class="ident">store</span>
-                    .<span class="ident">append</span>(<span class="ident">root</span>.<span class="ident">id</span>().<span class="ident">clone</span>(), <span class="ident">events</span>)
+                    .<span class="ident">append</span>(<span class="ident">root</span>.<span class="ident">id</span>().<span class="ident">clone</span>(), <span class="ident">version</span>, <span class="ident">events</span>)
                     .<span class="kw">await</span>
                     .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">Store</span>)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">root</span>)
+        <span class="prelude-val">Ok</span>(<span class="ident">root</span>.<span class="ident">with_version</span>(<span class="ident">version</span>))
     }
 
     <span class="doccomment">/// Removes the specified [`Aggregate`] from the `Repository`,</span>

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["EventStore","[`EventStore`] implementation using a PostgreSQL backend."],["EventStoreBuilder","Builder type for [`EventStore`] instances."]]});
+initSidebarItems({"struct":[["EventStore","[`EventStore`] implementation using a PostgreSQL backend."],["EventStoreBuilder","Builder type for [`EventStore`] instances."],["EventStoreError","Error type returned by the [`EventStore`] implementation, which is a newtype wrapper around `tokio_postgres::Error`."]]});

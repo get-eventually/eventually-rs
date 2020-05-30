@@ -90,6 +90,8 @@
 <span id="90">90</span>
 <span id="91">91</span>
 <span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">api</span>;
 <span class="kw">mod</span> <span class="ident">config</span>;
@@ -102,7 +104,6 @@
 <span class="kw">use</span> <span class="ident">envconfig</span>::<span class="ident">Envconfig</span>;
 
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">aggregate</span>::<span class="ident">Optional</span>;
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">versioned</span>::<span class="ident">AggregateExt</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">AggregateRootBuilder</span>, <span class="ident">Repository</span>};
 <span class="kw">use</span> <span class="ident">eventually_postgres</span>::<span class="ident">EventStoreBuilder</span>;
 
@@ -111,15 +112,18 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">Config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">order</span>::<span class="ident">OrderAggregate</span>;
 
-<span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="ident">smol</span>::<span class="ident">run</span>(<span class="ident">run</span>())
+}
+
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config</span>::<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="ident">env_logger</span>::<span class="ident">builder</span>().<span class="ident">filter_level</span>(<span class="ident">config</span>.<span class="ident">log_level</span>).<span class="ident">init</span>();
 
     <span class="comment">// Aggregate target: in this case it&#39;s empty, but usually it would use</span>
     <span class="comment">// some domain services or internal repositories.</span>
-    <span class="kw">let</span> <span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">OrderAggregate</span>.<span class="ident">as_aggregate</span>().<span class="ident">versioned</span>();
+    <span class="kw">let</span> <span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">OrderAggregate</span>.<span class="ident">as_aggregate</span>();
 
     <span class="comment">// Open a connection with Postgres.</span>
     <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">connection</span>) <span class="op">=</span>
@@ -174,7 +178,7 @@
         <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/add-item&quot;</span>).<span class="ident">post</span>(<span class="ident">api</span>::<span class="ident">add_order_item</span>);
         <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/complete&quot;</span>).<span class="ident">post</span>(<span class="ident">api</span>::<span class="ident">complete_order</span>);
         <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/cancel&quot;</span>).<span class="ident">post</span>(<span class="ident">api</span>::<span class="ident">cancel_order</span>);
-        <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/history&quot;</span>).<span class="ident">get</span>(<span class="ident">api</span>::<span class="ident">history</span>);
+        <span class="comment">// api.at(&quot;/history&quot;).get(api::history);</span>
 
         <span class="ident">api</span>
     });

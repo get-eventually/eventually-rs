@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["inmemory","Contains supporting entities using an in-memory backend."],["optional","Contains a different flavour of the [`Aggregate`] trait, while still maintaining compatibility through [`AsAggregate`] type."],["versioned","Contains support for Optimistic Concurrency Control using versioning attributes."]]});
+initSidebarItems({"mod":[["inmemory","Contains supporting entities using an in-memory backend."],["optional","Contains a different flavour of the [`Aggregate`] trait, while still maintaining compatibility through [`AsAggregate`] type."]]});

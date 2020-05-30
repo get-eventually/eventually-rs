@@ -179,72 +179,56 @@
 <span id="179">179</span>
 <span id="180">180</span>
 <span id="181">181</span>
-<span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
-
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">versioned</span>::<span class="ident">Versioned</span>;
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">EventStore</span>;
-
-<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">StreamExt</span>;
-
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
+<span class="comment">// use chrono::{DateTime, Utc};</span>
+<span class="comment">//</span>
+<span class="comment">// use eventually::versioned::Versioned;</span>
+<span class="comment">// use eventually::EventStore;</span>
+<span class="comment">//</span>
+<span class="comment">// use futures::StreamExt;</span>
+<span class="comment">//</span>
+<span class="comment">// use serde::Deserialize;</span>
 
 <span class="kw">use</span> <span class="ident">tide</span>::{<span class="ident">Error</span>, <span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">StatusCode</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">order</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">state</span>::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">history</span>(<span class="ident">req</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">AppState</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">struct</span> <span class="ident">Params</span> {
-        <span class="ident">from</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    }
-
-    <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">param</span>(<span class="string">&quot;id&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">params</span>: <span class="ident">Params</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">query</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">from</span>;
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Versioned</span><span class="op">&lt;</span><span class="ident">OrderEvent</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">req</span>
-        .<span class="ident">state</span>()
-        .<span class="ident">store</span>
-        .<span class="ident">stream</span>(<span class="ident">id</span>, <span class="number">0</span>)
-        .<span class="kw">await</span>
-        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>
-        .<span class="ident">collect</span>()
-        .<span class="kw">await</span>;
-
-    <span class="ident">stream</span>.<span class="ident">reverse</span>();
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_stream</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-
-    <span class="kw">for</span> <span class="ident">result</span> <span class="kw">in</span> <span class="ident">stream</span> {
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
-
-        <span class="kw">if</span> <span class="ident">from</span>.<span class="ident">is_some</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">event</span>.<span class="ident">happened_at</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">from</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>() {
-            <span class="ident">new_stream</span>.<span class="ident">push</span>(<span class="ident">event</span>);
-        }
-    }
-
-    <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="prelude-val">Ok</span>)
-        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">new_stream</span>)
-        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
-}
+<span class="comment">// pub(crate) async fn history(req: Request&lt;AppState&gt;) -&gt; Result&lt;Response, Error&gt; {</span>
+<span class="comment">//     #[derive(Deserialize)]</span>
+<span class="comment">//     struct Params {</span>
+<span class="comment">//         from: Option&lt;DateTime&lt;Utc&gt;&gt;,</span>
+<span class="comment">//     }</span>
+<span class="comment">//</span>
+<span class="comment">//     let id: String = req.param(&quot;id&quot;)?;</span>
+<span class="comment">//     let params: Params = req.query()?;</span>
+<span class="comment">//     let from = params.from;</span>
+<span class="comment">//</span>
+<span class="comment">//     let mut stream: Vec&lt;Result&lt;Versioned&lt;OrderEvent&gt;, _&gt;&gt; = req</span>
+<span class="comment">//         .state()</span>
+<span class="comment">//         .store</span>
+<span class="comment">//         .stream(id, 0)</span>
+<span class="comment">//         .await</span>
+<span class="comment">//         .map_err(Error::from)?</span>
+<span class="comment">//         .collect()</span>
+<span class="comment">//         .await;</span>
+<span class="comment">//</span>
+<span class="comment">//     stream.reverse();</span>
+<span class="comment">//</span>
+<span class="comment">//     let mut new_stream = Vec::new();</span>
+<span class="comment">//</span>
+<span class="comment">//     for result in stream {</span>
+<span class="comment">//         let event = result.map_err(Error::from)?;</span>
+<span class="comment">//</span>
+<span class="comment">//         if from.is_some() &amp;&amp; event.happened_at() &gt;= from.as_ref().unwrap() {</span>
+<span class="comment">//             new_stream.push(event);</span>
+<span class="comment">//         }</span>
+<span class="comment">//     }</span>
+<span class="comment">//</span>
+<span class="comment">//     Response::new(StatusCode::Ok)</span>
+<span class="comment">//         .body_json(&amp;new_stream)</span>
+<span class="comment">//         .map_err(Error::from)</span>
+<span class="comment">// }</span>
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_order</span>(<span class="ident">req</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">AppState</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">param</span>(<span class="string">&quot;id&quot;</span>)<span class="question-mark">?</span>;
@@ -258,12 +242,8 @@
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">state</span>().<span class="ident">is_none</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">NotFound</span>));
-    }
-
     <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="prelude-val">Ok</span>)
-        .<span class="ident">body_json</span>(<span class="ident">root</span>.<span class="ident">state</span>())
+        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>)
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
 }
 
@@ -286,7 +266,7 @@
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
     <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Created</span>)
-        .<span class="ident">body_json</span>(<span class="ident">root</span>.<span class="ident">state</span>())
+        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>)
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
 }
 
@@ -304,10 +284,6 @@
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">state</span>().<span class="ident">is_none</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">NotFound</span>));
-    }
-
     <span class="ident">root</span>.<span class="ident">handle</span>(<span class="ident">OrderCommand</span>::<span class="ident">AddItem</span> { <span class="ident">item</span> })
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Forbidden</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
@@ -322,7 +298,7 @@
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
     <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Accepted</span>)
-        .<span class="ident">body_json</span>(<span class="ident">root</span>.<span class="ident">state</span>())
+        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>)
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
 }
 
@@ -338,10 +314,6 @@
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">state</span>().<span class="ident">is_none</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">NotFound</span>));
-    }
-
     <span class="ident">root</span>.<span class="ident">handle</span>(<span class="ident">OrderCommand</span>::<span class="ident">Complete</span>)
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Forbidden</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
@@ -356,7 +328,7 @@
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
     <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Accepted</span>)
-        .<span class="ident">body_json</span>(<span class="ident">root</span>.<span class="ident">state</span>())
+        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>)
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
 }
 
@@ -372,10 +344,6 @@
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">state</span>().<span class="ident">is_none</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">NotFound</span>));
-    }
-
     <span class="ident">root</span>.<span class="ident">handle</span>(<span class="ident">OrderCommand</span>::<span class="ident">Cancel</span>)
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Forbidden</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
@@ -390,7 +358,7 @@
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
 
     <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="ident">Accepted</span>)
-        .<span class="ident">body_json</span>(<span class="ident">root</span>.<span class="ident">state</span>())
+        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>)
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
 }
 </pre></div>
