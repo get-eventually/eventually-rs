@@ -7,25 +7,22 @@
 //! [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
 //! [Repository pattern]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern
 
-use std::error::Error as StdError;
 use std::fmt::Debug;
 
-use futures::future;
 use futures::stream::TryStreamExt;
 
-use thiserror::Error as ThisError;
-
 use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
-use crate::store::EventStore;
+use crate::store::{EventStore, Select};
+use crate::versioning::Versioned;
 
 /// Error type returned by the [`Repository`].
 ///
 /// [`Repository`]: trait.Repository.html
-#[derive(Debug, ThisError, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error<A, S>
 where
-    A: StdError + 'static,
-    S: StdError + 'static,
+    A: std::error::Error + 'static,
+    S: std::error::Error + 'static,
 {
     /// Error returned by the [`Aggregate`], usually when recreating the [`State`].
     ///
@@ -92,10 +89,9 @@ where
     T: Aggregate + Debug + Clone,
     T::Id: Clone,
     T::Event: Clone,
-    T::Error: StdError + 'static,
+    T::Error: std::error::Error + 'static,
     Store: EventStore<SourceId = T::Id, Event = T::Event> + Debug,
-    Store::Offset: Default,
-    Store::Error: StdError + 'static,
+    Store::Error: std::error::Error + 'static,
 {
     /// Returns the [`Aggregate`] from the `Repository` with the specified id,
     /// if any.
@@ -110,22 +106,26 @@ where
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     pub async fn get(&self, id: T::Id) -> Result<AggregateRoot<T>, T, Store> {
         self.store
-            .stream(id.clone(), Store::Offset::default())
+            .stream(id.clone(), Select::All)
             .await
             .map_err(Error::Store)?
             // Re-map any errors from the Stream into a Repository error
             .map_err(Error::Store)
             // Try to fold all the Events into an Aggregate State.
-            //
-            // However, since the Event Store might not have any Events yet,
-            // use an Option<T::State> with the initial value set to None...
-            .try_fold(T::State::default(), |state, event| {
-                future::ready(T::apply(state, event).map_err(Error::Aggregate))
-            })
+            .try_fold(
+                (0, T::State::default()),
+                |(version, state), event| async move {
+                    // Always consider the max version number for the next version.
+                    let new_version = std::cmp::max(event.version(), version);
+                    let state = T::apply(state, event.take()).map_err(Error::Aggregate)?;
+
+                    Ok((new_version, state))
+                },
+            )
             .await
             // ...and map the State to a new AggregateRoot only if there is
             // at least one Event coming from the Event Stream.
-            .map(|state| self.builder.build_with_state(id, state))
+            .map(|(version, state)| self.builder.build_with_state(id, version, state))
     }
 
     /// Adds a new [`State`] of the [`Aggregate`] into the `Repository`,
@@ -140,18 +140,22 @@ where
     /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
+        let mut version = root.version();
         let events_to_commit = root.take_events_to_commit();
 
         if let Some(events) = events_to_commit {
             if !events.is_empty() {
+                // Version is incremented at each events flush.
+                version += 1;
+
                 self.store
-                    .append(root.id().clone(), events)
+                    .append(root.id().clone(), version, events)
                     .await
                     .map_err(Error::Store)?;
             }
         }
 
-        Ok(root)
+        Ok(root.with_version(version))
     }
 
     /// Removes the specified [`Aggregate`] from the `Repository`,

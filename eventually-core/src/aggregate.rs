@@ -8,6 +8,8 @@ use futures::future::BoxFuture;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
+use crate::versioning::Versioned;
+
 /// A short extractor type for the Aggregate [`Id`].
 ///
 /// [`Id`]: trait.Aggregate.html#associatedtype.Id
@@ -124,7 +126,7 @@ where
     /// [`AggregateRoot`]: struct.AggregateRoot.html
     #[inline]
     pub fn build(&self, id: T::Id) -> AggregateRoot<T> {
-        self.build_with_state(id, Default::default())
+        self.build_with_state(id, 0, Default::default())
     }
 
     /// Builds a new [`AggregateRoot`] instance for the specified Aggregate
@@ -133,9 +135,10 @@ where
     /// [`AggregateRoot`]: struct.AggregateRoot.html
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     #[inline]
-    pub fn build_with_state(&self, id: T::Id, state: T::State) -> AggregateRoot<T> {
+    pub fn build_with_state(&self, id: T::Id, version: u32, state: T::State) -> AggregateRoot<T> {
         AggregateRoot {
             id,
+            version,
             state,
             aggregate: self.aggregate.clone(),
             to_commit: None,
@@ -146,7 +149,7 @@ where
 /// An `AggregateRoot` represents an handler to the [`Aggregate`] it's managing,
 /// such as:
 ///
-/// * Owning its [`State`] and [`Id`],
+/// * Owning its [`State`], [`Id`] and version,
 /// * Proxying [`Command`]s to the [`Aggregate`] using the current [`State`],
 /// * Keeping a list of [`Event`]s to commit after [`Command`] execution.
 ///
@@ -172,6 +175,7 @@ where
     T: Aggregate + 'static,
 {
     id: T::Id,
+    version: u32,
 
     #[cfg_attr(feature = "serde", serde(flatten))]
     state: T::State,
@@ -193,18 +197,20 @@ where
     }
 }
 
+impl<T> Versioned for AggregateRoot<T>
+where
+    T: Aggregate,
+{
+    #[inline]
+    fn version(&self) -> u32 {
+        self.version
+    }
+}
+
 impl<T> AggregateRoot<T>
 where
     T: Aggregate,
 {
-    /// Returns a reference to the current Aggregate [`State`].
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    #[inline]
-    pub fn state(&self) -> &T::State {
-        &self.state
-    }
-
     /// Returns a reference to the Aggregate [`Id`] that represents
     /// the entity wrapped by this [`AggregateRoot`] instance.
     ///
@@ -215,11 +221,26 @@ where
         &self.id
     }
 
+    /// Returns a reference to the current Aggregate [`State`].
+    ///
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    #[inline]
+    pub fn state(&self) -> &T::State {
+        &self.state
+    }
+
     /// Takes the list of events to commit from the current instance,
     /// resetting it to `None`.
     #[inline]
     pub(crate) fn take_events_to_commit(&mut self) -> Option<Vec<T::Event>> {
         std::mem::replace(&mut self.to_commit, None)
+    }
+
+    /// Returns a new `AggregateRoot` having the specified version.
+    #[inline]
+    pub(crate) fn with_version(mut self, version: u32) -> Self {
+        self.version = version;
+        self
     }
 }
 

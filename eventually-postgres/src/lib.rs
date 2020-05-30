@@ -37,12 +37,9 @@
 //! // Use an EventStoreBuilder to build multiple EventStore instances.
 //! let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
 //!
-//! // Events should be versioned to be used with the Postgres Event Store.
-//! use eventually::versioned::Versioned;
-//!
 //! // Event store for the events.
 //! let store = {
-//!     let store = builder.event_stream::<String, Versioned<SomeEvent>>("orders");
+//!     let store = builder.event_stream::<String, SomeEvent>("orders");
 //!     store.create_stream().await?;
 //!     store
 //! };
@@ -56,8 +53,7 @@
 
 use std::sync::Arc;
 
-use eventually::store::EventStream;
-use eventually::versioned::Versioned;
+use eventually::store::{AppendError, EventStream, PersistedEvent, Select};
 use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;
@@ -69,6 +65,24 @@ use tokio::sync::RwLock;
 
 use tokio_postgres::types::ToSql;
 use tokio_postgres::{Client, Error};
+
+use thiserror::Error;
+
+/// Error type returned by the [`EventStore`] implementation, which is
+/// a _newtype_ wrapper around `tokio_postgres::Error`.
+///
+/// [`EventStore`]: struct.EventStore.html
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct EventStoreError(#[from] Error);
+
+impl AppendError for EventStoreError {
+    #[inline]
+    fn is_conflict_error(&self) -> bool {
+        // TODO: implement this
+        false
+    }
+}
 
 /// Builder type for [`EventStore`] instances.
 ///
@@ -135,9 +149,7 @@ impl EventStoreBuilder {
     /// // Use an EventStoreBuilder to build multiple EventStore instances.
     /// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
     ///
-    /// // Aggregates should be versioned to be used with the Postgres Event Store.
-    /// use eventually_util::versioned::AggregateExt;
-    /// let aggregate = SomeAggregate.versioned();
+    /// let aggregate = SomeAggregate;
     ///
     /// // Event store for the events.
     /// let store = {
@@ -216,68 +228,74 @@ where
     }
 }
 
-impl<Id, Event> eventually::EventStore for EventStore<Id, Versioned<Event>>
+impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
     Id: ToString + Eq + Send + Sync,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
     type SourceId = Id;
-    type Offset = usize;
-    type Event = Versioned<Event>;
-    type Error = Error;
+    type Event = Event;
+    type Error = EventStoreError;
 
     fn append(
         &mut self,
         id: Self::SourceId,
+        version: u32,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<(), Self::Error>> {
         let serialized = events
             .into_iter()
             .enumerate()
-            .map(|(i, event)| {
-                let version = event.version();
-                serde_json::to_value(event.take()).map(|value| (i, version, value))
-            })
+            .map(|(i, event)| serde_json::to_value(event).map(|value| (i, value)))
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
 
         Box::pin(async move {
             let mut tx = self.client.write().await;
-            let tx = tx.transaction().await?;
+            let tx = tx.transaction().await.map_err(EventStoreError::from)?;
 
-            for (i, version, event) in serialized {
+            for (i, event) in serialized {
                 tx.execute(
                     &*self.append_query,
                     &[&id.to_string(), &event, &version, &(i as u32)],
                 )
-                .await?;
+                .await
+                .map_err(EventStoreError::from)?;
             }
 
-            tx.commit().await
+            tx.commit().await.map_err(EventStoreError::from)
         })
     }
 
     fn stream(
         &self,
         id: Self::SourceId,
-        from: Self::Offset,
+        select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
+        let from = match select {
+            Select::All => 0,
+            Select::From(v) => v,
+        };
+
         Box::pin(async move {
-            let params: Params = &[&id.to_string(), &(from as u32)];
+            let params: Params = &[&id.to_string(), &from];
 
             Ok(self
                 .client
                 .read()
                 .await
                 .query_raw(&*self.stream_query, slice_iter(params))
-                .await?
+                .await
+                .map_err(EventStoreError::from)?
                 .map_ok(|row| {
-                    let event = serde_json::from_value(row.get("event")).unwrap();
-                    let version: u32 = row.get("version");
+                    let event: Event = serde_json::from_value(row.get("event")).unwrap();
 
-                    Versioned::new(event, version)
+                    PersistedEvent::from(event)
+                        .with_version(row.get("version"))
+                        .with_sequence_number(row.get("offset"))
                 })
+                .map_err(EventStoreError::from)
                 .boxed())
         })
     }
@@ -290,6 +308,7 @@ where
                 .execute(&*self.remove_query, &[&id.to_string()])
                 .await
                 .map(|_| ())
+                .map_err(EventStoreError::from)
         })
     }
 }
