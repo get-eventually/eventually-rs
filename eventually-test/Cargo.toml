@@ -18,6 +18,6 @@ log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 smol = { version = "0.1", features = ["tokio02"] }
-tide = "0.8.1"
+tide = "0.11.0"
 tokio = { version = "0.2", features = ["sync"] }
 tokio-postgres = "0.5"
