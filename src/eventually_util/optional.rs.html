@@ -298,7 +298,7 @@
 <span class="doccomment">/// [`optional::Aggregate`]: trait.Aggregate.html</span>
 <span class="doccomment">/// [`Aggregate::as_aggregate`]: trait.Aggregate.html#method.as_aggregate</span>
 <span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">A</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {

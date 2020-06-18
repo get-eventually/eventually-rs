@@ -256,11 +256,11 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span> <span class="ident">Repository</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">Id</span>: <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">Event</span>: <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Id</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Debug</span>,
+    <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Id</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
     <span class="ident">Store</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="doccomment">/// Returns the [`Aggregate`] from the `Repository` with the specified id,</span>
