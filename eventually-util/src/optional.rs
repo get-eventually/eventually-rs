@@ -124,7 +124,7 @@ pub trait Aggregate {
 /// [`optional::Aggregate`]: trait.Aggregate.html
 /// [`Aggregate::as_aggregate`]: trait.Aggregate.html#method.as_aggregate
 /// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AsAggregate<A>(A);
 
 impl<A> From<A> for AsAggregate<A> {

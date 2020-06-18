@@ -86,11 +86,11 @@ where
 
 impl<T, Store> Repository<T, Store>
 where
-    T: Aggregate + Debug + Clone,
+    T: Aggregate + Clone,
     T::Id: Clone,
     T::Event: Clone,
     T::Error: std::error::Error + 'static,
-    Store: EventStore<SourceId = T::Id, Event = T::Event> + Debug,
+    Store: EventStore<SourceId = T::Id, Event = T::Event>,
     Store::Error: std::error::Error + 'static,
 {
     /// Returns the [`Aggregate`] from the `Repository` with the specified id,
