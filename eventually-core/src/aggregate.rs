@@ -101,7 +101,7 @@ impl<T> AggregateExt for T where T: Aggregate {}
 /// Builder type for new [`AggregateRoot`] instances.
 ///
 /// [`AggregateRoot`]: struct.AggregateRoot.html
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AggregateRootBuilder<T> {
     aggregate: Arc<T>,
 }
