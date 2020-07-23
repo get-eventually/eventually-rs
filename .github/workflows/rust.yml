@@ -45,7 +45,7 @@ jobs:
           args: '-- --test-threads 1'
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1.0.11
+        uses: codecov/codecov-action@v1.0.12
         with:
           token: ${{secrets.CODECOV_TOKEN}}
 
