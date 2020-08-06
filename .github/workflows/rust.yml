@@ -25,8 +25,8 @@ jobs:
         with:
           command: check
 
-  coverage:
-    name: Code Coverage (tarpaulin)
+  tests:
+    name: Test Suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -38,16 +38,16 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Run cargo-tarpaulin
+      - name: Run cargo-tarpaulin (main)
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: '0.9.0'
           args: '-- --test-threads 1'
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.12
         with:
           token: ${{secrets.CODECOV_TOKEN}}
+          flags: unit
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v2.1.2
@@ -55,30 +55,35 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-  test:
-    name: Test Suite
+  tests-examples:
+    name: Test Suite (examples)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
+      - name: Checkout repository
         uses: actions/checkout@v2.3.1
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: stable
           override: true
 
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
+      - name: Run cargo-tarpaulin (examples)
+        uses: actions-rs/tarpaulin@v0.1
         with:
-          command: test
+          args: '--examples -- --test-threads 1'
 
-      - name: Run cargo test --examples
-        uses: actions-rs/cargo@v1
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v1.0.12
         with:
-          command: test
-          args: --examples
+          token: ${{secrets.CODECOV_TOKEN}}
+          flags: examples
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2.1.2
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
 
   lints:
       name: Lints
