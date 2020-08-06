@@ -175,60 +175,52 @@
 <span id="175">175</span>
 <span id="176">176</span>
 <span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
-<span id="181">181</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="comment">// use chrono::{DateTime, Utc};</span>
-<span class="comment">//</span>
-<span class="comment">// use eventually::versioned::Versioned;</span>
-<span class="comment">// use eventually::EventStore;</span>
-<span class="comment">//</span>
-<span class="comment">// use futures::StreamExt;</span>
-<span class="comment">//</span>
-<span class="comment">// use serde::Deserialize;</span>
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
+
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">PersistedEvent</span>, <span class="ident">Select</span>};
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">EventStore</span>;
+
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">TryStreamExt</span>;
+
+<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
 
 <span class="kw">use</span> <span class="ident">tide</span>::{<span class="ident">Error</span>, <span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">StatusCode</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">order</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">state</span>::<span class="kw-2">*</span>;
 
-<span class="comment">// pub(crate) async fn history(req: Request&lt;AppState&gt;) -&gt; Result&lt;Response, Error&gt; {</span>
-<span class="comment">//     #[derive(Deserialize)]</span>
-<span class="comment">//     struct Params {</span>
-<span class="comment">//         from: Option&lt;DateTime&lt;Utc&gt;&gt;,</span>
-<span class="comment">//     }</span>
-<span class="comment">//</span>
-<span class="comment">//     let id: String = req.param(&quot;id&quot;)?;</span>
-<span class="comment">//     let params: Params = req.query()?;</span>
-<span class="comment">//     let from = params.from;</span>
-<span class="comment">//</span>
-<span class="comment">//     let mut stream: Vec&lt;Result&lt;Versioned&lt;OrderEvent&gt;, _&gt;&gt; = req</span>
-<span class="comment">//         .state()</span>
-<span class="comment">//         .store</span>
-<span class="comment">//         .stream(id, 0)</span>
-<span class="comment">//         .await</span>
-<span class="comment">//         .map_err(Error::from)?</span>
-<span class="comment">//         .collect()</span>
-<span class="comment">//         .await;</span>
-<span class="comment">//</span>
-<span class="comment">//     stream.reverse();</span>
-<span class="comment">//</span>
-<span class="comment">//     let mut new_stream = Vec::new();</span>
-<span class="comment">//</span>
-<span class="comment">//     for result in stream {</span>
-<span class="comment">//         let event = result.map_err(Error::from)?;</span>
-<span class="comment">//</span>
-<span class="comment">//         if from.is_some() &amp;&amp; event.happened_at() &gt;= from.as_ref().unwrap() {</span>
-<span class="comment">//             new_stream.push(event);</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">//</span>
-<span class="comment">//     Response::new(StatusCode::Ok)</span>
-<span class="comment">//         .body_json(&amp;new_stream)</span>
-<span class="comment">//         .map_err(Error::from)</span>
-<span class="comment">// }</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">history</span>(<span class="ident">req</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">AppState</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
+    <span class="kw">struct</span> <span class="ident">Params</span> {
+        <span class="ident">from</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    }
+
+    <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">param</span>(<span class="string">&quot;id&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">params</span>: <span class="ident">Params</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">query</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">from</span>;
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PersistedEvent</span><span class="op">&lt;</span><span class="ident">OrderEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">req</span>
+        .<span class="ident">state</span>()
+        .<span class="ident">store</span>
+        .<span class="ident">stream</span>(<span class="ident">id</span>, <span class="ident">Select</span>::<span class="ident">All</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>
+        .<span class="ident">try_filter</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
+            <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">ready</span>(<span class="kw">match</span> <span class="ident">from</span> {
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                <span class="prelude-val">Some</span>(<span class="ident">from</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">event</span>.<span class="ident">happened_at</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">from</span>,
+            })
+        })
+        .<span class="ident">try_collect</span>()
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="ident">stream</span>.<span class="ident">reverse</span>();
+
+    <span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">StatusCode</span>::<span class="prelude-val">Ok</span>)
+        .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="ident">stream</span>)
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
+}
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_order</span>(<span class="ident">req</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">AppState</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">param</span>(<span class="string">&quot;id&quot;</span>)<span class="question-mark">?</span>;

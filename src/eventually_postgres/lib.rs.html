@@ -320,6 +320,9 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
 <span class="doccomment">//!</span>
@@ -376,7 +379,7 @@
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">PersistedEvent</span>, <span class="ident">Select</span>};
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">Expected</span>, <span class="ident">PersistedEvent</span>, <span class="ident">Select</span>};
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateId</span>};
 
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
@@ -564,31 +567,34 @@
     <span class="kw">fn</span> <span class="ident">append</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>,
-        <span class="ident">version</span>: <span class="ident">u32</span>,
+        <span class="ident">version</span>: <span class="ident">Expected</span>,
         <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">events</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">event</span>)<span class="op">|</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="ident">event</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> (<span class="ident">i</span>, <span class="ident">value</span>)))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-            .<span class="ident">unwrap</span>();
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="comment">// FIXME(ar3s3ru): this crate needs a new overhaul.</span>
+        <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;crate needs a new overhaul, after the changes with the EventStore&quot;</span>)
 
-        <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-            <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">transaction</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">EventStoreError</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
+        <span class="comment">// let serialized = events</span>
+        <span class="comment">//     .into_iter()</span>
+        <span class="comment">//     .enumerate()</span>
+        <span class="comment">//     .map(|(i, event)| serde_json::to_value(event).map(|value| (i, value)))</span>
+        <span class="comment">//     .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()</span>
+        <span class="comment">//     .unwrap();</span>
 
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">event</span>) <span class="kw">in</span> <span class="ident">serialized</span> {
-                <span class="ident">tx</span>.<span class="ident">execute</span>(
-                    <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">append_query</span>,
-                    <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">event</span>, <span class="kw-2">&amp;</span><span class="ident">version</span>, <span class="kw-2">&amp;</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>)],
-                )
-                .<span class="kw">await</span>
-                .<span class="ident">map_err</span>(<span class="ident">EventStoreError</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
-            }
+        <span class="comment">// Box::pin(async move {</span>
+        <span class="comment">//     let mut tx = self.client.write().await;</span>
+        <span class="comment">//     let tx = tx.transaction().await.map_err(EventStoreError::from)?;</span>
 
-            <span class="ident">tx</span>.<span class="ident">commit</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">EventStoreError</span>::<span class="ident">from</span>)
-        })
+        <span class="comment">//     for (i, event) in serialized {</span>
+        <span class="comment">//         tx.execute(</span>
+        <span class="comment">//             &amp;*self.append_query,</span>
+        <span class="comment">//             &amp;[&amp;id.to_string(), &amp;event, &amp;version, &amp;(i as u32)],</span>
+        <span class="comment">//         )</span>
+        <span class="comment">//         .await</span>
+        <span class="comment">//         .map_err(EventStoreError::from)?;</span>
+        <span class="comment">//     }</span>
+
+        <span class="comment">//     tx.commit().await.map_err(EventStoreError::from)</span>
+        <span class="comment">// })</span>
     }
 
     <span class="kw">fn</span> <span class="ident">stream</span>(
@@ -615,8 +621,8 @@
                     <span class="kw">let</span> <span class="ident">event</span>: <span class="ident">Event</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_value</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;event&quot;</span>)).<span class="ident">unwrap</span>();
 
                     <span class="ident">PersistedEvent</span>::<span class="ident">from</span>(<span class="ident">event</span>)
-                        .<span class="ident">with_version</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;version&quot;</span>))
-                        .<span class="ident">with_sequence_number</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;offset&quot;</span>))
+                        .<span class="ident">version</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;version&quot;</span>))
+                        .<span class="ident">sequence_number</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;offset&quot;</span>))
                 })
                 .<span class="ident">map_err</span>(<span class="ident">EventStoreError</span>::<span class="ident">from</span>)
                 .<span class="ident">boxed</span>())

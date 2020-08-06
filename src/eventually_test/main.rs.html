@@ -92,6 +92,7 @@
 <span id="92">92</span>
 <span id="93">93</span>
 <span id="94">94</span>
+<span id="95">95</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">api</span>;
 <span class="kw">mod</span> <span class="ident">config</span>;
@@ -104,8 +105,8 @@
 <span class="kw">use</span> <span class="ident">envconfig</span>::<span class="ident">Envconfig</span>;
 
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">aggregate</span>::<span class="ident">Optional</span>;
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">inmemory</span>::<span class="ident">EventStoreBuilder</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">AggregateRootBuilder</span>, <span class="ident">Repository</span>};
-<span class="kw">use</span> <span class="ident">eventually_postgres</span>::<span class="ident">EventStoreBuilder</span>;
 
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
 
@@ -126,31 +127,32 @@
     <span class="kw">let</span> <span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">OrderAggregate</span>.<span class="ident">as_aggregate</span>();
 
     <span class="comment">// Open a connection with Postgres.</span>
-    <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">connection</span>) <span class="op">=</span>
-        <span class="ident">tokio_postgres</span>::<span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">postgres_dsn</span>(), <span class="ident">tokio_postgres</span>::<span class="ident">NoTls</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;failed to connect to Postgres: {}&quot;</span>, <span class="ident">err</span>);
-                <span class="ident">err</span>
-            })<span class="question-mark">?</span>;
+    <span class="comment">// let (client, connection) =</span>
+    <span class="comment">//     tokio_postgres::connect(&amp;config.postgres_dsn(), tokio_postgres::NoTls)</span>
+    <span class="comment">//         .await</span>
+    <span class="comment">//         .map_err(|err| {</span>
+    <span class="comment">//             eprintln!(&quot;failed to connect to Postgres: {}&quot;, err);</span>
+    <span class="comment">//             err</span>
+    <span class="comment">//         })?;</span>
 
     <span class="comment">// The connection, responsible for the actual IO, must be handled by a different</span>
     <span class="comment">// execution context.</span>
-    <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">connection</span>.<span class="kw">await</span> {
-            <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;connection error: {}&quot;</span>, <span class="ident">e</span>);
-        }
-    });
+    <span class="comment">// tokio::spawn(async move {</span>
+    <span class="comment">//     if let Err(e) = connection.await {</span>
+    <span class="comment">//         eprintln!(&quot;connection error: {}&quot;, e);</span>
+    <span class="comment">//     }</span>
+    <span class="comment">// });</span>
 
     <span class="comment">// Use an EventStoreBuilder to build multiple EventStore instances.</span>
-    <span class="kw">let</span> <span class="ident">event_store_builder</span> <span class="op">=</span> <span class="ident">EventStoreBuilder</span>::<span class="ident">from</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">client</span>)));
+    <span class="kw">let</span> <span class="ident">event_store_builder</span> <span class="op">=</span> <span class="ident">EventStoreBuilder</span>::<span class="ident">for_aggregate</span>(<span class="kw-2">&amp;</span><span class="ident">aggregate</span>);
 
     <span class="comment">// Event store for the OrderAggregate.</span>
-    <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> {
-        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">event_store_builder</span>.<span class="ident">aggregate_stream</span>(<span class="kw-2">&amp;</span><span class="ident">aggregate</span>, <span class="string">&quot;orders&quot;</span>);
-        <span class="ident">store</span>.<span class="ident">create_stream</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="ident">store</span>
-    };
+    <span class="comment">// let store = {</span>
+    <span class="comment">//     let store = event_store_builder.aggregate_stream(&amp;aggregate, &quot;orders&quot;);</span>
+    <span class="comment">//     store.create_stream().await?;</span>
+    <span class="comment">//     store</span>
+    <span class="comment">// };</span>
+    <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">event_store_builder</span>;
 
     <span class="comment">// Builder for all new AggregateRoot instances.</span>
     <span class="kw">let</span> <span class="ident">aggregate_root_builder</span> <span class="op">=</span> <span class="ident">AggregateRootBuilder</span>::<span class="ident">from</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">aggregate</span>));
@@ -178,7 +180,7 @@
         <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/add-item&quot;</span>).<span class="ident">post</span>(<span class="ident">api</span>::<span class="ident">add_order_item</span>);
         <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/complete&quot;</span>).<span class="ident">post</span>(<span class="ident">api</span>::<span class="ident">complete_order</span>);
         <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/cancel&quot;</span>).<span class="ident">post</span>(<span class="ident">api</span>::<span class="ident">cancel_order</span>);
-        <span class="comment">// api.at(&quot;/history&quot;).get(api::history);</span>
+        <span class="ident">api</span>.<span class="ident">at</span>(<span class="string">&quot;/history&quot;</span>).<span class="ident">get</span>(<span class="ident">api</span>::<span class="ident">history</span>);
 
         <span class="ident">api</span>
     });

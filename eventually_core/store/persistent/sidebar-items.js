@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["EventBuilder","Creates a new [`PersistedEvent`] by wrapping an Event value."],["EventBuilderWithSequenceNumber","Next step in creating a new [`PersistedEvent`] carrying an Event value and its sequence number."],["EventBuilderWithVersion","Next step in creating a new [`PersistedEvent`] carrying an Event value and its version."]]});

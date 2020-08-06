@@ -1,4 +1,5 @@
 (function() {var implementors = {};
 implementors["eventually_core"] = [];
 implementors["eventually_postgres"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/store/trait.AppendError.html\" title=\"trait eventually_core::store::AppendError\">AppendError</a> for <a class=\"struct\" href=\"eventually_postgres/struct.EventStoreError.html\" title=\"struct eventually_postgres::EventStoreError\">EventStoreError</a>","synthetic":false,"types":["eventually_postgres::EventStoreError"]}];
+implementors["eventually_util"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/store/trait.AppendError.html\" title=\"trait eventually_core::store::AppendError\">AppendError</a> for <a class=\"enum\" href=\"eventually_util/inmemory/enum.Error.html\" title=\"enum eventually_util::inmemory::Error\">Error</a>","synthetic":false,"types":["eventually_util::inmemory::Error"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

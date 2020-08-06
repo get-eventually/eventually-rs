@@ -20,9 +20,9 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">inmemory</span>::<span class="ident">EventStore</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">optional</span>::<span class="ident">AsAggregate</span> <span class="kw">as</span> <span class="ident">Optional</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">AggregateRootBuilder</span>, <span class="ident">Repository</span>};
-<span class="kw">use</span> <span class="ident">eventually_postgres</span>::<span class="ident">EventStore</span>;
 
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
 
