@@ -2,6 +2,8 @@
 //!
 //! [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
 
+use std::ops::Deref;
+
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
@@ -122,6 +124,14 @@ impl<T> Versioned for PersistedEvent<T> {
     #[inline]
     fn version(&self) -> u32 {
         self.version
+    }
+}
+
+impl<T> Deref for PersistedEvent<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.event
     }
 }
 
