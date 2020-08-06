@@ -1,52 +1,48 @@
-// use chrono::{DateTime, Utc};
-//
-// use eventually::versioned::Versioned;
-// use eventually::EventStore;
-//
-// use futures::StreamExt;
-//
-// use serde::Deserialize;
+use chrono::{DateTime, Utc};
+
+use eventually::store::{PersistedEvent, Select};
+use eventually::EventStore;
+
+use futures::TryStreamExt;
+
+use serde::Deserialize;
 
 use tide::{Error, Request, Response, StatusCode};
 
 use crate::order::*;
 use crate::state::*;
 
-// pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
-//     #[derive(Deserialize)]
-//     struct Params {
-//         from: Option<DateTime<Utc>>,
-//     }
-//
-//     let id: String = req.param("id")?;
-//     let params: Params = req.query()?;
-//     let from = params.from;
-//
-//     let mut stream: Vec<Result<Versioned<OrderEvent>, _>> = req
-//         .state()
-//         .store
-//         .stream(id, 0)
-//         .await
-//         .map_err(Error::from)?
-//         .collect()
-//         .await;
-//
-//     stream.reverse();
-//
-//     let mut new_stream = Vec::new();
-//
-//     for result in stream {
-//         let event = result.map_err(Error::from)?;
-//
-//         if from.is_some() && event.happened_at() >= from.as_ref().unwrap() {
-//             new_stream.push(event);
-//         }
-//     }
-//
-//     Response::new(StatusCode::Ok)
-//         .body_json(&new_stream)
-//         .map_err(Error::from)
-// }
+pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
+    #[derive(Deserialize)]
+    struct Params {
+        from: Option<DateTime<Utc>>,
+    }
+
+    let id: String = req.param("id")?;
+    let params: Params = req.query()?;
+    let from = params.from;
+
+    let mut stream: Vec<PersistedEvent<OrderEvent>> = req
+        .state()
+        .store
+        .stream(id, Select::All)
+        .await
+        .map_err(Error::from)?
+        .try_filter(|event| {
+            futures::future::ready(match from {
+                None => true,
+                Some(from) => event.happened_at() >= &from,
+            })
+        })
+        .try_collect()
+        .await?;
+
+    stream.reverse();
+
+    Response::new(StatusCode::Ok)
+        .body_json(&stream)
+        .map_err(Error::from)
+}
 
 pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;

@@ -12,7 +12,7 @@ use std::fmt::Debug;
 use futures::stream::TryStreamExt;
 
 use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
-use crate::store::{EventStore, Select};
+use crate::store::{EventStore, Expected, Select};
 use crate::versioning::Versioned;
 
 /// Error type returned by the [`Repository`].
@@ -145,11 +145,10 @@ where
 
         if let Some(events) = events_to_commit {
             if !events.is_empty() {
-                // Version is incremented at each events flush.
-                version += 1;
-
-                self.store
-                    .append(root.id().clone(), version, events)
+                // Version is incremented at each events flush by the EventStore.
+                version = self
+                    .store
+                    .append(root.id().clone(), Expected::Exact(version), events)
                     .await
                     .map_err(Error::Store)?;
             }

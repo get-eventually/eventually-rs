@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use futures::stream::TryStreamExt;
 
-use eventually_core::store::EventStore;
+use eventually_core::store::{EventStore, Expected, Select};
 use eventually_util::inmemory::EventStore as InMemoryStore;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -15,18 +15,20 @@ enum Event {
 fn read_event_stream(store: InMemoryStore<&'static str, Event>, source_id: &'static str) {
     tokio_test::block_on(async move {
         store
-            .stream(source_id, 0)
+            .stream(source_id, Select::All)
             .await
             .unwrap()
             .try_fold(0u32, |acc, _x| async move { Ok(acc + 1) })
             .await
-    });
+    })
+    .unwrap();
 }
 
 fn insert_elements(mut store: InMemoryStore<&'static str, Event>, name: &'static str, num: usize) {
     tokio_test::block_on(
         store.append(
             name,
+            Expected::Any,
             (0..=num)
                 .map(|idx| match idx % 3 {
                     0 => Event::A,
@@ -37,7 +39,7 @@ fn insert_elements(mut store: InMemoryStore<&'static str, Event>, name: &'static
                 .collect::<Vec<Event>>(),
         ),
     )
-    .unwrap()
+    .unwrap();
 }
 
 fn benchmark(c: &mut Criterion) {

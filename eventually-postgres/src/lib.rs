@@ -53,7 +53,7 @@
 
 use std::sync::Arc;
 
-use eventually::store::{AppendError, EventStream, PersistedEvent, Select};
+use eventually::store::{AppendError, EventStream, Expected, PersistedEvent, Select};
 use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;
@@ -241,31 +241,34 @@ where
     fn append(
         &mut self,
         id: Self::SourceId,
-        version: u32,
+        version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), Self::Error>> {
-        let serialized = events
-            .into_iter()
-            .enumerate()
-            .map(|(i, event)| serde_json::to_value(event).map(|value| (i, value)))
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap();
+    ) -> BoxFuture<Result<u32, Self::Error>> {
+        // FIXME(ar3s3ru): this crate needs a new overhaul.
+        unimplemented!("crate needs a new overhaul, after the changes with the EventStore")
 
-        Box::pin(async move {
-            let mut tx = self.client.write().await;
-            let tx = tx.transaction().await.map_err(EventStoreError::from)?;
+        // let serialized = events
+        //     .into_iter()
+        //     .enumerate()
+        //     .map(|(i, event)| serde_json::to_value(event).map(|value| (i, value)))
+        //     .collect::<Result<Vec<_>, _>>()
+        //     .unwrap();
 
-            for (i, event) in serialized {
-                tx.execute(
-                    &*self.append_query,
-                    &[&id.to_string(), &event, &version, &(i as u32)],
-                )
-                .await
-                .map_err(EventStoreError::from)?;
-            }
+        // Box::pin(async move {
+        //     let mut tx = self.client.write().await;
+        //     let tx = tx.transaction().await.map_err(EventStoreError::from)?;
 
-            tx.commit().await.map_err(EventStoreError::from)
-        })
+        //     for (i, event) in serialized {
+        //         tx.execute(
+        //             &*self.append_query,
+        //             &[&id.to_string(), &event, &version, &(i as u32)],
+        //         )
+        //         .await
+        //         .map_err(EventStoreError::from)?;
+        //     }
+
+        //     tx.commit().await.map_err(EventStoreError::from)
+        // })
     }
 
     fn stream(
@@ -292,8 +295,8 @@ where
                     let event: Event = serde_json::from_value(row.get("event")).unwrap();
 
                     PersistedEvent::from(event)
-                        .with_version(row.get("version"))
-                        .with_sequence_number(row.get("offset"))
+                        .version(row.get("version"))
+                        .sequence_number(row.get("offset"))
                 })
                 .map_err(EventStoreError::from)
                 .boxed())

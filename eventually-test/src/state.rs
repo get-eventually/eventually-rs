@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
+use eventually::inmemory::EventStore;
 use eventually::optional::AsAggregate as Optional;
 use eventually::{AggregateRootBuilder, Repository};
-use eventually_postgres::EventStore;
 
 use tokio::sync::RwLock;
 

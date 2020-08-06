@@ -2,12 +2,107 @@
 //!
 //! [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
 
+use std::ops::Deref;
+
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
 use serde::{Deserialize, Serialize};
 
 use crate::versioning::Versioned;
+
+/// Contains a type-state builder for [`PersistentEvent`] type.
+///
+/// [`PersistentEvent`]: struct.PersistedEvent.html
+pub mod persistent {
+    /// Creates a new [`PersistedEvent`] by wrapping an Event value.
+    ///
+    /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+    pub struct EventBuilder<T> {
+        pub(super) event: T,
+    }
+
+    impl<T> From<T> for EventBuilder<T> {
+        #[inline]
+        fn from(event: T) -> Self {
+            Self { event }
+        }
+    }
+
+    impl<T> EventBuilder<T> {
+        /// Specifies the [`PersistentEvent`] version and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+        #[inline]
+        pub fn version(self, value: u32) -> EventBuilderWithVersion<T> {
+            EventBuilderWithVersion {
+                version: value,
+                event: self.event,
+            }
+        }
+
+        /// Specifies the [`PersistentEvent`] sequence number and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+        #[inline]
+        pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<T> {
+            EventBuilderWithSequenceNumber {
+                sequence_number: value,
+                event: self.event,
+            }
+        }
+    }
+
+    /// Next step in creating a new [`PersistedEvent`] carrying an Event value
+    /// and its version.
+    ///
+    /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+    pub struct EventBuilderWithVersion<T> {
+        version: u32,
+        event: T,
+    }
+
+    impl<T> EventBuilderWithVersion<T> {
+        /// Specifies the [`PersistentEvent`] sequence number and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+        #[inline]
+        pub fn sequence_number(self, value: u32) -> super::PersistedEvent<T> {
+            super::PersistedEvent {
+                version: self.version,
+                event: self.event,
+                sequence_number: value,
+            }
+        }
+    }
+
+    /// Next step in creating a new [`PersistedEvent`] carrying an Event value
+    /// and its sequence number.
+    ///
+    /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+    pub struct EventBuilderWithSequenceNumber<T> {
+        sequence_number: u32,
+        event: T,
+    }
+
+    impl<T> EventBuilderWithSequenceNumber<T> {
+        /// Specifies the [`PersistentEvent`] version and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
+        #[inline]
+        pub fn version(self, value: u32) -> super::PersistedEvent<T> {
+            super::PersistedEvent {
+                version: value,
+                event: self.event,
+                sequence_number: self.sequence_number,
+            }
+        }
+    }
+}
 
 /// An [`Event`] wrapper for events that have been
 /// successfully committed to the [`EventStore`].
@@ -25,17 +120,6 @@ pub struct PersistedEvent<T> {
     event: T,
 }
 
-impl<T> From<T> for PersistedEvent<T> {
-    #[inline]
-    fn from(event: T) -> Self {
-        Self {
-            event,
-            version: 0,
-            sequence_number: 0,
-        }
-    }
-}
-
 impl<T> Versioned for PersistedEvent<T> {
     #[inline]
     fn version(&self) -> u32 {
@@ -43,19 +127,21 @@ impl<T> Versioned for PersistedEvent<T> {
     }
 }
 
-impl<T> PersistedEvent<T> {
-    /// Updates the event version to the one specified.
-    #[inline]
-    pub fn with_version(mut self, version: u32) -> Self {
-        self.version = version;
-        self
-    }
+impl<T> Deref for PersistedEvent<T> {
+    type Target = T;
 
-    /// Updates the sequence number version to the one specified.
+    fn deref(&self) -> &Self::Target {
+        &self.event
+    }
+}
+
+impl<T> PersistedEvent<T> {
+    /// Creates a new [`EventBuilder`] from the provided Event value.
+    ///
+    /// [`EventBuilder`]: persistent/struct.EventBuilder.html
     #[inline]
-    pub fn with_sequence_number(mut self, sequence_number: u32) -> Self {
-        self.sequence_number = sequence_number;
-        self
+    pub fn from(event: T) -> persistent::EventBuilder<T> {
+        persistent::EventBuilder { event }
     }
 
     /// Returns the event sequence number.
@@ -91,6 +177,27 @@ pub enum Select {
     /// [`Event`]: trait.EventStore.html#associatedtype.Event
     /// [`EventStream`]: type.EventStream.html
     From(u32),
+}
+
+/// Specifies the optimistic locking level when performing [`append`] from
+/// an [`EventStore`].
+///
+/// Check out [`append`] documentation for more info.
+///
+/// [`append`]: trait.EventStore.html#method.append
+/// [`EventStore`]: trait.EventStore.html
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Expected {
+    /// Append events disregarding the current [`Aggregate`] version.
+    ///
+    /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
+    Any,
+
+    /// Append events only if the current version of the [`Aggregate`]
+    /// is the one specified by the value provided here.
+    ///
+    /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
+    Exact(u32),
 }
 
 /// Stream type returned by the [`EventStore::stream`] method.
@@ -142,7 +249,15 @@ pub trait EventStore {
     /// `append` is a transactional operation: it either appends all the events,
     /// or none at all and returns an [`AppendError`].
     ///
-    /// The desired version for the new [`Event`]s to append must be specified.
+    /// The desired version for the new [`Event`]s to append must be specified
+    /// through an [`Expected`] element.
+    ///
+    /// When using `Expected::Any`, no checks on the current [`Aggregate`]
+    /// values will be performed, disregarding optimistic locking.
+    ///
+    /// When using `Expected::Exact`, the Store will check that the current
+    /// version of the [`Aggregate`] is _exactly_ the one specified.
+    ///
     /// If the version is not the one expected from the Store, implementations
     /// should raise an [`AppendError::Conflict`] error.
     ///
@@ -156,9 +271,9 @@ pub trait EventStore {
     fn append(
         &mut self,
         id: Self::SourceId,
-        version: u32,
+        version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<(), Self::Error>>;
+    ) -> BoxFuture<Result<u32, Self::Error>>;
 
     /// Streams a list of [`Event`]s from the `EventStore` back to the application,
     /// by specifying the desired [`SourceId`] and [`Offset`].
