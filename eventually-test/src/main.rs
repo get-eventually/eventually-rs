@@ -1,6 +1,5 @@
 mod api;
 mod config;
-mod log;
 mod order;
 mod state;
 
@@ -17,46 +16,21 @@ use tokio::sync::RwLock;
 use crate::config::Config;
 use crate::order::OrderAggregate;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> anyhow::Result<()> {
     smol::run(run())
 }
 
-async fn run() -> Result<(), Box<dyn std::error::Error>> {
+async fn run() -> anyhow::Result<()> {
     let config = Config::init()?;
 
-    env_logger::builder().filter_level(config.log_level).init();
+    femme::with_level(config.log_level);
 
     // Aggregate target: in this case it's empty, but usually it would use
     // some domain services or internal repositories.
     let aggregate = OrderAggregate.as_aggregate();
 
-    // Open a connection with Postgres.
-    // let (client, connection) =
-    //     tokio_postgres::connect(&config.postgres_dsn(), tokio_postgres::NoTls)
-    //         .await
-    //         .map_err(|err| {
-    //             eprintln!("failed to connect to Postgres: {}", err);
-    //             err
-    //         })?;
-
-    // The connection, responsible for the actual IO, must be handled by a different
-    // execution context.
-    // tokio::spawn(async move {
-    //     if let Err(e) = connection.await {
-    //         eprintln!("connection error: {}", e);
-    //     }
-    // });
-
-    // Use an EventStoreBuilder to build multiple EventStore instances.
-    let event_store_builder = EventStoreBuilder::for_aggregate(&aggregate);
-
     // Event store for the OrderAggregate.
-    // let store = {
-    //     let store = event_store_builder.aggregate_stream(&aggregate, "orders");
-    //     store.create_stream().await?;
-    //     store
-    // };
-    let store = event_store_builder;
+    let store = EventStoreBuilder::for_aggregate(&aggregate);
 
     // Builder for all new AggregateRoot instances.
     let aggregate_root_builder = AggregateRootBuilder::from(Arc::new(aggregate));
@@ -69,8 +43,6 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     // Set up the HTTP router.
     let mut app = tide::new();
-
-    app.middleware(log::Middleware::new());
 
     app.at("/orders/:id").nest({
         let mut api = tide::with_state(state::AppState {

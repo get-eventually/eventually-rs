@@ -7,7 +7,7 @@ use futures::TryStreamExt;
 
 use serde::Deserialize;
 
-use tide::{Error, Request, Response, StatusCode};
+use tide::{Body, Error, Request, Response, StatusCode};
 
 use crate::order::*;
 use crate::state::*;
@@ -22,7 +22,7 @@ pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
     let params: Params = req.query()?;
     let from = params.from;
 
-    let mut stream: Vec<PersistedEvent<OrderEvent>> = req
+    let mut stream: Vec<PersistedEvent<String, OrderEvent>> = req
         .state()
         .store
         .stream(id, Select::All)
@@ -39,13 +39,15 @@ pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
 
     stream.reverse();
 
-    Response::new(StatusCode::Ok)
-        .body_json(&stream)
-        .map_err(Error::from)
+    Ok(Response::builder(StatusCode::Ok)
+        .body(Body::from_json(&stream)?)
+        .build())
 }
 
 pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
+
+    println!("ASD");
 
     let root = req
         .state()
@@ -56,15 +58,17 @@ pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error>
         .await
         .map_err(Error::from)?;
 
-    Response::new(StatusCode::Ok)
-        .body_json(&root)
-        .map_err(Error::from)
+    Ok(Response::builder(StatusCode::Ok)
+        .body(Body::from_json(&root)?)
+        .build())
 }
 
 pub(crate) async fn create_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
 
     let mut root = req.state().builder.build(id);
+
+    println!("ASD");
 
     root.handle(OrderCommand::Create)
         .await
@@ -79,9 +83,9 @@ pub(crate) async fn create_order(req: Request<AppState>) -> Result<Response, Err
         .await
         .map_err(Error::from)?;
 
-    Response::new(StatusCode::Created)
-        .body_json(&root)
-        .map_err(Error::from)
+    Ok(Response::builder(StatusCode::Created)
+        .body(Body::from_json(&root)?)
+        .build())
 }
 
 pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Response, Error> {
@@ -111,9 +115,9 @@ pub(crate) async fn add_order_item(mut req: Request<AppState>) -> Result<Respons
         .await
         .map_err(Error::from)?;
 
-    Response::new(StatusCode::Accepted)
-        .body_json(&root)
-        .map_err(Error::from)
+    Ok(Response::builder(StatusCode::Accepted)
+        .body(Body::from_json(&root)?)
+        .build())
 }
 
 pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, Error> {
@@ -141,9 +145,9 @@ pub(crate) async fn complete_order(req: Request<AppState>) -> Result<Response, E
         .await
         .map_err(Error::from)?;
 
-    Response::new(StatusCode::Accepted)
-        .body_json(&root)
-        .map_err(Error::from)
+    Ok(Response::builder(StatusCode::Accepted)
+        .body(Body::from_json(&root)?)
+        .build())
 }
 
 pub(crate) async fn cancel_order(req: Request<AppState>) -> Result<Response, Error> {
@@ -171,7 +175,7 @@ pub(crate) async fn cancel_order(req: Request<AppState>) -> Result<Response, Err
         .await
         .map_err(Error::from)?;
 
-    Response::new(StatusCode::Accepted)
-        .body_json(&root)
-        .map_err(Error::from)
+    Ok(Response::builder(StatusCode::Accepted)
+        .body(Body::from_json(&root)?)
+        .build())
 }

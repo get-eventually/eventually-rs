@@ -12,6 +12,7 @@ pub(crate) type OrderAggregate = Optional<order::OrderAggregate>;
 pub(crate) type OrderStore = EventStore<String, order::OrderEvent>;
 pub(crate) type OrderRepository = Repository<OrderAggregate, OrderStore>;
 
+#[derive(Clone)]
 pub(crate) struct AppState {
     pub store: OrderStore,
     pub builder: AggregateRootBuilder<OrderAggregate>,
