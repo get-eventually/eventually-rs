@@ -15,12 +15,21 @@ use futures::stream::{empty, iter, StreamExt};
 
 use parking_lot::RwLock;
 
+/// Error returned by the [`EventStore::append`] when a conflict has been detected.
+///
+/// [`EventStore::append`]: trait.EventStore.html#method.append
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum Error {
+    /// Version conflict registered.
     #[error(
         "inmemory::EventStore: conflicting versions, expected {expected}, got instead {actual}"
     )]
-    Conflict { expected: u32, actual: u32 },
+    Conflict {
+        /// The last version value found the Store.
+        expected: u32,
+        /// The actual version passed by the caller to the Store.
+        actual: u32,
+    },
 }
 
 impl AppendError for Error {
