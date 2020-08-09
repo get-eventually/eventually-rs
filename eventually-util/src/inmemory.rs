@@ -1,7 +1,6 @@
 //! Contains supporting entities using an in-memory backend.
 
 use std::collections::HashMap;
-use std::convert::Infallible;
 use std::hash::Hash;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
@@ -16,12 +15,21 @@ use futures::stream::{empty, iter, StreamExt};
 
 use parking_lot::RwLock;
 
-#[derive(Debug, thiserror::Error)]
+/// Error returned by the [`EventStore::append`] when a conflict has been detected.
+///
+/// [`EventStore::append`]: trait.EventStore.html#method.append
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum Error {
+    /// Version conflict registered.
     #[error(
         "inmemory::EventStore: conflicting versions, expected {expected}, got instead {actual}"
     )]
-    Conflict { expected: u32, actual: u32 },
+    Conflict {
+        /// The last version value found the Store.
+        expected: u32,
+        /// The actual version passed by the caller to the Store.
+        actual: u32,
+    },
 }
 
 impl AppendError for Error {
@@ -59,7 +67,7 @@ where
     Id: Hash + Eq,
 {
     global_offset: Arc<AtomicU32>,
-    backend: Arc<RwLock<HashMap<Id, Vec<PersistedEvent<Event>>>>>,
+    backend: Arc<RwLock<HashMap<Id, Vec<PersistedEvent<Id, Event>>>>>,
 }
 
 impl<Id, Event> Default for EventStore<Id, Event>
@@ -91,7 +99,7 @@ where
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<u32, Self::Error>> {
         Box::pin(async move {
-            let mut last_version = self
+            let expected = self
                 .backend
                 .read()
                 .get(&id)
@@ -99,27 +107,25 @@ where
                 .map(|event| event.version())
                 .unwrap_or(0);
 
-            if let Expected::Exact(version) = version {
-                if version != last_version {
-                    return Err(Error::Conflict {
-                        expected: version,
-                        actual: last_version,
-                    });
+            if let Expected::Exact(actual) = version {
+                if expected != actual {
+                    return Err(Error::Conflict { expected, actual });
                 }
             }
 
-            let mut persisted_events = into_persisted_events(last_version, events)
-                .into_iter()
-                .map(|event| {
-                    let offset = self.global_offset.fetch_add(1, Ordering::SeqCst);
-                    event.sequence_number(offset)
-                })
-                .collect::<Vec<PersistedEvent<Event>>>();
+            let mut persisted_events: Vec<PersistedEvent<Id, Event>> =
+                into_persisted_events(expected, id.clone(), events)
+                    .into_iter()
+                    .map(|event| {
+                        let offset = self.global_offset.fetch_add(1, Ordering::SeqCst);
+                        event.sequence_number(offset)
+                    })
+                    .collect();
 
-            last_version = persisted_events
+            let last_version = persisted_events
                 .last()
-                .map(|event| event.version())
-                .unwrap_or(last_version);
+                .map(PersistedEvent::version)
+                .unwrap_or(expected);
 
             self.backend
                 .write()
@@ -156,6 +162,25 @@ where
         })
     }
 
+    fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
+        let mut events: Vec<PersistedEvent<Id, Event>> = self
+            .backend
+            .read()
+            .values()
+            .flatten()
+            .cloned()
+            .filter(move |event| match select {
+                Select::All => true,
+                Select::From(sequence_number) => event.sequence_number() >= sequence_number,
+            })
+            .collect();
+
+        // Events must be sorted by the sequence number when using $all.
+        events.sort_by(|a, b| a.sequence_number().cmp(&b.sequence_number()));
+
+        Box::pin(futures::future::ok(iter(events).map(Ok).boxed()))
+    }
+
     fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
             self.backend.write().remove(&id);
@@ -165,20 +190,29 @@ where
     }
 }
 
-fn into_persisted_events<T>(last_version: u32, events: Vec<T>) -> Vec<EventBuilderWithVersion<T>> {
+fn into_persisted_events<Id, T>(
+    last_version: u32,
+    id: Id,
+    events: Vec<T>,
+) -> Vec<EventBuilderWithVersion<Id, T>>
+where
+    Id: Clone,
+{
     events
         .into_iter()
         .enumerate()
-        .map(|(i, event)| PersistedEvent::from(event).version(last_version + (i as u32) + 1))
+        .map(|(i, event)| {
+            PersistedEvent::from(id.clone(), event).version(last_version + (i as u32) + 1)
+        })
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::EventStore as InMemoryStore;
+    use super::{Error, EventStore as InMemoryStore};
     use eventually_core::store::{EventStore, Expected, PersistedEvent, Select};
 
-    use futures::StreamExt;
+    use futures::TryStreamExt;
 
     use tokio_test::block_on;
 
@@ -190,78 +224,226 @@ mod tests {
     }
 
     #[test]
-    fn append() {
+    fn append_with_any_versions_works() {
         let mut store = InMemoryStore::<&'static str, Event>::default();
-        append_to(&mut store, "test-append");
+        let id = "test-append";
+
+        let events = vec![Event::A, Event::B, Event::C];
+
+        let result = block_on(store.append(id, Expected::Any, events.clone()));
+        assert!(result.is_ok());
+
+        let result = block_on(store.append(id, Expected::Any, events.clone()));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn append_with_expected_versions_works() {
+        let mut store = InMemoryStore::<&'static str, Event>::default();
+        let id = "test-append";
+
+        let events = vec![Event::A, Event::B, Event::C];
+
+        let result = block_on(store.append(id, Expected::Exact(0), events.clone()));
+        assert!(result.is_ok());
+
+        let last_version = result.unwrap();
+        let result = block_on(store.append(id, Expected::Exact(last_version), events.clone()));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn append_with_wrong_expected_versions_fails() {
+        let mut store = InMemoryStore::<&'static str, Event>::default();
+        let id = "test-append";
+
+        let events = vec![Event::A, Event::B, Event::C];
+
+        let result = block_on(store.append(id, Expected::Exact(0), events.clone()));
+        assert!(result.is_ok());
+
+        let last_version = result.unwrap();
+        let poisoned_last_version = last_version + 1; // Poison the last version on purpose
+
+        let result =
+            block_on(store.append(id, Expected::Exact(poisoned_last_version), events.clone()));
+
+        assert_eq!(
+            Err(Error::Conflict {
+                expected: last_version,
+                actual: poisoned_last_version
+            }),
+            result
+        );
     }
 
     #[test]
     fn remove() {
+        let id = "test-remove";
         let mut store = InMemoryStore::<&'static str, Event>::default();
-        append_to(&mut store, "test-remove");
 
-        assert!(block_on(store.remove("test-remove")).is_ok());
-        assert!(block_on(stream_to_vec_from(&store, "test-remove", 0)).is_empty());
+        // Removing an empty stream works.
+        assert!(block_on(store.remove(id)).is_ok());
+        assert!(block_on(stream_to_vec(&store, id, Select::All))
+            .unwrap()
+            .is_empty());
+
+        // Add some events and lets remove them after
+        let events = vec![Event::A, Event::B, Event::C];
+        let result = block_on(store.append(id, Expected::Exact(0), events.clone()));
+        assert!(result.is_ok());
+
+        assert!(block_on(store.remove(id)).is_ok());
+        assert!(block_on(stream_to_vec(&store, id, Select::All))
+            .unwrap()
+            .is_empty());
     }
 
     #[test]
     fn stream() {
+        let id = "test-stream";
         let mut store = InMemoryStore::<&'static str, Event>::default();
 
         let events_1 = vec![Event::A, Event::B, Event::C];
         let events_2 = vec![Event::B, Event::A];
 
-        assert!(block_on(store.append("test-stream", Expected::Any, events_1.clone())).is_ok());
-        assert!(
-            block_on(store.append("test-stream", Expected::Exact(3), events_2.clone())).is_ok()
-        );
+        let result = block_on(store.append(id, Expected::Exact(0), events_1));
+        assert!(result.is_ok());
 
+        let last_version = result.unwrap();
+        let result = block_on(store.append(id, Expected::Exact(last_version), events_2));
+        assert!(result.is_ok());
+
+        // Stream from the start.
         assert_eq!(
-            block_on(stream_to_vec_from(&store, "test-stream", 1)),
+            block_on(stream_to_vec(&store, id, Select::All)).unwrap(),
             vec![
-                PersistedEvent::from(Event::A).version(1).sequence_number(0),
-                PersistedEvent::from(Event::B).version(2).sequence_number(1),
-                PersistedEvent::from(Event::C).version(3).sequence_number(2),
-                PersistedEvent::from(Event::B).version(4).sequence_number(3),
-                PersistedEvent::from(Event::A).version(5).sequence_number(4)
+                PersistedEvent::from(id, Event::A)
+                    .version(1)
+                    .sequence_number(0),
+                PersistedEvent::from(id, Event::B)
+                    .version(2)
+                    .sequence_number(1),
+                PersistedEvent::from(id, Event::C)
+                    .version(3)
+                    .sequence_number(2),
+                PersistedEvent::from(id, Event::B)
+                    .version(4)
+                    .sequence_number(3),
+                PersistedEvent::from(id, Event::A)
+                    .version(5)
+                    .sequence_number(4)
             ]
         );
 
+        // Stream from another offset.
         assert_eq!(
-            block_on(stream_to_vec_from(&store, "test-stream", 4)),
+            block_on(stream_to_vec(&store, id, Select::From(4))).unwrap(),
             vec![
-                PersistedEvent::from(Event::B).version(4).sequence_number(3),
-                PersistedEvent::from(Event::A).version(5).sequence_number(4)
+                PersistedEvent::from(id, Event::B)
+                    .version(4)
+                    .sequence_number(3),
+                PersistedEvent::from(id, Event::A)
+                    .version(5)
+                    .sequence_number(4)
             ]
+        );
+
+        // Stream from an unexistent offset.
+        assert!(block_on(stream_to_vec(&store, id, Select::From(10)))
+            .unwrap()
+            .is_empty());
+    }
+
+    #[test]
+    fn stream_all() {
+        let id_1 = "test-stream-all-1";
+        let id_2 = "test-stream-all-2";
+
+        let mut store = InMemoryStore::<&'static str, Event>::default();
+
+        let result = block_on(store.append(id_1, Expected::Any, vec![Event::A]));
+        assert!(result.is_ok());
+
+        let result = block_on(store.append(id_2, Expected::Any, vec![Event::B]));
+        assert!(result.is_ok());
+
+        let result = block_on(store.append(id_1, Expected::Any, vec![Event::C]));
+        assert!(result.is_ok());
+
+        let result = block_on(store.append(id_2, Expected::Any, vec![Event::A]));
+        assert!(result.is_ok());
+
+        // Stream from the start.
+        let result: anyhow::Result<Vec<PersistedEvent<&str, Event>>> = block_on(async {
+            store
+                .stream_all(Select::All)
+                .await
+                .unwrap()
+                .try_collect()
+                .await
+                .map_err(anyhow::Error::from)
+        });
+
+        assert!(result.is_ok());
+        let result = result.unwrap();
+
+        assert_eq!(
+            vec![
+                PersistedEvent::from(id_1, Event::A)
+                    .version(1)
+                    .sequence_number(0),
+                PersistedEvent::from(id_2, Event::B)
+                    .version(1)
+                    .sequence_number(1),
+                PersistedEvent::from(id_1, Event::C)
+                    .version(2)
+                    .sequence_number(2),
+                PersistedEvent::from(id_2, Event::A)
+                    .version(2)
+                    .sequence_number(3)
+            ],
+            result
+        );
+
+        // Stream from a specified sequence number.
+        let result: anyhow::Result<Vec<PersistedEvent<&str, Event>>> = block_on(async {
+            store
+                .stream_all(Select::From(2))
+                .await
+                .unwrap()
+                .try_collect()
+                .await
+                .map_err(anyhow::Error::from)
+        });
+
+        assert!(result.is_ok());
+        let result = result.unwrap();
+
+        assert_eq!(
+            vec![
+                PersistedEvent::from(id_1, Event::C)
+                    .version(2)
+                    .sequence_number(2),
+                PersistedEvent::from(id_2, Event::A)
+                    .version(2)
+                    .sequence_number(3)
+            ],
+            result
         );
     }
 
-    fn append_to(store: &mut InMemoryStore<&'static str, Event>, id: &'static str) {
-        let events = vec![Event::A, Event::B, Event::C];
-
-        assert!(block_on(store.append(id, Expected::Exact(0), events.clone())).is_ok());
-
-        assert_eq!(
-            block_on(stream_to_vec_from(&store, id, 0)),
-            vec![
-                PersistedEvent::from(Event::A).version(1).sequence_number(0),
-                PersistedEvent::from(Event::B).version(2).sequence_number(1),
-                PersistedEvent::from(Event::C).version(3).sequence_number(2)
-            ]
-        );
-    }
-
-    async fn stream_to_vec_from(
+    async fn stream_to_vec(
         store: &InMemoryStore<&'static str, Event>,
         id: &'static str,
-        from: u32,
-    ) -> Vec<PersistedEvent<Event>> {
+        select: Select,
+    ) -> anyhow::Result<Vec<PersistedEvent<&'static str, Event>>> {
         store
-            .stream(id, Select::From(from))
+            .stream(id, select)
             .await
-            .expect("should be infallible")
-            .map(|event| event.expect("should be infallible"))
-            .collect()
+            .map_err(anyhow::Error::from)?
+            .try_collect()
             .await
+            .map_err(anyhow::Error::from)
     }
 }

@@ -18,27 +18,30 @@ pub mod persistent {
     /// Creates a new [`PersistedEvent`] by wrapping an Event value.
     ///
     /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-    pub struct EventBuilder<T> {
+    pub struct EventBuilder<SourceId, T> {
         pub(super) event: T,
+        pub(super) source_id: SourceId,
     }
 
-    impl<T> From<T> for EventBuilder<T> {
+    impl<SourceId, T> From<(SourceId, T)> for EventBuilder<SourceId, T> {
         #[inline]
-        fn from(event: T) -> Self {
-            Self { event }
+        fn from(value: (SourceId, T)) -> Self {
+            let (source_id, event) = value;
+            Self { source_id, event }
         }
     }
 
-    impl<T> EventBuilder<T> {
+    impl<SourceId, T> EventBuilder<SourceId, T> {
         /// Specifies the [`PersistentEvent`] version and moves to the next
         /// builder state.
         ///
         /// [`PersistentEvent`]: ../struct.PersistedEvent.html
         #[inline]
-        pub fn version(self, value: u32) -> EventBuilderWithVersion<T> {
+        pub fn version(self, value: u32) -> EventBuilderWithVersion<SourceId, T> {
             EventBuilderWithVersion {
                 version: value,
                 event: self.event,
+                source_id: self.source_id,
             }
         }
 
@@ -47,10 +50,11 @@ pub mod persistent {
         ///
         /// [`PersistentEvent`]: ../struct.PersistedEvent.html
         #[inline]
-        pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<T> {
+        pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<SourceId, T> {
             EventBuilderWithSequenceNumber {
                 sequence_number: value,
                 event: self.event,
+                source_id: self.source_id,
             }
         }
     }
@@ -59,21 +63,23 @@ pub mod persistent {
     /// and its version.
     ///
     /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-    pub struct EventBuilderWithVersion<T> {
+    pub struct EventBuilderWithVersion<SourceId, T> {
         version: u32,
         event: T,
+        source_id: SourceId,
     }
 
-    impl<T> EventBuilderWithVersion<T> {
+    impl<SourceId, T> EventBuilderWithVersion<SourceId, T> {
         /// Specifies the [`PersistentEvent`] sequence number and moves to the next
         /// builder state.
         ///
         /// [`PersistentEvent`]: ../struct.PersistedEvent.html
         #[inline]
-        pub fn sequence_number(self, value: u32) -> super::PersistedEvent<T> {
+        pub fn sequence_number(self, value: u32) -> super::PersistedEvent<SourceId, T> {
             super::PersistedEvent {
                 version: self.version,
                 event: self.event,
+                source_id: self.source_id,
                 sequence_number: value,
             }
         }
@@ -83,21 +89,23 @@ pub mod persistent {
     /// and its sequence number.
     ///
     /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-    pub struct EventBuilderWithSequenceNumber<T> {
+    pub struct EventBuilderWithSequenceNumber<SourceId, T> {
         sequence_number: u32,
         event: T,
+        source_id: SourceId,
     }
 
-    impl<T> EventBuilderWithSequenceNumber<T> {
+    impl<SourceId, T> EventBuilderWithSequenceNumber<SourceId, T> {
         /// Specifies the [`PersistentEvent`] version and moves to the next
         /// builder state.
         ///
         /// [`PersistentEvent`]: ../struct.PersistedEvent.html
         #[inline]
-        pub fn version(self, value: u32) -> super::PersistedEvent<T> {
+        pub fn version(self, value: u32) -> super::PersistedEvent<SourceId, T> {
             super::PersistedEvent {
                 version: value,
                 event: self.event,
+                source_id: self.source_id,
                 sequence_number: self.sequence_number,
             }
         }
@@ -113,21 +121,22 @@ pub mod persistent {
 /// [`EventStream`]: type.EventStream.html
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PersistedEvent<T> {
+pub struct PersistedEvent<SourceId, T> {
+    source_id: SourceId,
     version: u32,
     sequence_number: u32,
     #[serde(flatten)]
     event: T,
 }
 
-impl<T> Versioned for PersistedEvent<T> {
+impl<SourceId, T> Versioned for PersistedEvent<SourceId, T> {
     #[inline]
     fn version(&self) -> u32 {
         self.version
     }
 }
 
-impl<T> Deref for PersistedEvent<T> {
+impl<SourceId, T> Deref for PersistedEvent<SourceId, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -135,19 +144,27 @@ impl<T> Deref for PersistedEvent<T> {
     }
 }
 
-impl<T> PersistedEvent<T> {
+impl<SourceId, T> PersistedEvent<SourceId, T> {
     /// Creates a new [`EventBuilder`] from the provided Event value.
     ///
     /// [`EventBuilder`]: persistent/struct.EventBuilder.html
     #[inline]
-    pub fn from(event: T) -> persistent::EventBuilder<T> {
-        persistent::EventBuilder { event }
+    pub fn from(source_id: SourceId, event: T) -> persistent::EventBuilder<SourceId, T> {
+        persistent::EventBuilder { source_id, event }
     }
 
     /// Returns the event sequence number.
     #[inline]
     pub fn sequence_number(&self) -> u32 {
         self.sequence_number
+    }
+
+    /// Returns the [`SourceId`] of the persisted event.
+    ///
+    /// [`SourceId`]: trait.EventStore.html#associatedType.SourceId
+    #[inline]
+    pub fn source_id(&self) -> &SourceId {
+        &self.source_id
     }
 
     /// Unwraps the inner [`Event`] from the `PersistedEvent` wrapper.
@@ -203,8 +220,13 @@ pub enum Expected {
 /// Stream type returned by the [`EventStore::stream`] method.
 ///
 /// [`EventStore::stream`]: trait.EventStore.html#method.stream
-pub type EventStream<'a, S> =
-    BoxStream<'a, Result<PersistedEvent<<S as EventStore>::Event>, <S as EventStore>::Error>>;
+pub type EventStream<'a, S> = BoxStream<
+    'a,
+    Result<
+        PersistedEvent<<S as EventStore>::SourceId, <S as EventStore>::Event>,
+        <S as EventStore>::Error,
+    >,
+>;
 
 /// Error type returned by [`append`] in [`EventStore`] implementations.
 ///
@@ -270,13 +292,13 @@ pub trait EventStore {
     /// [`AppendError::Conflict`]: enum.AppendError.html
     fn append(
         &mut self,
-        id: Self::SourceId,
+        source_id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<u32, Self::Error>>;
 
     /// Streams a list of [`Event`]s from the `EventStore` back to the application,
-    /// by specifying the desired [`SourceId`] and [`Offset`].
+    /// by specifying the desired [`SourceId`] and [`Select`] operation.
     ///
     /// [`SourceId`] will be used to request a particular `EventStream`.
     ///
@@ -290,14 +312,29 @@ pub trait EventStore {
     /// [`EventStream`]: type.EventStream.html
     fn stream(
         &self,
-        id: Self::SourceId,
+        source_id: Self::SourceId,
         select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
+
+    /// Streams a list of [`Event`]s from the `EventStore` back to the application,
+    /// disregarding the [`SourceId`] values but using a [`Select`] operation.
+    ///
+    /// [`SourceId`] will be used to request a particular `EventStream`.
+    ///
+    /// [`Select`] specifies the selection strategy for the [`Event`]s
+    /// in the returned [`EventStream`]: take a look at type documentation
+    /// for all the available options.
+    ///
+    /// [`Event`]: trait.EventStore.html#associatedtype.Event
+    /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
+    /// [`Select`]: enum.Select.html
+    /// [`EventStream`]: type.EventStream.html
+    fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
 
     /// Drops all the [`Event`]s related to one `Source`, specified by
     /// the provided [`SourceId`].
     ///
     /// [`Event`]: trait.EventStore.html#associatedtype.Event
     /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
-    fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>>;
+    fn remove(&mut self, source_id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>>;
 }

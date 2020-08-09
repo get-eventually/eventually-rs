@@ -51,6 +51,8 @@
 //! [`eventually`]: https://docs.rs/eventually
 //! [`EventStore`]: struct.EventStore.html
 
+use std::convert::TryFrom;
+use std::fmt::Display;
 use std::sync::Arc;
 
 use eventually::store::{AppendError, EventStream, Expected, PersistedEvent, Select};
@@ -197,7 +199,7 @@ pub struct EventStore<Id, Event> {
 
 impl<Id, Event> EventStore<Id, Event>
 where
-    Id: ToString + Eq + Send + Sync,
+    Id: TryFrom<String> + Display + Eq + Send + Sync,
 {
     /// Creates a new table in the database for the provided Stream name
     /// during initialization.
@@ -230,7 +232,7 @@ where
 
 impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
-    Id: ToString + Eq + Send + Sync,
+    Id: TryFrom<String, Error = ()> + Display + Eq + Send + Sync,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
@@ -293,14 +295,19 @@ where
                 .map_err(EventStoreError::from)?
                 .map_ok(|row| {
                     let event: Event = serde_json::from_value(row.get("event")).unwrap();
+                    let id: String = row.get("source_id");
 
-                    PersistedEvent::from(event)
+                    PersistedEvent::from(Id::try_from(id).unwrap(), event)
                         .version(row.get("version"))
                         .sequence_number(row.get("offset"))
                 })
                 .map_err(EventStoreError::from)
                 .boxed())
         })
+    }
+
+    fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
+        unimplemented!()
     }
 
     fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>> {
