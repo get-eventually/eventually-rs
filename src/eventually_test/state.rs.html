@@ -17,6 +17,7 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
+<span id="20">20</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
@@ -32,6 +33,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">OrderStore</span> <span class="op">=</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">order</span>::<span class="ident">OrderEvent</span><span class="op">&gt;</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">OrderRepository</span> <span class="op">=</span> <span class="ident">Repository</span><span class="op">&lt;</span><span class="ident">OrderAggregate</span>, <span class="ident">OrderStore</span><span class="op">&gt;</span>;
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AppState</span> {
     <span class="kw">pub</span> <span class="ident">store</span>: <span class="ident">OrderStore</span>,
     <span class="kw">pub</span> <span class="ident">builder</span>: <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">OrderAggregate</span><span class="op">&gt;</span>,

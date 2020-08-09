@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["eventually_test"] = [{"text":"impl&lt;State:&nbsp;<a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.Send.html\" title=\"trait core::marker::Send\">Send</a> + <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html\" title=\"trait core::marker::Sync\">Sync</a> + 'static&gt; Middleware&lt;State&gt; for <a class=\"struct\" href=\"eventually_test/log/struct.Middleware.html\" title=\"struct eventually_test::log::Middleware\">Middleware</a>","synthetic":false,"types":["eventually_test::log::Middleware"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

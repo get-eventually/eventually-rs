@@ -323,6 +323,13 @@
 <span id="323">323</span>
 <span id="324">324</span>
 <span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
 <span class="doccomment">//!</span>
@@ -377,6 +384,8 @@
 <span class="doccomment">//! [`eventually`]: https://docs.rs/eventually</span>
 <span class="doccomment">//! [`EventStore`]: struct.EventStore.html</span>
 
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">Expected</span>, <span class="ident">PersistedEvent</span>, <span class="ident">Select</span>};
@@ -523,7 +532,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="doccomment">/// Creates a new table in the database for the provided Stream name</span>
     <span class="doccomment">/// during initialization.</span>
@@ -556,7 +565,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">eventually</span>::<span class="ident">EventStore</span> <span class="kw">for</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Error</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="ident">Event</span>: <span class="ident">Serialize</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Event</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
 {
@@ -619,14 +628,19 @@
                 .<span class="ident">map_err</span>(<span class="ident">EventStoreError</span>::<span class="ident">from</span>)<span class="question-mark">?</span>
                 .<span class="ident">map_ok</span>(<span class="op">|</span><span class="ident">row</span><span class="op">|</span> {
                     <span class="kw">let</span> <span class="ident">event</span>: <span class="ident">Event</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_value</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;event&quot;</span>)).<span class="ident">unwrap</span>();
+                    <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;source_id&quot;</span>);
 
-                    <span class="ident">PersistedEvent</span>::<span class="ident">from</span>(<span class="ident">event</span>)
+                    <span class="ident">PersistedEvent</span>::<span class="ident">from</span>(<span class="ident">Id</span>::<span class="ident">try_from</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>(), <span class="ident">event</span>)
                         .<span class="ident">version</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;version&quot;</span>))
                         .<span class="ident">sequence_number</span>(<span class="ident">row</span>.<span class="ident">get</span>(<span class="string">&quot;offset&quot;</span>))
                 })
                 .<span class="ident">map_err</span>(<span class="ident">EventStoreError</span>::<span class="ident">from</span>)
                 .<span class="ident">boxed</span>())
         })
+    }
+
+    <span class="kw">fn</span> <span class="ident">stream_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">select</span>: <span class="ident">Select</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="self">Self</span>::<span class="ident">SourceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {

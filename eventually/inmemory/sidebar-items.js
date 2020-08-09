@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]],"struct":[["EventStore","An in-memory [`EventStore`] implementation, backed by an [`HashMap`]."],["EventStoreBuilder","Builder for [`EventStore`] instances."]]});
+initSidebarItems({"enum":[["Error","Error returned by the [`EventStore::append`] when a conflict has been detected."]],"struct":[["EventStore","An in-memory [`EventStore`] implementation, backed by an [`HashMap`]."],["EventStoreBuilder","Builder for [`EventStore`] instances."]]});
