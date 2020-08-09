@@ -42,7 +42,7 @@ impl OrderItems {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(tag = "state")]
 pub enum OrderState {
     Editable { updated_at: DateTime<Utc> },
@@ -52,10 +52,33 @@ pub enum OrderState {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Order {
+    #[serde(skip_serializing)]
     id: String,
     created_at: DateTime<Utc>,
     items: Vec<OrderItem>,
     state: OrderState,
+}
+
+impl Order {
+    pub fn created_at(&self) -> DateTime<Utc> {
+        self.created_at
+    }
+
+    pub fn items(&self) -> &Vec<OrderItem> {
+        &self.items
+    }
+
+    pub fn state(&self) -> OrderState {
+        self.state
+    }
+
+    pub fn is_editable(&self) -> bool {
+        if let OrderState::Editable { .. } = self.state {
+            return true;
+        }
+
+        false
+    }
 }
 
 #[derive(Debug)]

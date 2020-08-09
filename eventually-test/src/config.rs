@@ -2,7 +2,7 @@ use envconfig::Envconfig;
 use envconfig_derive::Envconfig;
 
 #[derive(Envconfig)]
-pub(crate) struct Config {
+pub struct Config {
     #[envconfig(from = "DB_HOST", default = "localhost")]
     pub db_host: String,
 

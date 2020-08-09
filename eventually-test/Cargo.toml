@@ -23,3 +23,7 @@ tokio = { version = "0.2", features = ["sync"] }
 tokio-postgres = "0.5"
 femme = "2.1.0"
 anyhow = "1.0"
+
+[dev-dependencies]
+reqwest = { version = "0.10", features = ["json"] }
+lazy_static = "1.4"
