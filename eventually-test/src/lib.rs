@@ -1,11 +1,9 @@
 mod api;
-mod config;
-mod order;
+pub mod config;
+pub mod order;
 mod state;
 
 use std::sync::Arc;
-
-use envconfig::Envconfig;
 
 use eventually::aggregate::Optional;
 use eventually::inmemory::EventStoreBuilder;
@@ -16,13 +14,7 @@ use tokio::sync::RwLock;
 use crate::config::Config;
 use crate::order::OrderAggregate;
 
-fn main() -> anyhow::Result<()> {
-    smol::run(run())
-}
-
-async fn run() -> anyhow::Result<()> {
-    let config = Config::init()?;
-
+pub async fn run(config: Config) -> anyhow::Result<()> {
     femme::with_level(config.log_level);
 
     // Aggregate target: in this case it's empty, but usually it would use
