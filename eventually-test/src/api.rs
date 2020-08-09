@@ -12,6 +12,37 @@ use tide::{Body, Error, Request, Response, StatusCode};
 use crate::order::*;
 use crate::state::*;
 
+pub(crate) async fn full_history(req: Request<AppState>) -> Result<Response, Error> {
+    #[derive(Deserialize)]
+    struct Params {
+        from: Option<DateTime<Utc>>,
+    }
+
+    let params: Params = req.query()?;
+    let from = params.from;
+
+    let mut stream: Vec<PersistedEvent<String, OrderEvent>> = req
+        .state()
+        .store
+        .stream_all(Select::All)
+        .await
+        .map_err(Error::from)?
+        .try_filter(|event| {
+            futures::future::ready(match from {
+                None => true,
+                Some(from) => event.happened_at() >= &from,
+            })
+        })
+        .try_collect()
+        .await?;
+
+    stream.reverse();
+
+    Ok(Response::builder(StatusCode::Ok)
+        .body(Body::from_json(&stream)?)
+        .build())
+}
+
 pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
     #[derive(Deserialize)]
     struct Params {

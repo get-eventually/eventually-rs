@@ -44,19 +44,21 @@ async fn run() -> anyhow::Result<()> {
     // Set up the HTTP router.
     let mut app = tide::new();
 
-    app.at("/orders/:id").nest({
+    app.at("/orders").nest({
         let mut api = tide::with_state(state::AppState {
             store,
             builder: aggregate_root_builder,
             repository,
         });
 
-        api.at("/").get(api::get_order);
-        api.at("/create").post(api::create_order);
-        api.at("/add-item").post(api::add_order_item);
-        api.at("/complete").post(api::complete_order);
-        api.at("/cancel").post(api::cancel_order);
-        api.at("/history").get(api::history);
+        api.at("/history").get(api::full_history);
+
+        api.at("/:id").get(api::get_order);
+        api.at("/:id/create").post(api::create_order);
+        api.at("/:id/add-item").post(api::add_order_item);
+        api.at("/:id/complete").post(api::complete_order);
+        api.at("/:id/cancel").post(api::cancel_order);
+        api.at("/:id/history").get(api::history);
 
         api
     });
