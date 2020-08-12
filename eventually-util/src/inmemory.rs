@@ -16,7 +16,7 @@ use futures::stream::{empty, iter, StreamExt, TryStreamExt};
 
 use parking_lot::RwLock;
 
-use tokio::sync::broadcast::{channel, RecvError, Sender};
+use tokio::sync::broadcast::{channel, RecvError, SendError, Sender};
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
@@ -75,7 +75,7 @@ where
     Id: Hash + Eq,
 {
     global_offset: Arc<AtomicU32>,
-    tx: Arc<Sender<Persisted<Id, Event>>>,
+    tx: Sender<Persisted<Id, Event>>,
     backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
 }
 
@@ -83,11 +83,19 @@ impl<Id, Event> EventStore<Id, Event>
 where
     Id: Hash + Eq,
 {
+    /// Creates a new EventStore with a specified in-memory broadcast channel
+    /// size, which will used by the [`subscribe_all`] method to notify
+    /// of newly [`append`] events.
+    ///
+    /// [`subscribe_all`]: struct.EventStore.html#method.subscribe_all
+    /// [`append`]: struct.EventStore.html#method.append
     pub fn new(subscribe_capacity: usize) -> Self {
+        // Use this broadcast channel to send append events to
+        // subscriptions from .subscribe_all()
         let (tx, _) = channel(subscribe_capacity);
 
         Self {
-            tx: Arc::new(tx),
+            tx,
             global_offset: Arc::new(AtomicU32::new(0)),
             backend: Arc::new(RwLock::new(HashMap::new())),
         }
@@ -116,6 +124,10 @@ where
     fn subscribe_all(
         &self,
     ) -> BoxFuture<Result<eventually_core::subscription::EventStream<Self>, Self::Error>> {
+        // Create a new Receiver from the store Sender.
+        //
+        // This receiver implements the TryStream trait, which works perfectly
+        // with the definition of the EventStream.
         let rx = self.tx.subscribe();
 
         Box::pin(async move { Ok(rx.into_stream().map_err(Error::ReceiveEvent).boxed()) })
@@ -175,9 +187,18 @@ where
                 .and_modify(|events| events.append(&mut persisted_events))
                 .or_insert_with(|| persisted_events);
 
-            broadcast_copy.into_iter().for_each(|event| {
-                self.tx.send(event);
-            });
+            // From tokio documentation, the send() operation can only
+            // fail if there are no active receivers to listen to these events.
+            //
+            // From our perspective, this is not an issue, since appends
+            // might be done without any active subscription.
+            #[allow(unused_must_use)]
+            {
+                // Broadcast events into the store's Sender channel.
+                broadcast_copy.into_iter().for_each(|event| {
+                    self.tx.send(event);
+                });
+            }
 
             Ok(last_version)
         })
