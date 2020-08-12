@@ -8,17 +8,22 @@ use std::sync::Arc;
 use eventually_core::aggregate::Aggregate;
 use eventually_core::store::persistent::EventBuilderWithVersion;
 use eventually_core::store::{AppendError, EventStream, Expected, Persisted, Select};
+use eventually_core::subscription::EventSubscriber;
 use eventually_core::versioning::Versioned;
 
 use futures::future::BoxFuture;
-use futures::stream::{empty, iter, StreamExt};
+use futures::stream::{empty, iter, StreamExt, TryStreamExt};
 
 use parking_lot::RwLock;
+
+use tokio::sync::broadcast::{channel, RecvError, Sender};
+
+const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
 /// Error returned by the [`EventStore::append`] when a conflict has been detected.
 ///
 /// [`EventStore::append`]: trait.EventStore.html#method.append
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error, PartialEq)]
 pub enum Error {
     /// Version conflict registered.
     #[error(
@@ -30,6 +35,9 @@ pub enum Error {
         /// The actual version passed by the caller to the Store.
         actual: u32,
     },
+
+    #[error("inmemory::EventStore: failed to read event from subscription: {0}")]
+    ReceiveEvent(#[source] RecvError),
 }
 
 impl AppendError for Error {
@@ -67,7 +75,23 @@ where
     Id: Hash + Eq,
 {
     global_offset: Arc<AtomicU32>,
+    tx: Arc<Sender<Persisted<Id, Event>>>,
     backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
+}
+
+impl<Id, Event> EventStore<Id, Event>
+where
+    Id: Hash + Eq,
+{
+    pub fn new(subscribe_capacity: usize) -> Self {
+        let (tx, _) = channel(subscribe_capacity);
+
+        Self {
+            tx: Arc::new(tx),
+            global_offset: Arc::new(AtomicU32::new(0)),
+            backend: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
 }
 
 impl<Id, Event> Default for EventStore<Id, Event>
@@ -76,10 +100,25 @@ where
 {
     #[inline]
     fn default() -> Self {
-        Self {
-            global_offset: Arc::new(AtomicU32::new(0)),
-            backend: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self::new(SUBSCRIBE_CHANNEL_DEFAULT_CAP)
+    }
+}
+
+impl<Id, Event> EventSubscriber for EventStore<Id, Event>
+where
+    Id: Hash + Eq + Sync + Send + Clone,
+    Event: Sync + Send + Clone,
+{
+    type SourceId = Id;
+    type Event = Event;
+    type Error = Error;
+
+    fn subscribe_all(
+        &self,
+    ) -> BoxFuture<Result<eventually_core::subscription::EventStream<Self>, Self::Error>> {
+        let rx = self.tx.subscribe();
+
+        Box::pin(async move { Ok(rx.into_stream().map_err(Error::ReceiveEvent).boxed()) })
     }
 }
 
@@ -122,6 +161,9 @@ where
                     })
                     .collect();
 
+            // Copy of the events for broadcasting.
+            let broadcast_copy = persisted_events.clone();
+
             let last_version = persisted_events
                 .last()
                 .map(Persisted::version)
@@ -132,6 +174,10 @@ where
                 .entry(id)
                 .and_modify(|events| events.append(&mut persisted_events))
                 .or_insert_with(|| persisted_events);
+
+            broadcast_copy.into_iter().for_each(|event| {
+                self.tx.send(event);
+            });
 
             Ok(last_version)
         })
@@ -208,11 +254,16 @@ where
 #[cfg(test)]
 mod tests {
     use super::{Error, EventStore as InMemoryStore};
+
+    use std::cell::RefCell;
+    use std::sync::Arc;
+
     use eventually_core::store::{EventStore, Expected, Persisted, Select};
+    use eventually_core::subscription::EventSubscriber;
 
-    use futures::TryStreamExt;
+    use futures::{StreamExt, TryStreamExt};
 
-    use tokio_test::block_on;
+    use tokio::sync::Barrier;
 
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     enum Event {
@@ -221,50 +272,191 @@ mod tests {
         C,
     }
 
-    #[test]
-    fn append_with_any_versions_works() {
-        let mut store = InMemoryStore::<&'static str, Event>::default();
-        let id = "test-append";
+    #[tokio::test]
+    async fn subscribe_returns_all_the_latest_events() {
+        let id_1 = "test-subscribe-1";
+        let id_2 = "test-subscribe-2";
 
-        let events = vec![Event::A, Event::B, Event::C];
+        // Create the store and the clone to move into the async closure.
+        let store = InMemoryStore::<&'static str, Event>::default();
+        let store_1 = store.clone();
 
-        let result = block_on(store.append(id, Expected::Any, events.clone()));
-        assert!(result.is_ok());
+        // Use a barrier to synchronize the start of the first 2 events
+        // and the first subscription start.
+        let barrier = Arc::new(Barrier::new(2));
+        let barrier_1 = barrier.clone();
 
-        let result = block_on(store.append(id, Expected::Any, events.clone()));
-        assert!(result.is_ok());
+        // First subscription.
+        let join_handle_1 = tokio::spawn(async move {
+            let mut events = store_1.subscribe_all().await.unwrap().enumerate();
+            barrier_1.wait().await;
+
+            while let Some((i, res)) = events.next().await {
+                assert!(res.is_ok());
+                let event = res.unwrap();
+
+                match i {
+                    0 => assert_eq!(
+                        Persisted::from(id_1, Event::A)
+                            .version(1)
+                            .sequence_number(0),
+                        event
+                    ),
+                    1 => assert_eq!(
+                        Persisted::from(id_1, Event::B)
+                            .version(2)
+                            .sequence_number(1),
+                        event
+                    ),
+                    2 => assert_eq!(
+                        Persisted::from(id_1, Event::C)
+                            .version(3)
+                            .sequence_number(2),
+                        event
+                    ),
+                    3 => {
+                        assert_eq!(
+                            Persisted::from(id_2, Event::A)
+                                .version(1)
+                                .sequence_number(3),
+                            event
+                        );
+                        // Break out of the stream looping after the last expected
+                        // event has been received.
+                        break;
+                    }
+                    _ => panic!("should not reach this point"),
+                };
+            }
+        });
+
+        // Use internal mutability to escape the borrow checker rules for the test,
+        // because append() requires &mut self, but subscribe() requires &self first.
+        let store = RefCell::new(store);
+        barrier.wait().await;
+
+        assert!(store
+            .borrow_mut()
+            .append(id_1, Expected::Exact(0), vec![Event::A])
+            .await
+            .is_ok());
+
+        assert!(store
+            .borrow_mut()
+            .append(id_1, Expected::Exact(1), vec![Event::B])
+            .await
+            .is_ok());
+
+        let store = store.into_inner();
+        let store_2 = store.clone();
+
+        // Same thing as above, but to wait the second batch of the events
+        // appended to the store.
+        let barrier = Arc::new(Barrier::new(2));
+        let barrier_2 = barrier.clone();
+
+        // Second subscriber, it will only see events of the second batch,
+        // which is when it started listening to events.
+        let join_handle_2 = tokio::spawn(async move {
+            let mut events = store_2.subscribe_all().await.unwrap().enumerate();
+            barrier_2.wait().await;
+
+            while let Some((i, res)) = events.next().await {
+                assert!(res.is_ok());
+                let event = res.unwrap();
+
+                match i {
+                    0 => assert_eq!(
+                        Persisted::from(id_1, Event::C)
+                            .version(3)
+                            .sequence_number(2),
+                        event
+                    ),
+                    1 => {
+                        assert_eq!(
+                            Persisted::from(id_2, Event::A)
+                                .version(1)
+                                .sequence_number(3),
+                            event
+                        );
+                        break;
+                    }
+                    _ => panic!("should not reach this point"),
+                };
+            }
+        });
+
+        let store = RefCell::new(store);
+        barrier.wait().await;
+
+        assert!(store
+            .borrow_mut()
+            .append(id_1, Expected::Exact(2), vec![Event::C])
+            .await
+            .is_ok());
+
+        assert!(store
+            .borrow_mut()
+            .append(id_2, Expected::Exact(0), vec![Event::A])
+            .await
+            .is_ok());
+
+        // Wait for both subscribers to be done.
+        tokio::join!(join_handle_1, join_handle_2);
     }
 
-    #[test]
-    fn append_with_expected_versions_works() {
+    #[tokio::test]
+    async fn append_with_any_versions_works() {
         let mut store = InMemoryStore::<&'static str, Event>::default();
         let id = "test-append";
 
         let events = vec![Event::A, Event::B, Event::C];
 
-        let result = block_on(store.append(id, Expected::Exact(0), events.clone()));
+        assert!(store
+            .append(id, Expected::Any, events.clone())
+            .await
+            .is_ok());
+
+        assert!(store
+            .append(id, Expected::Any, events.clone())
+            .await
+            .is_ok());
+    }
+
+    #[tokio::test]
+    async fn append_with_expected_versions_works() {
+        let mut store = InMemoryStore::<&'static str, Event>::default();
+        let id = "test-append";
+
+        let events = vec![Event::A, Event::B, Event::C];
+
+        let result = store.append(id, Expected::Exact(0), events.clone()).await;
         assert!(result.is_ok());
 
         let last_version = result.unwrap();
-        let result = block_on(store.append(id, Expected::Exact(last_version), events.clone()));
-        assert!(result.is_ok());
+
+        assert!(store
+            .append(id, Expected::Exact(last_version), events.clone())
+            .await
+            .is_ok());
     }
 
-    #[test]
-    fn append_with_wrong_expected_versions_fails() {
-        let mut store = InMemoryStore::<&'static str, Event>::default();
+    #[tokio::test]
+    async fn append_with_wrong_expected_versions_fails() {
         let id = "test-append";
+        let mut store = InMemoryStore::<&'static str, Event>::default();
 
         let events = vec![Event::A, Event::B, Event::C];
 
-        let result = block_on(store.append(id, Expected::Exact(0), events.clone()));
+        let result = store.append(id, Expected::Exact(0), events.clone()).await;
         assert!(result.is_ok());
 
         let last_version = result.unwrap();
         let poisoned_last_version = last_version + 1; // Poison the last version on purpose
 
-        let result =
-            block_on(store.append(id, Expected::Exact(poisoned_last_version), events.clone()));
+        let result = store
+            .append(id, Expected::Exact(poisoned_last_version), events.clone())
+            .await;
 
         assert_eq!(
             Err(Error::Conflict {
@@ -275,46 +467,52 @@ mod tests {
         );
     }
 
-    #[test]
-    fn remove() {
+    #[tokio::test]
+    async fn remove() {
         let id = "test-remove";
         let mut store = InMemoryStore::<&'static str, Event>::default();
 
         // Removing an empty stream works.
-        assert!(block_on(store.remove(id)).is_ok());
-        assert!(block_on(stream_to_vec(&store, id, Select::All))
+        assert!(store.remove(id).await.is_ok());
+        assert!(stream_to_vec(&store, id, Select::All)
+            .await
             .unwrap()
             .is_empty());
 
         // Add some events and lets remove them after
         let events = vec![Event::A, Event::B, Event::C];
-        let result = block_on(store.append(id, Expected::Exact(0), events.clone()));
-        assert!(result.is_ok());
+        assert!(store
+            .append(id, Expected::Exact(0), events.clone())
+            .await
+            .is_ok());
 
-        assert!(block_on(store.remove(id)).is_ok());
-        assert!(block_on(stream_to_vec(&store, id, Select::All))
+        assert!(store.remove(id).await.is_ok());
+        assert!(stream_to_vec(&store, id, Select::All)
+            .await
             .unwrap()
             .is_empty());
     }
 
-    #[test]
-    fn stream() {
+    #[tokio::test]
+    async fn stream() {
         let id = "test-stream";
         let mut store = InMemoryStore::<&'static str, Event>::default();
 
         let events_1 = vec![Event::A, Event::B, Event::C];
         let events_2 = vec![Event::B, Event::A];
 
-        let result = block_on(store.append(id, Expected::Exact(0), events_1));
+        let result = store.append(id, Expected::Exact(0), events_1).await;
         assert!(result.is_ok());
 
         let last_version = result.unwrap();
-        let result = block_on(store.append(id, Expected::Exact(last_version), events_2));
-        assert!(result.is_ok());
+        assert!(store
+            .append(id, Expected::Exact(last_version), events_2)
+            .await
+            .is_ok());
 
         // Stream from the start.
         assert_eq!(
-            block_on(stream_to_vec(&store, id, Select::All)).unwrap(),
+            stream_to_vec(&store, id, Select::All).await.unwrap(),
             vec![
                 Persisted::from(id, Event::A).version(1).sequence_number(0),
                 Persisted::from(id, Event::B).version(2).sequence_number(1),
@@ -326,7 +524,7 @@ mod tests {
 
         // Stream from another offset.
         assert_eq!(
-            block_on(stream_to_vec(&store, id, Select::From(4))).unwrap(),
+            stream_to_vec(&store, id, Select::From(4)).await.unwrap(),
             vec![
                 Persisted::from(id, Event::B).version(4).sequence_number(3),
                 Persisted::from(id, Event::A).version(5).sequence_number(4)
@@ -334,40 +532,47 @@ mod tests {
         );
 
         // Stream from an unexistent offset.
-        assert!(block_on(stream_to_vec(&store, id, Select::From(10)))
+        assert!(stream_to_vec(&store, id, Select::From(10))
+            .await
             .unwrap()
             .is_empty());
     }
 
-    #[test]
-    fn stream_all() {
+    #[tokio::test]
+    async fn stream_all() {
         let id_1 = "test-stream-all-1";
         let id_2 = "test-stream-all-2";
 
         let mut store = InMemoryStore::<&'static str, Event>::default();
 
-        let result = block_on(store.append(id_1, Expected::Any, vec![Event::A]));
-        assert!(result.is_ok());
+        assert!(store
+            .append(id_1, Expected::Any, vec![Event::A])
+            .await
+            .is_ok());
 
-        let result = block_on(store.append(id_2, Expected::Any, vec![Event::B]));
-        assert!(result.is_ok());
+        assert!(store
+            .append(id_2, Expected::Any, vec![Event::B])
+            .await
+            .is_ok());
 
-        let result = block_on(store.append(id_1, Expected::Any, vec![Event::C]));
-        assert!(result.is_ok());
+        assert!(store
+            .append(id_1, Expected::Any, vec![Event::C])
+            .await
+            .is_ok());
 
-        let result = block_on(store.append(id_2, Expected::Any, vec![Event::A]));
-        assert!(result.is_ok());
+        assert!(store
+            .append(id_2, Expected::Any, vec![Event::A])
+            .await
+            .is_ok());
 
         // Stream from the start.
-        let result: anyhow::Result<Vec<Persisted<&str, Event>>> = block_on(async {
-            store
-                .stream_all(Select::All)
-                .await
-                .unwrap()
-                .try_collect()
-                .await
-                .map_err(anyhow::Error::from)
-        });
+        let result: anyhow::Result<Vec<Persisted<&str, Event>>> = store
+            .stream_all(Select::All)
+            .await
+            .unwrap()
+            .try_collect()
+            .await
+            .map_err(anyhow::Error::from);
 
         assert!(result.is_ok());
         let result = result.unwrap();
@@ -391,15 +596,13 @@ mod tests {
         );
 
         // Stream from a specified sequence number.
-        let result: anyhow::Result<Vec<Persisted<&str, Event>>> = block_on(async {
-            store
-                .stream_all(Select::From(2))
-                .await
-                .unwrap()
-                .try_collect()
-                .await
-                .map_err(anyhow::Error::from)
-        });
+        let result: anyhow::Result<Vec<Persisted<&str, Event>>> = store
+            .stream_all(Select::From(2))
+            .await
+            .unwrap()
+            .try_collect()
+            .await
+            .map_err(anyhow::Error::from);
 
         assert!(result.is_ok());
         let result = result.unwrap();
