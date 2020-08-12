@@ -37,7 +37,7 @@
 //! // Use an EventStoreBuilder to build multiple EventStore instances.
 //! let builder = EventStoreBuilder::migrate_database(&mut client)
 //!     .await?
-//!     .new(Arc::new(client));
+//!     .builder(Arc::new(client));
 //!
 //! // Event store for the events.
 //! //
@@ -58,7 +58,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::sync::Arc;
 
-use eventually::store::{AppendError, EventStream, Expected, PersistedEvent, Select};
+use eventually::store::{AppendError, EventStream, Expected, Persisted, Select};
 use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;
@@ -86,6 +86,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// [`EventStore`]: struct.EventStore.html
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Error when decoding persistent events from the database
+    /// back into the application during a [`stream`]
+    /// or [`stream_all`] operation.
+    ///
+    /// [`stream`]: struct.EventStore.html#method.stream
+    /// [`stream_all`]: struct.EventStore.html#method.stream_all
+    #[error("store failed to decode event from the database: {0}")]
+    DecodeEvent(#[source] anyhow::Error),
+
     /// Error when encoding the events in [`append`] to JSON prior
     /// to sending them to the database.
     ///
@@ -106,21 +115,21 @@ impl AppendError for Error {
     }
 }
 
-const APPEND: &'static str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)";
+const APPEND: &str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)";
 
-const CREATE_AGGREGATE_TYPE: &'static str = "SELECT * FROM create_aggregate_type($1::text)";
+const CREATE_AGGREGATE_TYPE: &str = "SELECT * FROM create_aggregate_type($1::text)";
 
-const STREAM: &'static str = "SELECT e.*
+const STREAM: &str = "SELECT e.*
     FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
     WHERE a.aggregate_type_id = $1 AND e.aggregate_id = $2 AND e.version >= $3
     ORDER BY version ASC";
 
-const STREAM_ALL: &'static str = "SELECT e.*
+const STREAM_ALL: &str = "SELECT e.*
     FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
     WHERE a.aggregate_type_id = $1 AND e.sequence_number >= $2
     ORDER BY e.sequence_number ASC";
 
-const REMOVE: &'static str = "DELETE FROM aggregates WHERE aggregate_type_id = $1 AND id = $2";
+const REMOVE: &str = "DELETE FROM aggregates WHERE aggregate_type_id = $1 AND id = $2";
 
 /// Builder type for [`EventStore`] instances.
 ///
@@ -139,7 +148,7 @@ impl EventStoreBuilder {
     }
 
     /// Returns a new builder instance after migrations have been completed.
-    pub fn new(self, client: Arc<Client>) -> EventStoreBuilderMigrated {
+    pub fn builder(self, client: Arc<Client>) -> EventStoreBuilderMigrated {
         EventStoreBuilderMigrated { client }
     }
 }
@@ -176,40 +185,8 @@ impl EventStoreBuilderMigrated {
     }
 
     /// Creates a new [`EventStore`] for an [`Aggregate`] type.
+    ///
     /// Check out [`build`] for more information.
-    ///
-    /// ## Usage
-    ///
-    /// ```text
-    /// // Open a connection with Postgres.
-    /// let (client, connection) =
-    ///     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
-    ///         .await
-    ///         .map_err(|err| {
-    ///             eprintln!("failed to connect to Postgres: {}", err);
-    ///             err
-    ///         })?;
-    ///
-    /// // The connection, responsible for the actual IO, must be handled by a different
-    /// // execution context.
-    /// tokio::spawn(async move {
-    ///     if let Err(e) = connection.await {
-    ///         eprintln!("connection error: {}", e);
-    ///     }
-    /// });
-    ///
-    /// // Use an EventStoreBuilder to build multiple EventStore instances.
-    /// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
-    ///
-    /// let aggregate = SomeAggregate;
-    ///
-    /// // Event store for the events.
-    /// let store = {
-    ///     let store = builder.aggregate_stream(&aggregate, "orders");
-    ///     store.create_stream().await?;
-    ///     store
-    /// };
-    /// ```
     ///
     /// [`EventStore`]: struct.EventStore.html
     /// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
@@ -234,6 +211,15 @@ impl EventStoreBuilderMigrated {
 /// Check out [`EventStoreBuilder`] for examples to how initialize new
 /// instances of this type.
 ///
+/// ### Considerations on the `Id` type
+///
+/// The `Id` type supplied to the `EventStore` has to be
+/// able to `to_string()` (so implement the `std::fmt::Display` trait)
+/// and to be parsed from a `String` (so to implement the `std::convert::TryFrom<String>` trait).
+///
+/// The error for the `TryFrom<String>` conversion has to be a `std::error::Error`,
+/// so as to be able to map it into an `anyhow::Error` generic error value.
+///
 /// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html
 /// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
 #[derive(Debug, Clone)]
@@ -246,8 +232,10 @@ pub struct EventStore<Id, Event> {
 
 impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
-    // TODO: remove this Infallible error here and use a proper one.
-    Id: TryFrom<String, Error = std::convert::Infallible> + Display + Eq + Send + Sync,
+    Id: TryFrom<String> + Display + Eq + Send + Sync,
+    // This bound is for the translation into an anyhow::Error.
+    <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
+    <Id as TryFrom<String>>::Error: Into<anyhow::Error>,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
@@ -339,7 +327,9 @@ impl<Id, Event> EventStore<Id, Event> {
 
 impl<Id, Event> EventStore<Id, Event>
 where
-    Id: TryFrom<String, Error = std::convert::Infallible> + Display + Eq + Send + Sync,
+    Id: TryFrom<String> + Display + Eq + Send + Sync,
+    // This bound is for the translation into an anyhow::Error.
+    <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
@@ -349,20 +339,39 @@ where
             .query_raw(query, slice_iter(params))
             .await
             .map_err(Error::from)?
+            .map_err(Error::from)
             .and_then(|row| async move {
-                // FIXME: can we remove this unwrap here?
-                let event: Event = serde_json::from_value(row.try_get("event")?).unwrap();
+                let event: Event = serde_json::from_value(
+                    row.try_get("event")
+                        .map_err(anyhow::Error::from)
+                        .map_err(Error::DecodeEvent)?,
+                )
+                .map_err(anyhow::Error::from)
+                .map_err(Error::DecodeEvent)?;
 
-                let id: String = row.try_get("aggregate_id")?;
-                let version: i32 = row.try_get("version")?;
-                let sequence_number: i64 = row.try_get("sequence_number")?;
+                let id: String = row
+                    .try_get("aggregate_id")
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
 
-                // FIXME: can we also remove this unwrap here?
-                Ok(PersistedEvent::from(Id::try_from(id).unwrap(), event)
+                let version: i32 = row
+                    .try_get("version")
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
+
+                let sequence_number: i64 = row
+                    .try_get("sequence_number")
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
+
+                let id = Id::try_from(id)
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
+
+                Ok(Persisted::from(id, event)
                     .version(version as u32)
                     .sequence_number(sequence_number as u32))
             })
-            .map_err(Error::from)
             .boxed())
     }
 }

@@ -11,171 +11,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::versioning::Versioned;
 
-/// Contains a type-state builder for [`PersistentEvent`] type.
-///
-/// [`PersistentEvent`]: struct.PersistedEvent.html
-pub mod persistent {
-    /// Creates a new [`PersistedEvent`] by wrapping an Event value.
-    ///
-    /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-    pub struct EventBuilder<SourceId, T> {
-        pub(super) event: T,
-        pub(super) source_id: SourceId,
-    }
-
-    impl<SourceId, T> From<(SourceId, T)> for EventBuilder<SourceId, T> {
-        #[inline]
-        fn from(value: (SourceId, T)) -> Self {
-            let (source_id, event) = value;
-            Self { source_id, event }
-        }
-    }
-
-    impl<SourceId, T> EventBuilder<SourceId, T> {
-        /// Specifies the [`PersistentEvent`] version and moves to the next
-        /// builder state.
-        ///
-        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-        #[inline]
-        pub fn version(self, value: u32) -> EventBuilderWithVersion<SourceId, T> {
-            EventBuilderWithVersion {
-                version: value,
-                event: self.event,
-                source_id: self.source_id,
-            }
-        }
-
-        /// Specifies the [`PersistentEvent`] sequence number and moves to the next
-        /// builder state.
-        ///
-        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-        #[inline]
-        pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<SourceId, T> {
-            EventBuilderWithSequenceNumber {
-                sequence_number: value,
-                event: self.event,
-                source_id: self.source_id,
-            }
-        }
-    }
-
-    /// Next step in creating a new [`PersistedEvent`] carrying an Event value
-    /// and its version.
-    ///
-    /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-    pub struct EventBuilderWithVersion<SourceId, T> {
-        version: u32,
-        event: T,
-        source_id: SourceId,
-    }
-
-    impl<SourceId, T> EventBuilderWithVersion<SourceId, T> {
-        /// Specifies the [`PersistentEvent`] sequence number and moves to the next
-        /// builder state.
-        ///
-        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-        #[inline]
-        pub fn sequence_number(self, value: u32) -> super::PersistedEvent<SourceId, T> {
-            super::PersistedEvent {
-                version: self.version,
-                event: self.event,
-                source_id: self.source_id,
-                sequence_number: value,
-            }
-        }
-    }
-
-    /// Next step in creating a new [`PersistedEvent`] carrying an Event value
-    /// and its sequence number.
-    ///
-    /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-    pub struct EventBuilderWithSequenceNumber<SourceId, T> {
-        sequence_number: u32,
-        event: T,
-        source_id: SourceId,
-    }
-
-    impl<SourceId, T> EventBuilderWithSequenceNumber<SourceId, T> {
-        /// Specifies the [`PersistentEvent`] version and moves to the next
-        /// builder state.
-        ///
-        /// [`PersistentEvent`]: ../struct.PersistedEvent.html
-        #[inline]
-        pub fn version(self, value: u32) -> super::PersistedEvent<SourceId, T> {
-            super::PersistedEvent {
-                version: value,
-                event: self.event,
-                source_id: self.source_id,
-                sequence_number: self.sequence_number,
-            }
-        }
-    }
-}
-
-/// An [`Event`] wrapper for events that have been
-/// successfully committed to the [`EventStore`].
-///
-/// [`EventStream`]s are composed of these events.
-///
-/// [`Event`]: trait.EventStore.html#associatedtype.Event
-/// [`EventStream`]: type.EventStream.html
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PersistedEvent<SourceId, T> {
-    source_id: SourceId,
-    version: u32,
-    sequence_number: u32,
-    #[serde(flatten)]
-    event: T,
-}
-
-impl<SourceId, T> Versioned for PersistedEvent<SourceId, T> {
-    #[inline]
-    fn version(&self) -> u32 {
-        self.version
-    }
-}
-
-impl<SourceId, T> Deref for PersistedEvent<SourceId, T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.event
-    }
-}
-
-impl<SourceId, T> PersistedEvent<SourceId, T> {
-    /// Creates a new [`EventBuilder`] from the provided Event value.
-    ///
-    /// [`EventBuilder`]: persistent/struct.EventBuilder.html
-    #[inline]
-    pub fn from(source_id: SourceId, event: T) -> persistent::EventBuilder<SourceId, T> {
-        persistent::EventBuilder { source_id, event }
-    }
-
-    /// Returns the event sequence number.
-    #[inline]
-    pub fn sequence_number(&self) -> u32 {
-        self.sequence_number
-    }
-
-    /// Returns the [`SourceId`] of the persisted event.
-    ///
-    /// [`SourceId`]: trait.EventStore.html#associatedType.SourceId
-    #[inline]
-    pub fn source_id(&self) -> &SourceId {
-        &self.source_id
-    }
-
-    /// Unwraps the inner [`Event`] from the `PersistedEvent` wrapper.
-    ///
-    /// [`Event`]: trait.EventStore.html#associatedtype.Event
-    #[inline]
-    pub fn take(self) -> T {
-        self.event
-    }
-}
-
 /// Selection operation for the events to capture in an [`EventStream`].
 ///
 /// [`EventStream`]: type.EventStream.html
@@ -223,7 +58,7 @@ pub enum Expected {
 pub type EventStream<'a, S> = BoxStream<
     'a,
     Result<
-        PersistedEvent<<S as EventStore>::SourceId, <S as EventStore>::Event>,
+        Persisted<<S as EventStore>::SourceId, <S as EventStore>::Event>,
         <S as EventStore>::Error,
     >,
 >;
@@ -337,4 +172,169 @@ pub trait EventStore {
     /// [`Event`]: trait.EventStore.html#associatedtype.Event
     /// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId
     fn remove(&mut self, source_id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>>;
+}
+
+/// An [`Event`] wrapper for events that have been
+/// successfully committed to the [`EventStore`].
+///
+/// [`EventStream`]s are composed of these events.
+///
+/// [`Event`]: trait.EventStore.html#associatedtype.Event
+/// [`EventStream`]: type.EventStream.html
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Persisted<SourceId, T> {
+    source_id: SourceId,
+    version: u32,
+    sequence_number: u32,
+    #[serde(flatten)]
+    event: T,
+}
+
+impl<SourceId, T> Versioned for Persisted<SourceId, T> {
+    #[inline]
+    fn version(&self) -> u32 {
+        self.version
+    }
+}
+
+impl<SourceId, T> Deref for Persisted<SourceId, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.event
+    }
+}
+
+impl<SourceId, T> Persisted<SourceId, T> {
+    /// Creates a new [`EventBuilder`] from the provided Event value.
+    ///
+    /// [`EventBuilder`]: persistent/struct.EventBuilder.html
+    #[inline]
+    pub fn from(source_id: SourceId, event: T) -> persistent::EventBuilder<SourceId, T> {
+        persistent::EventBuilder { source_id, event }
+    }
+
+    /// Returns the event sequence number.
+    #[inline]
+    pub fn sequence_number(&self) -> u32 {
+        self.sequence_number
+    }
+
+    /// Returns the [`SourceId`] of the persisted event.
+    ///
+    /// [`SourceId`]: trait.EventStore.html#associatedType.SourceId
+    #[inline]
+    pub fn source_id(&self) -> &SourceId {
+        &self.source_id
+    }
+
+    /// Unwraps the inner [`Event`] from the `Persisted` wrapper.
+    ///
+    /// [`Event`]: trait.EventStore.html#associatedtype.Event
+    #[inline]
+    pub fn take(self) -> T {
+        self.event
+    }
+}
+
+/// Contains a type-state builder for [`PersistentEvent`] type.
+///
+/// [`PersistentEvent`]: struct.Persisted.html
+pub mod persistent {
+    /// Creates a new [`Persisted`] by wrapping an Event value.
+    ///
+    /// [`PersistentEvent`]: ../struct.Persisted.html
+    pub struct EventBuilder<SourceId, T> {
+        pub(super) event: T,
+        pub(super) source_id: SourceId,
+    }
+
+    impl<SourceId, T> From<(SourceId, T)> for EventBuilder<SourceId, T> {
+        #[inline]
+        fn from(value: (SourceId, T)) -> Self {
+            let (source_id, event) = value;
+            Self { source_id, event }
+        }
+    }
+
+    impl<SourceId, T> EventBuilder<SourceId, T> {
+        /// Specifies the [`PersistentEvent`] version and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.Persisted.html
+        #[inline]
+        pub fn version(self, value: u32) -> EventBuilderWithVersion<SourceId, T> {
+            EventBuilderWithVersion {
+                version: value,
+                event: self.event,
+                source_id: self.source_id,
+            }
+        }
+
+        /// Specifies the [`PersistentEvent`] sequence number and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.Persisted.html
+        #[inline]
+        pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<SourceId, T> {
+            EventBuilderWithSequenceNumber {
+                sequence_number: value,
+                event: self.event,
+                source_id: self.source_id,
+            }
+        }
+    }
+
+    /// Next step in creating a new [`Persisted`] carrying an Event value
+    /// and its version.
+    ///
+    /// [`PersistentEvent`]: ../struct.Persisted.html
+    pub struct EventBuilderWithVersion<SourceId, T> {
+        version: u32,
+        event: T,
+        source_id: SourceId,
+    }
+
+    impl<SourceId, T> EventBuilderWithVersion<SourceId, T> {
+        /// Specifies the [`PersistentEvent`] sequence number and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.Persisted.html
+        #[inline]
+        pub fn sequence_number(self, value: u32) -> super::Persisted<SourceId, T> {
+            super::Persisted {
+                version: self.version,
+                event: self.event,
+                source_id: self.source_id,
+                sequence_number: value,
+            }
+        }
+    }
+
+    /// Next step in creating a new [`Persisted`] carrying an Event value
+    /// and its sequence number.
+    ///
+    /// [`PersistentEvent`]: ../struct.Persisted.html
+    pub struct EventBuilderWithSequenceNumber<SourceId, T> {
+        sequence_number: u32,
+        event: T,
+        source_id: SourceId,
+    }
+
+    impl<SourceId, T> EventBuilderWithSequenceNumber<SourceId, T> {
+        /// Specifies the [`PersistentEvent`] version and moves to the next
+        /// builder state.
+        ///
+        /// [`PersistentEvent`]: ../struct.Persisted.html
+        #[inline]
+        pub fn version(self, value: u32) -> super::Persisted<SourceId, T> {
+            super::Persisted {
+                version: value,
+                event: self.event,
+                source_id: self.source_id,
+                sequence_number: self.sequence_number,
+            }
+        }
+    }
 }

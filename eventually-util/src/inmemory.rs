@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use eventually_core::aggregate::Aggregate;
 use eventually_core::store::persistent::EventBuilderWithVersion;
-use eventually_core::store::{AppendError, EventStream, Expected, PersistedEvent, Select};
+use eventually_core::store::{AppendError, EventStream, Expected, Persisted, Select};
 use eventually_core::versioning::Versioned;
 
 use futures::future::BoxFuture;
@@ -67,7 +67,7 @@ where
     Id: Hash + Eq,
 {
     global_offset: Arc<AtomicU32>,
-    backend: Arc<RwLock<HashMap<Id, Vec<PersistedEvent<Id, Event>>>>>,
+    backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
 }
 
 impl<Id, Event> Default for EventStore<Id, Event>
@@ -113,7 +113,7 @@ where
                 }
             }
 
-            let mut persisted_events: Vec<PersistedEvent<Id, Event>> =
+            let mut persisted_events: Vec<Persisted<Id, Event>> =
                 into_persisted_events(expected, id.clone(), events)
                     .into_iter()
                     .map(|event| {
@@ -124,7 +124,7 @@ where
 
             let last_version = persisted_events
                 .last()
-                .map(PersistedEvent::version)
+                .map(Persisted::version)
                 .unwrap_or(expected);
 
             self.backend
@@ -163,7 +163,7 @@ where
     }
 
     fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
-        let mut events: Vec<PersistedEvent<Id, Event>> = self
+        let mut events: Vec<Persisted<Id, Event>> = self
             .backend
             .read()
             .values()
@@ -201,16 +201,14 @@ where
     events
         .into_iter()
         .enumerate()
-        .map(|(i, event)| {
-            PersistedEvent::from(id.clone(), event).version(last_version + (i as u32) + 1)
-        })
+        .map(|(i, event)| Persisted::from(id.clone(), event).version(last_version + (i as u32) + 1))
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::{Error, EventStore as InMemoryStore};
-    use eventually_core::store::{EventStore, Expected, PersistedEvent, Select};
+    use eventually_core::store::{EventStore, Expected, Persisted, Select};
 
     use futures::TryStreamExt;
 
@@ -318,21 +316,11 @@ mod tests {
         assert_eq!(
             block_on(stream_to_vec(&store, id, Select::All)).unwrap(),
             vec![
-                PersistedEvent::from(id, Event::A)
-                    .version(1)
-                    .sequence_number(0),
-                PersistedEvent::from(id, Event::B)
-                    .version(2)
-                    .sequence_number(1),
-                PersistedEvent::from(id, Event::C)
-                    .version(3)
-                    .sequence_number(2),
-                PersistedEvent::from(id, Event::B)
-                    .version(4)
-                    .sequence_number(3),
-                PersistedEvent::from(id, Event::A)
-                    .version(5)
-                    .sequence_number(4)
+                Persisted::from(id, Event::A).version(1).sequence_number(0),
+                Persisted::from(id, Event::B).version(2).sequence_number(1),
+                Persisted::from(id, Event::C).version(3).sequence_number(2),
+                Persisted::from(id, Event::B).version(4).sequence_number(3),
+                Persisted::from(id, Event::A).version(5).sequence_number(4)
             ]
         );
 
@@ -340,12 +328,8 @@ mod tests {
         assert_eq!(
             block_on(stream_to_vec(&store, id, Select::From(4))).unwrap(),
             vec![
-                PersistedEvent::from(id, Event::B)
-                    .version(4)
-                    .sequence_number(3),
-                PersistedEvent::from(id, Event::A)
-                    .version(5)
-                    .sequence_number(4)
+                Persisted::from(id, Event::B).version(4).sequence_number(3),
+                Persisted::from(id, Event::A).version(5).sequence_number(4)
             ]
         );
 
@@ -375,7 +359,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Stream from the start.
-        let result: anyhow::Result<Vec<PersistedEvent<&str, Event>>> = block_on(async {
+        let result: anyhow::Result<Vec<Persisted<&str, Event>>> = block_on(async {
             store
                 .stream_all(Select::All)
                 .await
@@ -390,16 +374,16 @@ mod tests {
 
         assert_eq!(
             vec![
-                PersistedEvent::from(id_1, Event::A)
+                Persisted::from(id_1, Event::A)
                     .version(1)
                     .sequence_number(0),
-                PersistedEvent::from(id_2, Event::B)
+                Persisted::from(id_2, Event::B)
                     .version(1)
                     .sequence_number(1),
-                PersistedEvent::from(id_1, Event::C)
+                Persisted::from(id_1, Event::C)
                     .version(2)
                     .sequence_number(2),
-                PersistedEvent::from(id_2, Event::A)
+                Persisted::from(id_2, Event::A)
                     .version(2)
                     .sequence_number(3)
             ],
@@ -407,7 +391,7 @@ mod tests {
         );
 
         // Stream from a specified sequence number.
-        let result: anyhow::Result<Vec<PersistedEvent<&str, Event>>> = block_on(async {
+        let result: anyhow::Result<Vec<Persisted<&str, Event>>> = block_on(async {
             store
                 .stream_all(Select::From(2))
                 .await
@@ -422,10 +406,10 @@ mod tests {
 
         assert_eq!(
             vec![
-                PersistedEvent::from(id_1, Event::C)
+                Persisted::from(id_1, Event::C)
                     .version(2)
                     .sequence_number(2),
-                PersistedEvent::from(id_2, Event::A)
+                Persisted::from(id_2, Event::A)
                     .version(2)
                     .sequence_number(3)
             ],
@@ -437,7 +421,7 @@ mod tests {
         store: &InMemoryStore<&'static str, Event>,
         id: &'static str,
         select: Select,
-    ) -> anyhow::Result<Vec<PersistedEvent<&'static str, Event>>> {
+    ) -> anyhow::Result<Vec<Persisted<&'static str, Event>>> {
         store
             .stream(id, select)
             .await
