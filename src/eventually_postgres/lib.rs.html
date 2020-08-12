@@ -374,6 +374,15 @@
 <span id="374">374</span>
 <span id="375">375</span>
 <span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
 <span class="doccomment">//!</span>
@@ -414,7 +423,7 @@
 <span class="doccomment">//! // Use an EventStoreBuilder to build multiple EventStore instances.</span>
 <span class="doccomment">//! let builder = EventStoreBuilder::migrate_database(&amp;mut client)</span>
 <span class="doccomment">//!     .await?</span>
-<span class="doccomment">//!     .new(Arc::new(client));</span>
+<span class="doccomment">//!     .builder(Arc::new(client));</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! // Event store for the events.</span>
 <span class="doccomment">//! //</span>
@@ -435,7 +444,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">Expected</span>, <span class="ident">PersistedEvent</span>, <span class="ident">Select</span>};
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">Expected</span>, <span class="ident">Persisted</span>, <span class="ident">Select</span>};
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateId</span>};
 
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
@@ -463,6 +472,15 @@
 <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="doccomment">/// Error when decoding persistent events from the database</span>
+    <span class="doccomment">/// back into the application during a [`stream`]</span>
+    <span class="doccomment">/// or [`stream_all`] operation.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`stream`]: struct.EventStore.html#method.stream</span>
+    <span class="doccomment">/// [`stream_all`]: struct.EventStore.html#method.stream_all</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;store failed to decode event from the database: {0}&quot;</span>)]</span>
+    <span class="ident">DecodeEvent</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">anyhow</span>::<span class="ident">Error</span>),
+
     <span class="doccomment">/// Error when encoding the events in [`append`] to JSON prior</span>
     <span class="doccomment">/// to sending them to the database.</span>
     <span class="doccomment">///</span>
@@ -483,21 +501,21 @@
     }
 }
 
-<span class="kw">const</span> <span class="ident">APPEND</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)&quot;</span>;
+<span class="kw">const</span> <span class="ident">APPEND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">CREATE_AGGREGATE_TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT * FROM create_aggregate_type($1::text)&quot;</span>;
+<span class="kw">const</span> <span class="ident">CREATE_AGGREGATE_TYPE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT * FROM create_aggregate_type($1::text)&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">STREAM</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT e.*
+<span class="kw">const</span> <span class="ident">STREAM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT e.*
     FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
     WHERE a.aggregate_type_id = $1 AND e.aggregate_id = $2 AND e.version &gt;= $3
     ORDER BY version ASC&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">STREAM_ALL</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT e.*
+<span class="kw">const</span> <span class="ident">STREAM_ALL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SELECT e.*
     FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
     WHERE a.aggregate_type_id = $1 AND e.sequence_number &gt;= $2
     ORDER BY e.sequence_number ASC&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">REMOVE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;DELETE FROM aggregates WHERE aggregate_type_id = $1 AND id = $2&quot;</span>;
+<span class="kw">const</span> <span class="ident">REMOVE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;DELETE FROM aggregates WHERE aggregate_type_id = $1 AND id = $2&quot;</span>;
 
 <span class="doccomment">/// Builder type for [`EventStore`] instances.</span>
 <span class="doccomment">///</span>
@@ -516,7 +534,7 @@
     }
 
     <span class="doccomment">/// Returns a new builder instance after migrations have been completed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventStoreBuilderMigrated</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventStoreBuilderMigrated</span> {
         <span class="ident">EventStoreBuilderMigrated</span> { <span class="ident">client</span> }
     }
 }
@@ -553,40 +571,8 @@
     }
 
     <span class="doccomment">/// Creates a new [`EventStore`] for an [`Aggregate`] type.</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Check out [`build`] for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Usage</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// // Open a connection with Postgres.</span>
-    <span class="doccomment">/// let (client, connection) =</span>
-    <span class="doccomment">///     tokio_postgres::connect(&quot;postgres://user@pass:localhost:5432/db&quot;, tokio_postgres::NoTls)</span>
-    <span class="doccomment">///         .await</span>
-    <span class="doccomment">///         .map_err(|err| {</span>
-    <span class="doccomment">///             eprintln!(&quot;failed to connect to Postgres: {}&quot;, err);</span>
-    <span class="doccomment">///             err</span>
-    <span class="doccomment">///         })?;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // The connection, responsible for the actual IO, must be handled by a different</span>
-    <span class="doccomment">/// // execution context.</span>
-    <span class="doccomment">/// tokio::spawn(async move {</span>
-    <span class="doccomment">///     if let Err(e) = connection.await {</span>
-    <span class="doccomment">///         eprintln!(&quot;connection error: {}&quot;, e);</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">/// });</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Use an EventStoreBuilder to build multiple EventStore instances.</span>
-    <span class="doccomment">/// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let aggregate = SomeAggregate;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// // Event store for the events.</span>
-    <span class="doccomment">/// let store = {</span>
-    <span class="doccomment">///     let store = builder.aggregate_stream(&amp;aggregate, &quot;orders&quot;);</span>
-    <span class="doccomment">///     store.create_stream().await?;</span>
-    <span class="doccomment">///     store</span>
-    <span class="doccomment">/// };</span>
-    <span class="doccomment">/// ```</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
     <span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
@@ -611,6 +597,15 @@
 <span class="doccomment">/// Check out [`EventStoreBuilder`] for examples to how initialize new</span>
 <span class="doccomment">/// instances of this type.</span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// ### Considerations on the `Id` type</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The `Id` type supplied to the `EventStore` has to be</span>
+<span class="doccomment">/// able to `to_string()` (so implement the `std::fmt::Display` trait)</span>
+<span class="doccomment">/// and to be parsed from a `String` (so to implement the `std::convert::TryFrom&lt;String&gt;` trait).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The error for the `TryFrom&lt;String&gt;` conversion has to be a `std::error::Error`,</span>
+<span class="doccomment">/// so as to be able to map it into an `anyhow::Error` generic error value.</span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html</span>
 <span class="doccomment">/// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
@@ -623,8 +618,10 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">eventually</span>::<span class="ident">EventStore</span> <span class="kw">for</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="comment">// TODO: remove this Infallible error here and use a proper one.</span>
-    <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">Infallible</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="comment">// This bound is for the translation into an anyhow::Error.</span>
+    <span class="op">&lt;</span><span class="ident">Id</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="op">&lt;</span><span class="ident">Id</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">anyhow</span>::<span class="ident">Error</span><span class="op">&gt;</span>,
     <span class="ident">Event</span>: <span class="ident">Serialize</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Event</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
 {
@@ -716,7 +713,9 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">Infallible</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="comment">// This bound is for the translation into an anyhow::Error.</span>
+    <span class="op">&lt;</span><span class="ident">Id</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">Event</span>: <span class="ident">Serialize</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Event</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
 {
@@ -726,20 +725,39 @@
             .<span class="ident">query_raw</span>(<span class="ident">query</span>, <span class="ident">slice_iter</span>(<span class="ident">params</span>))
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">row</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="comment">// FIXME: can we remove this unwrap here?</span>
-                <span class="kw">let</span> <span class="ident">event</span>: <span class="ident">Event</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_value</span>(<span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;event&quot;</span>)<span class="question-mark">?</span>).<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">event</span>: <span class="ident">Event</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_value</span>(
+                    <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;event&quot;</span>)
+                        .<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">from</span>)
+                        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeEvent</span>)<span class="question-mark">?</span>,
+                )
+                .<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">from</span>)
+                .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeEvent</span>)<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;aggregate_id&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">version</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;version&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">sequence_number</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;sequence_number&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">row</span>
+                    .<span class="ident">try_get</span>(<span class="string">&quot;aggregate_id&quot;</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">from</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeEvent</span>)<span class="question-mark">?</span>;
 
-                <span class="comment">// FIXME: can we also remove this unwrap here?</span>
-                <span class="prelude-val">Ok</span>(<span class="ident">PersistedEvent</span>::<span class="ident">from</span>(<span class="ident">Id</span>::<span class="ident">try_from</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>(), <span class="ident">event</span>)
+                <span class="kw">let</span> <span class="ident">version</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">row</span>
+                    .<span class="ident">try_get</span>(<span class="string">&quot;version&quot;</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">from</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeEvent</span>)<span class="question-mark">?</span>;
+
+                <span class="kw">let</span> <span class="ident">sequence_number</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">row</span>
+                    .<span class="ident">try_get</span>(<span class="string">&quot;sequence_number&quot;</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">from</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeEvent</span>)<span class="question-mark">?</span>;
+
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">try_from</span>(<span class="ident">id</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">from</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeEvent</span>)<span class="question-mark">?</span>;
+
+                <span class="prelude-val">Ok</span>(<span class="ident">Persisted</span>::<span class="ident">from</span>(<span class="ident">id</span>, <span class="ident">event</span>)
                     .<span class="ident">version</span>(<span class="ident">version</span> <span class="kw">as</span> <span class="ident">u32</span>)
                     .<span class="ident">sequence_number</span>(<span class="ident">sequence_number</span> <span class="kw">as</span> <span class="ident">u32</span>))
             })
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">from</span>)
             .<span class="ident">boxed</span>())
     }
 }
