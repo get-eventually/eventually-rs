@@ -86,6 +86,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// [`EventStore`]: struct.EventStore.html
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Error when decoding persistent events from the database
+    /// back into the application during a [`stream`]
+    /// or [`stream_all`] operation.
+    ///
+    /// [`stream`]: struct.EventStore.html#method.stream
+    /// [`stream_all`]: struct.EventStore.html#method.stream_all
+    #[error("store failed to decode event from the database: {0}")]
+    DecodeEvent(#[source] anyhow::Error),
+
     /// Error when encoding the events in [`append`] to JSON prior
     /// to sending them to the database.
     ///
@@ -234,6 +243,15 @@ impl EventStoreBuilderMigrated {
 /// Check out [`EventStoreBuilder`] for examples to how initialize new
 /// instances of this type.
 ///
+/// ### Considerations on the `Id` type
+///
+/// The `Id` type supplied to the `EventStore` has to be
+/// able to `to_string()` (so implement the `std::fmt::Display` trait)
+/// and to be parsed from a `String` (so to implement the `std::convert::TryFrom<String>` trait).
+///
+/// The error for the `TryFrom<String>` conversion has to be a `std::error::Error`,
+/// so as to be able to map it into an `anyhow::Error` generic error value.
+///
 /// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html
 /// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
 #[derive(Debug, Clone)]
@@ -246,8 +264,10 @@ pub struct EventStore<Id, Event> {
 
 impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
-    // TODO: remove this Infallible error here and use a proper one.
-    Id: TryFrom<String, Error = std::convert::Infallible> + Display + Eq + Send + Sync,
+    Id: TryFrom<String> + Display + Eq + Send + Sync,
+    // This bound is for the translation into an anyhow::Error.
+    <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
+    <Id as TryFrom<String>>::Error: Into<anyhow::Error>,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
@@ -339,7 +359,9 @@ impl<Id, Event> EventStore<Id, Event> {
 
 impl<Id, Event> EventStore<Id, Event>
 where
-    Id: TryFrom<String, Error = std::convert::Infallible> + Display + Eq + Send + Sync,
+    Id: TryFrom<String> + Display + Eq + Send + Sync,
+    // This bound is for the translation into an anyhow::Error.
+    <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
     Event: Serialize + Send + Sync,
     for<'de> Event: Deserialize<'de>,
 {
@@ -349,20 +371,39 @@ where
             .query_raw(query, slice_iter(params))
             .await
             .map_err(Error::from)?
+            .map_err(Error::from)
             .and_then(|row| async move {
-                // FIXME: can we remove this unwrap here?
-                let event: Event = serde_json::from_value(row.try_get("event")?).unwrap();
+                let event: Event = serde_json::from_value(
+                    row.try_get("event")
+                        .map_err(anyhow::Error::from)
+                        .map_err(Error::DecodeEvent)?,
+                )
+                .map_err(anyhow::Error::from)
+                .map_err(Error::DecodeEvent)?;
 
-                let id: String = row.try_get("aggregate_id")?;
-                let version: i32 = row.try_get("version")?;
-                let sequence_number: i64 = row.try_get("sequence_number")?;
+                let id: String = row
+                    .try_get("aggregate_id")
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
 
-                // FIXME: can we also remove this unwrap here?
-                Ok(PersistedEvent::from(Id::try_from(id).unwrap(), event)
+                let version: i32 = row
+                    .try_get("version")
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
+
+                let sequence_number: i64 = row
+                    .try_get("sequence_number")
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
+
+                let id = Id::try_from(id)
+                    .map_err(anyhow::Error::from)
+                    .map_err(Error::DecodeEvent)?;
+
+                Ok(Persisted::from(id, event)
                     .version(version as u32)
                     .sequence_number(sequence_number as u32))
             })
-            .map_err(Error::from)
             .boxed())
     }
 }
