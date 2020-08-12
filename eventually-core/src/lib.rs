@@ -13,4 +13,5 @@
 pub mod aggregate;
 pub mod repository;
 pub mod store;
+pub mod subscription;
 pub mod versioning;

@@ -23,6 +23,10 @@ pub mod store {
     pub use eventually_core::store::*;
 }
 
+pub mod subscription {
+    pub use eventually_core::subscription::*;
+}
+
 pub mod optional {
     pub use eventually_util::optional::*;
 }
