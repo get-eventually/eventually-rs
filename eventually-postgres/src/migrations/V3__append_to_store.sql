@@ -50,14 +50,10 @@ BEGIN
     END LOOP;
 
     -- Update the aggregate with the latest version computed.
-    UPDATE aggregates
-    set "version" = aggregate_version
-    WHERE aggregate_id = aggregate_id;
+    UPDATE aggregates SET "version" = aggregate_version WHERE id = aggregate_id;
 
     -- Update the global offset with the latest sequence number.
-    UPDATE aggregate_types
-    SET "offset" = sequence_number
-    WHERE aggregate_type_id = aggregate_type_id;
+    UPDATE aggregate_types SET "offset" = sequence_number WHERE id = aggregate_type_id;
 
     RETURN QUERY
         SELECT aggregate_version, sequence_number;
