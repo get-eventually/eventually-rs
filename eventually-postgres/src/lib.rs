@@ -58,7 +58,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::sync::Arc;
 
-use eventually::store::{AppendError, EventStream, Expected, PersistedEvent, Select};
+use eventually::store::{AppendError, EventStream, Expected, Persisted, Select};
 use eventually::{Aggregate, AggregateId};
 
 use futures::future::BoxFuture;

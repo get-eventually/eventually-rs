@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 
-use eventually::store::{PersistedEvent, Select};
+use eventually::store::{Persisted, Select};
 use eventually::EventStore;
 
+use futures::future::ready;
 use futures::TryStreamExt;
 
 use serde::Deserialize;
@@ -21,16 +22,16 @@ pub(crate) async fn full_history(req: Request<AppState>) -> Result<Response, Err
     let params: Params = req.query()?;
     let from = params.from;
 
-    let mut stream: Vec<PersistedEvent<String, OrderEvent>> = req
+    let mut stream: Vec<Persisted<String, OrderEvent>> = req
         .state()
         .store
         .stream_all(Select::All)
         .await
         .map_err(Error::from)?
         .try_filter(|event| {
-            futures::future::ready(match from {
+            ready(match from {
                 None => true,
-                Some(from) => event.happened_at() >= &from,
+                Some(ref from) => event.happened_at() >= from,
             })
         })
         .try_collect()
@@ -53,7 +54,7 @@ pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
     let params: Params = req.query()?;
     let from = params.from;
 
-    let mut stream: Vec<PersistedEvent<String, OrderEvent>> = req
+    let mut stream: Vec<Persisted<String, OrderEvent>> = req
         .state()
         .store
         .stream(id, Select::All)
