@@ -37,7 +37,7 @@
 //! // Use an EventStoreBuilder to build multiple EventStore instances.
 //! let builder = EventStoreBuilder::migrate_database(&mut client)
 //!     .await?
-//!     .new(Arc::new(client));
+//!     .builder(Arc::new(client));
 //!
 //! // Event store for the events.
 //! //
@@ -115,21 +115,21 @@ impl AppendError for Error {
     }
 }
 
-const APPEND: &'static str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)";
+const APPEND: &str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)";
 
-const CREATE_AGGREGATE_TYPE: &'static str = "SELECT * FROM create_aggregate_type($1::text)";
+const CREATE_AGGREGATE_TYPE: &str = "SELECT * FROM create_aggregate_type($1::text)";
 
-const STREAM: &'static str = "SELECT e.*
+const STREAM: &str = "SELECT e.*
     FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
     WHERE a.aggregate_type_id = $1 AND e.aggregate_id = $2 AND e.version >= $3
     ORDER BY version ASC";
 
-const STREAM_ALL: &'static str = "SELECT e.*
+const STREAM_ALL: &str = "SELECT e.*
     FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
     WHERE a.aggregate_type_id = $1 AND e.sequence_number >= $2
     ORDER BY e.sequence_number ASC";
 
-const REMOVE: &'static str = "DELETE FROM aggregates WHERE aggregate_type_id = $1 AND id = $2";
+const REMOVE: &str = "DELETE FROM aggregates WHERE aggregate_type_id = $1 AND id = $2";
 
 /// Builder type for [`EventStore`] instances.
 ///
@@ -148,7 +148,7 @@ impl EventStoreBuilder {
     }
 
     /// Returns a new builder instance after migrations have been completed.
-    pub fn new(self, client: Arc<Client>) -> EventStoreBuilderMigrated {
+    pub fn builder(self, client: Arc<Client>) -> EventStoreBuilderMigrated {
         EventStoreBuilderMigrated { client }
     }
 }
@@ -185,40 +185,8 @@ impl EventStoreBuilderMigrated {
     }
 
     /// Creates a new [`EventStore`] for an [`Aggregate`] type.
+    ///
     /// Check out [`build`] for more information.
-    ///
-    /// ## Usage
-    ///
-    /// ```text
-    /// // Open a connection with Postgres.
-    /// let (client, connection) =
-    ///     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
-    ///         .await
-    ///         .map_err(|err| {
-    ///             eprintln!("failed to connect to Postgres: {}", err);
-    ///             err
-    ///         })?;
-    ///
-    /// // The connection, responsible for the actual IO, must be handled by a different
-    /// // execution context.
-    /// tokio::spawn(async move {
-    ///     if let Err(e) = connection.await {
-    ///         eprintln!("connection error: {}", e);
-    ///     }
-    /// });
-    ///
-    /// // Use an EventStoreBuilder to build multiple EventStore instances.
-    /// let builder = EventStoreBuilder::from(Arc::new(RwLock::new(client)));
-    ///
-    /// let aggregate = SomeAggregate;
-    ///
-    /// // Event store for the events.
-    /// let store = {
-    ///     let store = builder.aggregate_stream(&aggregate, "orders");
-    ///     store.create_stream().await?;
-    ///     store
-    /// };
-    /// ```
     ///
     /// [`EventStore`]: struct.EventStore.html
     /// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
