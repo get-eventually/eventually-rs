@@ -9,12 +9,11 @@
 //!
 //! ```no_run
 //! # use std::sync::Arc;
-//! # use tokio::sync::RwLock;
 //! # use eventually_postgres::EventStoreBuilder;
 //! #
 //! # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
 //! // Open a connection with Postgres.
-//! let (client, connection) =
+//! let (mut client, connection) =
 //!     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
 //!         .await
 //!         .map_err(|err| {
@@ -45,7 +44,7 @@
 //! // to distinguish between different aggregates.
 //! //
 //! // You can also use std::any::type_name for that.
-//! let store = builder::build::<String, SomeEvent>("aggregate-name").await?
+//! let store = builder.build::<String, SomeEvent>("aggregate-name").await?;
 //!
 //! # Ok(())
 //! # }
