@@ -1,3 +1,8 @@
+//! Module for creating and managing long-running Subscriptions
+//! to incoming events in the [`EventStore`].
+//!
+//! [`EventStore`]: ../store/trait.EventStore.html
+
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
@@ -14,6 +19,15 @@ pub type EventStream<'a, S> = BoxStream<
     >,
 >;
 
+/// Component to let users subscribe to newly-inserted events into the [`EventStore`].
+///
+/// Check out [`subscribe_all`] for more information.
+///
+/// Additional information can be found in the [_Volatile Subscription_] section
+/// of eventstore.com
+///
+/// [_Volatile Subscription_]: https://eventstore.com/docs/getting-started/reading-subscribing-events/index.html#volatile-subscriptions
+/// [`EventStore`]: ../store/trait.EventStore.html
 pub trait EventSubscriber {
     /// Type of the Source id, typically an [`AggregateId`].
     ///
@@ -29,5 +43,23 @@ pub trait EventSubscriber {
     /// Possible errors returned when receiving events from the notification channel.
     type Error;
 
+    /// Subscribes to all new events persisted in the [`EventStore`], from
+    /// the moment of calling this function, in the future.
+    ///
+    /// Since this is a long-running stream, make sure not to *block*
+    /// or await the full computation of the stream.
+    ///
+    /// Prefer using a `while let` consumer for this [`EventStream`]:
+    ///
+    /// ```text
+    /// let stream = subscriber.subscribe_all().await?;
+    ///
+    /// while let Some(event) = stream.next().await {
+    ///     // Do stuff with the received event...
+    /// }
+    /// ```
+    ///
+    /// [`EventStore`]: ../store/trait.EventStore.html
+    /// [`EventStream`]: type.EventStream.html
     fn subscribe_all(&self) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
 }

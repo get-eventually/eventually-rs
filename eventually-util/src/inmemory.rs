@@ -16,7 +16,7 @@ use futures::stream::{empty, iter, StreamExt, TryStreamExt};
 
 use parking_lot::RwLock;
 
-use tokio::sync::broadcast::{channel, RecvError, SendError, Sender};
+use tokio::sync::broadcast::{channel, RecvError, Sender};
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
