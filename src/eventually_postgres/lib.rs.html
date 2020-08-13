@@ -382,7 +382,6 @@
 <span id="382">382</span>
 <span id="383">383</span>
 <span id="384">384</span>
-<span id="385">385</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
 <span class="doccomment">//!</span>
@@ -395,12 +394,11 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```no_run</span>
 <span class="doccomment">//! # use std::sync::Arc;</span>
-<span class="doccomment">//! # use tokio::sync::RwLock;</span>
 <span class="doccomment">//! # use eventually_postgres::EventStoreBuilder;</span>
 <span class="doccomment">//! #</span>
 <span class="doccomment">//! # async fn dox() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {</span>
 <span class="doccomment">//! // Open a connection with Postgres.</span>
-<span class="doccomment">//! let (client, connection) =</span>
+<span class="doccomment">//! let (mut client, connection) =</span>
 <span class="doccomment">//!     tokio_postgres::connect(&quot;postgres://user@pass:localhost:5432/db&quot;, tokio_postgres::NoTls)</span>
 <span class="doccomment">//!         .await</span>
 <span class="doccomment">//!         .map_err(|err| {</span>
@@ -431,7 +429,7 @@
 <span class="doccomment">//! // to distinguish between different aggregates.</span>
 <span class="doccomment">//! //</span>
 <span class="doccomment">//! // You can also use std::any::type_name for that.</span>
-<span class="doccomment">//! let store = builder::build::&lt;String, SomeEvent&gt;(&quot;aggregate-name&quot;).await?</span>
+<span class="doccomment">//! let store = builder.build::&lt;String, SomeEvent&gt;(&quot;aggregate-name&quot;).await?;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Ok(())</span>
 <span class="doccomment">//! # }</span>

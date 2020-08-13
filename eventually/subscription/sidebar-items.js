@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["EventSubscriber","Component to let users subscribe to newly-inserted events into the [`EventStore`]."]],"type":[["EventStream","Stream of events returned by the [`EventSubscriber::subscribe_all`] method."]]});
