@@ -11,6 +11,7 @@
 //! [`eventually`]: https://crates.io/crates/eventually
 
 pub mod aggregate;
+pub mod projection;
 pub mod repository;
 pub mod store;
 pub mod subscription;

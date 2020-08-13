@@ -1,8 +1,10 @@
 pub use eventually_core::aggregate::{
     Aggregate, AggregateExt, AggregateId, AggregateRoot, AggregateRootBuilder,
 };
+pub use eventually_core::projection::Projection;
 pub use eventually_core::repository::Repository;
 pub use eventually_core::store::EventStore;
+pub use eventually_core::subscription::EventSubscriber;
 pub use eventually_core::versioning::Versioned;
 
 pub mod aggregate {
