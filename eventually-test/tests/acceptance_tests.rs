@@ -23,10 +23,11 @@ fn setup() {
             let config = Config::init().unwrap();
             SERVER_STARTED.store(true, std::sync::atomic::Ordering::SeqCst);
 
-            smol::run(eventually_test::run(config));
+            smol::run(eventually_test::run(config)).expect("don't fail :(");
         });
     });
 
+    // Busy loading :(
     while !SERVER_STARTED.load(std::sync::atomic::Ordering::SeqCst) {}
 }
 

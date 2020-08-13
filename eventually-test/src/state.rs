@@ -14,7 +14,8 @@ pub(crate) type OrderRepository = Repository<OrderAggregate, OrderStore>;
 
 #[derive(Clone)]
 pub(crate) struct AppState {
-    pub store: OrderStore,
+    pub store: Arc<OrderStore>,
     pub builder: AggregateRootBuilder<OrderAggregate>,
     pub repository: Arc<RwLock<OrderRepository>>,
+    pub total_orders_projection: Arc<RwLock<order::TotalOrdersProjection>>,
 }
