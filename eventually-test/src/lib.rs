@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use eventually::aggregate::Optional;
 use eventually::inmemory::{EventStoreBuilder, ProjectorBuilder};
-use eventually::store::Select;
 use eventually::{AggregateRootBuilder, Repository};
 
 use futures::stream::StreamExt;
@@ -57,12 +56,7 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
     // The projector will open its own running subscription, on which
     // it will receive all oldest and newest events as they come into the EventStore,
     // and it will progressively update the projection as events arrive.
-    tokio::spawn(async move {
-        total_orders_projector
-            .run(Select::All)
-            .await
-            .expect("should not fail")
-    });
+    tokio::spawn(async move { total_orders_projector.run().await.expect("should not fail") });
 
     // Spawn a dedicated coroutine to listen to changes to the projection.
     //
