@@ -44,6 +44,14 @@ pub(crate) async fn full_history(req: Request<AppState>) -> Result<Response, Err
         .build())
 }
 
+pub(crate) async fn total_orders(req: Request<AppState>) -> Result<Response, Error> {
+    let state = req.state().total_orders_projection.read().await;
+
+    Ok(Response::builder(StatusCode::Ok)
+        .body(Body::from_json(&*state)?)
+        .build())
+}
+
 pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
     #[derive(Deserialize)]
     struct Params {
@@ -78,8 +86,6 @@ pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
 
 pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
-
-    println!("ASD");
 
     let root = req
         .state()
