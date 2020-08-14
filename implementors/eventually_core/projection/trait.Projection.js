@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["eventually_test"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/projection/trait.Projection.html\" title=\"trait eventually_core::projection::Projection\">Projection</a> for <a class=\"struct\" href=\"eventually_test/order/struct.TotalOrdersProjection.html\" title=\"struct eventually_test::order::TotalOrdersProjection\">TotalOrdersProjection</a>","synthetic":false,"types":["eventually_test::order::TotalOrdersProjection"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

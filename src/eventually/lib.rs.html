@@ -34,12 +34,16 @@
 <span id="34">34</span>
 <span id="35">35</span>
 <span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{
     <span class="ident">Aggregate</span>, <span class="ident">AggregateExt</span>, <span class="ident">AggregateId</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootBuilder</span>,
 };
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">projection</span>::<span class="ident">Projection</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">repository</span>::<span class="ident">Repository</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">store</span>::<span class="ident">EventStore</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">subscription</span>::<span class="ident">EventSubscriber</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">versioning</span>::<span class="ident">Versioned</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">aggregate</span> {

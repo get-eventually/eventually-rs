@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["OrderCommand",""],["OrderError",""],["OrderEvent",""],["OrderState",""]],"struct":[["Order",""],["OrderAggregate",""],["OrderItem",""],["OrderItems",""]]});
+initSidebarItems({"enum":[["OrderCommand",""],["OrderError",""],["OrderEvent",""],["OrderState",""]],"struct":[["Order",""],["OrderAggregate",""],["OrderItem",""],["OrderItems",""],["TotalOrdersProjection",""]]});

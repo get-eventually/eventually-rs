@@ -18,6 +18,7 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
+<span id="21">21</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
@@ -35,9 +36,10 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AppState</span> {
-    <span class="kw">pub</span> <span class="ident">store</span>: <span class="ident">OrderStore</span>,
+    <span class="kw">pub</span> <span class="ident">store</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">OrderStore</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">builder</span>: <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">OrderAggregate</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">repository</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">OrderRepository</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">total_orders_projection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">order</span>::<span class="ident">TotalOrdersProjection</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "eventually_test";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
