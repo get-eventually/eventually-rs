@@ -47,6 +47,16 @@ BEGIN
         -- Version numbers should start from 1; sequence numbers should start from 0.
         INSERT INTO events (aggregate_id, "version", sequence_number, "event")
         VALUES (aggregate_id, aggregate_version, sequence_number, "event");
+
+        -- Send a notification to all listeners of the newly added events.
+        PERFORM pg_notify(aggregate_type_id, ''
+            || '{'
+            || '"source_id": "'      || aggregate_id      || '" ,'
+            || '"version": '         || aggregate_version || ', '
+            || '"sequence_number": ' || sequence_number   || ', '
+            || '"event": '           || "event"::TEXT
+            || '}');
+
     END LOOP;
 
     -- Update the aggregate with the latest version computed.
