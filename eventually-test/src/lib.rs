@@ -9,8 +9,6 @@ use eventually::aggregate::Optional;
 use eventually::inmemory::{EventStoreBuilder, ProjectorBuilder};
 use eventually::{AggregateRootBuilder, Repository};
 
-use futures::stream::StreamExt;
-
 use tokio::sync::RwLock;
 
 use crate::config::Config;

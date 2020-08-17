@@ -23,27 +23,28 @@ const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 /// Error returned by the [`EventStore::append`] when a conflict has been detected.
 ///
 /// [`EventStore::append`]: trait.EventStore.html#method.append
-#[derive(Debug, thiserror::Error, PartialEq)]
-pub enum Error {
-    /// Version conflict registered.
-    #[error(
-        "inmemory::EventStore: conflicting versions, expected {expected}, got instead {actual}"
-    )]
-    Conflict {
-        /// The last version value found the Store.
-        expected: u32,
-        /// The actual version passed by the caller to the Store.
-        actual: u32,
-    },
-
-    #[error("inmemory::EventStore: failed to read event from subscription: {0}")]
-    ReceiveEvent(#[source] RecvError),
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[error("conflicting versions, expected {expected}, got instead {actual}")]
+pub struct ConflictError {
+    /// The last version value found the Store.
+    pub expected: u32,
+    /// The actual version passed by the caller to the Store.
+    pub actual: u32,
 }
 
-impl AppendError for Error {
+impl AppendError for ConflictError {
     fn is_conflict_error(&self) -> bool {
         true
     }
+}
+
+/// Error returned by the [`EventStore::append`] when a conflict has been detected.
+///
+/// [`EventStore::append`]: trait.EventStore.html#method.append
+#[derive(Debug, thiserror::Error)]
+pub enum SubscriberError {
+    #[error("failed to read event from subscription watch channel: {0}")]
+    ReceiveEvent(#[source] RecvError),
 }
 
 /// Builder for [`EventStore`] instances.
@@ -119,7 +120,7 @@ where
 {
     type SourceId = Id;
     type Event = Event;
-    type Error = Error;
+    type Error = SubscriberError;
 
     fn subscribe_all(
         &self,
@@ -130,7 +131,12 @@ where
         // with the definition of the EventStream.
         let rx = self.tx.subscribe();
 
-        Box::pin(async move { Ok(rx.into_stream().map_err(Error::ReceiveEvent).boxed()) })
+        Box::pin(async move {
+            Ok(rx
+                .into_stream()
+                .map_err(SubscriberError::ReceiveEvent)
+                .boxed())
+        })
     }
 }
 
@@ -141,7 +147,7 @@ where
 {
     type SourceId = Id;
     type Event = Event;
-    type Error = Error;
+    type Error = ConflictError;
 
     fn append(
         &mut self,
@@ -160,7 +166,7 @@ where
 
             if let Expected::Exact(actual) = version {
                 if expected != actual {
-                    return Err(Error::Conflict { expected, actual });
+                    return Err(ConflictError { expected, actual });
                 }
             }
 
@@ -274,7 +280,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{Error, EventStore as InMemoryStore};
+    use super::{ConflictError, EventStore as InMemoryStore};
 
     use std::cell::RefCell;
     use std::sync::Arc;
@@ -480,7 +486,7 @@ mod tests {
             .await;
 
         assert_eq!(
-            Err(Error::Conflict {
+            Err(ConflictError {
                 expected: last_version,
                 actual: poisoned_last_version
             }),
