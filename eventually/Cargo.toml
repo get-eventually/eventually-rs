@@ -14,11 +14,13 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 [features]
 default = []
 serde = ["eventually-core/serde", "eventually-util/serde"]
-full = ["serde"]
+postgres = ["eventually-postgres"]
+full = ["serde", "postgres"]
 
 [dependencies]
 eventually-core = { version = "0.4", path = "../eventually-core" }
 eventually-util = { version = "0.4", path = "../eventually-util" }
+eventually-postgres = { version = "0.2", path = "../eventually-postgres", optional = true }
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }

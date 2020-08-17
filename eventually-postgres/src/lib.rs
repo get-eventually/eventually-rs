@@ -57,8 +57,8 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::sync::Arc;
 
-use eventually::store::{AppendError, EventStream, Expected, Persisted, Select};
-use eventually::{Aggregate, AggregateId};
+use eventually_core::aggregate::{Aggregate, AggregateId};
+use eventually_core::store::{AppendError, EventStream, Expected, Persisted, Select};
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
@@ -229,7 +229,7 @@ pub struct EventStore<Id, Event> {
     payload: std::marker::PhantomData<Event>,
 }
 
-impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
+impl<Id, Event> eventually_core::store::EventStore for EventStore<Id, Event>
 where
     Id: TryFrom<String> + Display + Eq + Send + Sync,
     // This bound is for the translation into an anyhow::Error.
