@@ -30,6 +30,7 @@ pub enum Error {
     Database(String),
 }
 
+#[derive(Clone)]
 pub struct EventSubscriber<Id, Event> {
     tx: broadcast::Sender<Result<Persisted<Id, Event>>>,
 }

@@ -25,16 +25,13 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
     let store = EventStoreBuilder::for_aggregate(&aggregate);
 
     // Builder for all new AggregateRoot instances.
-    let aggregate_root_builder = AggregateRootBuilder::from(Arc::new(aggregate));
+    let aggregate_root_builder = AggregateRootBuilder::from(aggregate);
 
     // Creates a Repository to read and store OrderAggregates.
     let repository = Arc::new(RwLock::new(Repository::new(
         aggregate_root_builder.clone(),
         store.clone(),
     )));
-
-    // Put the store behind an Arc to allow for clone-ness of a single instance.
-    let store = Arc::new(store);
 
     // Create a new in-memory projection to keep the total orders computed by
     // the application.

@@ -14,8 +14,8 @@ use tokio::sync::RwLock;
 ///
 /// [`Projector`]: struct.Projector.html
 pub struct ProjectorBuilder<Store, Subscriber> {
-    store: Arc<Store>,
-    subscriber: Arc<Subscriber>,
+    store: Store,
+    subscriber: Subscriber,
 }
 
 impl<Store, Subscriber> ProjectorBuilder<Store, Subscriber> {
@@ -24,7 +24,7 @@ impl<Store, Subscriber> ProjectorBuilder<Store, Subscriber> {
     ///
     /// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html
     /// [`EventSubscriber`]: ../../../eventually-core/subscription/trait.EventSubscriber.html
-    pub fn new(store: Arc<Store>, subscriber: Arc<Subscriber>) -> Self {
+    pub fn new(store: Store, subscriber: Subscriber) -> Self {
         Self { store, subscriber }
     }
 
@@ -36,8 +36,8 @@ impl<Store, Subscriber> ProjectorBuilder<Store, Subscriber> {
     where
         // NOTE: these bounds are required for Projector::run.
         P: Projection,
-        Store: EventStore<SourceId = P::SourceId, Event = P::Event>,
-        Subscriber: EventSubscriber<SourceId = P::SourceId, Event = P::Event>,
+        Store: EventStore<SourceId = P::SourceId, Event = P::Event> + Clone,
+        Subscriber: EventSubscriber<SourceId = P::SourceId, Event = P::Event> + Clone,
         <P as Projection>::Error: StdError + Send + Sync + 'static,
         <Store as EventStore>::Error: StdError + Send + Sync + 'static,
         <Subscriber as EventSubscriber>::Error: StdError + Send + Sync + 'static,
@@ -68,8 +68,8 @@ where
     P: Projection,
 {
     projection: Arc<RwLock<P>>,
-    store: Arc<Store>,
-    subscriber: Arc<Subscriber>,
+    store: Store,
+    subscriber: Subscriber,
     last_sequence_number: AtomicU32,
 }
 
@@ -83,7 +83,7 @@ where
     <Store as EventStore>::Error: StdError + Send + Sync + 'static,
     <Subscriber as EventSubscriber>::Error: StdError + Send + Sync + 'static,
 {
-    fn new(projection: Arc<RwLock<P>>, store: Arc<Store>, subscriber: Arc<Subscriber>) -> Self {
+    fn new(projection: Arc<RwLock<P>>, store: Store, subscriber: Subscriber) -> Self {
         Self {
             store,
             subscriber,

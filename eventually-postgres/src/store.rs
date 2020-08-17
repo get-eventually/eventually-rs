@@ -115,7 +115,10 @@ impl EventStoreBuilderMigrated {
     ///
     /// [`EventStore`]: struct.EventStore.html
     #[inline]
-    pub async fn build<Id, Event>(&self, type_name: &'static str) -> Result<EventStore<Id, Event>> {
+    pub async fn build<Id, Event>(
+        &self,
+        type_name: &'static str,
+    ) -> std::result::Result<EventStore<Id, Event>, tokio_postgres::Error> {
         let store = EventStore {
             client: self.client.clone(),
             type_name,
@@ -140,7 +143,7 @@ impl EventStoreBuilderMigrated {
         &'a self,
         type_name: &'static str,
         _: &'a T,
-    ) -> Result<EventStore<AggregateId<T>, T::Event>>
+    ) -> std::result::Result<EventStore<AggregateId<T>, T::Event>, tokio_postgres::Error>
     where
         T: Aggregate,
     {
@@ -260,7 +263,7 @@ where
 }
 
 impl<Id, Event> EventStore<Id, Event> {
-    async fn create_aggregate_type(&self) -> Result<()> {
+    async fn create_aggregate_type(&self) -> std::result::Result<(), tokio_postgres::Error> {
         let params: Params = &[&self.type_name];
 
         self.client.execute(CREATE_AGGREGATE_TYPE, params).await?;
