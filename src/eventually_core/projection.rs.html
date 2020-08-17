@@ -33,6 +33,14 @@
 <span id="33">33</span>
 <span id="34">34</span>
 <span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Contain support for [`Projection`], an optimized read model</span>
 <span class="doccomment">//! of an [`Aggregate`] or of a number of `Aggregate`s.</span>
@@ -42,6 +50,8 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`Projection`]: trait.Projection.html</span>
 <span class="doccomment">//! [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
+
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">store</span>::<span class="ident">Persisted</span>;
 
@@ -54,7 +64,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
 <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Projection</span>: <span class="ident">Default</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Projection</span> {
     <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
@@ -65,9 +75,15 @@
     <span class="doccomment">/// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
-    <span class="doccomment">/// Updates the next value of the `Projection` using the provided</span>
-    <span class="doccomment">/// event value.</span>
-    <span class="kw">fn</span> <span class="ident">project</span>(<span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Persisted</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">SourceId</span>, <span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="doccomment">/// Type of the possible error that might occur when projecting</span>
+    <span class="doccomment">/// the next state.</span>
+    <span class="kw">type</span> <span class="ident">Error</span>;
+
+    <span class="doccomment">/// Updates the next value of the `Projection` using the provided event value.</span>
+    <span class="kw">fn</span> <span class="ident">project</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">event</span>: <span class="ident">Persisted</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">SourceId</span>, <span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "eventually_core";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
