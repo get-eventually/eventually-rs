@@ -1,5 +1,4 @@
 use std::error::Error as StdError;
-use std::fmt::Debug;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
@@ -7,9 +6,9 @@ use eventually_core::projection::Projection;
 use eventually_core::store::{EventStore, Select};
 use eventually_core::subscription::EventSubscriber;
 
-use futures::stream::{Stream, StreamExt, TryStreamExt};
+use futures::stream::{StreamExt, TryStreamExt};
 
-use tokio::sync::watch::{channel, Receiver, Sender};
+use tokio::sync::RwLock;
 
 /// Reusable builder for multiple [`Projector`] instances.
 ///
@@ -29,21 +28,21 @@ impl<Store, Subscriber> ProjectorBuilder<Store, Subscriber> {
         Self { store, subscriber }
     }
 
-    /// Builds a new [`Projector`] for the [`Projection`]
-    /// specified in the function type.
+    /// Builds a new [`Projector`] for the [`Projection`] specified in the function type.
     ///
     /// [`Projector`]: struct.Projector.html
     /// [`Projection`]: ../../../eventually-core/projection/trait.Projection.html
-    pub fn build<P>(&self) -> Projector<P, Store, Subscriber>
+    pub fn build<P>(&self, projection: Arc<RwLock<P>>) -> Projector<P, Store, Subscriber>
     where
         // NOTE: these bounds are required for Projector::run.
-        P: Projection + Debug + Clone,
+        P: Projection,
         Store: EventStore<SourceId = P::SourceId, Event = P::Event>,
         Subscriber: EventSubscriber<SourceId = P::SourceId, Event = P::Event>,
+        <P as Projection>::Error: StdError + Send + Sync + 'static,
         <Store as EventStore>::Error: StdError + Send + Sync + 'static,
         <Subscriber as EventSubscriber>::Error: StdError + Send + Sync + 'static,
     {
-        Projector::new(self.store.clone(), self.subscriber.clone())
+        Projector::new(projection, self.store.clone(), self.subscriber.clone())
     }
 }
 
@@ -68,42 +67,29 @@ pub struct Projector<P, Store, Subscriber>
 where
     P: Projection,
 {
-    tx: Sender<P>,
-    rx: Receiver<P>, // Keep the receiver to be able to clone it in watch().
+    projection: Arc<RwLock<P>>,
     store: Arc<Store>,
     subscriber: Arc<Subscriber>,
-    state: P,
     last_sequence_number: AtomicU32,
-    projection: std::marker::PhantomData<P>,
 }
 
 impl<P, Store, Subscriber> Projector<P, Store, Subscriber>
 where
-    P: Projection + Debug + Clone,
+    P: Projection,
     Store: EventStore<SourceId = P::SourceId, Event = P::Event>,
     Subscriber: EventSubscriber<SourceId = P::SourceId, Event = P::Event>,
     // NOTE: these bounds are needed for anyhow::Error conversion.
+    <P as Projection>::Error: StdError + Send + Sync + 'static,
     <Store as EventStore>::Error: StdError + Send + Sync + 'static,
     <Subscriber as EventSubscriber>::Error: StdError + Send + Sync + 'static,
 {
-    fn new(store: Arc<Store>, subscriber: Arc<Subscriber>) -> Self {
-        let state: P = Default::default();
-        let (tx, rx) = channel(state.clone());
-
+    fn new(projection: Arc<RwLock<P>>, store: Arc<Store>, subscriber: Arc<Subscriber>) -> Self {
         Self {
-            tx,
-            rx,
             store,
             subscriber,
-            state,
+            projection,
             last_sequence_number: Default::default(),
-            projection: std::marker::PhantomData,
         }
-    }
-
-    /// Provides a `Stream` that receives the latest copy of the `Projection` state.
-    pub fn watch(&self) -> impl Stream<Item = P> {
-        self.rx.clone()
     }
 
     /// Starts the update of the `Projection` by processing all the events
@@ -124,32 +110,30 @@ where
         let subscription = self.subscriber.subscribe_all().await?;
         let one_off_stream = self.store.stream_all(Select::All).await?;
 
-        let mut stream = one_off_stream
+        let stream = one_off_stream
             .map_err(anyhow::Error::from)
             .chain(subscription.map_err(anyhow::Error::from));
 
-        while let Some(event) = stream.next().await {
-            let event = event?;
-            let expected_sequence_number = self.last_sequence_number.load(Ordering::SeqCst);
-            let event_sequence_number = event.sequence_number();
+        stream
+            .try_for_each(|event| async {
+                let expected_sequence_number = self.last_sequence_number.load(Ordering::SeqCst);
+                let event_sequence_number = event.sequence_number();
 
-            if event_sequence_number < expected_sequence_number {
-                continue; // Duplicated event detected, let's skip it.
-            }
+                if event_sequence_number < expected_sequence_number {
+                    return Ok(()); // Duplicated event detected, let's skip it.
+                }
 
-            self.state = P::project(self.state.clone(), event);
+                self.projection.write().await.project(event).await?;
 
-            self.last_sequence_number.compare_and_swap(
-                expected_sequence_number,
-                event_sequence_number,
-                Ordering::SeqCst,
-            );
+                self.last_sequence_number.compare_and_swap(
+                    expected_sequence_number,
+                    event_sequence_number,
+                    Ordering::SeqCst,
+                );
 
-            // Notify watchers of the latest projection state.
-            self.tx.broadcast(self.state.clone()).expect(
-                "since this struct holds the original receiver, failures should not happen",
-            );
-        }
+                Ok(())
+            })
+            .await?;
 
         Ok(())
     }

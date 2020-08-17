@@ -2,7 +2,8 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use chrono::{DateTime, Utc};
 
-use futures::{future, future::BoxFuture};
+use futures::future;
+use futures::future::{BoxFuture, FutureExt};
 
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +21,12 @@ pub struct TotalOrdersProjection {
 impl Projection for TotalOrdersProjection {
     type SourceId = String;
     type Event = OrderEvent;
+    type Error = std::convert::Infallible;
 
-    fn project(mut self, event: Persisted<Self::SourceId, Self::Event>) -> Self {
+    fn project<'a>(
+        &'a mut self,
+        event: Persisted<Self::SourceId, Self::Event>,
+    ) -> BoxFuture<'a, Result<(), Self::Error>> {
         match event.take() {
             OrderEvent::Created { .. } => self.created += 1,
             OrderEvent::Completed { .. } => self.completed += 1,
@@ -29,7 +34,7 @@ impl Projection for TotalOrdersProjection {
             _ => (),
         };
 
-        self
+        future::ok(()).boxed()
     }
 }
 

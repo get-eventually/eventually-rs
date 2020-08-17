@@ -7,6 +7,8 @@
 //! [`Projection`]: trait.Projection.html
 //! [`Aggregate`]: ../aggregate/trait.Aggregate.html
 
+use futures::future::BoxFuture;
+
 use crate::store::Persisted;
 
 /// A `Projection` is an optimized read model (or materialized view)
@@ -18,7 +20,7 @@ use crate::store::Persisted;
 ///
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
 /// [`EventStore`]: ../store/trait.EventStore.html
-pub trait Projection: Default {
+pub trait Projection {
     /// Type of the Source id, typically an [`AggregateId`].
     ///
     /// [`AggregateId`]: ../aggregate/type.AggregateId.html
@@ -29,7 +31,13 @@ pub trait Projection: Default {
     /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     type Event;
 
-    /// Updates the next value of the `Projection` using the provided
-    /// event value.
-    fn project(self, event: Persisted<Self::SourceId, Self::Event>) -> Self;
+    /// Type of the possible error that might occur when projecting
+    /// the next state.
+    type Error;
+
+    /// Updates the next value of the `Projection` using the provided event value.
+    fn project<'a>(
+        &'a mut self,
+        event: Persisted<Self::SourceId, Self::Event>,
+    ) -> BoxFuture<'a, Result<(), Self::Error>>;
 }

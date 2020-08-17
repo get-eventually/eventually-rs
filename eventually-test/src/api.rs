@@ -69,7 +69,7 @@ pub(crate) async fn history(req: Request<AppState>) -> Result<Response, Error> {
         .await
         .map_err(Error::from)?
         .try_filter(|event| {
-            futures::future::ready(match from {
+            ready(match from {
                 None => true,
                 Some(from) => event.happened_at() >= &from,
             })
