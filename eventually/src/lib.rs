@@ -36,3 +36,8 @@ pub mod optional {
 pub mod inmemory {
     pub use eventually_util::inmemory::*;
 }
+
+#[cfg(feature = "postgres")]
+pub mod postgres {
+    pub use eventually_postgres::*;
+}
