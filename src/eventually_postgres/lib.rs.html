@@ -442,8 +442,8 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">Expected</span>, <span class="ident">Persisted</span>, <span class="ident">Select</span>};
-<span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateId</span>};
+<span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateId</span>};
+<span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">store</span>::{<span class="ident">AppendError</span>, <span class="ident">EventStream</span>, <span class="ident">Expected</span>, <span class="ident">Persisted</span>, <span class="ident">Select</span>};
 
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">stream</span>::{<span class="ident">StreamExt</span>, <span class="ident">TryStreamExt</span>};
@@ -614,7 +614,7 @@
     <span class="ident">payload</span>: <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">eventually</span>::<span class="ident">EventStore</span> <span class="kw">for</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">eventually_core</span>::<span class="ident">store</span>::<span class="ident">EventStore</span> <span class="kw">for</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="comment">// This bound is for the translation into an anyhow::Error.</span>

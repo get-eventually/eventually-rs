@@ -36,6 +36,11 @@
 <span id="36">36</span>
 <span id="37">37</span>
 <span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{
     <span class="ident">Aggregate</span>, <span class="ident">AggregateExt</span>, <span class="ident">AggregateId</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootBuilder</span>,
@@ -74,6 +79,11 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">inmemory</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">inmemory</span>::<span class="kw-2">*</span>;
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;postgres&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">postgres</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_postgres</span>::<span class="kw-2">*</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "eventually";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
