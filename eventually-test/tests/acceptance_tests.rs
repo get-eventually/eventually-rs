@@ -8,8 +8,10 @@ use envconfig::Envconfig;
 
 use lazy_static::lazy_static;
 
+use reqwest::{Client, Response, StatusCode};
+
 use eventually_test::config::Config;
-use eventually_test::order::Order;
+use eventually_test::order::{Order, OrderItem};
 
 static START: Once = Once::new();
 
@@ -23,35 +25,71 @@ fn setup() {
             let config = Config::init().unwrap();
             SERVER_STARTED.store(true, std::sync::atomic::Ordering::SeqCst);
 
-            smol::run(eventually_test::run(config)).expect("don't fail :(");
+            smol::run(eventually_test::run(config));
         });
     });
 
-    // Busy loading :(
     while !SERVER_STARTED.load(std::sync::atomic::Ordering::SeqCst) {}
 }
 
-#[test]
-fn it_creates_an_order_successfully() {
+#[tokio::test]
+async fn it_creates_an_order_successfully() {
     setup();
 
-    smol::run(async {
-        let url = format!("http://localhost:8080/orders/test/create");
-        let client = reqwest::Client::new();
+    let url = format!("http://localhost:8080/orders/test/create");
+    let client = Client::new();
 
-        let start = Utc::now();
+    let start = Utc::now();
 
-        let root: Order = client
-            .post(&url)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .await
-            .unwrap();
+    let root: Order = client
+        .post(&url)
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
 
-        assert!(root.created_at() >= start);
-        assert!(root.is_editable());
-        assert!(root.items().is_empty());
-    });
+    assert!(root.created_at() >= start);
+    assert!(root.is_editable());
+    assert!(root.items().is_empty());
+
+    // Sending a Create command again will cause the endpoint to return '409 Conflict'.
+    let root: Response = client.post(&url).send().await.unwrap();
+    assert_eq!(StatusCode::CONFLICT, root.status());
+}
+
+#[tokio::test]
+async fn it_adds_items_to_an_order_successfully() {
+    setup();
+
+    let id = "test-add-items";
+    let url = format!("http://localhost:8080/orders/{}/create", id);
+    let client = Client::new();
+
+    let response: Response = client.post(&url).send().await.unwrap();
+
+    assert_eq!(StatusCode::CREATED, response.status());
+
+    let url = format!("http://localhost:8080/orders/{}/add-item", id);
+
+    let item = OrderItem {
+        item_sku: "ITEM-SKU".to_owned(),
+        quantity: 10,
+        price: 5.99,
+    };
+
+    let order: Order = client
+        .post(&url)
+        .json(&item)
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+
+    assert!(order.is_editable());
+    assert_eq!(1, order.items().len());
+    assert_eq!(&item, order.items().first().unwrap());
 }

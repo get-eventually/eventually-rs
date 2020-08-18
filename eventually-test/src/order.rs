@@ -38,7 +38,7 @@ impl Projection for TotalOrdersProjection {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct OrderItem {
     pub item_sku: String,
     pub quantity: u8,

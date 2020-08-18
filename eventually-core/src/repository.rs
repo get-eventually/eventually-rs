@@ -60,9 +60,11 @@ pub type Result<T, A, S> =
 /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
 /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
 /// [`EventStore`]: ../store/trait.EventStore.html
+#[derive(Clone)]
 pub struct Repository<T, Store>
 where
-    T: Aggregate + 'static,
+    T: Aggregate + Clone + 'static,
+    Store: EventStore<SourceId = T::Id, Event = T::Event>,
 {
     builder: AggregateRootBuilder<T>,
     store: Store,
@@ -70,7 +72,7 @@ where
 
 impl<T, Store> Repository<T, Store>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
     Store: EventStore<SourceId = T::Id, Event = T::Event>,
 {
     /// Creates a new `Repository` instance, using the [`Aggregate`]

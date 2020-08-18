@@ -1,8 +1,6 @@
 //! Foundation traits for creating Domain abstractions
 //! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).
 
-use std::sync::Arc;
-
 use futures::future::BoxFuture;
 
 #[cfg(feature = "serde")]
@@ -102,23 +100,26 @@ impl<T> AggregateExt for T where T: Aggregate {}
 ///
 /// [`AggregateRoot`]: struct.AggregateRoot.html
 #[derive(Clone)]
-pub struct AggregateRootBuilder<T> {
-    aggregate: Arc<T>,
+pub struct AggregateRootBuilder<T>
+where
+    T: Aggregate + Clone,
+{
+    aggregate: T,
 }
 
-impl<T> From<Arc<T>> for AggregateRootBuilder<T>
+impl<T> From<T> for AggregateRootBuilder<T>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
 {
     #[inline]
-    fn from(aggregate: Arc<T>) -> Self {
+    fn from(aggregate: T) -> Self {
         Self { aggregate }
     }
 }
 
 impl<T> AggregateRootBuilder<T>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
 {
     /// Builds a new [`AggregateRoot`] instance for the specified Aggregate [`Id`].
     ///
@@ -172,7 +173,7 @@ where
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct AggregateRoot<T>
 where
-    T: Aggregate + 'static,
+    T: Aggregate + Clone + 'static,
 {
     id: T::Id,
     version: u32,
@@ -181,7 +182,7 @@ where
     state: T::State,
 
     #[cfg_attr(feature = "serde", serde(skip_serializing))]
-    aggregate: Arc<T>,
+    aggregate: T,
 
     #[cfg_attr(feature = "serde", serde(skip_serializing))]
     to_commit: Option<Vec<T::Event>>,
@@ -189,7 +190,7 @@ where
 
 impl<T> PartialEq for AggregateRoot<T>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -199,7 +200,7 @@ where
 
 impl<T> Versioned for AggregateRoot<T>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
 {
     #[inline]
     fn version(&self) -> u32 {
@@ -209,7 +210,7 @@ where
 
 impl<T> AggregateRoot<T>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
 {
     /// Returns a reference to the Aggregate [`Id`] that represents
     /// the entity wrapped by this [`AggregateRoot`] instance.
@@ -246,7 +247,7 @@ where
 
 impl<T> AggregateRoot<T>
 where
-    T: Aggregate,
+    T: Aggregate + Clone,
     T::Event: Clone,
     T::State: Clone,
 {

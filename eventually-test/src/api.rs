@@ -104,9 +104,18 @@ pub(crate) async fn get_order(req: Request<AppState>) -> Result<Response, Error>
 pub(crate) async fn create_order(req: Request<AppState>) -> Result<Response, Error> {
     let id: String = req.param("id")?;
 
-    let mut root = req.state().builder.build(id);
+    let mut root = req
+        .state()
+        .repository
+        .read()
+        .await
+        .get(id)
+        .await
+        .map_err(Error::from)?;
 
-    println!("ASD");
+    if root.state().is_some() {
+        return Ok(Response::builder(StatusCode::Conflict).build());
+    }
 
     root.handle(OrderCommand::Create)
         .await

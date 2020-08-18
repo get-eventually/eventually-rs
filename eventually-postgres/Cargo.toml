@@ -21,6 +21,8 @@ tokio-postgres = { version = "0.5", features = ["with-serde_json-1"] }
 thiserror = "1.0"
 refinery = { version = "0.3.0", features = ["tokio-postgres"] }
 anyhow = "1.0.32"
+tokio = { version = "0.2", features = ["sync"] }
 
 [dev-dependencies]
-tokio = { version = "0.2", features = ["sync"] }
+testcontainers = "0.9"
+tokio = { version = "0.2", features = ["sync", "macros"] }
