@@ -155,8 +155,8 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Projector`]: struct.Projector.html</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProjectorBuilder</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> {
-    <span class="ident">store</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>,
-    <span class="ident">subscriber</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Subscriber</span><span class="op">&gt;</span>,
+    <span class="ident">store</span>: <span class="ident">Store</span>,
+    <span class="ident">subscriber</span>: <span class="ident">Subscriber</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> <span class="ident">ProjectorBuilder</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> {
@@ -165,7 +165,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html</span>
     <span class="doccomment">/// [`EventSubscriber`]: ../../../eventually-core/subscription/trait.EventSubscriber.html</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">store</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>, <span class="ident">subscriber</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Subscriber</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">subscriber</span>: <span class="ident">Subscriber</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">store</span>, <span class="ident">subscriber</span> }
     }
 
@@ -177,8 +177,8 @@
     <span class="kw">where</span>
         <span class="comment">// NOTE: these bounds are required for Projector::run.</span>
         <span class="ident">P</span>: <span class="ident">Projection</span>,
-        <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">SourceId</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
-        <span class="ident">Subscriber</span>: <span class="ident">EventSubscriber</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">SourceId</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
+        <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">SourceId</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">Subscriber</span>: <span class="ident">EventSubscriber</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">SourceId</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">P</span>::<span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
         <span class="op">&lt;</span><span class="ident">P</span> <span class="kw">as</span> <span class="ident">Projection</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
         <span class="op">&lt;</span><span class="ident">Store</span> <span class="kw">as</span> <span class="ident">EventStore</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
         <span class="op">&lt;</span><span class="ident">Subscriber</span> <span class="kw">as</span> <span class="ident">EventSubscriber</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
@@ -209,8 +209,8 @@
     <span class="ident">P</span>: <span class="ident">Projection</span>,
 {
     <span class="ident">projection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">store</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>,
-    <span class="ident">subscriber</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Subscriber</span><span class="op">&gt;</span>,
+    <span class="ident">store</span>: <span class="ident">Store</span>,
+    <span class="ident">subscriber</span>: <span class="ident">Subscriber</span>,
     <span class="ident">last_sequence_number</span>: <span class="ident">AtomicU32</span>,
 }
 
@@ -224,7 +224,7 @@
     <span class="op">&lt;</span><span class="ident">Store</span> <span class="kw">as</span> <span class="ident">EventStore</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="op">&lt;</span><span class="ident">Subscriber</span> <span class="kw">as</span> <span class="ident">EventSubscriber</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">projection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">store</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>, <span class="ident">subscriber</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Subscriber</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">projection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">subscriber</span>: <span class="ident">Subscriber</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">store</span>,
             <span class="ident">subscriber</span>,

@@ -76,9 +76,6 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">api</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">config</span>;
@@ -107,16 +104,13 @@
     <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">EventStoreBuilder</span>::<span class="ident">for_aggregate</span>(<span class="kw-2">&amp;</span><span class="ident">aggregate</span>);
 
     <span class="comment">// Builder for all new AggregateRoot instances.</span>
-    <span class="kw">let</span> <span class="ident">aggregate_root_builder</span> <span class="op">=</span> <span class="ident">AggregateRootBuilder</span>::<span class="ident">from</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">aggregate</span>));
+    <span class="kw">let</span> <span class="ident">aggregate_root_builder</span> <span class="op">=</span> <span class="ident">AggregateRootBuilder</span>::<span class="ident">from</span>(<span class="ident">aggregate</span>);
 
     <span class="comment">// Creates a Repository to read and store OrderAggregates.</span>
     <span class="kw">let</span> <span class="ident">repository</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">Repository</span>::<span class="ident">new</span>(
         <span class="ident">aggregate_root_builder</span>.<span class="ident">clone</span>(),
         <span class="ident">store</span>.<span class="ident">clone</span>(),
     )));
-
-    <span class="comment">// Put the store behind an Arc to allow for clone-ness of a single instance.</span>
-    <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">store</span>);
 
     <span class="comment">// Create a new in-memory projection to keep the total orders computed by</span>
     <span class="comment">// the application.</span>

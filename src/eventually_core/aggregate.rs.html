@@ -280,11 +280,10 @@
 <span id="280">280</span>
 <span id="281">281</span>
 <span id="282">282</span>
+<span id="283">283</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Foundation traits for creating Domain abstractions</span>
 <span class="doccomment">//! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).</span>
-
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
 
@@ -385,23 +384,26 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`AggregateRoot`]: struct.AggregateRoot.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">aggregate</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
+{
+    <span class="ident">aggregate</span>: <span class="ident">T</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">aggregate</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">aggregate</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">aggregate</span> }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="doccomment">/// Builds a new [`AggregateRoot`] instance for the specified Aggregate [`Id`].</span>
     <span class="doccomment">///</span>
@@ -455,7 +457,7 @@
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="ident">id</span>: <span class="ident">T</span>::<span class="ident">Id</span>,
     <span class="ident">version</span>: <span class="ident">u32</span>,
@@ -464,7 +466,7 @@
     <span class="ident">state</span>: <span class="ident">T</span>::<span class="ident">State</span>,
 
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip_serializing</span>))]</span>
-    <span class="ident">aggregate</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="ident">aggregate</span>: <span class="ident">T</span>,
 
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip_serializing</span>))]</span>
     <span class="ident">to_commit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -472,7 +474,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
@@ -482,7 +484,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Versioned</span> <span class="kw">for</span> <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
@@ -492,7 +494,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="doccomment">/// Returns a reference to the Aggregate [`Id`] that represents</span>
     <span class="doccomment">/// the entity wrapped by this [`AggregateRoot`] instance.</span>
@@ -529,7 +531,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">Event</span>: <span class="ident">Clone</span>,
     <span class="ident">T</span>::<span class="ident">State</span>: <span class="ident">Clone</span>,
 {

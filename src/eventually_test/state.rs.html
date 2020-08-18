@@ -36,7 +36,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AppState</span> {
-    <span class="kw">pub</span> <span class="ident">store</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">OrderStore</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">store</span>: <span class="ident">OrderStore</span>,
     <span class="kw">pub</span> <span class="ident">builder</span>: <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">OrderAggregate</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">repository</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">OrderRepository</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">total_orders_projection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">order</span>::<span class="ident">TotalOrdersProjection</span><span class="op">&gt;</span><span class="op">&gt;</span>,

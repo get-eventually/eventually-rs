@@ -166,6 +166,8 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Contains the [Repository pattern] implementation for [`AggregateRoot`]</span>
 <span class="doccomment">//! instances.</span>
@@ -229,9 +231,11 @@
 <span class="doccomment">/// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State</span>
 <span class="doccomment">/// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
 <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Repository</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Id</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
 {
     <span class="ident">builder</span>: <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">store</span>: <span class="ident">Store</span>,
@@ -239,7 +243,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span> <span class="ident">Repository</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Id</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Creates a new `Repository` instance, using the [`Aggregate`]</span>
