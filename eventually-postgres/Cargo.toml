@@ -22,3 +22,7 @@ thiserror = "1.0"
 refinery = { version = "0.3.0", features = ["tokio-postgres"] }
 anyhow = "1.0.32"
 tokio = { version = "0.2", features = ["sync"] }
+
+[dev-dependencies]
+testcontainers = "0.9"
+tokio = { version = "0.2", features = ["sync", "macros"] }
