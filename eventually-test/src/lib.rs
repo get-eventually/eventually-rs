@@ -6,7 +6,8 @@ mod state;
 use std::sync::Arc;
 
 use eventually::aggregate::Optional;
-use eventually::inmemory::{EventStoreBuilder, ProjectorBuilder};
+use eventually::inmemory::{EventStoreBuilder, Projector};
+use eventually::subscription::Transient as TransientSubscription;
 use eventually::{AggregateRootBuilder, Repository};
 
 use tokio::sync::RwLock;
@@ -37,9 +38,12 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
     // the application.
     let total_orders_projection = Arc::new(RwLock::new(TotalOrdersProjection::default()));
 
+    // Create an in-memory transient Subscription that starts from the very
+    // beginning of the EventStream.
+    let subscription = TransientSubscription::new(store.clone(), store.clone());
+
     // Create a new Projector for the desired projection.
-    let mut total_orders_projector =
-        ProjectorBuilder::new(store.clone(), store.clone()).build(total_orders_projection.clone());
+    let mut total_orders_projector = Projector::new(total_orders_projection.clone(), subscription);
 
     // Spawn a dedicated coroutine to run the projector.
     //
