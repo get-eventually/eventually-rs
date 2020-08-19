@@ -10,8 +10,9 @@ use futures::stream::{StreamExt, TryStreamExt};
 
 use serde::{Deserialize, Serialize};
 
-use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
+
+use crate::{slice_iter, Params};
 
 /// Embedded migrations module.
 mod embedded {
@@ -171,8 +172,8 @@ impl EventStoreBuilderMigrated {
 /// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Event> {
+    pub(crate) type_name: &'static str,
     client: Arc<Client>,
-    type_name: &'static str,
     id: std::marker::PhantomData<Id>,
     payload: std::marker::PhantomData<Event>,
 }
@@ -321,12 +322,4 @@ where
             })
             .boxed())
     }
-}
-
-type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
-
-#[inline]
-#[allow(trivial_casts)]
-fn slice_iter<'a>(s: Params<'a>) -> impl ExactSizeIterator<Item = &'a dyn ToSql> + 'a {
-    s.iter().map(|s| *s as _)
 }
