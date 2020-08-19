@@ -1,13 +1,12 @@
 [package]
 name = "eventually-test"
-version = "0.4.0"
+version = "0.4.0-alpha.1"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 
 [dependencies]
-eventually = { version = "0.4", path = "../eventually", features = ["full"] }
-# eventually-postgres = { version = "0.1", path = "../eventually-postgres" }
+eventually = { version = "0.4.0-alpha.1", path = "../eventually", features = ["full"] }
 
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.7"
