@@ -13,7 +13,7 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [features]
 default = []
-serde = ["eventually-core/serde", "eventually-util/serde"]
+serde = ["eventually-core/serde"]
 postgres = ["eventually-postgres"]
 full = ["serde", "postgres"]
 
