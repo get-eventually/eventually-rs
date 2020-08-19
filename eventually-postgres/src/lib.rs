@@ -53,8 +53,21 @@
 //! [`eventually`]: https://docs.rs/eventually
 //! [`EventStore`]: struct.EventStore.html
 
-mod store;
-mod subscriber;
+pub mod store;
+pub mod subscriber;
+pub mod subscription;
 
 pub use store::*;
 pub use subscriber::*;
+pub use subscription::*;
+
+use tokio_postgres::types::ToSql;
+
+/// Adapter type for parameters compatible with `tokio_postgres::Client` methods.
+pub(crate) type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
+
+#[inline]
+#[allow(trivial_casts)]
+pub(crate) fn slice_iter<'a>(s: Params<'a>) -> impl ExactSizeIterator<Item = &'a dyn ToSql> + 'a {
+    s.iter().map(|s| *s as _)
+}
