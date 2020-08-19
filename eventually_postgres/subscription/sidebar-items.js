@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Error types returned by a [`Persistent`] Subscription."]],"struct":[["Persistent","[`Subscription`] type with persistent state over a Postgres data source."],["PersistentBuilder","Builder type for multiple [`Persistent`] Subscription instance."]]});

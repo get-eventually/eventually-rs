@@ -76,6 +76,10 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">api</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">config</span>;
@@ -85,7 +89,8 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">aggregate</span>::<span class="ident">Optional</span>;
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">inmemory</span>::{<span class="ident">EventStoreBuilder</span>, <span class="ident">ProjectorBuilder</span>};
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">inmemory</span>::{<span class="ident">EventStoreBuilder</span>, <span class="ident">Projector</span>};
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">subscription</span>::<span class="ident">Transient</span> <span class="kw">as</span> <span class="ident">TransientSubscription</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">AggregateRootBuilder</span>, <span class="ident">Repository</span>};
 
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
@@ -116,9 +121,12 @@
     <span class="comment">// the application.</span>
     <span class="kw">let</span> <span class="ident">total_orders_projection</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">TotalOrdersProjection</span>::<span class="ident">default</span>()));
 
+    <span class="comment">// Create an in-memory transient Subscription that starts from the very</span>
+    <span class="comment">// beginning of the EventStream.</span>
+    <span class="kw">let</span> <span class="ident">subscription</span> <span class="op">=</span> <span class="ident">TransientSubscription</span>::<span class="ident">new</span>(<span class="ident">store</span>.<span class="ident">clone</span>(), <span class="ident">store</span>.<span class="ident">clone</span>());
+
     <span class="comment">// Create a new Projector for the desired projection.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_orders_projector</span> <span class="op">=</span>
-        <span class="ident">ProjectorBuilder</span>::<span class="ident">new</span>(<span class="ident">store</span>.<span class="ident">clone</span>(), <span class="ident">store</span>.<span class="ident">clone</span>()).<span class="ident">build</span>(<span class="ident">total_orders_projection</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_orders_projector</span> <span class="op">=</span> <span class="ident">Projector</span>::<span class="ident">new</span>(<span class="ident">total_orders_projection</span>.<span class="ident">clone</span>(), <span class="ident">subscription</span>);
 
     <span class="comment">// Spawn a dedicated coroutine to run the projector.</span>
     <span class="comment">//</span>
