@@ -7,6 +7,7 @@ use std::ops::Deref;
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::versioning::Versioned;
@@ -187,7 +188,7 @@ pub struct Persisted<SourceId, T> {
     source_id: SourceId,
     version: u32,
     sequence_number: u32,
-    #[serde(flatten)]
+    #[cfg_attr(feature = "serde", serde(flatten))]
     event: T,
 }
 
