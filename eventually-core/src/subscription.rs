@@ -244,9 +244,7 @@ where
 
     fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
         // Checkpointing happens in memory on the atomic sequence number checkpoint.
-        ok({
-            self.last_sequence_number.store(version, Ordering::Relaxed);
-        })
-        .boxed()
+        self.last_sequence_number.store(version, Ordering::Relaxed);
+        ok(()).boxed()
     }
 }
