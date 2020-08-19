@@ -36,6 +36,8 @@ where
 impl<P, S> Projector<P, S>
 where
     P: Projection,
+    <P as Projection>::SourceId: std::fmt::Debug,
+    <P as Projection>::Event: std::fmt::Debug,
     S: Subscription<SourceId = P::SourceId, Event = P::Event>,
     // NOTE: these bounds are needed for anyhow::Error conversion.
     <P as Projection>::Error: StdError + Send + Sync + 'static,
@@ -61,8 +63,16 @@ where
         let mut stream = self.subscription.resume().await?;
 
         while let Some(result) = stream.next().await {
+            println!("Got new event for {}", std::any::type_name::<P>());
+
             let event = result?;
             let sequence_number = event.sequence_number();
+
+            println!(
+                "Project event {} for {}",
+                sequence_number,
+                std::any::type_name::<P>()
+            );
 
             self.projection
                 .write()
@@ -70,6 +80,12 @@ where
                 .project(event)
                 .await
                 .map_err(anyhow::Error::from)?;
+
+            println!(
+                "Update subscription for {} for {}",
+                sequence_number,
+                std::any::type_name::<P>()
+            );
 
             self.subscription
                 .checkpoint(sequence_number)
