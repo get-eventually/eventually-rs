@@ -13,6 +13,7 @@ keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]
 
 [dependencies]
 eventually-core = { version = "0.4.0-alpha.1", path = "../eventually-core", features = ["full"] }
+eventually-util = { version = "0.4.0-alpha.1", path = "../eventually-util" }
 
 futures = "0.3"
 serde = { version = "1.0", features = ["derive"] }

@@ -8,9 +8,8 @@ use std::sync::Arc;
 use eventually::aggregate::Optional;
 use eventually::inmemory::{EventStoreBuilder, Projector};
 use eventually::subscription::Transient as TransientSubscription;
+use eventually::sync::RwLock;
 use eventually::{AggregateRootBuilder, Repository};
-
-use tokio::sync::RwLock;
 
 use crate::config::Config;
 use crate::order::{OrderAggregate, TotalOrdersProjection};
@@ -50,7 +49,7 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
     // The projector will open its own running subscription, on which
     // it will receive all oldest and newest events as they come into the EventStore,
     // and it will progressively update the projection as events arrive.
-    tokio::spawn(async move { total_orders_projector.run().await.expect("should not fail") });
+    eventually::spawn(async move { total_orders_projector.run().await.expect("should not fail") });
 
     // Set up the HTTP router.
     let mut app = tide::new();
