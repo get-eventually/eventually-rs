@@ -25,5 +25,5 @@ tokio = { version = "0.2", features = ["sync", "stream"] }
 tracing = "0.1"
 
 [dev-dependencies]
-testcontainers = "0.9"
+testcontainers = "0.10"
 tokio = { version = "0.2", features = ["sync", "macros"] }
