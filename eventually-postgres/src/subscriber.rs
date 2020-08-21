@@ -70,7 +70,7 @@ where
 
         let mut stream = futures::stream::poll_fn(move |cx| connection.poll_message(cx));
 
-        tokio::spawn(async move {
+        eventually_util::spawn(async move {
             while let Some(event) = stream.next().await {
                 let event = event.expect("subscriber connection failed");
 

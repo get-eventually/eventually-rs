@@ -6,6 +6,7 @@ pub use eventually_core::repository::Repository;
 pub use eventually_core::store::EventStore;
 pub use eventually_core::subscription::EventSubscriber;
 pub use eventually_core::versioning::Versioned;
+pub use eventually_util::spawn;
 
 pub mod aggregate {
     pub use eventually_core::aggregate::*;
@@ -35,6 +36,10 @@ pub mod optional {
 
 pub mod inmemory {
     pub use eventually_util::inmemory::*;
+}
+
+pub mod sync {
+    pub use eventually_util::sync::*;
 }
 
 #[cfg(feature = "postgres")]

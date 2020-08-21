@@ -2,9 +2,8 @@ use std::sync::Arc;
 
 use eventually::inmemory::EventStore;
 use eventually::optional::AsAggregate as Optional;
+use eventually::sync::RwLock;
 use eventually::{AggregateRootBuilder, Repository};
-
-use tokio::sync::RwLock;
 
 use crate::order;
 
