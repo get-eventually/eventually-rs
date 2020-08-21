@@ -105,7 +105,7 @@
 
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">stream</span>::<span class="ident">StreamExt</span>;
 
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
 
 <span class="doccomment">/// A `Projector` manages the state of a single [`Projection`]</span>
 <span class="doccomment">/// by opening a long-running stream of all events coming from the [`EventStore`].</span>

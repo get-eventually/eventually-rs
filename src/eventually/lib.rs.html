@@ -41,6 +41,11 @@
 <span id="41">41</span>
 <span id="42">42</span>
 <span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::{
     <span class="ident">Aggregate</span>, <span class="ident">AggregateExt</span>, <span class="ident">AggregateId</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootBuilder</span>,
@@ -50,6 +55,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">store</span>::<span class="ident">EventStore</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">subscription</span>::<span class="ident">EventSubscriber</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">versioning</span>::<span class="ident">Versioned</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">spawn</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">aggregate</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core</span>::<span class="ident">aggregate</span>::<span class="kw-2">*</span>;
@@ -79,6 +85,10 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">inmemory</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">inmemory</span>::<span class="kw-2">*</span>;
+}
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sync</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_util</span>::<span class="ident">sync</span>::<span class="kw-2">*</span>;
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;postgres&quot;</span>)]</span>

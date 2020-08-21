@@ -221,7 +221,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">stream</span>::<span class="ident">poll_fn</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">cx</span><span class="op">|</span> <span class="ident">connection</span>.<span class="ident">poll_message</span>(<span class="ident">cx</span>));
 
-        <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+        <span class="ident">eventually_util</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="ident">stream</span>.<span class="ident">next</span>().<span class="kw">await</span> {
                 <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">expect</span>(<span class="string">&quot;subscriber connection failed&quot;</span>);
 

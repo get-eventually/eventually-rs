@@ -79,7 +79,6 @@
 <span id="79">79</span>
 <span id="80">80</span>
 <span id="81">81</span>
-<span id="82">82</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">api</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">config</span>;
@@ -91,9 +90,8 @@
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">aggregate</span>::<span class="ident">Optional</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">inmemory</span>::{<span class="ident">EventStoreBuilder</span>, <span class="ident">Projector</span>};
 <span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">subscription</span>::<span class="ident">Transient</span> <span class="kw">as</span> <span class="ident">TransientSubscription</span>;
+<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">AggregateRootBuilder</span>, <span class="ident">Repository</span>};
-
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">RwLock</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">Config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">order</span>::{<span class="ident">OrderAggregate</span>, <span class="ident">TotalOrdersProjection</span>};
@@ -133,7 +131,7 @@
     <span class="comment">// The projector will open its own running subscription, on which</span>
     <span class="comment">// it will receive all oldest and newest events as they come into the EventStore,</span>
     <span class="comment">// and it will progressively update the projection as events arrive.</span>
-    <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> { <span class="ident">total_orders_projector</span>.<span class="ident">run</span>().<span class="kw">await</span>.<span class="ident">expect</span>(<span class="string">&quot;should not fail&quot;</span>) });
+    <span class="ident">eventually</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> { <span class="ident">total_orders_projector</span>.<span class="ident">run</span>().<span class="kw">await</span>.<span class="ident">expect</span>(<span class="string">&quot;should not fail&quot;</span>) });
 
     <span class="comment">// Set up the HTTP router.</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">tide</span>::<span class="ident">new</span>();
