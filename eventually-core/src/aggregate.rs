@@ -1,6 +1,8 @@
 //! Foundation traits for creating Domain abstractions
 //! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).
 
+use std::ops::Deref;
+
 use futures::future::BoxFuture;
 
 #[cfg(feature = "serde")]
@@ -242,6 +244,17 @@ where
     pub(crate) fn with_version(mut self, version: u32) -> Self {
         self.version = version;
         self
+    }
+}
+
+impl<T> Deref for AggregateRoot<T>
+where
+    T: Aggregate,
+{
+    type Target = T::State;
+
+    fn deref(&self) -> &Self::Target {
+        self.state()
     }
 }
 
