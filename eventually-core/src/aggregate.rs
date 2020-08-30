@@ -1,6 +1,8 @@
 //! Foundation traits for creating Domain abstractions
 //! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).
 
+use std::ops::Deref;
+
 use futures::future::BoxFuture;
 
 #[cfg(feature = "serde")]
@@ -102,14 +104,14 @@ impl<T> AggregateExt for T where T: Aggregate {}
 #[derive(Clone)]
 pub struct AggregateRootBuilder<T>
 where
-    T: Aggregate + Clone,
+    T: Aggregate,
 {
     aggregate: T,
 }
 
 impl<T> From<T> for AggregateRootBuilder<T>
 where
-    T: Aggregate + Clone,
+    T: Aggregate,
 {
     #[inline]
     fn from(aggregate: T) -> Self {
@@ -173,7 +175,7 @@ where
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct AggregateRoot<T>
 where
-    T: Aggregate + Clone + 'static,
+    T: Aggregate + 'static,
 {
     id: T::Id,
     version: u32,
@@ -190,7 +192,7 @@ where
 
 impl<T> PartialEq for AggregateRoot<T>
 where
-    T: Aggregate + Clone,
+    T: Aggregate,
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -200,7 +202,7 @@ where
 
 impl<T> Versioned for AggregateRoot<T>
 where
-    T: Aggregate + Clone,
+    T: Aggregate,
 {
     #[inline]
     fn version(&self) -> u32 {
@@ -210,7 +212,7 @@ where
 
 impl<T> AggregateRoot<T>
 where
-    T: Aggregate + Clone,
+    T: Aggregate,
 {
     /// Returns a reference to the Aggregate [`Id`] that represents
     /// the entity wrapped by this [`AggregateRoot`] instance.
@@ -245,9 +247,20 @@ where
     }
 }
 
+impl<T> Deref for AggregateRoot<T>
+where
+    T: Aggregate,
+{
+    type Target = T::State;
+
+    fn deref(&self) -> &Self::Target {
+        self.state()
+    }
+}
+
 impl<T> AggregateRoot<T>
 where
-    T: Aggregate + Clone,
+    T: Aggregate,
     T::Event: Clone,
     T::State: Clone,
 {
