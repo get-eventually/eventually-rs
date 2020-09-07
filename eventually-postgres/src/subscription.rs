@@ -3,7 +3,7 @@
 //!
 //! [`Subscription`]: ../../eventually-core/subscription/trait.Subscription.html
 
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
 use std::fmt::Display;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -143,7 +143,12 @@ where
             //
             // In the initial case, the last_sequence_number
             // would be -1, which will load everything from the start.
-            let checkpoint = (self.last_sequence_number.load(Ordering::Relaxed) as u32) + 1;
+            let checkpoint: u32 = (self.last_sequence_number.load(Ordering::Relaxed) + 1)
+                .try_into()
+                .expect(
+                    "in case of overflow, it means there is a bug in the optimistic versioning code; \\
+                    please open an issue with steps to reproduce the bug"
+                );
 
             tracing::debug!(
                 subscription.checkpoint = checkpoint,
