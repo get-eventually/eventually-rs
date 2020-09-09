@@ -231,7 +231,14 @@ where
                     let event_sequence_number = event.sequence_number();
 
                     if event_sequence_number < expected_sequence_number {
-                        return Ok(None); // Duplicated event detected, let's skip it.
+                        #[cfg(feature = "with-tracing")]
+                        tracing::trace!(
+                            event.sequence_number = event_sequence_number,
+                            subscription.sequence_number = expected_sequence_number,
+                            "Duplicated event detected; skipping"
+                        );
+
+                        return Ok(None);
                     }
 
                     Ok(Some(event))

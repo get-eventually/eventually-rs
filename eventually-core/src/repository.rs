@@ -89,7 +89,7 @@ where
 impl<T, Store> Repository<T, Store>
 where
     T: Aggregate + Clone,
-    T::Id: Clone,
+    T::Id: Debug + Clone,
     T::Event: Clone,
     T::Error: std::error::Error + 'static,
     Store: EventStore<SourceId = T::Id, Event = T::Event>,
@@ -106,6 +106,10 @@ where
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(level = "info", skip(self))
+    )]
     pub async fn get(&self, id: T::Id) -> Result<AggregateRoot<T>, T, Store> {
         self.store
             .stream(id.clone(), Select::All)
@@ -141,6 +145,10 @@ where
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
     /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(level = "info", name = "Repository::add", skip(self, root))
+    )]
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
         let mut version = root.version();
         let events_to_commit = root.take_events_to_commit();
@@ -164,6 +172,10 @@ where
     ///
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     /// [`AggregateId`]: ../aggregate/type.AggregateId.html
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(level = "info", name = "Repository::remove", skip(self))
+    )]
     pub async fn remove(&mut self, id: T::Id) -> Result<(), T, Store> {
         self.store.remove(id).await.map_err(Error::Store)
     }
