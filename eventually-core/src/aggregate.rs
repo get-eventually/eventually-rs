@@ -1,6 +1,7 @@
 //! Foundation traits for creating Domain abstractions
 //! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).
 
+use std::fmt::Debug;
 use std::ops::Deref;
 
 use futures::future::BoxFuture;
@@ -263,6 +264,7 @@ where
     T: Aggregate,
     T::Event: Clone,
     T::State: Clone,
+    T::Command: Debug,
 {
     /// Handles the submitted [`Command`] using the [`Aggregate::handle`] method
     /// and updates the Aggregate [`State`].
@@ -272,6 +274,10 @@ where
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     /// [`Aggregate::handle`]: trait.Aggregate.html#method.handle
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(level = "debug", name = "AggregateRoot::handle", skip(self))
+    )]
     pub async fn handle(&mut self, command: T::Command) -> Result<&mut Self, T::Error> {
         let events = self
             .aggregate

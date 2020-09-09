@@ -5,7 +5,7 @@
 
 use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::Arc;
 
@@ -129,7 +129,7 @@ pub struct Persistent<SourceId, Event> {
 impl<SourceId, Event> Subscription for Persistent<SourceId, Event>
 where
     SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync,
-    Event: Serialize + Clone + Send + Sync,
+    Event: Serialize + Clone + Send + Sync + Debug,
     for<'de> Event: Deserialize<'de>,
     <SourceId as TryFrom<String>>::Error: StdError + Send + Sync + 'static,
 {
@@ -138,19 +138,21 @@ where
     type Error = Error;
 
     fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
-        Box::pin(async move {
+        let fut = async move {
+            let last_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
+
             // Get the next item from the last processed one.
             //
             // In the initial case, the last_sequence_number
             // would be -1, which will load everything from the start.
-            let checkpoint: u32 = (self.last_sequence_number.load(Ordering::Relaxed) + 1)
-                .try_into()
-                .expect(
-                    "in case of overflow, it means there is a bug in the optimistic versioning code; \\
-                    please open an issue with steps to reproduce the bug"
-                );
+            let checkpoint: u32 = (last_sequence_number + 1).try_into().expect(
+                "in case of overflow, it means there is a bug in the optimistic versioning code; \\
+                please open an issue with steps to reproduce the bug",
+            );
 
-            tracing::debug!(
+            #[cfg(feature = "with-tracing")]
+            tracing::trace!(
+                subscription.sequence_number = last_sequence_number,
                 subscription.checkpoint = checkpoint,
                 subscription.name = %self.name,
                 subscription.aggregate_type = %self.store.type_name,
@@ -188,13 +190,14 @@ where
                         self.last_sequence_number.load(Ordering::Relaxed);
 
                     if event_sequence_number <= expected_sequence_number {
-                        tracing::debug!(
+                        #[cfg(feature = "with-tracing")]
+                        tracing::trace!(
                             event.sequence_number = event_sequence_number,
-                            expected = expected_sequence_number,
-                            "Duplicated event detected"
+                            subscription.sequence_number = expected_sequence_number,
+                            "Duplicated event detected; skipping"
                         );
 
-                        return Ok(None); // Duplicated event detected, let's skip it.
+                        return Ok(None);
                     }
 
                     Ok(Some(event))
@@ -202,14 +205,17 @@ where
                 .boxed();
 
             Ok(stream)
-        })
+        };
+
+        Box::pin(fut)
     }
 
     fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
             let params: Params = &[&self.name, &self.store.type_name, &(version as i64)];
 
-            tracing::debug!(
+            #[cfg(feature = "with-tracing")]
+            tracing::trace!(
                 checkpoint = version,
                 subscription.name = %self.name,
                 subscription.aggregate_type = %self.store.type_name,

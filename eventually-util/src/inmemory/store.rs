@@ -1,6 +1,7 @@
 //! Contains supporting entities using an in-memory backend.
 
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::hash::Hash;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
@@ -17,6 +18,9 @@ use futures::stream::{empty, iter, StreamExt, TryStreamExt};
 use parking_lot::RwLock;
 
 use tokio::sync::broadcast::{channel, RecvError, Sender};
+
+#[cfg(feature = "with-tracing")]
+use tracing_futures::Instrument;
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
@@ -38,14 +42,15 @@ impl AppendError for ConflictError {
     }
 }
 
-/// Error returned by the [`EventStore::append`] when a conflict has been detected.
+/// Error returned by the [`EventSubscriber`] when reading elements
+/// from the [`EventStream`] produced by [`subscribe_all`].
 ///
-/// [`EventStore::append`]: trait.EventStore.html#method.append
+/// [`EventSubscriber`]: struct.EventSubscriber.html
+/// [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
+/// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
 #[derive(Debug, thiserror::Error)]
-pub enum SubscriberError {
-    #[error("failed to read event from subscription watch channel: {0}")]
-    ReceiveEvent(#[source] RecvError),
-}
+#[error("failed to read event from subscription watch channel: {0}")]
+pub struct SubscriberError(#[from] RecvError);
 
 /// Builder for [`EventStore`] instances.
 ///
@@ -131,19 +136,14 @@ where
         // with the definition of the EventStream.
         let rx = self.tx.subscribe();
 
-        Box::pin(async move {
-            Ok(rx
-                .into_stream()
-                .map_err(SubscriberError::ReceiveEvent)
-                .boxed())
-        })
+        Box::pin(async move { Ok(rx.into_stream().map_err(SubscriberError).boxed()) })
     }
 }
 
 impl<Id, Event> eventually_core::store::EventStore for EventStore<Id, Event>
 where
-    Id: Hash + Eq + Sync + Send + Clone,
-    Event: Sync + Send + Clone,
+    Id: Hash + Eq + Sync + Send + Debug + Clone,
+    Event: Sync + Send + Debug + Clone,
 {
     type SourceId = Id;
     type Event = Event;
@@ -155,7 +155,15 @@ where
         version: Expected,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<u32, Self::Error>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::append",
+            id = ?id,
+            version = ?version,
+            events = ?events
+        );
+
+        let fut = async move {
             let expected = self
                 .backend
                 .read()
@@ -207,7 +215,12 @@ where
             }
 
             Ok(last_version)
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 
     fn stream(
@@ -215,7 +228,14 @@ where
         id: Self::SourceId,
         select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::stream",
+            id = ?id,
+            select = ?select
+        );
+
+        let fut = async move {
             Ok(self
                 .backend
                 .read()
@@ -232,10 +252,21 @@ where
                     iter(stream).map(Ok).boxed()
                 })
                 .unwrap_or_else(|| empty().boxed()))
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 
     fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::stream_all",
+            select = ?select
+        );
+
         let mut events: Vec<Persisted<Id, Event>> = self
             .backend
             .read()
@@ -251,15 +282,31 @@ where
         // Events must be sorted by the sequence number when using $all.
         events.sort_by(|a, b| a.sequence_number().cmp(&b.sequence_number()));
 
-        Box::pin(futures::future::ok(iter(events).map(Ok).boxed()))
+        let fut = futures::future::ok(iter(events).map(Ok).boxed());
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 
     fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::remove",
+            id = ?id
+        );
+
+        let fut = async move {
             self.backend.write().remove(&id);
 
             Ok(())
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 }
 

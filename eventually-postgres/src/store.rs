@@ -1,5 +1,5 @@
 use std::convert::TryFrom;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::sync::Arc;
 
 use eventually_core::aggregate::{Aggregate, AggregateId};
@@ -11,6 +11,9 @@ use futures::stream::{StreamExt, TryStreamExt};
 use serde::{Deserialize, Serialize};
 
 use tokio_postgres::Client;
+
+#[cfg(feature = "with-tracing")]
+use tracing_futures::Instrument;
 
 use crate::{slice_iter, Params};
 
@@ -86,6 +89,15 @@ pub struct EventStoreBuilder {
 
 impl EventStoreBuilder {
     /// Ensure the database is migrated to the latest version.
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(
+            err,
+            level = "debug",
+            name = "EventStoreBuilder::migrate_database",
+            skip(client)
+        )
+    )]
     pub async fn migrate_database(client: &mut Client) -> anyhow::Result<Self> {
         embedded::migrations::runner().run_async(client).await?;
 
@@ -184,7 +196,7 @@ where
     // This bound is for the translation into an anyhow::Error.
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
     <Id as TryFrom<String>>::Error: Into<anyhow::Error>,
-    Event: Serialize + Send + Sync,
+    Event: Serialize + Send + Sync + Debug,
     for<'de> Event: Deserialize<'de>,
 {
     type SourceId = Id;
@@ -197,7 +209,15 @@ where
         version: Expected,
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<u32>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::append",
+            id = %id,
+            version = ?version,
+            events = ?events
+        );
+
+        let fut = async move {
             let serialized = events
                 .into_iter()
                 .map(serde_json::to_value)
@@ -221,11 +241,23 @@ where
 
             let id: i32 = row.try_get("version")?;
             Ok(id as u32)
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 
     fn stream(&self, id: Self::SourceId, select: Select) -> BoxFuture<Result<EventStream<Self>>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::stream",
+            id = %id,
+            select = ?select,
+        );
+
+        let fut = async move {
             let from = match select {
                 Select::All => 0i32,
                 Select::From(v) => v as i32,
@@ -236,11 +268,22 @@ where
             let params: Params = &[&self.type_name, &id, &from];
 
             self.stream_query(STREAM, params).await
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 
     fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::stream_all",
+            select = ?select
+        );
+
+        let fut = async move {
             let from = match select {
                 Select::All => 0i64,
                 Select::From(v) => v as i64,
@@ -249,21 +292,46 @@ where
             let params: Params = &[&self.type_name, &from];
 
             self.stream_query(STREAM_ALL, params).await
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 
     fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<()>> {
-        Box::pin(async move {
+        #[cfg(feature = "with-tracing")]
+        let span = tracing::info_span!(
+            "EventStore::remove",
+            id = %id,
+        );
+
+        let fut = async move {
             Ok(self
                 .client
                 .execute(REMOVE, &[&self.type_name, &id.to_string()])
                 .await
                 .map(|_| ())?)
-        })
+        };
+
+        #[cfg(feature = "with-tracing")]
+        let fut = fut.instrument(span);
+
+        Box::pin(fut)
     }
 }
 
 impl<Id, Event> EventStore<Id, Event> {
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(
+            err,
+            level = "debug",
+            name = "EventStore::create_aggregate_type",
+            skip(self)
+        )
+    )]
     async fn create_aggregate_type(&self) -> std::result::Result<(), tokio_postgres::Error> {
         let params: Params = &[&self.type_name];
 
@@ -278,7 +346,7 @@ where
     Id: TryFrom<String> + Display + Eq + Send + Sync,
     // This bound is for the translation into an anyhow::Error.
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
-    Event: Serialize + Send + Sync,
+    Event: Serialize + Send + Sync + Debug,
     for<'de> Event: Deserialize<'de>,
 {
     async fn stream_query(&self, query: &str, params: Params<'_>) -> Result<EventStream<'_, Self>> {
