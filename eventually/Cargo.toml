@@ -14,8 +14,11 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 [features]
 default = []
 serde = ["eventually-core/serde"]
+# TODO: is there a way to exclude eventually-postgres/with-tracing if postgres
+# hasn't been specified in features?
+tracing = ["eventually-core/with-tracing", "eventually-util/with-tracing", "eventually-postgres/with-tracing"]
 postgres = ["eventually-postgres"]
-full = ["serde", "postgres"]
+full = ["serde", "tracing", "postgres"]
 
 [dependencies]
 eventually-core = { version = "0.4.0-alpha.1", path = "../eventually-core" }
