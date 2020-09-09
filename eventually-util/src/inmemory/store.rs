@@ -38,14 +38,15 @@ impl AppendError for ConflictError {
     }
 }
 
-/// Error returned by the [`EventStore::append`] when a conflict has been detected.
+/// Error returned by the [`EventSubscriber`] when reading elements
+/// from the [`EventStream`] produced by [`subscribe_all`].
 ///
-/// [`EventStore::append`]: trait.EventStore.html#method.append
+/// [`EventSubscriber`]: struct.EventSubscriber.html
+/// [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
+/// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
 #[derive(Debug, thiserror::Error)]
-pub enum SubscriberError {
-    #[error("failed to read event from subscription watch channel: {0}")]
-    ReceiveEvent(#[source] RecvError),
-}
+#[error("failed to read event from subscription watch channel: {0}")]
+pub struct SubscriberError(#[from] RecvError);
 
 /// Builder for [`EventStore`] instances.
 ///
@@ -131,12 +132,7 @@ where
         // with the definition of the EventStream.
         let rx = self.tx.subscribe();
 
-        Box::pin(async move {
-            Ok(rx
-                .into_stream()
-                .map_err(SubscriberError::ReceiveEvent)
-                .boxed())
-        })
+        Box::pin(async move { Ok(rx.into_stream().map_err(SubscriberError).boxed()) })
     }
 }
 
