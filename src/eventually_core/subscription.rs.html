@@ -248,6 +248,13 @@
 <span id="248">248</span>
 <span id="249">249</span>
 <span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Module for creating and managing long-running Subscriptions</span>
 <span class="doccomment">//! to incoming events in the [`EventStore`].</span>
@@ -482,7 +489,14 @@
                     <span class="kw">let</span> <span class="ident">event_sequence_number</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">sequence_number</span>();
 
                     <span class="kw">if</span> <span class="ident">event_sequence_number</span> <span class="op">&lt;</span> <span class="ident">expected_sequence_number</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>); <span class="comment">// Duplicated event detected, let&#39;s skip it.</span>
+                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;with-tracing&quot;</span>)]</span>
+                        <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(
+                            <span class="ident">event</span>.<span class="ident">sequence_number</span> <span class="op">=</span> <span class="ident">event_sequence_number</span>,
+                            <span class="ident">subscription</span>.<span class="ident">sequence_number</span> <span class="op">=</span> <span class="ident">expected_sequence_number</span>,
+                            <span class="string">&quot;Duplicated event detected; skipping&quot;</span>
+                        );
+
+                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                     }
 
                     <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">event</span>))
