@@ -108,7 +108,7 @@ where
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     #[cfg_attr(
         feature = "with-tracing",
-        tracing::instrument(level = "info", skip(self))
+        tracing::instrument(level = "info", name = "Repository::get", skip(self))
     )]
     pub async fn get(&self, id: T::Id) -> Result<AggregateRoot<T>, T, Store> {
         self.store

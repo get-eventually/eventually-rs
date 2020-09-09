@@ -56,7 +56,7 @@ Add `eventually` into your project dependencies:
 
 ```toml
 [dependencies]
-eventually = { version = "0.4.0-alpha.1", features = ["full"] }
+eventually = { version = "0.4.0-alpha.3", features = ["full"] }
 ```
 
 Check out [`eventually-test`](eventually-test) crate to see how to use the different

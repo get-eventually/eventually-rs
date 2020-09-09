@@ -1,7 +1,7 @@
 [package]
 name = "eventually"
 description = "Crate for using Event Sourcing in Rust applications"
-version = "0.4.0-alpha.1"
+version = "0.4.0-alpha.3"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
@@ -21,9 +21,9 @@ postgres = ["eventually-postgres"]
 full = ["serde", "tracing", "postgres"]
 
 [dependencies]
-eventually-core = { version = "0.4.0-alpha.1", path = "../eventually-core" }
-eventually-util = { version = "0.4.0-alpha.1", path = "../eventually-util" }
-eventually-postgres = { version = "0.2.0-alpha.1", path = "../eventually-postgres", optional = true }
+eventually-core = { version = "0.4.0-alpha.3", path = "../eventually-core" }
+eventually-util = { version = "0.4.0-alpha.3", path = "../eventually-util" }
+eventually-postgres = { version = "0.2.0-alpha.3", path = "../eventually-postgres", optional = true }
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }
