@@ -11,9 +11,14 @@ repository = "https://github.com/ar3s3ru/eventually-rs"
 categories = ["web-programming", "asynchronous"]
 keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]
 
+[features]
+default = []
+with-tracing = ["tracing", "tracing-futures"]
+full = ["with-tracing"]
+
 [dependencies]
-eventually-core = { version = "0.4.0-alpha.1", path = "../eventually-core", features = ["full"] }
-eventually-util = { version = "0.4.0-alpha.1", path = "../eventually-util" }
+eventually-core = { version = "0.4.0-alpha.1", path = "../eventually-core", features = ["serde"] }
+eventually-util = { version = "0.4.0-alpha.1", path = "../eventually-util", features = ["serde"] }
 
 futures = "0.3"
 serde = { version = "1.0", features = ["derive"] }
@@ -23,7 +28,8 @@ thiserror = "1.0"
 refinery = { version = "0.3.0", features = ["tokio-postgres"] }
 anyhow = "1.0.32"
 tokio = { version = "0.2", features = ["sync", "stream"] }
-tracing = "0.1"
+tracing = { version = "0.1", optional = true }
+tracing-futures = { version = "0.2", optional = true }
 
 [dev-dependencies]
 testcontainers = "0.10"
