@@ -291,7 +291,7 @@
     <span class="doccomment">/// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(
         <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;with-tracing&quot;</span>,
-        <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;info&quot;</span>, <span class="ident">skip</span>(<span class="self">self</span>))
+        <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;info&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;Repository::get&quot;</span>, <span class="ident">skip</span>(<span class="self">self</span>))
     )]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">T</span>::<span class="ident">Id</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T</span>, <span class="ident">Store</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">store</span>
