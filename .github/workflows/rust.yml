@@ -48,7 +48,7 @@ jobs:
           flags: unit
 
       - name: Archive code coverage results
-        uses: actions/upload-artifact@v2.1.4
+        uses: actions/upload-artifact@v2.2.0
         with:
           name: code-coverage-report
           path: cobertura.xml
