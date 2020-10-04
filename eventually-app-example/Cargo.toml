@@ -6,7 +6,7 @@ authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 
 [dependencies]
-eventually = { version = "0.4.0-alpha.3", path = "../eventually", features = ["full"] }
+eventually = { version = "0.4.0", path = "../eventually", features = ["full"] }
 
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.7"

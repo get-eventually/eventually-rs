@@ -85,7 +85,7 @@ Add `eventually` into your project dependencies:
 
 ```toml
 [dependencies]
-eventually = { version = "0.4.0-alpha.3", features = ["full"] }
+eventually = { version = "0.4.0", features = ["full"] }
 ```
 
 ### Note on semantic versioning
