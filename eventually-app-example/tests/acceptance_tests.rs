@@ -8,8 +8,8 @@ use envconfig::Envconfig;
 
 use lazy_static::lazy_static;
 
-use eventually_test::config::Config;
-use eventually_test::order::Order;
+use eventually_app_example::config::Config;
+use eventually_app_example::order::Order;
 
 static START: Once = Once::new();
 
@@ -23,7 +23,7 @@ fn setup() {
             let config = Config::init().unwrap();
             SERVER_STARTED.store(true, std::sync::atomic::Ordering::SeqCst);
 
-            smol::run(eventually_test::run(config)).expect("don't fail :(");
+            smol::run(eventually_app_example::run(config)).expect("don't fail :(");
         });
     });
 

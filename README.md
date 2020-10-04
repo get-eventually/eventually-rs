@@ -1,4 +1,11 @@
-<h1 align="center">Eventually</h1>
+<br />
+
+<div align="center">
+    <img alt="Eventually" src = "./resources/logo.png" width = 300>
+</div>
+
+<br />
+
 <div align="center">
     <strong>
         Event Sourcing for Rust
@@ -50,7 +57,29 @@
 
 Collection of traits and other utilities to help you build your Event-sourced applications in Rust.
 
-## Usage
+## What is Event Sourcing?
+
+Before diving into the crate's internals,you might be wondering what
+Event Sourcing is.
+
+From eventstore.com introduction:
+
+>Event Sourcing is an architectural pattern that is gaining popularity as a method for building modern systems. Unlike traditional databases which only store and update the current state of data, event-sourced systems store all changes as an immutable series of events in the order that they occurred and current state is derived from that event log.
+
+## How does `eventually` support Event Sourcing?
+
+`eventually` exposes all the necessary abstraction to model your
+Doman Entities (in lingo, _Aggregates_) using Domain Events, and
+to save these Events using an _Event Store_ (the append-only event log).
+
+For more information, [check out the crate documentation](https://docs.rs/eventually).
+
+You can also take a look at [`eventually-app-example`](./eventually-app-example),
+showcasing an example event-sourced microservice using HTTP transport layer.
+
+All other questions are more than welcome on our [Gitter chat](https://gitter.im/eventually-rs/community).
+
+## Installation
 
 Add `eventually` into your project dependencies:
 
@@ -59,22 +88,7 @@ Add `eventually` into your project dependencies:
 eventually = { version = "0.4.0-alpha.3", features = ["full"] }
 ```
 
-Check out [`eventually-test`](eventually-test) crate to see how to use the different
-components offered by the crate.
-
-## Project Layout
-
-Eventually is a workspace containing different sub-crates, as follows:
-
-* [`eventually`](eventually): crate containing the public API -- users should only depend on this crate,
-* [`eventually-core`](eventually-core): contains foundation traits and types to use Event Sourcing,
-* [`eventually-util`](eventually-util): contains set of extensions built on top
-of the foundation traits contained in the core crate,
-* [`eventually-postgres`](eventually-postgres): contains a PostgreSQL-backed Event Store implementation, to permanently store Domain Events,
-* [`eventually-test`](eventually-test): contains an _HTTP service_ example application build using `eventually` and [`tide`](https://github.com/http-rs/tide).
-
-
-## Versioning
+### Note on semantic versioning
 
 This library is **actively being developed**, and prior to `v1` release the following [Semantic versioning]()
 is being adopted:
