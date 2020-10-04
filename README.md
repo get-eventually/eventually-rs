@@ -1,4 +1,11 @@
-<h1 align="center">Eventually</h1>
+<br />
+
+<div align="center">
+    <img alt="Eventually" src = "./resources/logo.png" width = 300>
+</div>
+
+<br />
+
 <div align="center">
     <strong>
         Event Sourcing for Rust
