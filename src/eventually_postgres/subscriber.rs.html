@@ -148,7 +148,21 @@
 <span id="148">148</span>
 <span id="149">149</span>
 <span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! Contains an [`EventSubscriber`] implementation using PostgreSQL</span>
+<span class="doccomment">//! as a backend data store and `NOTIFY`/`LISTEN` functionality</span>
+<span class="doccomment">//! to power the [`EventStream`].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`EventSubscriber`]: ../../eventually-core/subscription/trait.EventSubscriber.html</span>
+<span class="doccomment">//! [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html</span>
+
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;

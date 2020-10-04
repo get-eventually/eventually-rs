@@ -255,6 +255,7 @@
 <span id="255">255</span>
 <span id="256">256</span>
 <span id="257">257</span>
+<span id="258">258</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Module for creating and managing long-running Subscriptions</span>
 <span class="doccomment">//! to incoming events in the [`EventStore`].</span>
@@ -341,6 +342,7 @@
 <span class="doccomment">/// keeps a record of the latest message processed by itself using [`checkpoint`],</span>
 <span class="doccomment">/// and can resume working from such message by using the [`resume`].</span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
 <span class="doccomment">/// [`resume`]: trait.Subscription.html#method.resume</span>
 <span class="doccomment">/// [`checkpoint`]: trait.Subscription.html#method.checkpoint</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Subscription</span> {
@@ -361,7 +363,7 @@
     <span class="doccomment">/// Resumes the current state of a `Subscription` by returning the [`EventStream`],</span>
     <span class="doccomment">/// starting from the last event processed by the `Subscription`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`EventStream`]: trait.EventStream.html</span>
+    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
     <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Saves the provided version (or sequence number) as the latest</span>
