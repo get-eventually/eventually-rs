@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 mod api;
 pub mod config;
 pub mod order;
