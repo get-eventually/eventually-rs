@@ -40,13 +40,15 @@ pub enum Error {
     #[error("error detected while reading one-off event stream from the store: {0}")]
     Store(#[source] EventStoreError),
 
-    // Error variant returned when the cause of the error is produced
+    /// Error variant returned when the cause of the error is produced
     /// by the [`EventSubscriber`] during the Subscription stream.
     ///
     /// [`EventSubscriber`]: ../store/struct.EventSubscriber.html
     #[error("error detected while reading catch-up event stream from the subscription: {0}")]
     Subscriber(#[source] DeserializeError),
 
+    /// Error variant returned when an issue has occurred during the checkpoint
+    /// of a processed event.
     #[error("failed to checkpoint persistent subscription version: {0}")]
     Checkpoint(#[source] tokio_postgres::Error),
 }

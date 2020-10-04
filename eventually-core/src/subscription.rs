@@ -83,6 +83,7 @@ pub type SubscriptionStream<'a, S> = BoxStream<
 /// keeps a record of the latest message processed by itself using [`checkpoint`],
 /// and can resume working from such message by using the [`resume`].
 ///
+/// [`EventStream`]: type.EventStream.html
 /// [`resume`]: trait.Subscription.html#method.resume
 /// [`checkpoint`]: trait.Subscription.html#method.checkpoint
 pub trait Subscription {
@@ -103,7 +104,7 @@ pub trait Subscription {
     /// Resumes the current state of a `Subscription` by returning the [`EventStream`],
     /// starting from the last event processed by the `Subscription`.
     ///
-    /// [`EventStream`]: trait.EventStream.html
+    /// [`EventStream`]: type.EventStream.html
     fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>>;
 
     /// Saves the provided version (or sequence number) as the latest
