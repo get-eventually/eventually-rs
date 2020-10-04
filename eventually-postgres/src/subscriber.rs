@@ -1,3 +1,10 @@
+//! Contains an [`EventSubscriber`] implementation using PostgreSQL
+//! as a backend data store and `NOTIFY`/`LISTEN` functionality
+//! to power the [`EventStream`].
+//!
+//! [`EventSubscriber`]: ../../eventually-core/subscription/trait.EventSubscriber.html
+//! [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
+
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::sync::Arc;

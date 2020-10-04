@@ -1,3 +1,8 @@
+//! Contains an [`EventStore`] implementation using PostgreSQL
+//! as a backend data store.
+//!
+//! [`EventStore`]: ../../eventually-core/store/trait.EventStore.html
+
 use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 use std::sync::Arc;
