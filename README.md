@@ -59,17 +59,16 @@ Collection of traits and other utilities to help you build your Event-sourced ap
 
 ## What is Event Sourcing?
 
-Before diving into the crate's internals,you might be wondering what
-Event Sourcing is.
+Before diving into the crate's internals, you may be wondering what Event Sourcing is.
 
-From eventstore.com introduction:
+From [eventstore.com](https://eventstore.com/) introduction:
 
 >Event Sourcing is an architectural pattern that is gaining popularity as a method for building modern systems. Unlike traditional databases which only store and update the current state of data, event-sourced systems store all changes as an immutable series of events in the order that they occurred and current state is derived from that event log.
 
 ## How does `eventually` support Event Sourcing?
 
 `eventually` exposes all the necessary abstraction to model your
-Doman Entities (in lingo, _Aggregates_) using Domain Events, and
+Domain Entities (in lingo, _Aggregates_) using Domain Events, and
 to save these Events using an _Event Store_ (the append-only event log).
 
 For more information, [check out the crate documentation](https://docs.rs/eventually).
