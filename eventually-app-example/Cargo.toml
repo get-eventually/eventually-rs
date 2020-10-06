@@ -10,7 +10,7 @@ eventually = { version = "0.4.0", path = "../eventually", features = ["full"] }
 
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.7"
-envconfig = "0.8"
+envconfig = "0.9"
 envconfig_derive = "0.8"
 futures = "0.3"
 log = "0.4"
