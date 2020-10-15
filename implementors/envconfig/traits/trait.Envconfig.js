@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["eventually_app_example"] = [{"text":"impl Envconfig for <a class=\"struct\" href=\"eventually_app_example/config/struct.Config.html\" title=\"struct eventually_app_example::config::Config\">Config</a>","synthetic":false,"types":["eventually_app_example::config::Config"]}];
+implementors["eventually_app_example"] = [{"text":"impl Envconfig for Config","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `eventually-app-example/src/order.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>order.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../eventually_app_example/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `eventually-app-example/src/order.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>order.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../eventually_app_example/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -299,12 +300,12 @@
     <span class="kw">fn</span> <span class="ident">project</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">event</span>: <span class="ident">Persisted</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">SourceId</span>, <span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;&gt;</span> {
         <span class="kw">match</span> <span class="ident">event</span>.<span class="ident">take</span>() {
-            <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">created</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>,
-            <span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">completed</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>,
-            <span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">cancelled</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
+            <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { .. } <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">created</span> <span class="op">+=</span> <span class="number">1</span>,
+            <span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { .. } <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">completed</span> <span class="op">+=</span> <span class="number">1</span>,
+            <span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { .. } <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">cancelled</span> <span class="op">+=</span> <span class="number">1</span>,
+            <span class="kw">_</span> <span class="op">=&gt;</span> (),
         };
 
         <span class="ident">future</span>::<span class="ident">ok</span>(()).<span class="ident">boxed</span>()
@@ -320,26 +321,26 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OrderItems</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span>);
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">OrderItems</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;&gt;</span> <span class="kw">for</span> <span class="ident">OrderItems</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="ident">OrderItems</span>(<span class="ident">value</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">OrderItems</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">OrderItems</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">OrderItems</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="ident">value</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">OrderItems</span> {
-    <span class="kw">fn</span> <span class="ident">insert_or_merge</span>(<span class="self">self</span>, <span class="ident">item</span>: <span class="ident">OrderItem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">insert_or_merge</span>(<span class="self">self</span>, <span class="ident">item</span>: <span class="ident">OrderItem</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into</span>();
 
         <span class="ident">list</span>.<span class="ident">iter_mut</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">item_sku</span> <span class="op">=</span><span class="op">=</span> <span class="ident">it</span>.<span class="ident">item_sku</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">it</span>.<span class="ident">quantity</span> <span class="op">+</span><span class="op">=</span> <span class="ident">item</span>.<span class="ident">quantity</span>)
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">item</span>)));
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">item_sku</span> <span class="op">==</span> <span class="ident">it</span>.<span class="ident">item_sku</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">it</span><span class="op">|</span> <span class="ident">it</span>.<span class="ident">quantity</span> <span class="op">+=</span> <span class="ident">item</span>.<span class="ident">quantity</span>)
+            .<span class="ident">or_else</span>(<span class="op">||</span> <span class="prelude-val">Some</span>(<span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">item</span>)));
 
         <span class="ident">OrderItems</span>::<span class="ident">from</span>(<span class="ident">list</span>)
     }
@@ -363,19 +364,19 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Order</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">created_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">created_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">created_at</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">items</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">items</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">items</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">OrderState</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">OrderState</span> {
         <span class="self">self</span>.<span class="ident">state</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_editable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_editable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">OrderState</span>::<span class="ident">Editable</span> { .. } <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span> {
             <span class="kw">return</span> <span class="bool-val">true</span>;
         }
@@ -402,12 +403,12 @@
 }
 
 <span class="kw">impl</span> <span class="ident">OrderEvent</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">happened_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">happened_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { <span class="ident">at</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">at</span>,
-            <span class="ident">OrderEvent</span>::<span class="ident">ItemAdded</span> { <span class="ident">at</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">at</span>,
-            <span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { <span class="ident">at</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">at</span>,
-            <span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { <span class="ident">at</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">at</span>,
+            <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { <span class="ident">at</span>, .. } <span class="op">=&gt;</span> <span class="ident">at</span>,
+            <span class="ident">OrderEvent</span>::<span class="ident">ItemAdded</span> { <span class="ident">at</span>, .. } <span class="op">=&gt;</span> <span class="ident">at</span>,
+            <span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { <span class="ident">at</span>, .. } <span class="op">=&gt;</span> <span class="ident">at</span>,
+            <span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { <span class="ident">at</span>, .. } <span class="op">=&gt;</span> <span class="ident">at</span>,
         }
     }
 }
@@ -422,13 +423,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">OrderError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FmtResult</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">FmtResult</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">OrderError</span>::<span class="ident">AlreadyCreated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has already been created&quot;</span>),
-            <span class="ident">OrderError</span>::<span class="ident">NotYetCreated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has not been created yet&quot;</span>),
-            <span class="ident">OrderError</span>::<span class="ident">NotEditable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order can&#39;t be edited anymore&quot;</span>),
-            <span class="ident">OrderError</span>::<span class="ident">AlreadyCancelled</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has already been cancelled&quot;</span>),
-            <span class="ident">OrderError</span>::<span class="ident">AlreadyCompleted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has already been completed&quot;</span>),
+            <span class="ident">OrderError</span>::<span class="ident">AlreadyCreated</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has already been created&quot;</span>),
+            <span class="ident">OrderError</span>::<span class="ident">NotYetCreated</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has not been created yet&quot;</span>),
+            <span class="ident">OrderError</span>::<span class="ident">NotEditable</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order can&#39;t be edited anymore&quot;</span>),
+            <span class="ident">OrderError</span>::<span class="ident">AlreadyCancelled</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has already been cancelled&quot;</span>),
+            <span class="ident">OrderError</span>::<span class="ident">AlreadyCompleted</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;order has already been completed&quot;</span>),
         }
     }
 }
@@ -444,7 +445,7 @@
     <span class="kw">type</span> <span class="ident">Command</span> <span class="op">=</span> <span class="ident">OrderCommand</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">OrderError</span>;
 
-    <span class="kw">fn</span> <span class="ident">apply_first</span>(<span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">apply_first</span>(<span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { <span class="ident">id</span>, <span class="ident">at</span> } <span class="op">=</span> <span class="ident">event</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Order</span> {
                 <span class="ident">id</span>,
@@ -457,11 +458,11 @@
         <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">NotYetCreated</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">apply_next</span>(<span class="kw-2">mut</span> <span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">apply_next</span>(<span class="kw-2">mut</span> <span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">AlreadyCreated</span>),
+            <span class="ident">OrderEvent</span>::<span class="ident">Created</span> { .. } <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">AlreadyCreated</span>),
 
-            <span class="ident">OrderEvent</span>::<span class="ident">ItemAdded</span> { <span class="ident">item</span>, <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">OrderEvent</span>::<span class="ident">ItemAdded</span> { <span class="ident">item</span>, <span class="ident">at</span> } <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">OrderState</span>::<span class="ident">Editable</span> { .. } <span class="op">=</span> <span class="ident">state</span>.<span class="ident">state</span> {
                     <span class="ident">state</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">OrderState</span>::<span class="ident">Editable</span> { <span class="ident">updated_at</span>: <span class="ident">at</span> };
                     <span class="ident">state</span>.<span class="ident">items</span> <span class="op">=</span> <span class="ident">OrderItems</span>::<span class="ident">from</span>(<span class="ident">state</span>.<span class="ident">items</span>).<span class="ident">insert_or_merge</span>(<span class="ident">item</span>).<span class="ident">into</span>();
@@ -471,7 +472,7 @@
                 <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">NotEditable</span>)
             }
 
-            <span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { <span class="ident">at</span> } <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">OrderState</span>::<span class="ident">Complete</span> { .. } <span class="op">=</span> <span class="ident">state</span>.<span class="ident">state</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">AlreadyCompleted</span>);
                 }
@@ -484,7 +485,7 @@
                 <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">NotEditable</span>)
             }
 
-            <span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { <span class="ident">at</span> } <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">OrderState</span>::<span class="ident">Cancelled</span> { .. } <span class="op">=</span> <span class="ident">state</span>.<span class="ident">state</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">OrderError</span>::<span class="ident">AlreadyCancelled</span>);
                 }
@@ -503,7 +504,7 @@
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span>::<span class="ident">Id</span>,
         <span class="ident">command</span>: <span class="self">Self</span>::<span class="ident">Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
+    ) <span class="op">-&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
@@ -524,20 +525,20 @@
         <span class="ident">_id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span>::<span class="ident">Id</span>,
         <span class="ident">_state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span>::<span class="ident">State</span>,
         <span class="ident">command</span>: <span class="self">Self</span>::<span class="ident">Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
+    ) <span class="op">-&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
         <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="kw">match</span> <span class="ident">command</span> {
-            <span class="ident">OrderCommand</span>::<span class="ident">Create</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">future</span>::<span class="ident">err</span>(<span class="ident">OrderError</span>::<span class="ident">AlreadyCreated</span>),
-            <span class="ident">OrderCommand</span>::<span class="ident">AddItem</span> { <span class="ident">item</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">future</span>::<span class="ident">ok</span>(<span class="prelude-val">Some</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">OrderEvent</span>::<span class="ident">ItemAdded</span> {
+            <span class="ident">OrderCommand</span>::<span class="ident">Create</span> <span class="op">=&gt;</span> <span class="ident">future</span>::<span class="ident">err</span>(<span class="ident">OrderError</span>::<span class="ident">AlreadyCreated</span>),
+            <span class="ident">OrderCommand</span>::<span class="ident">AddItem</span> { <span class="ident">item</span> } <span class="op">=&gt;</span> <span class="ident">future</span>::<span class="ident">ok</span>(<span class="prelude-val">Some</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">OrderEvent</span>::<span class="ident">ItemAdded</span> {
                 <span class="ident">item</span>,
                 <span class="ident">at</span>: <span class="ident">Utc</span>::<span class="ident">now</span>(),
             }])),
-            <span class="ident">OrderCommand</span>::<span class="ident">Complete</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">OrderCommand</span>::<span class="ident">Complete</span> <span class="op">=&gt;</span> {
                 <span class="ident">future</span>::<span class="ident">ok</span>(<span class="prelude-val">Some</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">OrderEvent</span>::<span class="ident">Completed</span> { <span class="ident">at</span>: <span class="ident">Utc</span>::<span class="ident">now</span>() }]))
             }
-            <span class="ident">OrderCommand</span>::<span class="ident">Cancel</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">OrderCommand</span>::<span class="ident">Cancel</span> <span class="op">=&gt;</span> {
                 <span class="ident">future</span>::<span class="ident">ok</span>(<span class="prelude-val">Some</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">OrderEvent</span>::<span class="ident">Cancelled</span> { <span class="ident">at</span>: <span class="ident">Utc</span>::<span class="ident">now</span>() }]))
             }
         })

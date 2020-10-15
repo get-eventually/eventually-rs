@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["eventually_app_example"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/projection/trait.Projection.html\" title=\"trait eventually_core::projection::Projection\">Projection</a> for <a class=\"struct\" href=\"eventually_app_example/order/struct.TotalOrdersProjection.html\" title=\"struct eventually_app_example::order::TotalOrdersProjection\">TotalOrdersProjection</a>","synthetic":false,"types":["eventually_app_example::order::TotalOrdersProjection"]}];
+implementors["eventually_app_example"] = [{"text":"impl Projection for TotalOrdersProjection","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
