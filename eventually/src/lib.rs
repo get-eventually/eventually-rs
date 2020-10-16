@@ -411,6 +411,82 @@ pub mod sync {
 #[cfg(feature = "postgres")]
 pub mod postgres {
     //! Module containing Event Store support using PostgreSQL backend.
+    //!
+    //! ## Event Store
+    //!
+    //! The module contains an [`eventually::EventStore`] trait implementation
+    //! by using an [`EventStore`] instance.
+    //!
+    //! In order to create an [`EventStore`] instance, you need to use
+    //! the [`EventStoreBuilder`] object.
+    //!
+    //! Here you can find a complete example on how to initialize the
+    //! [`EventStore`], ready to be used in an [`eventually::Repository`] instance:
+    //!
+    //! ```no_run
+    //! # use std::sync::Arc;
+    //! # use eventually_postgres::EventStoreBuilder;
+    //! #
+    //! # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
+    //! // Open a connection with Postgres.
+    //! let (mut client, connection) =
+    //!     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
+    //!         .await
+    //!         .map_err(|err| {
+    //!             eprintln!("failed to connect to Postgres: {}", err);
+    //!             err
+    //!         })?;
+    //!
+    //! // The connection, responsible for the actual IO, must be handled by a different
+    //! // execution context.
+    //! //
+    //! // NOTE: if this connection fails with Err(e), then the application
+    //! // can't read nor write from the database anymore.
+    //! tokio::spawn(async move {
+    //!     if let Err(e) = connection.await {
+    //!         eprintln!("connection error: {}", e);
+    //!     }
+    //! });
+    //!
+    //! // A domain event example -- it is deliberately simple.
+    //! #[derive(Debug, Clone)]
+    //! struct SomeEvent;
+    //!
+    //! // Use an EventStoreBuilder to build multiple EventStore instances.
+    //! //
+    //! // The only way to get an EventStoreBuilder instance is to use
+    //! // migrate_database, to ensure the database schemas used by Eventually
+    //! // are using the latest versions.
+    //! let builder = EventStoreBuilder::migrate_database(&mut client)
+    //!     .await?
+    //!     // To build an EventStore instance, the client must be wrapped
+    //!     // around an Arc in order to be shared among multiple threads.
+    //!     .builder(Arc::new(client));
+    //!
+    //! // Event store for the events.
+    //! //
+    //! // When building an new EventStore instance, a type name is always needed
+    //! // to distinguish between different aggregates.
+    //! //
+    //! // You can also use std::any::type_name for that.
+    //! let store = builder.build::<String, SomeEvent>("aggregate-name").await?;
+    //!
+    //! # Ok(())
+    //! # }
+    //! ```
+    //!
+    //! ## Subscribing to Events
+    //!
+    //! In order to subscribe to committed events and to run projections,
+    //! the module exposes an [`eventually::EventSubscriber`] trait implementation
+    //! using the [`EventSubscriber`] type.
+    //!
+    //! [`eventually::EventStore`]: ../trait.EventStore.html
+    //! [`EventStore`]: struct.EventStore.html
+    //! [`EventStoreBuilder`]: struct.EventStoreBuilder.html
+    //! [`eventually::Repository`]: ../struct.Repository.html
+    //! [`eventually::EventSubscriber`]: ../trait.EventSubscriber.html
+    //! [`EventSubscriber`]: struct.EventSubscriber.html
 
     pub use eventually_postgres::*;
 }
