@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 /// [`EventStoreBuilder::stream_page_size`]: struct.EventStoreBuilder.html#method.stream_page_size
 pub const STREAM_PAGE_DEFAULT: usize = 128;
 
-static APPEND_TO_STORE_SOURCE: &'static str = std::include_str!("append_to_store.lua");
+static APPEND_TO_STORE_SOURCE: &str = std::include_str!("append_to_store.lua");
 
 lazy_static! {
     static ref APPEND_TO_STORE_SCRIPT: redis::Script = redis::Script::new(APPEND_TO_STORE_SOURCE);
@@ -461,6 +461,6 @@ impl RedisPaginatedStream {
 }
 
 fn parse_entry_id(id: &str) -> (usize, usize) {
-    let parts: Vec<&str> = id.split("-").collect();
+    let parts: Vec<&str> = id.split('-').collect();
     (parts[0].parse().unwrap(), parts[1].parse().unwrap())
 }
