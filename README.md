@@ -87,6 +87,16 @@ Add `eventually` into your project dependencies:
 eventually = { version = "0.4.0", features = ["full"] }
 ```
 
+### Event Store backends
+
+`eventually` provides the necessary abstractions for modeling and interacting
+with an Event Store.
+
+These are the following officially-supported backend implementations:
+* [`eventually::inmemory::EventStore`](): simple inmemory Event Store implementation, using `std::collections::HashMap`,
+* [`eventually_postgres`](./eventually-postgres): Event Store implementation for PostgreSQL databases,
+* [`eventually_redis`](./eventually-redis): Event Store implementation for Redis stores.
+
 ### Note on semantic versioning
 
 This library is **actively being developed**, and prior to `v1` release the following [Semantic versioning]()
