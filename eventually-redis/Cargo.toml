@@ -12,13 +12,12 @@ categories = ["web-programming", "asynchronous"]
 keywords = ["redis", "eventually", "event-store", "ddd", "event-sourcing"]
 
 [dependencies]
-eventually-core = { version = "0.4.0", path = "../eventually-core", features = ["serde"] }
-eventually-util = { version = "0.4.0", path = "../eventually-util" }
+eventually-core = { version = "0.4.0", features = ["serde"] }
+eventually-util = "0.4.0"
 
 futures = "0.3"
 redis = { version = "0.17", features = ["r2d2", "tokio-rt-core"] }
 serde = { version = "1.0", features = ["derive"] }
-rmp-serde = "0.14"
 lazy_static = "1.4.0"
 async-stream = "0.3.0"
 thiserror = "1.0.21"
@@ -27,4 +26,4 @@ serde_json = "1.0.59"
 
 [dev-dependencies]
 testcontainers = "0.11"
-tokio = { version = "0.2", features = ["sync", "macros"] }
+tokio = { version = "0.2", features = ["sync", "macros", "time"] }
