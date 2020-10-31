@@ -22,21 +22,19 @@ for i, event in pairs({unpack(ARGV, 2)}) do
     redis.call(
         "XADD",
         source_stream,
-        -- Use <version>-<seq.no> format to allow for XRANGE to work
-        -- using the version number.
-        string.format("%d-%d", version, sequence_number),
-        "event", event
+        string.format("%d-1", version),
+        "event", event,
+        "sequence_number", sequence_number
     )
 
     -- Second, it adds the event to the $all event stream.
     redis.call(
         "XADD",
         stream_type,
-        -- Use <seq.no>-<version> format to allow for XRANGE to work
-        -- using the sequence number.
-        string.format("%d-%d", sequence_number, version),
+        string.format("%d-1", sequence_number),
         "source_id", source_id,
-        "event", event
+        "event", event,
+        "version", version
     )
 
     -- Publish the message of the newly-added event for interested subscribers.
