@@ -6,7 +6,7 @@ edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 readme = "../README.md"
-repository = "https://github.com/ar3s3ru/eventually-rs"
+repository = "https://github.com/eventually-rs/eventually-rs"
 
 categories = ["web-programming", "asynchronous"]
 keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]

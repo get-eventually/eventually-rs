@@ -16,14 +16,14 @@
 
 <div align="center">
     <!-- Testing pipeline -->
-    <a href="https://github.com/ar3s3ru/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
+    <a href="https://github.com/eventually-rs/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
         <img alt="GitHub Workflow Status"
-        src="https://img.shields.io/github/workflow/status/ar3s3ru/eventually-rs/Rust%20(stable)?style=flat-square">
+        src="https://img.shields.io/github/workflow/status/eventually-rs/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
     <!-- Codecov -->
-    <a href="https://codecov.io/gh/ar3s3ru/eventually-rs">
+    <a href="https://codecov.io/gh/eventually-rs/eventually-rs">
             <img alt="Codecov"
-            src="https://img.shields.io/codecov/c/github/ar3s3ru/eventually-rs?style=flat-square">
+            src="https://img.shields.io/codecov/c/github/eventually-rs/eventually-rs?style=flat-square">
     </a>
     <!-- Crates.io -->
     <a href="https://crates.io/crates/eventually">
@@ -31,7 +31,7 @@
         src="https://img.shields.io/crates/v/eventually?style=flat-square">
     </a>
     <!-- Github pages docs -->
-    <a href="https://ar3s3ru.github.io/eventually-rs/eventually/">
+    <a href="https://eventually-rs.github.io/eventually-rs/eventually/">
         <img alt="latest master docs"
         src="https://img.shields.io/badge/docs-master-important?style=flat-square" />
     </a>
@@ -41,9 +41,9 @@
         src="https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=docs.rs&query=%24.crate.newest_version&url=https%3A%2F%2Fcrates.io%2Fapi%2Fv1%2Fcrates%2Feventually" />
     </a>
     <!-- License -->
-    <a href="https://github.com/ar3s3ru/eventually-rs/blob/master/LICENSE">
+    <a href="https://github.com/eventually-rs/eventually-rs/blob/master/LICENSE">
         <img alt="GitHub license"
-        src="https://img.shields.io/github/license/ar3s3ru/eventually-rs?style=flat-square">
+        src="https://img.shields.io/github/license/eventually-rs/eventually-rs?style=flat-square">
     </a>
     <!-- Gitter -->
     <a href="https://gitter.im/eventually-rs/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
@@ -94,8 +94,8 @@ with an Event Store.
 
 These are the following officially-supported backend implementations:
 * [`eventually::inmemory::EventStore`](): simple inmemory Event Store implementation, using `std::collections::HashMap`,
-* [`eventually_postgres`](./eventually-postgres): Event Store implementation for PostgreSQL databases,
-* [`eventually_redis`](./eventually-redis): Event Store implementation for Redis stores.
+* [`eventually-postgres`](./eventually-postgres): Event Store implementation for PostgreSQL databases,
+* [`eventually-redis`](./eventually-redis): Event Store implementation for Redis stores.
 
 ### Note on semantic versioning
 
