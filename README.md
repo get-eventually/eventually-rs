@@ -78,15 +78,6 @@ showcasing an example event-sourced microservice using HTTP transport layer.
 
 All other questions are more than welcome on our [Gitter chat](https://gitter.im/eventually-rs/community).
 
-## Installation
-
-Add `eventually` into your project dependencies:
-
-```toml
-[dependencies]
-eventually = { version = "0.4.0", features = ["full"] }
-```
-
 ### Event Store backends
 
 `eventually` provides the necessary abstractions for modeling and interacting
@@ -97,6 +88,15 @@ These are the following officially-supported backend implementations:
 * [`eventually-postgres`](./eventually-postgres): Event Store implementation for PostgreSQL databases,
 * [`eventually-redis`](./eventually-redis): Event Store implementation for Redis stores.
 
+## Installation
+
+Add `eventually` into your project dependencies:
+
+```toml
+[dependencies]
+eventually = { version = "0.4.0", features = ["full"] }
+```
+
 ### Note on semantic versioning
 
 This library is **actively being developed**, and prior to `v1` release the following [Semantic versioning]()
@@ -104,6 +104,16 @@ is being adopted:
 
 * Breaking changes are tagged with a new `MINOR` release
 * New features, patches and documentation are tagged with a new `PATCH` release
+
+## Contributing
+
+You want to contribute to `eventually` but you don't know where to start?
+
+First of all, thank you for considering contributing :heart:
+
+You can head over our [`CONTRIBUTING`](./CONTRIBUTING.md) section to know
+how to contribute to the project, and — in case you don't have a clear idea what
+to contribute — what is most needed needed from contributors.
 
 ## License
 
