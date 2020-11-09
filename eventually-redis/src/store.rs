@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 
-use eventually_core::store::{
+use eventually::store::{
     AppendError, EventStream as StoreEventStream, Expected, Persisted, Select,
 };
 
@@ -86,7 +86,7 @@ pub struct EventStore<Id, Event> {
     pub(crate) event: std::marker::PhantomData<Event>,
 }
 
-impl<Id, Event> eventually_core::store::EventStore for EventStore<Id, Event>
+impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
     Id: TryFrom<String> + Display + Eq + Clone + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,

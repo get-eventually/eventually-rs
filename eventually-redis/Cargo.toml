@@ -12,8 +12,7 @@ categories = ["web-programming", "asynchronous"]
 keywords = ["redis", "eventually", "event-store", "ddd", "event-sourcing"]
 
 [dependencies]
-eventually-core = { version = "0.4.0", features = ["serde"] }
-eventually-util = "0.4.0"
+eventually = { version = "0.4.0", features = ["serde"] }
 
 futures = "0.3"
 redis = { version = "0.17", features = ["r2d2", "tokio-rt-core"] }

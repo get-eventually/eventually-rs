@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use eventually_core::projection::Projection;
-use eventually_core::store::{EventStore, Expected, Persisted, Select};
-use eventually_core::subscription::EventSubscriber;
+use eventually::inmemory::Projector;
+use eventually::store::{Expected, Persisted, Select};
+use eventually::sync::RwLock;
+use eventually::{EventStore, EventSubscriber, Projection};
 use eventually_redis::{Builder, EventStore as RedisEventStore};
-use eventually_util::inmemory::Projector;
-use eventually_util::sync::RwLock;
 
 use futures::future::BoxFuture;
 use futures::stream::TryStreamExt;

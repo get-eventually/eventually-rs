@@ -3,8 +3,8 @@
 use std::convert::TryFrom;
 use std::fmt::Debug;
 
-use eventually_core::store::Persisted;
-use eventually_core::subscription::{Subscription, SubscriptionStream};
+use eventually::store::Persisted;
+use eventually::subscription::{Subscription, SubscriptionStream};
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};

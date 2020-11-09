@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 use std::fmt::Debug;
 
-use eventually_core::store::Persisted;
-use eventually_core::subscription::EventStream as SubscriberEventStream;
+use eventually::store::Persisted;
+use eventually::subscription::EventStream as SubscriberEventStream;
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
@@ -61,7 +61,7 @@ pub struct EventSubscriber<Id, Event> {
     pub(crate) event: std::marker::PhantomData<Event>,
 }
 
-impl<Id, Event> eventually_core::subscription::EventSubscriber for EventSubscriber<Id, Event>
+impl<Id, Event> eventually::EventSubscriber for EventSubscriber<Id, Event>
 where
     Id: TryFrom<String> + Eq + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
