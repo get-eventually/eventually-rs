@@ -30,6 +30,8 @@ anyhow = "1.0.32"
 tokio = { version = "0.2", features = ["sync", "stream"] }
 tracing = { version = "0.1", optional = true }
 tracing-futures = { version = "0.2", optional = true }
+bb8 = { version = "0.4" }
+bb8-postgres = { version = "0.4", features = ["with-serde_json-1"] }
 
 [dev-dependencies]
 testcontainers = "0.11"
