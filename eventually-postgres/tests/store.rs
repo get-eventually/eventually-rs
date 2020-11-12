@@ -143,7 +143,6 @@ async fn stream_works() {
         .await
         .expect("Could not build the pool");
 
-
     let source_name = "stream_test";
     let source_id = "stream_test";
 
