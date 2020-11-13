@@ -13,7 +13,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 
 use serde::{Deserialize, Serialize};
 
-use bb8::{Pool, RunError};
+use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
 use tokio_postgres::Socket;
@@ -23,7 +23,7 @@ use eventually_core::subscription::{
     EventSubscriber as EventSubscriberTrait, Subscription, SubscriptionStream,
 };
 
-use crate::store::{Error as EventStoreError, EventStore};
+use crate::store::{Error as EventStoreError, EventStore, PoolResult};
 use crate::subscriber::{DeserializeError, EventSubscriber};
 use crate::Params;
 
@@ -52,7 +52,7 @@ pub enum Error {
     /// Error variant returned when an issue has occurred during the checkpoint
     /// of a processed event.
     #[error("failed to checkpoint persistent subscription version: {0}")]
-    Checkpoint(#[source] RunError<tokio_postgres::Error>),
+    Checkpoint(#[source] bb8::RunError<tokio_postgres::Error>),
 }
 
 /// Builder type for multiple [`Persistent`] Subscription instance.
@@ -105,7 +105,7 @@ where
     pub async fn get_or_create(
         &self,
         name: String,
-    ) -> Result<Persistent<SourceId, Event, Tls>, RunError<tokio_postgres::Error>> {
+    ) -> PoolResult<Persistent<SourceId, Event, Tls>> {
         let params: Params = &[&name, &self.store.type_name];
 
         let client = self.pool.get().await?;
@@ -248,7 +248,7 @@ where
             client
                 .execute(CHECKPOINT_SUBSCRIPTION, params)
                 .await
-                .map_err(RunError::User)
+                .map_err(bb8::RunError::User)
                 .map_err(Error::Checkpoint)?;
 
             self.last_sequence_number

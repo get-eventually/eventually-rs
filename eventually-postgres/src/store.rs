@@ -37,6 +37,11 @@ mod embedded {
 /// [`Error`]: enum.Error.html
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Result returning the connection pool [`Error`] type.
+///
+/// [`Error`]: enum.Error.html
+pub type PoolResult<T> = std::result::Result<T, RunError<tokio_postgres::Error>>;
+
 /// Error type returned by the [`EventStore`] implementation, which is
 /// a _newtype_ wrapper around `tokio_postgres::Error`.
 ///
@@ -176,7 +181,7 @@ where
     pub async fn build<Id, Event>(
         &self,
         type_name: &'static str,
-    ) -> std::result::Result<EventStore<Id, Event, Tls>, RunError<tokio_postgres::Error>> {
+    ) -> PoolResult<EventStore<Id, Event, Tls>> {
         let store = EventStore {
             pool: self.pool.clone(),
             type_name,
@@ -201,10 +206,7 @@ where
         &'a self,
         type_name: &'static str,
         _: &'a T,
-    ) -> std::result::Result<
-        EventStore<AggregateId<T>, T::Event, Tls>,
-        RunError<tokio_postgres::Error>,
-    >
+    ) -> PoolResult<EventStore<AggregateId<T>, T::Event, Tls>>
     where
         T: Aggregate,
     {
@@ -397,9 +399,7 @@ where
             skip(self)
         )
     )]
-    async fn create_aggregate_type(
-        &self,
-    ) -> std::result::Result<(), RunError<tokio_postgres::Error>> {
+    async fn create_aggregate_type(&self) -> PoolResult<()> {
         let params: Params = &[&self.type_name];
 
         let client = self.pool.get().await?;
