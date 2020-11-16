@@ -65,13 +65,6 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
-<span id="67">67</span>
-<span id="68">68</span>
-<span id="69">69</span>
-<span id="70">70</span>
-<span id="71">71</span>
-<span id="72">72</span>
-<span id="73">73</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
 <span class="doccomment">//!</span>
@@ -83,35 +76,28 @@
 <span class="doccomment">//! Example usage:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```no_run</span>
-<span class="doccomment">//! # use std::sync::Arc;</span>
 <span class="doccomment">//! # use eventually_postgres::EventStoreBuilder;</span>
 <span class="doccomment">//! #</span>
 <span class="doccomment">//! # async fn dox() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {</span>
-<span class="doccomment">//! // Open a connection with Postgres.</span>
-<span class="doccomment">//! let (mut client, connection) =</span>
-<span class="doccomment">//!     tokio_postgres::connect(&quot;postgres://user@pass:localhost:5432/db&quot;, tokio_postgres::NoTls)</span>
-<span class="doccomment">//!         .await</span>
-<span class="doccomment">//!         .map_err(|err| {</span>
-<span class="doccomment">//!             eprintln!(&quot;failed to connect to Postgres: {}&quot;, err);</span>
-<span class="doccomment">//!             err</span>
-<span class="doccomment">//!         })?;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // The connection, responsible for the actual IO, must be handled by a different</span>
-<span class="doccomment">//! // execution context.</span>
-<span class="doccomment">//! tokio::spawn(async move {</span>
-<span class="doccomment">//!     if let Err(e) = connection.await {</span>
-<span class="doccomment">//!         eprintln!(&quot;connection error: {}&quot;, e);</span>
-<span class="doccomment">//!     }</span>
-<span class="doccomment">//! });</span>
+<span class="doccomment">//! // Open a connection with bb8.</span>
+<span class="doccomment">//! let pg_manager = bb8_postgres::PostgresConnectionManager::new_from_stringlike(</span>
+<span class="doccomment">//!     &quot;postgres://user@pass:localhost:5432/db&quot;,</span>
+<span class="doccomment">//!     tokio_postgres::NoTls,</span>
+<span class="doccomment">//!     )</span>
+<span class="doccomment">//!     .map_err(|err| {</span>
+<span class="doccomment">//!         eprintln!(&quot;Failed configuring a Postgres Connection pool: {}&quot;, err);</span>
+<span class="doccomment">//!         err</span>
+<span class="doccomment">//!     })?;</span>
+<span class="doccomment">//! let pool = bb8::Pool::builder().build(pg_manager).await?;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! // A domain event example -- it is deliberately simple.</span>
 <span class="doccomment">//! #[derive(Debug, Clone)]</span>
 <span class="doccomment">//! struct SomeEvent;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! // Use an EventStoreBuilder to build multiple EventStore instances.</span>
-<span class="doccomment">//! let builder = EventStoreBuilder::migrate_database(&amp;mut client)</span>
+<span class="doccomment">//! let builder = EventStoreBuilder::migrate_database(pool.clone())</span>
 <span class="doccomment">//!     .await?</span>
-<span class="doccomment">//!     .builder(Arc::new(client));</span>
+<span class="doccomment">//!     .builder(pool);</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! // Event store for the events.</span>
 <span class="doccomment">//! //</span>
