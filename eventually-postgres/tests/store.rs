@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use eventually_core::store::{EventStore, Expected, Persisted, Select};
 use eventually_postgres::EventStoreBuilder;
 
@@ -27,24 +25,22 @@ async fn stream_all_works() {
         node.get_host_port(5432).unwrap()
     );
 
-    let (mut client, connection) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls)
+    let pg_manager =
+        bb8_postgres::PostgresConnectionManager::new_from_stringlike(&dsn, tokio_postgres::NoTls)
+            .expect("Could not parse the dsn string");
+    let pool = bb8::Pool::builder()
+        .build(pg_manager)
         .await
-        .expect("could not connect to the docker container");
-
-    tokio::spawn(async move {
-        connection
-            .await
-            .expect("connection with the database exited with error")
-    });
+        .expect("Could not build the pool");
 
     let source_name = "stream_all_test";
     let source_id_1 = "stream_all_test_1";
     let source_id_2 = "stream_all_test_2";
 
-    let event_store_builder = EventStoreBuilder::migrate_database(&mut client)
+    let event_store_builder = EventStoreBuilder::migrate_database(pool.clone())
         .await
         .expect("failed to run database migrations")
-        .builder(Arc::new(client));
+        .builder(pool);
 
     let mut event_store = event_store_builder
         .build::<String, Event>(source_name)
@@ -139,23 +135,21 @@ async fn stream_works() {
         node.get_host_port(5432).unwrap()
     );
 
-    let (mut client, connection) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls)
+    let pg_manager =
+        bb8_postgres::PostgresConnectionManager::new_from_stringlike(&dsn, tokio_postgres::NoTls)
+            .expect("Could not parse the dsn string");
+    let pool = bb8::Pool::builder()
+        .build(pg_manager)
         .await
-        .expect("could not connect to the docker container");
-
-    tokio::spawn(async move {
-        connection
-            .await
-            .expect("connection with the database exited with error")
-    });
+        .expect("Could not build the pool");
 
     let source_name = "stream_test";
     let source_id = "stream_test";
 
-    let event_store_builder = EventStoreBuilder::migrate_database(&mut client)
+    let event_store_builder = EventStoreBuilder::migrate_database(pool.clone())
         .await
         .expect("failed to run database migrations")
-        .builder(Arc::new(client));
+        .builder(pool);
 
     let mut event_store = event_store_builder
         .build::<String, Event>(source_name)

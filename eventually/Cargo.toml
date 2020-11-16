@@ -23,7 +23,7 @@ full = ["serde", "tracing", "postgres"]
 [dependencies]
 eventually-core = { version = "0.4.0", path = "../eventually-core" }
 eventually-util = { version = "0.4.0", path = "../eventually-util" }
-eventually-postgres = { version = "0.2.0", path = "../eventually-postgres", optional = true }
+eventually-postgres = { version = "0.3.0", path = "../eventually-postgres", optional = true }
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }
