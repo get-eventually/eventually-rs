@@ -46,7 +46,15 @@ pub enum StoreError {
     /// [`stream`]: struct.EventStore.html#tymethod.stream
     /// [`stream_all`]: struct.EventStore.html#tymethod.stream_all
     #[error("failed to decode events: {0}")]
-    DecodeEvents(#[source] serde_json::Error),
+    DecodeEvents(#[source] stream::ToPersistedError),
+
+    /// Error returned when failed to decoding events from JSON
+    /// during either [`stream`] or [`stream_all`].
+    ///
+    /// [`stream`]: struct.EventStore.html#tymethod.stream
+    /// [`stream_all`]: struct.EventStore.html#tymethod.stream_all
+    #[error("failed to decode from JSON: {0}")]
+    DecodeJSON(#[source] serde_json::Error),
 
     /// Error returned when reading the stream coming from `XRANGE .. COUNT n`
     /// during either [`stream`] or [`stream_all`].
@@ -60,11 +68,6 @@ pub enum StoreError {
     /// that does not exist.
     #[error("no key from Redis result: `{0}`")]
     NoKey(&'static str),
-
-    /// Error returned when attempting to decode the source id of one
-    /// Redis stream entry.
-    #[error("failed to decode source_id from Redis entry: {0}")]
-    DecodeSourceId(#[source] anyhow::Error),
 }
 
 impl AppendError for StoreError {
@@ -152,7 +155,7 @@ where
                         .get("event")
                         .ok_or_else(|| StoreError::NoKey("event"))?;
                     let event: Event =
-                        serde_json::from_slice(&event).map_err(StoreError::DecodeEvents)?;
+                        serde_json::from_slice(&event).map_err(StoreError::DecodeJSON)?;
 
                     let sequence_number: u32 = entry
                         .get("sequence_number")
@@ -185,29 +188,8 @@ where
             Ok(paginator
                 .map_err(StoreError::Stream)
                 .and_then(|entry| async move {
-                    let source_id: String = entry
-                        .get("source_id")
-                        .ok_or_else(|| StoreError::NoKey("source_id"))?;
-
-                    let source_id: Id = Id::try_from(source_id)
-                        .map_err(anyhow::Error::from)
-                        .map_err(StoreError::DecodeSourceId)?;
-
-                    let event: Vec<u8> = entry
-                        .get("event")
-                        .ok_or_else(|| StoreError::NoKey("event"))?;
-                    let event: Event =
-                        serde_json::from_slice(&event).map_err(StoreError::DecodeEvents)?;
-
-                    let version: u32 = entry
-                        .get("version")
-                        .ok_or_else(|| StoreError::NoKey("version"))?;
-
-                    let sequence_number = stream::parse_version(&entry.id);
-
-                    Ok(Persisted::from(source_id, event)
-                        .sequence_number(sequence_number as u32)
-                        .version(version))
+                    Persisted::<Id, Event>::try_from(stream::ToPersisted::from(entry))
+                        .map_err(StoreError::DecodeEvents)
                 })
                 .boxed())
         };

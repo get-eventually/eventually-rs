@@ -1,8 +1,81 @@
+use std::convert::TryFrom;
+use std::error::Error;
+
+use eventually::store::Persisted;
+
 use futures::stream::Stream;
 
 use redis::aio::MultiplexedConnection;
 use redis::streams::{StreamId, StreamKey, StreamRangeReply, StreamReadOptions, StreamReadReply};
 use redis::{AsyncCommands, RedisResult};
+
+use serde::Deserialize;
+
+#[derive(Debug)]
+pub(crate) struct ToPersisted(StreamId);
+
+impl From<StreamId> for ToPersisted {
+    fn from(stream_id: StreamId) -> Self {
+        Self(stream_id)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ToPersistedError {
+    /// Error returned when attempting to read a key from the Redis stream
+    /// that does not exist.
+    #[error("no key from Redis result: `{0}`")]
+    NoKey(&'static str),
+
+    /// Error returned when attempting to decode the source id of one
+    /// Redis stream entry.
+    #[error("failed to decode source_id from Redis entry: {0}")]
+    DecodeSourceId(#[source] anyhow::Error),
+
+    /// Error returned when failed to decoding events from JSON
+    /// during either [`stream`] or [`stream_all`].
+    ///
+    /// [`stream`]: struct.EventStore.html#tymethod.stream
+    /// [`stream_all`]: struct.EventStore.html#tymethod.stream_all
+    #[error("failed to decode from JSON: {0}")]
+    DecodeJSON(#[source] serde_json::Error),
+}
+
+impl<SourceId, Event> TryFrom<ToPersisted> for Persisted<SourceId, Event>
+where
+    SourceId: TryFrom<String> + Eq + Clone + Send + Sync,
+    <SourceId as TryFrom<String>>::Error: Error + Send + Sync + 'static,
+    for<'de> Event: Deserialize<'de>,
+{
+    type Error = ToPersistedError;
+
+    fn try_from(entry: ToPersisted) -> Result<Self, Self::Error> {
+        let entry = entry.0;
+
+        let source_id: String = entry
+            .get("source_id")
+            .ok_or_else(|| ToPersistedError::NoKey("source_id"))?;
+
+        let source_id: SourceId = SourceId::try_from(source_id)
+            .map_err(anyhow::Error::from)
+            .map_err(ToPersistedError::DecodeSourceId)?;
+
+        let event: Vec<u8> = entry
+            .get("event")
+            .ok_or_else(|| ToPersistedError::NoKey("event"))?;
+        let event: Event = serde_json::from_slice(&event).map_err(ToPersistedError::DecodeJSON)?;
+
+        let version: u32 = entry
+            .get("version")
+            .ok_or_else(|| ToPersistedError::NoKey("version"))?;
+
+        let sequence_number = parse_version(&entry.id);
+
+        Ok(Persisted::from(source_id, event)
+            .sequence_number(sequence_number as u32)
+            .version(version))
+    }
+}
 
 /// Returns a [`futures::Stream`] instance out of a paginated series of
 /// requests to read a Redis Stream using `XRANGE`.
@@ -15,7 +88,7 @@ use redis::{AsyncCommands, RedisResult};
 ///
 /// [`futures::Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
 /// [`StreamRangeReply`]: https://docs.rs/redis/0.17.0/redis/streams/struct.StreamRangeReply.html
-pub fn into_xrange_stream(
+pub(crate) fn into_xrange_stream(
     mut conn: MultiplexedConnection,
     stream_name: String,
     page_size: usize,
@@ -55,7 +128,7 @@ pub fn into_xrange_stream(
 ///
 /// [`futures::Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
 /// [`StreamReadReply`]: https://docs.rs/redis/0.17.0/redis/streams/struct.StreamReadReply.html
-pub fn into_xread_stream(
+pub(crate) fn into_xread_stream(
     mut conn: MultiplexedConnection,
     stream_name: String,
     group_name: String,

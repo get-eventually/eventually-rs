@@ -1,5 +1,3 @@
-#![allow(missing_docs)]
-
 use std::convert::TryFrom;
 use std::fmt::Debug;
 
@@ -31,22 +29,12 @@ pub enum SubscriptionError {
     /// Error returned when failed to decoding events from JSON
     /// from the `XREADGROUP` operation.
     #[error("failed to decode events: {0}")]
-    DecodeEvents(#[source] serde_json::Error),
+    DecodeEvents(#[source] stream::ToPersistedError),
 
     /// Error returned when reading the stream coming from the `XREADGROUP`
     /// operation.
     #[error("failed while reading stream from Redis: {0}")]
     Stream(#[source] RedisError),
-
-    /// Error returned when attempting to read a key from the Redis stream
-    /// that does not exist.
-    #[error("no key from Redis result: `{0}`")]
-    NoKey(&'static str),
-
-    /// Error returned when attempting to decode the source id of one
-    /// Redis stream entry.
-    #[error("failed to decode source_id from Redis entry: {0}")]
-    DecodeSourceId(#[source] anyhow::Error),
 
     /// Error returned when failed to acknowledge one Redis message
     /// using `XACK` command, due to an error occurred on Redis server.
@@ -59,6 +47,14 @@ pub enum SubscriptionError {
     Checkpoint(u32),
 }
 
+/// [`Subscription`] implementation with persistent state over a Redis
+/// data source.
+///
+/// `PersistentSubscription` leverages the [Consumer Group] feature
+/// offered by Redis to consume events that have been published
+/// on a Stream.
+///
+/// [Consumer Group]: https://redis.io/commands/xreadgroup#consumer-groups-in-30-seconds
 #[derive(Clone)]
 pub struct PersistentSubscription<Id, Event> {
     pub(crate) stream: &'static str,
@@ -117,32 +113,9 @@ where
                     Ok(futures::stream::iter(ids.into_iter().map(Ok)))
                 })
                 .try_flatten()
-                // TODO: merge this in its own function with EventStore.stream_all
                 .and_then(|entry| async move {
-                    let source_id: String = entry
-                        .get("source_id")
-                        .ok_or_else(|| SubscriptionError::NoKey("source_id"))?;
-
-                    let source_id: Id = Id::try_from(source_id)
-                        .map_err(anyhow::Error::from)
-                        .map_err(SubscriptionError::DecodeSourceId)?;
-
-                    let event: Vec<u8> = entry
-                        .get("event")
-                        .ok_or_else(|| SubscriptionError::NoKey("event"))?;
-
-                    let event: Event =
-                        serde_json::from_slice(&event).map_err(SubscriptionError::DecodeEvents)?;
-
-                    let version: u32 = entry
-                        .get("version")
-                        .ok_or_else(|| SubscriptionError::NoKey("version"))?;
-
-                    let sequence_number = stream::parse_version(&entry.id);
-
-                    Ok(Persisted::from(source_id, event)
-                        .sequence_number(sequence_number as u32)
-                        .version(version))
+                    Persisted::<Id, Event>::try_from(stream::ToPersisted::from(entry))
+                        .map_err(SubscriptionError::DecodeEvents)
                 })
                 .boxed())
         };
