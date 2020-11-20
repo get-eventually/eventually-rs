@@ -5,5 +5,8 @@ members = [
     "eventually-postgres",
     "eventually-redis",
     "eventually-util",
-    "eventually-app-example"
+
+    # Example cases
+    "examples/orders-domain",
+    "examples/orders-http-api-postgres-store"
 ]

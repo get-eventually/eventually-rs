@@ -1,0 +1,30 @@
+[package]
+name = "orders-http-api-postgres-store"
+version = "0.1.0"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-rt = "1.1.1"
+actix-web = "3.2.0"
+anyhow = "1.0.34"
+bb8 = { version = "0.4" }
+bb8-postgres = { version = "0.4", features = ["with-serde_json-1"] }
+envconfig = "0.9.1"
+orders-domain = { path = "../orders-domain" }
+serde_json = "1.0.59"
+thiserror = "1.0.22"
+tracing = "0.1"
+tracing-futures = "0.2.4"
+tracing-subscriber = "0.2"
+
+[dependencies.eventually]
+version = "0.4.0"
+path = "../../eventually"
+features = ["full"]
+
+[dependencies.eventually-postgres]
+version = "0.3.0"
+path = "../../eventually-postgres"

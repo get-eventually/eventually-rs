@@ -1,0 +1,19 @@
+[package]
+name = "orders-domain"
+version = "0.1.0"
+edition = "2018"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+license = "MIT"
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+
+[dependencies.eventually]
+version = "0.4.0"
+path = "../../eventually"
+features = ["serde"]
+
+[dev-dependencies]
+lazy_static = "1.4"
