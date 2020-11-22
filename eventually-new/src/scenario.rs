@@ -2,7 +2,7 @@ use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
-use crate::aggregate::{Aggregate, AggregateRootBuilder, Repository};
+use crate::aggregate::{Aggregate, AggregateRootBuilder, AggregateRootError, Repository};
 use crate::eventstore::EventStore;
 use crate::inmemory::InMemoryEventStore;
 use crate::Events;
@@ -85,7 +85,7 @@ where
     <A as Aggregate>::State: Default + Clone,
     <A as Aggregate>::DomainEvent: PartialEq + Debug + Clone + Unpin,
     <A as Aggregate>::HandleError: PartialEq + StdError + 'static,
-    <A as Aggregate>::ApplyError: StdError + 'static,
+    <A as Aggregate>::ApplyError: PartialEq + StdError + 'static,
 {
     pub async fn then(self, expect: Option<Events<A::DomainEvent>>) {
         let mut event_store = InMemoryEventStore::<A::Id, A::DomainEvent>::default();
@@ -111,32 +111,28 @@ where
         assert_eq!(expect, root.flush_events());
     }
 
-    // pub async fn thenError(self, error: A::HandleError) {
-    //     let state = self
-    //         .given
-    //         .into_iter()
-    //         .try_fold(None, |state, event| {
-    //             state.map(|state| A::apply(state, event)).transpose()
-    //         })
-    //         .expect("should not fail")
-    //         .expect("state should be built from given events");
+    pub async fn then_error(self, error: A::HandleError) {
+        let mut event_store = InMemoryEventStore::<A::Id, A::DomainEvent>::default();
 
-    //     let mut root = AggregateRoot {
-    //         aggregate: self.aggregate,
-    //         id: self.when.as_ref().clone(),
-    //         state,
-    //         uncommitted_events: Vec::new(),
-    //     };
+        if let Some(events) = self.given {
+            event_store
+                .append(&self.aggregate_id, events)
+                .await
+                .expect("given events should be in the event store");
+        }
 
-    //     let result = root
-    //         .handle(self.when)
-    //         .await
-    //         .expect_err("command handling should fail");
+        let repository = Repository::new(self.aggregate_root_builder, event_store);
 
-    //     if let AggregateRootError::Handle(err) = result {
-    //         assert_eq!(error, err);
-    //     } else {
-    //         panic!("unexpected error: {}", result);
-    //     }
-    // }
+        let mut root = repository
+            .get(&self.aggregate_id)
+            .await
+            .expect("aggregate root should be found");
+
+        let err = root
+            .handle(self.when)
+            .await
+            .expect_err("command should fail");
+
+        assert_eq!(AggregateRootError::Handle(error), err);
+    }
 }

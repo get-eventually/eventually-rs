@@ -232,7 +232,7 @@ where
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, thiserror::Error)]
 pub enum AggregateRootError<Id, HandleError, ApplyError>
 where
     Id: Display + Debug,
