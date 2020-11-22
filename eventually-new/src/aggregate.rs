@@ -6,12 +6,12 @@ use std::fmt::{Debug, Display};
 
 use async_trait::async_trait;
 
-use futures::stream::{Stream, TryStreamExt};
+use futures::stream::TryStreamExt;
 
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
-use crate::eventstore::{EventStore, PersistedEvent};
+use crate::eventstore::{EventStore, PersistedEvent, Select, Version};
 use crate::{Event, Events};
 
 /// A short extractor type for the Aggregate [`Id`].
@@ -120,7 +120,7 @@ where
     async fn rehydrate<Evts, E>(&self, id: T::Id, events: Evts) -> Result<AggregateRoot<T>, E>
     where
         E: Debug,
-        Evts: Stream<Item = Result<PersistedEvent<T::Id, T::DomainEvent>, E>>,
+        Evts: futures::Stream<Item = Result<PersistedEvent<T::Id, T::DomainEvent>, E>>,
     {
         let (version, state): (u32, T::State) = events
             .try_fold((0, T::State::default()), |(_, state), event| async move {
@@ -324,7 +324,7 @@ where
     ES: EventStore<A::Id, A::DomainEvent>,
 {
     pub async fn get(&self, id: &A::Id) -> Result<AggregateRoot<A>, ES::StreamError> {
-        let events = self.event_store.stream(id);
+        let events = self.event_store.stream(id, Select::All);
 
         self.aggregate_root_builder
             .rehydrate(id.clone(), events)
@@ -341,7 +341,11 @@ where
 
         let events_to_commit = events_to_commit.unwrap();
 
-        let new_version = self.event_store.append(root.id(), events_to_commit).await?;
+        let new_version = self
+            .event_store
+            .append(root.id(), Version::Exact(root.version), events_to_commit)
+            .await?;
+
         root.version = new_version;
 
         Ok(())

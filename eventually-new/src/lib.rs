@@ -49,4 +49,9 @@ impl<T> Event<T> {
     pub fn into_inner(self) -> T {
         self.data
     }
+
+    #[inline]
+    pub fn metadata(&self) -> Option<&HashMap<String, String>> {
+        self.metadata.as_ref()
+    }
 }

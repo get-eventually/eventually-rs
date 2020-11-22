@@ -36,10 +36,10 @@ impl<Id, T> PersistedEvent<Id, T> {
     }
 }
 
-#[derive(Debug)]
-pub enum Stream<Id> {
+#[derive(Debug, Clone, Copy)]
+pub enum Select {
     All,
-    Id(Id),
+    From(u32),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -61,7 +61,16 @@ pub trait EventStore<Id, Evt>: Send + Sync {
     type AppendError: ConflictError + Send + Sync;
     type StreamError: StdError + Send + Sync;
 
-    async fn append(&mut self, id: &Id, events: Events<Evt>) -> Result<u32, Self::AppendError>;
+    async fn append(
+        &mut self,
+        id: &Id,
+        version: Version,
+        events: Events<Evt>,
+    ) -> Result<u32, Self::AppendError>;
 
-    fn stream(&self, id: &Id) -> BoxStream<Result<PersistedEvent<Id, Evt>, Self::StreamError>>;
+    fn stream(
+        &self,
+        id: &Id,
+        select: Select,
+    ) -> BoxStream<Result<PersistedEvent<Id, Evt>, Self::StreamError>>;
 }

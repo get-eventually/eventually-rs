@@ -111,79 +111,64 @@ mod tests {
 
     #[tokio::test]
     async fn order_is_created() {
-        let id = "test-order";
+        let id = "test-order".to_owned();
         let now = Utc::now().naive_utc();
 
-        AggregateRootScenario::with(id.to_owned(), Order)
-            .when(OrderCommand::Create {
-                id: id.to_owned(),
-                now,
-            })
+        AggregateRootScenario::with(id.clone(), Order)
+            .when(OrderCommand::Create { id, now })
             .then(Some(vec![OrderEvent::Created { at: now }.into()]))
             .await;
     }
 
     #[tokio::test]
     async fn order_is_finalized() {
-        let id = "test-order";
+        let id = "test-order".to_owned();
         let now = Utc::now().naive_utc();
         let created_at = now - chrono::Duration::days(1);
 
-        AggregateRootScenario::with(id.to_owned(), Order)
+        AggregateRootScenario::with(id.clone(), Order)
             .given(vec![OrderEvent::Created { at: created_at }.into()])
-            .when(OrderCommand::Finalize {
-                id: id.to_owned(),
-                now,
-            })
+            .when(OrderCommand::Finalize { id, now })
             .then(Some(vec![OrderEvent::Finalized { at: now }.into()]))
             .await;
     }
 
     #[tokio::test]
     async fn order_cannot_be_created_twice() {
-        let id = "test-order";
+        let id = "test-order".to_owned();
         let now = Utc::now().naive_utc();
         let created_at = now - chrono::Duration::days(1);
 
-        AggregateRootScenario::with(id.to_owned(), Order)
+        AggregateRootScenario::with(id.clone(), Order)
             .given(vec![OrderEvent::Created { at: created_at }.into()])
-            .when(OrderCommand::Create {
-                id: id.to_owned(),
-                now,
-            })
+            .when(OrderCommand::Create { id, now })
             .then_error(OrderError::AlreadyCreated)
             .await;
     }
 
     #[tokio::test]
     async fn order_cannot_be_finalized_twice() {
-        let id = "test-order";
+        let id = "test-order".to_owned();
         let now = Utc::now().naive_utc();
         let created_at = now - chrono::Duration::days(1);
 
-        AggregateRootScenario::with(id.to_owned(), Order)
+        AggregateRootScenario::with(id.clone(), Order)
             .given(vec![
                 OrderEvent::Created { at: created_at }.into(),
                 OrderEvent::Finalized { at: now }.into(),
             ])
-            .when(OrderCommand::Finalize {
-                id: id.to_owned(),
-                now,
-            })
+            .when(OrderCommand::Finalize { id, now })
             .then_error(OrderError::AlreadyFinalized)
             .await;
     }
 
     #[tokio::test]
     async fn order_cannot_be_finalized_if_not_created() {
-        let id = "test-order";
+        let id = "test-order".to_owned();
         let now = Utc::now().naive_utc();
 
-        AggregateRootScenario::with(id.to_owned(), Order)
-            .when(OrderCommand::Finalize {
-                id: id.to_owned(),
-                now,
-            })
+        AggregateRootScenario::with(id.clone(), Order)
+            .when(OrderCommand::Finalize { id, now })
             .then_error(OrderError::NotCreatedYet)
             .await;
     }

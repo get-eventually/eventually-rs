@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
 use crate::aggregate::{Aggregate, AggregateRootBuilder, AggregateRootError, Repository};
-use crate::eventstore::EventStore;
+use crate::eventstore::{EventStore, Version};
 use crate::inmemory::InMemoryEventStore;
 use crate::Events;
 
@@ -92,7 +92,7 @@ where
 
         if let Some(events) = self.given {
             event_store
-                .append(&self.aggregate_id, events)
+                .append(&self.aggregate_id, Version::Any, events)
                 .await
                 .expect("given events should be in the event store");
         }
@@ -116,7 +116,7 @@ where
 
         if let Some(events) = self.given {
             event_store
-                .append(&self.aggregate_id, events)
+                .append(&self.aggregate_id, Version::Any, events)
                 .await
                 .expect("given events should be in the event store");
         }
