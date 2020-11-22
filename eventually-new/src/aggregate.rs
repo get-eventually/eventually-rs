@@ -301,8 +301,7 @@ where
             .await
             .map_err(AggregateRootError::Handle)?;
 
-        // Only apply new events if the command handling actually
-        // produced new ones.
+        // Apply new events only if the command handling produced some.
         if let Some(events) = events {
             self.apply(events).map_err(AggregateRootError::Apply)?;
         }
