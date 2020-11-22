@@ -1,0 +1,19 @@
+[package]
+name = "eventually-new"
+version = "0.1.0"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1"
+thiserror = "1"
+serde = { version = "1", optional = true }
+tracing = { version = "0.1.21", optional = true }
+futures = "0.3.8"
+async-stream = "0.3.0"
+chrono = "0.4.19"
+
+[dev-dependencies]
+tokio = { version = "0.3", features = ["macros", "rt"] }
