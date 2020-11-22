@@ -5,6 +5,9 @@ use async_trait::async_trait;
 
 use futures::stream::BoxStream;
 
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use crate::{Event, Events};
 
 pub type PersistedEvents<Id, T> = Vec<PersistedEvent<Id, T>>;
