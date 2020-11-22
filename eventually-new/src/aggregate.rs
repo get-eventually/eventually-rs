@@ -113,21 +113,39 @@ impl<T: Aggregate> From<T> for AggregateRootBuilder<T> {
     }
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum RehydrateError<A, ES>
+where
+    A: StdError + 'static,
+    ES: StdError + 'static,
+{
+    #[error("rehydrate error, failed to apply event: {0}")]
+    Apply(#[source] A),
+
+    #[error("rehydrate error, failed to process next event: {0}")]
+    EventStore(#[source] ES),
+}
+
 impl<T> AggregateRootBuilder<T>
 where
     T: Aggregate + Clone + 'static,
 {
-    async fn rehydrate<Evts, E>(&self, id: T::Id, events: Evts) -> Result<AggregateRoot<T>, E>
+    async fn rehydrate<Evts, E>(
+        &self,
+        id: T::Id,
+        events: Evts,
+    ) -> Result<AggregateRoot<T>, RehydrateError<T::ApplyError, E>>
     where
-        E: Debug,
+        E: StdError + 'static,
         Evts: futures::Stream<Item = Result<PersistedEvent<T::Id, T::DomainEvent>, E>>,
     {
         let (version, state): (u32, T::State) = events
+            .map_err(RehydrateError::EventStore)
             .try_fold((0, T::State::default()), |(_, state), event| async move {
                 let version = event.version();
                 let next = T::apply(state, event.into()).map(|state| (version, state));
 
-                Ok(next.unwrap())
+                Ok(next.map_err(RehydrateError::Apply)?)
             })
             .await?;
 
@@ -266,7 +284,7 @@ where
     /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     /// [`Aggregate::handle`]: trait.Aggregate.html#method.handle
     #[cfg_attr(
-        feature = "tracing",
+        feature = "with-racing",
         tracing::instrument(level = "debug", name = "AggregateRoot::handle", skip(self))
     )]
     pub async fn handle(
@@ -321,9 +339,14 @@ impl<A, ES> Repository<A, ES>
 where
     A: Aggregate + Clone + 'static,
     <A as Aggregate>::Id: Clone,
+    <A as Aggregate>::ApplyError: StdError + 'static,
     ES: EventStore<A::Id, A::DomainEvent>,
+    <ES as EventStore<A::Id, A::DomainEvent>>::StreamError: StdError + 'static,
 {
-    pub async fn get(&self, id: &A::Id) -> Result<AggregateRoot<A>, ES::StreamError> {
+    pub async fn get(
+        &self,
+        id: &A::Id,
+    ) -> Result<AggregateRoot<A>, RehydrateError<A::ApplyError, ES::StreamError>> {
         let events = self.event_store.stream(id, Select::All);
 
         self.aggregate_root_builder
