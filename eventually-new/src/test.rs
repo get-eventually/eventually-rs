@@ -35,32 +35,17 @@ pub enum OrderEvent {
     Finalized { at: NaiveDateTime },
 }
 
-// #[async_trait]
-// impl NewAggregate for Order {
-//     type Command = OrderCreate;
-//     type NewError = std::convert::Infallible;
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+pub enum OrderError {
+    #[error("order has already been created")]
+    AlreadyCreated,
 
-//     async fn new(
-//         &mut self,
-//         command: <Self as NewAggregate>::Command,
-//     ) -> Result<Vec<Event<<Self as Aggregate>::DomainEvent>>, Self::NewError> {
-//         Ok(vec![Event::new(OrderEvent::Created { at: command.now })])
-//     }
+    #[error("order not been created yet")]
+    NotCreatedYet,
 
-//     fn apply_first(event: Event<Self::DomainEvent>) -> Result<Self::State, Self::ApplyError> {
-//         Ok(Some(match event.into_inner() {
-//             OrderEvent::Created { at } => OrderState {
-//                 finalized: false,
-//                 updated_at: at,
-//             },
-
-//             OrderEvent::Finalized { at } => OrderState {
-//                 finalized: true,
-//                 updated_at: at,
-//             },
-//         }))
-//     }
-// }
+    #[error("order has already been finalized")]
+    AlreadyFinalized,
+}
 
 #[async_trait]
 impl Aggregate for Order {
@@ -68,18 +53,34 @@ impl Aggregate for Order {
     type Command = OrderCommand;
     type State = Option<OrderState>;
     type DomainEvent = OrderEvent;
-    type HandleError = std::convert::Infallible;
+    type HandleError = OrderError;
     type ApplyError = std::convert::Infallible;
 
     async fn handle(
         &mut self,
-        _: &Self::State,
+        state: &Self::State,
         command: Self::Command,
     ) -> Result<Option<Events<Self::DomainEvent>>, Self::HandleError> {
-        Ok(Some(vec![Event::from(match command {
-            OrderCommand::Create { now, .. } => OrderEvent::Created { at: now },
-            OrderCommand::Finalize { now, .. } => OrderEvent::Finalized { at: now },
-        })]))
+        match command {
+            OrderCommand::Create { now, .. } => {
+                if state.is_none() {
+                    Ok(Some(vec![Event::from(OrderEvent::Created { at: now })]))
+                } else {
+                    Err(OrderError::AlreadyCreated)
+                }
+            }
+
+            OrderCommand::Finalize { now, .. } => match state {
+                None => Err(OrderError::NotCreatedYet),
+                Some(state) => {
+                    if state.finalized {
+                        Err(OrderError::AlreadyFinalized)
+                    } else {
+                        Ok(Some(vec![Event::from(OrderEvent::Finalized { at: now })]))
+                    }
+                }
+            },
+        }
     }
 
     fn apply(

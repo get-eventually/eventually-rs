@@ -17,9 +17,9 @@ pub struct InMemoryEventStore<Id, Evt> {
     events: Arc<RwLock<HashMap<Id, PersistedEvents<Id, Evt>>>>,
 }
 
-impl<Id, Evt> InMemoryEventStore<Id, Evt> {
+impl<Id, Evt> Default for InMemoryEventStore<Id, Evt> {
     #[inline]
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self {
             events: Arc::new(RwLock::new(HashMap::new())),
         }
@@ -61,7 +61,7 @@ where
             .unwrap()
             .entry(id.clone())
             .and_modify(|events| events.extend(new_events.clone()))
-            .or_insert(new_events.collect());
+            .or_insert_with(|| new_events.collect());
 
         Ok(new_version)
     }

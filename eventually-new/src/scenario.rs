@@ -88,7 +88,7 @@ where
     <A as Aggregate>::ApplyError: StdError + 'static,
 {
     pub async fn then(self, expect: Option<Events<A::DomainEvent>>) {
-        let mut event_store = InMemoryEventStore::<A::Id, A::DomainEvent>::new();
+        let mut event_store = InMemoryEventStore::<A::Id, A::DomainEvent>::default();
 
         if let Some(events) = self.given {
             event_store
@@ -110,10 +110,6 @@ where
 
         assert_eq!(expect, root.flush_events());
     }
-
-    // pub async fn thenNothing(self) {
-    //     self.then(vec![]).await
-    // }
 
     // pub async fn thenError(self, error: A::HandleError) {
     //     let state = self

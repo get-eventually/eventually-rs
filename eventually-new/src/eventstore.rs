@@ -36,6 +36,18 @@ impl<Id, T> PersistedEvent<Id, T> {
     }
 }
 
+#[derive(Debug)]
+pub enum Stream<Id> {
+    All,
+    Id(Id),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Version {
+    Any,
+    Exact(u32),
+}
+
 pub trait ConflictError: StdError {
     fn is_conflict(&self) -> bool {
         false
