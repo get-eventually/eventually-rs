@@ -16,7 +16,7 @@ pub type PersistedEvents<Id, T> = Vec<PersistedEvent<Id, T>>;
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct PersistedEvent<Id, T> {
     pub(crate) stream_id: Id,
-    pub(crate) version: u32,
+    pub(crate) sequence_number: u32,
     pub(crate) event: Event<T>,
 }
 
@@ -29,8 +29,8 @@ impl<Id, T> From<PersistedEvent<Id, T>> for Event<T> {
 
 impl<Id, T> PersistedEvent<Id, T> {
     #[inline]
-    pub fn version(&self) -> u32 {
-        self.version
+    pub fn sequence_number(&self) -> u32 {
+        self.sequence_number
     }
 
     #[inline]
@@ -59,6 +59,8 @@ pub trait ConflictError: StdError {
 
 impl ConflictError for std::convert::Infallible {}
 
+pub type EventStream<'a, Id, Evt, E> = BoxStream<'a, Result<PersistedEvent<Id, Evt>, E>>;
+
 #[async_trait]
 pub trait EventStore<Id, Evt>: Send + Sync {
     type AppendError: ConflictError + Send + Sync;
@@ -71,9 +73,7 @@ pub trait EventStore<Id, Evt>: Send + Sync {
         events: Events<Evt>,
     ) -> Result<u32, Self::AppendError>;
 
-    fn stream(
-        &self,
-        id: &Id,
-        select: Select,
-    ) -> BoxStream<Result<PersistedEvent<Id, Evt>, Self::StreamError>>;
+    fn stream(&self, id: &Id, select: Select) -> EventStream<Id, Evt, Self::StreamError>;
+
+    fn subscribe(&self, id: &Id) -> EventStream<Id, Evt, Self::StreamError>;
 }

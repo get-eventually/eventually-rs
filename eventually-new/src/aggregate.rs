@@ -142,7 +142,7 @@ where
         let (version, state): (u32, T::State) = events
             .map_err(RehydrateError::EventStore)
             .try_fold((0, T::State::default()), |(_, state), event| async move {
-                let version = event.version();
+                let version = event.sequence_number();
                 let next = T::apply(state, event.into()).map(|state| (version, state));
 
                 Ok(next.map_err(RehydrateError::Apply)?)

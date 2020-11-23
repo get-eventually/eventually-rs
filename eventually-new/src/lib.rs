@@ -54,4 +54,21 @@ impl<T> Event<T> {
     pub fn metadata(&self) -> Option<&HashMap<String, String>> {
         self.metadata.as_ref()
     }
+
+    pub(crate) fn with_metadata_field(mut self, key: String, value: String) -> Self {
+        if self.metadata.is_none() {
+            self.metadata = Some(HashMap::new());
+        }
+
+        self.metadata
+            .as_mut()
+            .unwrap()
+            .entry(key)
+            .and_modify(|previous| {
+                *previous = value.to_owned();
+            })
+            .or_insert_with(|| value);
+
+        self
+    }
 }

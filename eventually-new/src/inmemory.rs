@@ -7,9 +7,11 @@ use async_stream::try_stream;
 
 use async_trait::async_trait;
 
-use futures::stream::{empty, BoxStream};
+use futures::stream::empty;
 
-use crate::eventstore::{EventStore, PersistedEvent, PersistedEvents, Select, Version};
+use crate::eventstore::{
+    EventStore, EventStream, PersistedEvent, PersistedEvents, Select, Version,
+};
 use crate::Events;
 
 #[derive(Debug, Clone)]
@@ -27,9 +29,11 @@ impl<Id, Evt> Default for InMemoryEventStore<Id, Evt> {
 }
 
 #[derive(Debug, thiserror::Error)]
-#[error("conflict error, last version committed: `{last_committed_version}`, caller provided: `{provided}`")]
+#[error(
+    "conflict error, last sequence number: `{last_sequence_number}`, caller provided: `{provided}`"
+)]
 pub struct ConflictError {
-    last_committed_version: u32,
+    last_sequence_number: u32,
     provided: u32,
 }
 
@@ -55,32 +59,32 @@ where
         version: Version,
         events: Events<Evt>,
     ) -> Result<u32, Self::AppendError> {
-        let last_committed_version = self
+        let last_sequence_number = self
             .events
             .read()
             .unwrap()
             .get(id)
             .and_then(|events| events.last())
-            .map(PersistedEvent::version)
+            .map(PersistedEvent::sequence_number)
             .unwrap_or_default();
 
-        if let Version::Exact(version) = version {
-            if version != last_committed_version {
+        if let Version::Exact(sequence_number) = version {
+            if sequence_number != last_sequence_number {
                 return Err(ConflictError {
-                    last_committed_version,
-                    provided: version,
+                    last_sequence_number,
+                    provided: sequence_number,
                 });
             }
         }
 
-        let new_version = last_committed_version + (events.len() as u32);
+        let new_sequence_number = last_sequence_number + (events.len() as u32);
 
         let new_events = events
             .into_iter()
             .enumerate()
             .map(|(i, event)| PersistedEvent {
                 stream_id: id.clone(),
-                version: (last_committed_version + 1) + (i as u32),
+                sequence_number: (last_sequence_number + 1) + (i as u32),
                 event,
             });
 
@@ -91,14 +95,10 @@ where
             .and_modify(|events| events.extend(new_events.clone()))
             .or_insert_with(|| new_events.collect());
 
-        Ok(new_version)
+        Ok(new_sequence_number)
     }
 
-    fn stream(
-        &self,
-        id: &Id,
-        select: Select,
-    ) -> BoxStream<Result<PersistedEvent<Id, Evt>, Self::StreamError>> {
+    fn stream(&self, id: &Id, select: Select) -> EventStream<Id, Evt, Self::StreamError> {
         let events = self.events.read().unwrap();
         let events = events.get(id);
 
@@ -113,10 +113,16 @@ where
             for event in events {
                 match select {
                     Select::All => yield event,
-                    Select::From(version) if event.version() >= version => yield event,
-                    _ => ()
+                    Select::From(sequence_number) if event.sequence_number() >= sequence_number => {
+                        yield event
+                    }
+                    _ => (),
                 };
             }
         })
+    }
+
+    fn subscribe(&self, id: &Id) -> EventStream<Id, Evt, Self::StreamError> {
+        todo!()
     }
 }
