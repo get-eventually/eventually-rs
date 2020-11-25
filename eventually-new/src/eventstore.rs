@@ -12,7 +12,7 @@ use crate::{Event, Events};
 
 pub type PersistedEvents<Id, T> = Vec<PersistedEvent<Id, T>>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct PersistedEvent<Id, T> {
     pub(crate) stream_id: Id,
@@ -65,6 +65,7 @@ pub type EventStream<'a, Id, Evt, E> = BoxStream<'a, Result<PersistedEvent<Id, E
 pub trait EventStore<Id, Evt>: Send + Sync {
     type AppendError: ConflictError + Send + Sync;
     type StreamError: StdError + Send + Sync;
+    type SubscribeError: StdError + Send + Sync;
 
     async fn append(
         &mut self,
@@ -75,5 +76,5 @@ pub trait EventStore<Id, Evt>: Send + Sync {
 
     fn stream(&self, id: &Id, select: Select) -> EventStream<Id, Evt, Self::StreamError>;
 
-    fn subscribe(&self, id: &Id) -> EventStream<Id, Evt, Self::StreamError>;
+    fn subscribe(&self, id: &Id) -> EventStream<Id, Evt, Self::SubscribeError>;
 }
