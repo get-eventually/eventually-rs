@@ -14,13 +14,6 @@ enum Event {
     C,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-enum Ivent {
-    A,
-    B,
-    C,
-}
-
 #[tokio::test]
 async fn different_types_can_share_id() {
     let docker = testcontainers::clients::Cli::default();
@@ -47,6 +40,13 @@ async fn different_types_can_share_id() {
 
     let event_name = "first_name";
     let ivent_name = "second_name";
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    enum Ivent {
+        A,
+        B,
+        C,
+    }
 
     let mut event_store = event_store_builder
         .build::<String, Event>(event_name)
