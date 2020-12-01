@@ -86,12 +86,14 @@ const APPEND: &str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, 
 const CREATE_AGGREGATE_TYPE: &str = "SELECT * FROM create_aggregate_type($1::text)";
 
 const STREAM: &str = "SELECT e.*
-    FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
+    FROM events e LEFT JOIN aggregates a
+    ON a.id = e.aggregate_id AND a.aggregate_type_id = e.aggregate_type
     WHERE a.aggregate_type_id = $1 AND e.aggregate_id = $2 AND e.version >= $3
     ORDER BY version ASC";
 
 const STREAM_ALL: &str = "SELECT e.*
-    FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
+    FROM events e LEFT JOIN aggregates a
+    ON a.id = e.aggregate_id AND a.aggregate_type_id = e.aggregate_type
     WHERE a.aggregate_type_id = $1 AND e.sequence_number >= $2
     ORDER BY e.sequence_number ASC";
 

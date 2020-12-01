@@ -43,9 +43,7 @@ async fn different_types_can_share_id() {
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     enum Ivent {
-        A,
-        B,
-        C,
+        A(usize),
     }
 
     let mut event_store = event_store_builder
@@ -66,13 +64,40 @@ async fn different_types_can_share_id() {
         .await
         .expect("Failed appending events");
     ivent_store
-        .append(
-            shared_id.to_owned(),
-            Expected::Exact(0),
-            vec![Ivent::A, Ivent::B],
-        )
+        .append(shared_id.to_owned(), Expected::Exact(0), vec![Ivent::A(1)])
         .await
         .expect("Failed appending ivents");
+    let ivents: Vec<Persisted<String, Ivent>> = ivent_store
+        .stream_all(Select::All)
+        .await
+        .expect("failed to create first stream")
+        .try_collect()
+        .await
+        .expect("failed to collect ivents from subscription");
+    let events: Vec<Persisted<String, Event>> = event_store
+        .stream_all(Select::All)
+        .await
+        .expect("failed to create second stream")
+        .try_collect()
+        .await
+        .expect("failed to collect events from subscription");
+    assert_eq!(
+        vec![Persisted::from(shared_id.to_owned(), Ivent::A(1))
+            .version(1)
+            .sequence_number(0),],
+        ivents
+    );
+    assert_eq!(
+        vec![
+            Persisted::from(shared_id.to_owned(), Event::A)
+                .version(1)
+                .sequence_number(0),
+            Persisted::from(shared_id.to_owned(), Event::B)
+                .version(2)
+                .sequence_number(1),
+        ],
+        events
+    );
 }
 
 #[tokio::test]
