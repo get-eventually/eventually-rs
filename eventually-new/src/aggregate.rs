@@ -27,7 +27,6 @@ pub type IdOf<A> = <A as Aggregate>::Id;
 /// [`Event`]: trait.Aggregate.html#associatedtype.Event
 /// [`State`]: trait.Aggregate.html#associatedtype.State
 /// [`Command`]: trait.Aggregate.html#associatedtype.Command
-#[async_trait]
 pub trait Aggregate: Send + Sync {
     /// Aggregate identifier: this should represent an unique identifier to refer
     /// to a unique Aggregate instance.
@@ -41,32 +40,7 @@ pub trait Aggregate: Send + Sync {
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     type DomainEvent: Send + Sync;
 
-    /// Commands are all the possible operations available on an Aggregate.
-    /// Use Commands to model business use-cases or [`State`] mutations.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    type Command: AsRef<Self::Id> + Send + Sync;
-
-    /// Possible failures while [`apply`]ing [`Event`]s or handling [`Command`]s.
-    ///
-    /// [`apply`]: trait.Aggregate.html#method.apply
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
-    type HandleError: StdError + Send + Sync;
-
     type ApplyError: StdError + Send + Sync;
-
-    /// Handles the requested [`Command`] and returns a list of [`Event`]s
-    /// to apply the [`State`] mutation based on the current representation of the State.
-    ///
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
-    async fn handle(
-        &mut self,
-        state: &Self::State,
-        command: Self::Command,
-    ) -> Result<Option<Events<Self::DomainEvent>>, Self::HandleError>;
 
     /// Applies an [`Event`] to the current Aggregate [`State`].
     ///
@@ -96,6 +70,34 @@ pub trait Aggregate: Send + Sync {
     {
         events.try_fold(state, Self::apply)
     }
+}
+
+#[async_trait]
+pub trait AggregateWithCommand: Aggregate {
+    /// Commands are all the possible operations available on an Aggregate.
+    /// Use Commands to model business use-cases or [`State`] mutations.
+    ///
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    type Command: Send + Sync;
+
+    /// Possible failures while [`apply`]ing [`Event`]s or handling [`Command`]s.
+    ///
+    /// [`apply`]: trait.Aggregate.html#method.apply
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    type HandleError: StdError + Send + Sync;
+
+    /// Handles the requested [`Command`] and returns a list of [`Event`]s
+    /// to apply the [`State`] mutation based on the current representation of the State.
+    ///
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    async fn handle(
+        &mut self,
+        state: &Self::State,
+        command: Self::Command,
+    ) -> Result<Events<Self::DomainEvent>, Self::HandleError>;
 }
 
 /// Builder type for new [`AggregateRoot`] instances.
@@ -154,7 +156,7 @@ where
             version,
             aggregate: self.aggregate.clone(),
             state,
-            uncommitted_events: None,
+            uncommitted_events: Vec::new(),
         })
     }
 }
@@ -195,7 +197,7 @@ where
     aggregate: T,
 
     #[cfg_attr(feature = "serde", serde(skip_serializing))]
-    uncommitted_events: Option<Events<T::DomainEvent>>,
+    uncommitted_events: Events<T::DomainEvent>,
 }
 
 impl<T> PartialEq for AggregateRoot<T>
@@ -225,8 +227,8 @@ where
     /// Takes the list of events to commit from the current instance,
     /// resetting it to `None`.
     #[inline]
-    pub(crate) fn flush_events(&mut self) -> Option<Events<T::DomainEvent>> {
-        std::mem::replace(&mut self.uncommitted_events, None)
+    pub(crate) fn flush_events(&mut self) -> Events<T::DomainEvent> {
+        std::mem::replace(&mut self.uncommitted_events, Vec::new())
     }
 }
 
@@ -236,14 +238,7 @@ where
     T::DomainEvent: Clone,
 {
     fn apply(&mut self, events: Events<T::DomainEvent>) -> Result<(), T::ApplyError> {
-        self.uncommitted_events = match self.uncommitted_events.take() {
-            None => Some(events.clone()),
-            Some(mut old_events) => {
-                old_events.append(&mut events.clone());
-                Some(old_events)
-            }
-        };
-
+        self.uncommitted_events.append(&mut events.clone());
         self.state = T::fold(std::mem::take(&mut self.state), events.into_iter())?;
 
         Ok(())
@@ -269,11 +264,11 @@ where
 
 impl<T> AggregateRoot<T>
 where
-    T: Aggregate,
+    T: AggregateWithCommand,
     T::Id: Display + Debug + Clone,
     T::DomainEvent: Clone,
     T::State: Clone,
-    T::Command: Debug,
+    T::Command: AsRef<T::Id> + Debug,
 {
     /// Handles the submitted [`Command`] using the [`Aggregate::handle`] method
     /// and updates the Aggregate [`State`].
@@ -302,7 +297,7 @@ where
             .map_err(AggregateRootError::Handle)?;
 
         // Apply new events only if the command handling produced some.
-        if let Some(events) = events {
+        if !events.is_empty() {
             self.apply(events).map_err(AggregateRootError::Apply)?;
         }
 
@@ -355,13 +350,10 @@ where
 
     pub async fn add(&mut self, root: &mut AggregateRoot<A>) -> Result<(), ES::AppendError> {
         let events_to_commit = root.flush_events();
-        let no_events_to_commit = events_to_commit.as_ref().map(Vec::is_empty).unwrap_or(true);
 
-        if no_events_to_commit {
+        if events_to_commit.is_empty() {
             return Ok(());
         }
-
-        let events_to_commit = events_to_commit.unwrap();
 
         let new_version = self
             .event_store

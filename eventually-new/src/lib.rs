@@ -9,6 +9,8 @@ pub mod scenario;
 #[cfg(test)]
 pub mod test;
 
+pub use async_trait::async_trait;
+
 #[cfg(feature = "serde")]
 use serde::Serialize;
 

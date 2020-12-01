@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use chrono::NaiveDateTime;
 
-use crate::aggregate::Aggregate;
+use crate::aggregate::{Aggregate, AggregateWithCommand};
 use crate::{Event, Events};
 
 #[derive(Debug, Clone)]
@@ -47,41 +47,11 @@ pub enum OrderError {
     AlreadyFinalized,
 }
 
-#[async_trait]
 impl Aggregate for Order {
     type Id = String;
-    type Command = OrderCommand;
     type State = Option<OrderState>;
     type DomainEvent = OrderEvent;
-    type HandleError = OrderError;
     type ApplyError = std::convert::Infallible;
-
-    async fn handle(
-        &mut self,
-        state: &Self::State,
-        command: Self::Command,
-    ) -> Result<Option<Events<Self::DomainEvent>>, Self::HandleError> {
-        match command {
-            OrderCommand::Create { now, .. } => {
-                if state.is_none() {
-                    Ok(Some(vec![Event::from(OrderEvent::Created { at: now })]))
-                } else {
-                    Err(OrderError::AlreadyCreated)
-                }
-            }
-
-            OrderCommand::Finalize { now, .. } => match state {
-                None => Err(OrderError::NotCreatedYet),
-                Some(state) => {
-                    if state.finalized {
-                        Err(OrderError::AlreadyFinalized)
-                    } else {
-                        Ok(Some(vec![Event::from(OrderEvent::Finalized { at: now })]))
-                    }
-                }
-            },
-        }
-    }
 
     fn apply(
         _state: Self::State,
@@ -101,6 +71,39 @@ impl Aggregate for Order {
     }
 }
 
+#[async_trait]
+impl AggregateWithCommand for Order {
+    type Command = OrderCommand;
+    type HandleError = OrderError;
+
+    async fn handle(
+        &mut self,
+        state: &<Self as Aggregate>::State,
+        command: Self::Command,
+    ) -> Result<Events<<Self as Aggregate>::DomainEvent>, Self::HandleError> {
+        match command {
+            OrderCommand::Create { now, .. } => {
+                if state.is_none() {
+                    Ok(vec![Event::from(OrderEvent::Created { at: now })])
+                } else {
+                    Err(OrderError::AlreadyCreated)
+                }
+            }
+
+            OrderCommand::Finalize { now, .. } => match state {
+                None => Err(OrderError::NotCreatedYet),
+                Some(state) => {
+                    if state.finalized {
+                        Err(OrderError::AlreadyFinalized)
+                    } else {
+                        Ok(vec![Event::from(OrderEvent::Finalized { at: now })])
+                    }
+                }
+            },
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -116,7 +119,7 @@ mod tests {
 
         AggregateRootScenario::with(id.clone(), Order)
             .when(OrderCommand::Create { id, now })
-            .then(Some(vec![OrderEvent::Created { at: now }.into()]))
+            .then(vec![OrderEvent::Created { at: now }.into()])
             .await;
     }
 
@@ -129,7 +132,7 @@ mod tests {
         AggregateRootScenario::with(id.clone(), Order)
             .given(vec![OrderEvent::Created { at: created_at }.into()])
             .when(OrderCommand::Finalize { id, now })
-            .then(Some(vec![OrderEvent::Finalized { at: now }.into()]))
+            .then(vec![OrderEvent::Finalized { at: now }.into()])
             .await;
     }
 
