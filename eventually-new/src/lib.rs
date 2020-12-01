@@ -23,6 +23,12 @@ pub struct Event<T> {
     metadata: Option<HashMap<String, String>>,
 }
 
+impl<T> AsRef<T> for Event<T> {
+    fn as_ref(&self) -> &T {
+        &self.data
+    }
+}
+
 impl<T> From<T> for Event<T> {
     #[inline]
     fn from(data: T) -> Self {
@@ -55,22 +61,5 @@ impl<T> Event<T> {
     #[inline]
     pub fn metadata(&self) -> Option<&HashMap<String, String>> {
         self.metadata.as_ref()
-    }
-
-    pub(crate) fn with_metadata_field(mut self, key: String, value: String) -> Self {
-        if self.metadata.is_none() {
-            self.metadata = Some(HashMap::new());
-        }
-
-        self.metadata
-            .as_mut()
-            .unwrap()
-            .entry(key)
-            .and_modify(|previous| {
-                *previous = value.to_owned();
-            })
-            .or_insert_with(|| value);
-
-        self
     }
 }
