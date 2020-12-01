@@ -1,5 +1,5 @@
 use eventually_core::store::{EventStore, Expected, Persisted, Select};
-use eventually_postgres::{EventStoreBuilder, EventStoreBuilderMigrated};
+use eventually_postgres::EventStoreBuilder;
 
 use futures::stream::TryStreamExt;
 
