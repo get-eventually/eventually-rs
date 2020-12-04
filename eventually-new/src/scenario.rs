@@ -2,16 +2,14 @@ use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
-use crate::aggregate::{
-    Aggregate, AggregateRootBuilder, AggregateRootError, AggregateWithCommand, Repository,
-};
+use crate::aggregate::{Aggregate, AggregateRootBuilder, AggregateRootError, Repository};
 use crate::eventstore::{EventStore, Version};
 use crate::inmemory::InMemoryEventStore;
 use crate::Events;
 
 pub struct AggregateRootScenario<A>
 where
-    A: AggregateWithCommand,
+    A: Aggregate,
 {
     aggregate_id: A::Id,
     aggregate_root_builder: AggregateRootBuilder<A>,
@@ -19,7 +17,7 @@ where
 
 impl<A> AggregateRootScenario<A>
 where
-    A: AggregateWithCommand,
+    A: Aggregate,
 {
     pub fn with(id: A::Id, aggregate: A) -> Self {
         Self {
@@ -48,7 +46,7 @@ where
 
 pub struct AggregateRootScenarioWhen<A>
 where
-    A: AggregateWithCommand,
+    A: Aggregate,
 {
     aggregate_id: A::Id,
     aggregate_root_builder: AggregateRootBuilder<A>,
@@ -57,7 +55,7 @@ where
 
 impl<A> AggregateRootScenarioWhen<A>
 where
-    A: AggregateWithCommand,
+    A: Aggregate,
 {
     pub fn when(self, command: A::Command) -> AggregateRootScenarioThen<A> {
         AggregateRootScenarioThen {
@@ -71,7 +69,7 @@ where
 
 pub struct AggregateRootScenarioThen<A>
 where
-    A: AggregateWithCommand,
+    A: Aggregate,
 {
     aggregate_id: A::Id,
     aggregate_root_builder: AggregateRootBuilder<A>,
@@ -81,13 +79,13 @@ where
 
 impl<A> AggregateRootScenarioThen<A>
 where
-    A: AggregateWithCommand + Clone + 'static,
+    A: Aggregate + Clone + 'static,
     <A as Aggregate>::Id: Eq + Hash + Display + Debug + Clone + Unpin,
     <A as Aggregate>::State: Default + Clone,
     <A as Aggregate>::DomainEvent: PartialEq + Debug + Clone + Unpin,
     <A as Aggregate>::ApplyError: PartialEq + StdError + 'static,
-    <A as AggregateWithCommand>::Command: AsRef<A::Id> + Debug,
-    <A as AggregateWithCommand>::HandleError: PartialEq + StdError + 'static,
+    <A as Aggregate>::Command: AsRef<A::Id> + Debug,
+    <A as Aggregate>::HandleError: PartialEq + StdError + 'static,
 {
     pub async fn then_nothing(self) {
         self.then(Vec::new()).await

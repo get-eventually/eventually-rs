@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use chrono::NaiveDateTime;
 
-use crate::aggregate::{Aggregate, AggregateWithCommand};
+use crate::aggregate::Aggregate;
 use crate::{Event, Events};
 
 #[derive(Debug, Clone)]
@@ -47,33 +47,13 @@ pub enum OrderError {
     AlreadyFinalized,
 }
 
+#[async_trait]
 impl Aggregate for Order {
     type Id = String;
     type State = Option<OrderState>;
     type DomainEvent = OrderEvent;
-    type ApplyError = std::convert::Infallible;
-
-    fn apply(
-        _state: Self::State,
-        event: Event<Self::DomainEvent>,
-    ) -> Result<Self::State, Self::ApplyError> {
-        Ok(Some(match event.into_inner() {
-            OrderEvent::Created { at } => OrderState {
-                finalized: false,
-                updated_at: at,
-            },
-
-            OrderEvent::Finalized { at } => OrderState {
-                finalized: true,
-                updated_at: at,
-            },
-        }))
-    }
-}
-
-#[async_trait]
-impl AggregateWithCommand for Order {
     type Command = OrderCommand;
+    type ApplyError = std::convert::Infallible;
     type HandleError = OrderError;
 
     async fn handle(
@@ -101,6 +81,23 @@ impl AggregateWithCommand for Order {
                 }
             },
         }
+    }
+
+    fn apply(
+        _state: Self::State,
+        event: Event<Self::DomainEvent>,
+    ) -> Result<Self::State, Self::ApplyError> {
+        Ok(Some(match event.into_inner() {
+            OrderEvent::Created { at } => OrderState {
+                finalized: false,
+                updated_at: at,
+            },
+
+            OrderEvent::Finalized { at } => OrderState {
+                finalized: true,
+                updated_at: at,
+            },
+        }))
     }
 }
 

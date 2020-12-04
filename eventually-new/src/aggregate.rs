@@ -27,6 +27,7 @@ pub type IdOf<A> = <A as Aggregate>::Id;
 /// [`Event`]: trait.Aggregate.html#associatedtype.Event
 /// [`State`]: trait.Aggregate.html#associatedtype.State
 /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+#[async_trait]
 pub trait Aggregate: Send + Sync {
     /// Aggregate identifier: this should represent an unique identifier to refer
     /// to a unique Aggregate instance.
@@ -40,7 +41,32 @@ pub trait Aggregate: Send + Sync {
     /// [`State`]: trait.Aggregate.html#associatedtype.State
     type DomainEvent: Send + Sync;
 
+    /// Commands are all the possible operations available on an Aggregate.
+    /// Use Commands to model business use-cases or [`State`] mutations.
+    ///
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    type Command: Send + Sync;
+
     type ApplyError: StdError + Send + Sync;
+
+    /// Possible failures while [`apply`]ing [`Event`]s or handling [`Command`]s.
+    ///
+    /// [`apply`]: trait.Aggregate.html#method.apply
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    type HandleError: StdError + Send + Sync;
+
+    /// Handles the requested [`Command`] and returns a list of [`Event`]s
+    /// to apply the [`State`] mutation based on the current representation of the State.
+    ///
+    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
+    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    async fn handle(
+        &mut self,
+        state: &Self::State,
+        command: Self::Command,
+    ) -> Result<Events<Self::DomainEvent>, Self::HandleError>;
 
     /// Applies an [`Event`] to the current Aggregate [`State`].
     ///
@@ -70,34 +96,6 @@ pub trait Aggregate: Send + Sync {
     {
         events.try_fold(state, Self::apply)
     }
-}
-
-#[async_trait]
-pub trait AggregateWithCommand: Aggregate {
-    /// Commands are all the possible operations available on an Aggregate.
-    /// Use Commands to model business use-cases or [`State`] mutations.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    type Command: Send + Sync;
-
-    /// Possible failures while [`apply`]ing [`Event`]s or handling [`Command`]s.
-    ///
-    /// [`apply`]: trait.Aggregate.html#method.apply
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
-    type HandleError: StdError + Send + Sync;
-
-    /// Handles the requested [`Command`] and returns a list of [`Event`]s
-    /// to apply the [`State`] mutation based on the current representation of the State.
-    ///
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
-    async fn handle(
-        &mut self,
-        state: &Self::State,
-        command: Self::Command,
-    ) -> Result<Events<Self::DomainEvent>, Self::HandleError>;
 }
 
 /// Builder type for new [`AggregateRoot`] instances.
@@ -264,7 +262,7 @@ where
 
 impl<T> AggregateRoot<T>
 where
-    T: AggregateWithCommand,
+    T: Aggregate,
     T::Id: Display + Debug + Clone,
     T::DomainEvent: Clone,
     T::State: Clone,
