@@ -16,17 +16,8 @@ pub struct Order;
 
 #[derive(Debug)]
 pub enum OrderCommand {
-    Create { id: String, now: NaiveDateTime },
-    Finalize { id: String, now: NaiveDateTime },
-}
-
-impl AsRef<String> for OrderCommand {
-    fn as_ref(&self) -> &String {
-        match self {
-            OrderCommand::Create { id, .. } => id,
-            OrderCommand::Finalize { id, .. } => id,
-        }
-    }
+    Create { now: NaiveDateTime },
+    Finalize { now: NaiveDateTime },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -58,6 +49,7 @@ impl Aggregate for Order {
 
     async fn handle(
         &mut self,
+        _id: &Self::Id,
         state: &<Self as Aggregate>::State,
         command: Self::Command,
     ) -> Result<Events<<Self as Aggregate>::DomainEvent>, Self::HandleError> {
@@ -115,7 +107,7 @@ mod tests {
         let now = Utc::now().naive_utc();
 
         AggregateRootScenario::with(id.clone(), Order)
-            .when(OrderCommand::Create { id, now })
+            .when(OrderCommand::Create { now })
             .then(vec![OrderEvent::Created { at: now }.into()])
             .await;
     }
@@ -128,7 +120,7 @@ mod tests {
 
         AggregateRootScenario::with(id.clone(), Order)
             .given(vec![OrderEvent::Created { at: created_at }.into()])
-            .when(OrderCommand::Finalize { id, now })
+            .when(OrderCommand::Finalize { now })
             .then(vec![OrderEvent::Finalized { at: now }.into()])
             .await;
     }
@@ -141,7 +133,7 @@ mod tests {
 
         AggregateRootScenario::with(id.clone(), Order)
             .given(vec![OrderEvent::Created { at: created_at }.into()])
-            .when(OrderCommand::Create { id, now })
+            .when(OrderCommand::Create { now })
             .then_error(OrderError::AlreadyCreated)
             .await;
     }
@@ -157,7 +149,7 @@ mod tests {
                 OrderEvent::Created { at: created_at }.into(),
                 OrderEvent::Finalized { at: now }.into(),
             ])
-            .when(OrderCommand::Finalize { id, now })
+            .when(OrderCommand::Finalize { now })
             .then_error(OrderError::AlreadyFinalized)
             .await;
     }
@@ -168,7 +160,7 @@ mod tests {
         let now = Utc::now().naive_utc();
 
         AggregateRootScenario::with(id.clone(), Order)
-            .when(OrderCommand::Finalize { id, now })
+            .when(OrderCommand::Finalize { now })
             .then_error(OrderError::NotCreatedYet)
             .await;
     }

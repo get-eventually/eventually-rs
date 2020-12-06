@@ -84,7 +84,7 @@ where
     <A as Aggregate>::State: Default + Clone,
     <A as Aggregate>::DomainEvent: PartialEq + Debug + Clone + Unpin,
     <A as Aggregate>::ApplyError: PartialEq + StdError + 'static,
-    <A as Aggregate>::Command: AsRef<A::Id> + Debug,
+    <A as Aggregate>::Command: Debug,
     <A as Aggregate>::HandleError: PartialEq + StdError + 'static,
 {
     pub async fn then_nothing(self) {

@@ -64,6 +64,7 @@ pub trait Aggregate: Send + Sync {
     /// [`Command`]: trait.Aggregate.html#associatedtype.Command
     async fn handle(
         &mut self,
+        id: &Self::Id,
         state: &Self::State,
         command: Self::Command,
     ) -> Result<Events<Self::DomainEvent>, Self::HandleError>;
@@ -124,6 +125,33 @@ where
 
     #[error("rehydrate error, failed to process next event: {0}")]
     EventStore(#[source] ES),
+}
+
+impl<T> AggregateRootBuilder<T>
+where
+    T: Aggregate + Clone + 'static,
+    T::Id: Display + Debug + Clone,
+    T::DomainEvent: Clone,
+    T::State: Clone,
+    T::Command: Debug,
+{
+    pub async fn build_from(
+        &self,
+        id: T::Id,
+        command: T::Command,
+    ) -> Result<AggregateRoot<T>, AggregateRootError<T::HandleError, T::ApplyError>> {
+        let mut aggregate_root = AggregateRoot {
+            id,
+            version: 0,
+            aggregate: self.aggregate.clone(),
+            state: T::State::default(),
+            uncommitted_events: Vec::new(),
+        };
+
+        aggregate_root.handle(command).await?;
+
+        Ok(aggregate_root)
+    }
 }
 
 impl<T> AggregateRootBuilder<T>
@@ -244,15 +272,11 @@ where
 }
 
 #[derive(Debug, PartialEq, thiserror::Error)]
-pub enum AggregateRootError<Id, HandleError, ApplyError>
+pub enum AggregateRootError<HandleError, ApplyError>
 where
-    Id: Display + Debug,
     HandleError: StdError + 'static,
     ApplyError: StdError + 'static,
 {
-    #[error("command refers to another aggregate instance with id: `{0}`")]
-    MismatchId(Id),
-
     #[error("aggregate failed to process command: {0}")]
     Handle(#[source] HandleError),
 
@@ -266,7 +290,7 @@ where
     T::Id: Display + Debug + Clone,
     T::DomainEvent: Clone,
     T::State: Clone,
-    T::Command: AsRef<T::Id> + Debug,
+    T::Command: Debug,
 {
     /// Handles the submitted [`Command`] using the [`Aggregate::handle`] method
     /// and updates the Aggregate [`State`].
@@ -283,18 +307,14 @@ where
     pub async fn handle(
         &mut self,
         command: T::Command,
-    ) -> Result<(), AggregateRootError<T::Id, T::HandleError, T::ApplyError>> {
-        if self.id() != command.as_ref() {
-            return Err(AggregateRootError::MismatchId(command.as_ref().clone()));
-        }
-
+    ) -> Result<(), AggregateRootError<T::HandleError, T::ApplyError>> {
         let events = self
             .aggregate
-            .handle(&self.state, command)
+            .handle(&self.id, &self.state, command)
             .await
             .map_err(AggregateRootError::Handle)?;
 
-        // Apply new events only if the command handling produced some.
+        // Apply new events only if the command handclone()ling produced some.
         if !events.is_empty() {
             self.apply(events).map_err(AggregateRootError::Apply)?;
         }
