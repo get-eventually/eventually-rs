@@ -36,13 +36,13 @@ pub enum SubscriberError {
     /// Error variant returned when deserializing payloads coming from Postgres' `LISTEN`
     /// asynchronous notifications.
     #[error("failed to deserialize notification payload from JSON: {0}")]
-    DeserializeError(String),
+    Deserialize(String),
 
     /// Error variant returned when the connection, used for `LISTEN` asynchronous notifications
     /// gets dropped. Currently the subscriber cannot recover from this error and a new one should
     /// be created.
-    #[error("postgres connection error: ${0}")]
-    ConnectionError(String),
+    #[error("postgres connection error: {0}")]
+    Connection(String),
 }
 
 /// Subscriber for listening to new events committed to an [`EventStore`],
@@ -94,7 +94,7 @@ where
                                     serde_json::from_str::<NotificationPayload<Event>>(
                                         not.payload(),
                                     )
-                                    .map_err(|e| SubscriberError::DeserializeError(e.to_string()))
+                                    .map_err(|e| SubscriberError::Deserialize(e.to_string()))
                                     .and_then(TryInto::try_into),
                                 );
                             }
@@ -103,7 +103,7 @@ where
                     Err(e) => {
                         #[allow(unused_must_use)]
                         {
-                            tx_captured.send(Err(SubscriberError::ConnectionError(e.to_string())));
+                            tx_captured.send(Err(SubscriberError::Connection(e.to_string())));
                         }
                         break;
                     }
@@ -162,7 +162,7 @@ where
 
     fn try_from(payload: NotificationPayload<Event>) -> Result<Self> {
         let source_id: SourceId = payload.source_id.try_into().map_err(|e| {
-            SubscriberError::DeserializeError(format!(
+            SubscriberError::Deserialize(format!(
                 "could not deserialize source id from string: {:?}",
                 e
             ))
