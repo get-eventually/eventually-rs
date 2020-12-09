@@ -158,6 +158,24 @@
 <span id="155">155</span>
 <span id="156">156</span>
 <span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Contains an [`EventSubscriber`] implementation using PostgreSQL</span>
 <span class="doccomment">//! as a backend data store and `NOTIFY`/`LISTEN` functionality</span>
@@ -184,20 +202,26 @@
 
 <span class="kw">const</span> <span class="ident">DEFAULT_BROADCAST_CHANNEL_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">128</span>;
 
-<span class="doccomment">/// Alias type for a `Result` having [`DeserializeError`] as error type.alloc</span>
+<span class="doccomment">/// Alias type for a `Result` having [`SubscriberError`] as error type.alloc</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [`DeserializeError`]: struct.DeserializeError.html</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">DeserializeError</span><span class="op">&gt;</span>;
+<span class="doccomment">/// [`SubscriberError`]: struct.SubscriberError.html</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SubscriberError</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Error returned by the `TryStream` on [`subscribe_all`]</span>
-<span class="doccomment">/// when deserializing payloads coming from Postgres&#39; `LISTEN`</span>
-<span class="doccomment">/// asynchronous notifications.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
-<span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to deserialize notification payload from JSON: {message}&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DeserializeError</span> {
-    <span class="ident">message</span>: <span class="ident">String</span>,
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SubscriberError</span> {
+    <span class="doccomment">/// Error variant returned when deserializing payloads coming from Postgres&#39; `LISTEN`</span>
+    <span class="doccomment">/// asynchronous notifications.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to deserialize notification payload from JSON: {0}&quot;</span>)]</span>
+    <span class="ident">Deserialize</span>(<span class="ident">String</span>),
+
+    <span class="doccomment">/// Error variant returned when the connection, used for `LISTEN` asynchronous notifications</span>
+    <span class="doccomment">/// gets dropped. Currently the subscriber cannot recover from this error and a new one should</span>
+    <span class="doccomment">/// be created.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;postgres connection error: {0}&quot;</span>)]</span>
+    <span class="ident">Connection</span>(<span class="ident">String</span>),
 }
 
 <span class="doccomment">/// Subscriber for listening to new events committed to an [`EventStore`],</span>
@@ -240,18 +264,27 @@
 
         <span class="ident">eventually_util</span>::<span class="ident">spawn</span>(<span class="ident">async</span> <span class="kw">move</span> {
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="ident">stream</span>.<span class="ident">next</span>().<span class="ident">await</span> {
-                <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">expect</span>(<span class="string">&quot;subscriber connection failed&quot;</span>);
-
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AsyncMessage</span>::<span class="ident">Notification</span>(<span class="ident">not</span>) <span class="op">=</span> <span class="ident">event</span> {
-                    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
-                    {
-                        <span class="ident">tx_captured</span>.<span class="ident">send</span>(
-                            <span class="ident">serde_json</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">NotificationPayload</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">not</span>.<span class="ident">payload</span>())
-                                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">DeserializeError</span> {
-                                    <span class="ident">message</span>: <span class="ident">e</span>.<span class="ident">to_string</span>(),
-                                })
-                                .<span class="ident">and_then</span>(<span class="ident">TryInto</span>::<span class="ident">try_into</span>),
-                        );
+                <span class="kw">match</span> <span class="ident">event</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">event</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AsyncMessage</span>::<span class="ident">Notification</span>(<span class="ident">not</span>) <span class="op">=</span> <span class="ident">event</span> {
+                            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
+                            {
+                                <span class="ident">tx_captured</span>.<span class="ident">send</span>(
+                                    <span class="ident">serde_json</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">NotificationPayload</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+                                        <span class="ident">not</span>.<span class="ident">payload</span>(),
+                                    )
+                                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">SubscriberError</span>::<span class="ident">Deserialize</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+                                    .<span class="ident">and_then</span>(<span class="ident">TryInto</span>::<span class="ident">try_into</span>),
+                                );
+                            }
+                        }
+                    }
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
+                        {
+                            <span class="ident">tx_captured</span>.<span class="ident">send</span>(<span class="prelude-val">Err</span>(<span class="ident">SubscriberError</span>::<span class="ident">Connection</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())));
+                        }
+                        <span class="kw">break</span>;
                     }
                 }
             }
@@ -274,7 +307,7 @@
 {
     <span class="kw">type</span> <span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">Id</span>;
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">DeserializeError</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SubscriberError</span>;
 
     <span class="kw">fn</span> <span class="ident">subscribe_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="ident">async</span> <span class="kw">move</span> {
@@ -304,11 +337,14 @@
     <span class="ident">SourceId</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="op">&lt;</span><span class="ident">SourceId</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">DeserializeError</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SubscriberError</span>;
 
     <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">payload</span>: <span class="ident">NotificationPayload</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">source_id</span>: <span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">payload</span>.<span class="ident">source_id</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">DeserializeError</span> {
-            <span class="ident">message</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;could not deserialize source id from string: {:?}&quot;</span>, <span class="ident">e</span>),
+        <span class="kw">let</span> <span class="ident">source_id</span>: <span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">payload</span>.<span class="ident">source_id</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">SubscriberError</span>::<span class="ident">Deserialize</span>(<span class="macro">format</span><span class="macro">!</span>(
+                <span class="string">&quot;could not deserialize source id from string: {:?}&quot;</span>,
+                <span class="ident">e</span>
+            ))
         })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">Persisted</span>::<span class="ident">from</span>(<span class="ident">source_id</span>, <span class="ident">payload</span>.<span class="ident">event</span>)
