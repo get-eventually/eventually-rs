@@ -23,20 +23,26 @@ use tokio_postgres::AsyncMessage;
 
 const DEFAULT_BROADCAST_CHANNEL_SIZE: usize = 128;
 
-/// Alias type for a `Result` having [`DeserializeError`] as error type.alloc
+/// Alias type for a `Result` having [`SubscriberError`] as error type.alloc
 ///
-/// [`DeserializeError`]: struct.DeserializeError.html
-pub type Result<T> = std::result::Result<T, DeserializeError>;
+/// [`SubscriberError`]: struct.SubscriberError.html
+pub type Result<T> = std::result::Result<T, SubscriberError>;
 
 /// Error returned by the `TryStream` on [`subscribe_all`]
-/// when deserializing payloads coming from Postgres' `LISTEN`
-/// asynchronous notifications.
 ///
 /// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
 #[derive(Debug, Clone, thiserror::Error)]
-#[error("failed to deserialize notification payload from JSON: {message}")]
-pub struct DeserializeError {
-    message: String,
+pub enum SubscriberError {
+    /// Error variant returned when deserializing payloads coming from Postgres' `LISTEN`
+    /// asynchronous notifications.
+    #[error("failed to deserialize notification payload from JSON: {0}")]
+    Deserialize(String),
+
+    /// Error variant returned when the connection, used for `LISTEN` asynchronous notifications
+    /// gets dropped. Currently the subscriber cannot recover from this error and a new one should
+    /// be created.
+    #[error("postgres connection error: {0}")]
+    Connection(String),
 }
 
 /// Subscriber for listening to new events committed to an [`EventStore`],
@@ -79,18 +85,27 @@ where
 
         eventually_util::spawn(async move {
             while let Some(event) = stream.next().await {
-                let event = event.expect("subscriber connection failed");
-
-                if let AsyncMessage::Notification(not) = event {
-                    #[allow(unused_must_use)]
-                    {
-                        tx_captured.send(
-                            serde_json::from_str::<NotificationPayload<Event>>(not.payload())
-                                .map_err(|e| DeserializeError {
-                                    message: e.to_string(),
-                                })
-                                .and_then(TryInto::try_into),
-                        );
+                match event {
+                    Ok(event) => {
+                        if let AsyncMessage::Notification(not) = event {
+                            #[allow(unused_must_use)]
+                            {
+                                tx_captured.send(
+                                    serde_json::from_str::<NotificationPayload<Event>>(
+                                        not.payload(),
+                                    )
+                                    .map_err(|e| SubscriberError::Deserialize(e.to_string()))
+                                    .and_then(TryInto::try_into),
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        #[allow(unused_must_use)]
+                        {
+                            tx_captured.send(Err(SubscriberError::Connection(e.to_string())));
+                        }
+                        break;
                     }
                 }
             }
@@ -113,7 +128,7 @@ where
 {
     type SourceId = Id;
     type Event = Event;
-    type Error = DeserializeError;
+    type Error = SubscriberError;
 
     fn subscribe_all(&self) -> BoxFuture<Result<EventStream<Self>>> {
         Box::pin(async move {
@@ -143,11 +158,14 @@ where
     SourceId: TryFrom<String>,
     <SourceId as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
 {
-    type Error = DeserializeError;
+    type Error = SubscriberError;
 
     fn try_from(payload: NotificationPayload<Event>) -> Result<Self> {
-        let source_id: SourceId = payload.source_id.try_into().map_err(|e| DeserializeError {
-            message: format!("could not deserialize source id from string: {:?}", e),
+        let source_id: SourceId = payload.source_id.try_into().map_err(|e| {
+            SubscriberError::Deserialize(format!(
+                "could not deserialize source id from string: {:?}",
+                e
+            ))
         })?;
 
         Ok(Persisted::from(source_id, payload.event)

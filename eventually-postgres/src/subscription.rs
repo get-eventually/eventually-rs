@@ -24,7 +24,7 @@ use eventually_core::subscription::{
 };
 
 use crate::store::{Error as EventStoreError, EventStore, PoolResult};
-use crate::subscriber::{DeserializeError, EventSubscriber};
+use crate::subscriber::{EventSubscriber, SubscriberError};
 use crate::Params;
 
 const GET_OR_CREATE_SUBSCRIPTION: &str = "SELECT * FROM get_or_create_subscription($1, $2)";
@@ -47,7 +47,7 @@ pub enum Error {
     ///
     /// [`EventSubscriber`]: ../store/struct.EventSubscriber.html
     #[error("error detected while reading catch-up event stream from the subscription: {0}")]
-    Subscriber(#[source] DeserializeError),
+    Subscriber(#[source] SubscriberError),
 
     /// Error variant returned when an issue has occurred during the checkpoint
     /// of a processed event.
