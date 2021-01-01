@@ -50,7 +50,7 @@ async fn subscribe_all_works() {
         .await
         .expect("failed to create event subscription");
 
-    let subscription = event_subscriber
+    let mut subscription = event_subscriber
         .subscribe_all()
         .await
         .expect("failed to create subscription from event subscriber");
@@ -63,27 +63,42 @@ async fn subscribe_all_works() {
         )
         .await
         .expect("failed while appending events");
-
-    let events: Vec<Persisted<String, Event>> = subscription
-        .take(3)
-        .try_collect()
+    let event_a = subscription
+        .next()
         .await
-        .expect("failed to collect events from subscription");
-
+        .unwrap()
+        .expect("Failed collecting event A");
+    let event_b = subscription
+        .next()
+        .await
+        .unwrap()
+        .expect("Failed collecting event B");
+    let event_c = subscription
+        .next()
+        .await
+        .unwrap()
+        .expect("Failed collecting event C");
     assert_eq!(
-        vec![
-            Persisted::from(source_id.to_owned(), Event::A)
-                .version(1)
-                .sequence_number(0),
-            Persisted::from(source_id.to_owned(), Event::B)
-                .version(2)
-                .sequence_number(1),
-            Persisted::from(source_id.to_owned(), Event::C)
-                .version(3)
-                .sequence_number(2)
-        ],
-        events
+        event_a,
+        Persisted::from(source_id.to_owned(), Event::A)
+            .version(1)
+            .sequence_number(0),
     );
+    assert_eq!(
+        event_b,
+        Persisted::from(source_id.to_owned(), Event::B)
+            .version(2)
+            .sequence_number(1),
+    );
+    assert_eq!(
+        event_c,
+        Persisted::from(source_id.to_owned(), Event::C)
+            .version(3)
+            .sequence_number(2),
+    );
+    node.stop();
+    let connection_error = subscription.next().await.unwrap();
+    assert!(connection_error.is_err());
 }
 
 #[tokio::test]
