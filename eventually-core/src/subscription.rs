@@ -81,11 +81,13 @@ pub type SubscriptionStream<'a, S> = BoxStream<
 
 /// A Subscription to an [`EventStream`] which can be "checkpointed":
 /// keeps a record of the latest message processed by itself using [`checkpoint`],
-/// and can resume working from such message by using the [`resume`].
+/// and can resume working from such message - either with the infinite [`resume`],
+/// or finite [`cachup`].
 ///
 /// [`EventStream`]: type.EventStream.html
 /// [`resume`]: trait.Subscription.html#method.resume
 /// [`checkpoint`]: trait.Subscription.html#method.checkpoint
+/// [`cachup`]: trait.Subscription.html#method.cachup
 pub trait Subscription {
     /// Type of the Source id, typically an [`AggregateId`].
     ///
@@ -110,6 +112,13 @@ pub trait Subscription {
     /// Saves the provided version (or sequence number) as the latest
     /// version processed.
     fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>>;
+
+    /// Caches-up to  the current state of a `Subscription` by returning the [`EventStream`],
+    /// starting from the last event processed by the `Subscription`. The stream stops
+    /// (is exhausted) once there are no more events to process.
+    ///
+    /// [`EventStream`]: type.EventStream.html
+    fn cachup(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>>;
 }
 
 /// Error type returned by a [`Transient`] Subscription.
@@ -172,6 +181,69 @@ impl<Store, Subscriber> Transient<Store, Subscriber> {
     }
 }
 
+type StorePersisted<S> = Persisted<<S as EventStore>::SourceId, <S as EventStore>::Event>;
+
+impl<Store, Subscriber> Transient<Store, Subscriber>
+where
+    Store: EventStore + Send + Sync,
+    Subscriber: EventSubscriber<
+            SourceId = <Store as EventStore>::SourceId,
+            Event = <Store as EventStore>::Event,
+        > + Send
+        + Sync,
+    <Store as EventStore>::SourceId: Send + Sync,
+    <Store as EventStore>::Error: StdError + Send + Sync + 'static,
+    <Subscriber as EventSubscriber>::Error: StdError + Send + Sync + 'static,
+{
+    fn process_event(
+        &self,
+        event: StorePersisted<Store>,
+    ) -> Result<Option<StorePersisted<Store>>, Error> {
+        let expected_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
+
+        let event_sequence_number = event.sequence_number();
+
+        if event_sequence_number < expected_sequence_number {
+            #[cfg(feature = "with-tracing")]
+            tracing::trace!(
+                event.sequence_number = event_sequence_number,
+                subscription.sequence_number = expected_sequence_number,
+                "Duplicated event detected; skipping"
+            );
+
+            return Ok(None);
+        }
+
+        Ok(Some(event))
+    }
+
+    async fn subscribe(
+        &self,
+    ) -> Result<
+        BoxStream<'_, Result<StorePersisted<Store>, <Subscriber as EventSubscriber>::Error>>,
+        Error,
+    > {
+        self.subscriber
+            .subscribe_all()
+            .await
+            .map_err(anyhow::Error::from)
+            .map_err(Error::Store)
+    }
+
+    async fn stream_stored(
+        &self,
+    ) -> Result<BoxStream<'_, Result<StorePersisted<Store>, <Store as EventStore>::Error>>, Error>
+    {
+        self.store
+            .stream_all(Select::From(
+                self.last_sequence_number.load(Ordering::Relaxed),
+            ))
+            .await
+            .map_err(anyhow::Error::from)
+            .map_err(Error::Subscription)
+    }
+}
+
 impl<Store, Subscriber> Subscription for Transient<Store, Subscriber>
 where
     Store: EventStore + Send + Sync,
@@ -189,6 +261,20 @@ where
     type Event = Store::Event;
     type Error = Error;
 
+    fn cachup(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
+        Box::pin(async move {
+            let one_off_stream = self.stream_stored().await?;
+
+            let stream = one_off_stream
+                .map_err(anyhow::Error::from)
+                .map_err(Error::Store)
+                .try_filter_map(move |event| async move { self.process_event(event) })
+                .boxed();
+
+            Ok(stream)
+        })
+    }
+
     fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
         Box::pin(async move {
             // Create the Subscription first, so that once the future has been resolved
@@ -201,21 +287,8 @@ where
             // and the subscription stream. Luckily, we can discard those by
             // keeping an internal state of the last processed sequence number,
             // and discard all those events that are found.
-            let subscription = self
-                .subscriber
-                .subscribe_all()
-                .await
-                .map_err(anyhow::Error::from)
-                .map_err(Error::Store)?;
-
-            let one_off_stream = self
-                .store
-                .stream_all(Select::From(
-                    self.last_sequence_number.load(Ordering::Relaxed),
-                ))
-                .await
-                .map_err(anyhow::Error::from)
-                .map_err(Error::Subscription)?;
+            let subscription = self.subscribe().await?;
+            let one_off_stream = self.stream_stored().await?;
 
             let stream = one_off_stream
                 .map_err(anyhow::Error::from)
@@ -225,25 +298,7 @@ where
                         .map_err(anyhow::Error::from)
                         .map_err(Error::Subscription),
                 )
-                .try_filter_map(move |event| async move {
-                    let expected_sequence_number =
-                        self.last_sequence_number.load(Ordering::Relaxed);
-
-                    let event_sequence_number = event.sequence_number();
-
-                    if event_sequence_number < expected_sequence_number {
-                        #[cfg(feature = "with-tracing")]
-                        tracing::trace!(
-                            event.sequence_number = event_sequence_number,
-                            subscription.sequence_number = expected_sequence_number,
-                            "Duplicated event detected; skipping"
-                        );
-
-                        return Ok(None);
-                    }
-
-                    Ok(Some(event))
-                })
+                .try_filter_map(move |event| async move { self.process_event(event) })
                 .boxed();
 
             Ok(stream)
