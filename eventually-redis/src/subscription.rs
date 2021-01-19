@@ -123,7 +123,7 @@ where
         Box::pin(fut)
     }
 
-    fn cachup(&self) -> BoxFuture<SubscriptionResult<SubscriptionStream<Self>>> {
+    fn catch_up(&self) -> BoxFuture<SubscriptionResult<SubscriptionStream<Self>>> {
         let fut = async move {
             let keys_stream = stream::into_xread_catchup_stream(
                 self.conn.clone(),

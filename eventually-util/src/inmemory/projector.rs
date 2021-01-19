@@ -80,7 +80,7 @@ where
         #[cfg(feature = "with-tracing")]
         let projection_type = std::any::type_name::<P>();
         let mut stream = match stream_type {
-            StreamType::Cachup => self.subscription.cachup(),
+            StreamType::Cachup => self.subscription.catch_up(),
             StreamType::Resume => self.subscription.resume(),
         }
         .await?;

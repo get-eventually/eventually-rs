@@ -288,7 +288,7 @@ where
         })
     }
 
-    fn cachup(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
+    fn catch_up(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
         // TODO: refactor bits
         let fut = async move {
             let last_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);

@@ -82,12 +82,12 @@ pub type SubscriptionStream<'a, S> = BoxStream<
 /// A Subscription to an [`EventStream`] which can be "checkpointed":
 /// keeps a record of the latest message processed by itself using [`checkpoint`],
 /// and can resume working from such message - either with the infinite [`resume`],
-/// or finite [`cachup`].
+/// or finite [`catch_up`].
 ///
 /// [`EventStream`]: type.EventStream.html
 /// [`resume`]: trait.Subscription.html#method.resume
 /// [`checkpoint`]: trait.Subscription.html#method.checkpoint
-/// [`cachup`]: trait.Subscription.html#method.cachup
+/// [`catchup`]: trait.Subscription.html#method.catch_up
 pub trait Subscription {
     /// Type of the Source id, typically an [`AggregateId`].
     ///
@@ -113,12 +113,12 @@ pub trait Subscription {
     /// version processed.
     fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>>;
 
-    /// Caches-up to  the current state of a `Subscription` by returning the [`EventStream`],
+    /// Catches-up to  the current state of a `Subscription` by returning the [`EventStream`],
     /// starting from the last event processed by the `Subscription`. The stream stops
     /// (is exhausted) once there are no more events to process.
     ///
     /// [`EventStream`]: type.EventStream.html
-    fn cachup(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>>;
+    fn catch_up(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>>;
 }
 
 /// Error type returned by a [`Transient`] Subscription.
@@ -261,7 +261,7 @@ where
     type Event = Store::Event;
     type Error = Error;
 
-    fn cachup(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
+    fn catch_up(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
         Box::pin(async move {
             let one_off_stream = self.stream_stored().await?;
 
