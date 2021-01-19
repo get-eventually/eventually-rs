@@ -10,28 +10,32 @@ use futures::TryFutureExt;
 use crate::sync::RwLock;
 
 /// A `Projector` manages the state of a single [`Projection`]
-/// by opening a long-running stream of all events coming from the [`EventStore`].
+/// by consuming events coming from the [`EventStore`].
 ///
 /// New instances of a `Projector` are obtainable through a [`ProjectorBuilder`]
 /// instance.
 ///
-/// The `Projector` will start updating the [`Projection`] state when [`run`]
-/// is called.
-///
-/// At each update, the `Projector` will broadcast the latest version of the
-/// [`Projection`] on a `Stream` obtainable through [`watch`].
+/// The `Projector` can either cach up with the [`EventStore`] to have the most up-to-date
+/// state and stop with [`update`], or open a long-running stream of events
+/// to keep updating the state continuously as new events are being added
+/// when [`run`] is called.
 ///
 /// [`Projection`]: ../../../eventually-core/projection/trait.Projection.html
 /// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html
 /// [`ProjectorBuilder`]: struct.ProjectorBuilder.html
 /// [`run`]: struct.Projector.html#method.run
-/// [`watch`]: struct.Projector.html#method.watch
+/// [`update`]: struct.Projector.html#method.update
 pub struct Projector<P, S>
 where
     P: Projection,
 {
     projection: Arc<RwLock<P>>,
     subscription: S,
+}
+
+enum StreamType {
+    Cachup,
+    Resume,
 }
 
 impl<P, S> Projector<P, S>
@@ -56,15 +60,30 @@ where
         }
     }
 
-    /// Starts the update of the `Projection` by processing all the events
-    /// coming from the [`EventStore`].
+    /// Updates the state of the `Projection` by processing all events currently stored in from the [`EventStore`].
+    /// Once all are observed, the method exists.
+    ///
+    /// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html
+    pub async fn update(&mut self) -> anyhow::Result<()> {
+        self.process_stream(StreamType::Cachup).await
+    }
+
+    /// Updates the state of the `Projection` by processing all the events
+    /// coming from the [`EventStore`], and then keeps on waiting and processing as new events are added.
     ///
     /// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html
     pub async fn run(&mut self) -> anyhow::Result<()> {
+        self.process_stream(StreamType::Resume).await
+    }
+
+    async fn process_stream(&mut self, stream_type: StreamType) -> anyhow::Result<()> {
         #[cfg(feature = "with-tracing")]
         let projection_type = std::any::type_name::<P>();
-
-        let mut stream = self.subscription.resume().await?;
+        let mut stream = match stream_type {
+            StreamType::Cachup => self.subscription.cachup(),
+            StreamType::Resume => self.subscription.resume(),
+        }
+        .await?;
 
         while let Some(result) = stream.next().await {
             let event = result?;
