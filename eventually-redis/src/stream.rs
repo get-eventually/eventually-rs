@@ -157,3 +157,43 @@ pub(crate) fn parse_version(id: &str) -> usize {
     let parts: Vec<&str> = id.split('-').collect();
     parts[0].parse().unwrap()
 }
+
+/// Returns a short-running [`futures::Stream`] instance returning
+/// the results of reading a Redis Stream using Consumer Groups with `XREADGROUP`.
+///
+/// Each read block should be as big as `page_size`; for each page requested,
+/// all the keys in [`StreamReadReply`] are yielded in the stream,
+/// until the entries are fully exhausted.
+///
+/// The stream will be closed upon fully catching up.
+///
+/// [`futures::Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
+/// [`StreamReadReply`]: https://docs.rs/redis/0.17.0/redis/streams/struct.StreamReadReply.html
+pub(crate) fn into_xread_catchup_stream(
+    mut conn: MultiplexedConnection,
+    stream_name: String,
+    group_name: String,
+    page_size: usize,
+) -> impl Stream<Item = RedisResult<StreamKey>> + 'static {
+    async_stream::try_stream! {
+        loop {
+            let opts = StreamReadOptions::default()
+                .count(page_size)
+                // TODO: should the consumer name be configurable?
+                .group(&group_name, "eventually-consumer");
+
+            let result: StreamReadReply = conn
+                .xread_options(&[&stream_name], &[">"], opts)
+                .await?;
+
+            let size = result.keys.len();
+
+            for key in result.keys {
+                yield key;
+            }
+            if size < page_size {
+                break;
+            }
+        }
+    }
+}

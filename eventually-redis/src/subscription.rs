@@ -123,6 +123,31 @@ where
         Box::pin(fut)
     }
 
+    fn cachup(&self) -> BoxFuture<SubscriptionResult<SubscriptionStream<Self>>> {
+        let fut = async move {
+            let keys_stream = stream::into_xread_catchup_stream(
+                self.conn.clone(),
+                self.stream.to_owned(),
+                self.group_name.to_owned(),
+                self.stream_page_size,
+            );
+
+            Ok(keys_stream
+                .map_err(SubscriptionError::Stream)
+                .and_then(|StreamKey { ids, .. }| async move {
+                    Ok(futures::stream::iter(ids.into_iter().map(Ok)))
+                })
+                .try_flatten()
+                .and_then(|entry| async move {
+                    Persisted::<Id, Event>::try_from(stream::ToPersisted::from(entry))
+                        .map_err(SubscriptionError::DecodeEvents)
+                })
+                .boxed())
+        };
+
+        Box::pin(fut)
+    }
+
     fn checkpoint(&self, version: u32) -> BoxFuture<SubscriptionResult<()>> {
         let fut = async move {
             let mut conn = self.conn.clone();

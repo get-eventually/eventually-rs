@@ -8,8 +8,8 @@ use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
+use futures::{future::BoxFuture, stream::BoxStream};
 
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
 use tokio_postgres::Socket;
 
-use eventually_core::store::{EventStore as EventStoreTrait, Select};
+use eventually_core::store::{EventStore as EventStoreTrait, Persisted, Select};
 use eventually_core::subscription::{
     EventSubscriber as EventSubscriberTrait, Subscription, SubscriptionStream,
 };
@@ -144,6 +144,62 @@ where
     subscriber: EventSubscriber<SourceId, Event>,
 }
 
+impl<SourceId, Event, Tls> Persistent<SourceId, Event, Tls>
+where
+    SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync,
+    Event: Serialize + Clone + Send + Sync + Debug,
+    for<'de> Event: Deserialize<'de>,
+    <SourceId as TryFrom<String>>::Error: StdError + Send + Sync + 'static,
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    fn process_event(
+        &self,
+        event: Persisted<SourceId, Event>,
+    ) -> Result<Option<Persisted<SourceId, Event>>, Error> {
+        let event_sequence_number = event.sequence_number() as i64;
+        let expected_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
+
+        if event_sequence_number <= expected_sequence_number {
+            #[cfg(feature = "with-tracing")]
+            tracing::trace!(
+                event.sequence_number = event_sequence_number,
+                subscription.sequence_number = expected_sequence_number,
+                "Duplicated event detected; skipping"
+            );
+
+            return Ok(None);
+        }
+
+        Ok(Some(event))
+    }
+
+    async fn subscribe(
+        &self,
+    ) -> Result<BoxStream<'_, Result<Persisted<SourceId, Event>, SubscriberError>>, Error> {
+        self.subscriber
+            .subscribe_all()
+            .await
+            .map_err(Error::Subscriber)
+    }
+
+    async fn stream_stored(
+        &self,
+    ) -> Result<BoxStream<'_, Result<Persisted<SourceId, Event>, EventStoreError>>, Error> {
+        let last_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
+        let checkpoint: u32 = (last_sequence_number + 1).try_into().expect(
+            "in case of overflow, it means there is a bug in the optimistic versioning code; \\
+                please open an issue with steps to reproduce the bug",
+        );
+        self.store
+            .stream_all(Select::From(checkpoint))
+            .await
+            .map_err(Error::Store)
+    }
+}
+
 impl<SourceId, Event, Tls> Subscription for Persistent<SourceId, Event, Tls>
 where
     SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync,
@@ -191,39 +247,13 @@ where
             // and the subscription stream. Luckily, we can discard those by
             // keeping an internal state of the last processed sequence number,
             // and discard all those events that are found.
-            let subscription = self
-                .subscriber
-                .subscribe_all()
-                .await
-                .map_err(Error::Subscriber)?;
-
-            let one_off_stream = self
-                .store
-                .stream_all(Select::From(checkpoint))
-                .await
-                .map_err(Error::Store)?;
+            let subscription = self.subscribe().await?;
+            let one_off_stream = self.stream_stored().await?;
 
             let stream = one_off_stream
                 .map_err(Error::Store)
                 .chain(subscription.map_err(Error::Subscriber))
-                .try_filter_map(move |event| async move {
-                    let event_sequence_number = event.sequence_number() as i64;
-                    let expected_sequence_number =
-                        self.last_sequence_number.load(Ordering::Relaxed);
-
-                    if event_sequence_number <= expected_sequence_number {
-                        #[cfg(feature = "with-tracing")]
-                        tracing::trace!(
-                            event.sequence_number = event_sequence_number,
-                            subscription.sequence_number = expected_sequence_number,
-                            "Duplicated event detected; skipping"
-                        );
-
-                        return Ok(None);
-                    }
-
-                    Ok(Some(event))
-                })
+                .try_filter_map(move |event| async move { self.process_event(event) })
                 .boxed();
 
             Ok(stream)
@@ -256,5 +286,40 @@ where
 
             Ok(())
         })
+    }
+
+    fn cachup(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
+        // TODO: refactor bits
+        let fut = async move {
+            let last_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
+
+            // Get the next item from the last processed one.
+            //
+            // In the initial case, the last_sequence_number
+            // would be -1, which will load everything from the start.
+            let checkpoint: u32 = (last_sequence_number + 1).try_into().expect(
+                "in case of overflow, it means there is a bug in the optimistic versioning code; \\
+                please open an issue with steps to reproduce the bug",
+            );
+
+            #[cfg(feature = "with-tracing")]
+            tracing::trace!(
+                subscription.sequence_number = last_sequence_number,
+                subscription.checkpoint = checkpoint,
+                subscription.name = %self.name,
+                subscription.aggregate_type = %self.store.type_name,
+                "Caching up persistent subscription"
+            );
+
+            let one_off_stream = self.stream_stored().await?;
+            let stream = one_off_stream
+                .map_err(Error::Store)
+                .try_filter_map(move |event| async move { self.process_event(event) })
+                .boxed();
+
+            Ok(stream)
+        };
+
+        Box::pin(fut)
     }
 }
