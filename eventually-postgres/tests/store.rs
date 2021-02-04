@@ -47,11 +47,11 @@ async fn different_types_can_share_id() {
     }
 
     let mut event_store = event_store_builder
-        .build::<String, Event>(event_name)
+        .build::<String, Event, _>(event_name)
         .await
         .expect("Failed to create event store");
     let mut ivent_store = event_store_builder
-        .build::<String, Ivent>(ivent_name)
+        .build::<String, Ivent, _>(ivent_name)
         .await
         .expect("Failed to create ivent store");
     let shared_id = "first!";
@@ -128,7 +128,7 @@ async fn stream_all_works() {
     let source_id_2 = "stream_all_test_2";
 
     let mut event_store = event_store_builder
-        .build::<String, Event>(source_name)
+        .build::<String, Event, _>(source_name)
         .await
         .expect("failed to create event store");
 
@@ -236,7 +236,7 @@ async fn stream_works() {
         .builder(pool);
 
     let mut event_store = event_store_builder
-        .build::<String, Event>(source_name)
+        .build::<String, Event, _>(source_name)
         .await
         .expect("failed to create event store");
 

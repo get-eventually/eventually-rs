@@ -180,13 +180,13 @@ where
     ///
     /// [`EventStore`]: struct.EventStore.html
     #[inline]
-    pub async fn build<Id, Event>(
+    pub async fn build<Id, Event, Name: ToString>(
         &self,
-        type_name: &'static str,
+        type_name: Name,
     ) -> PoolResult<EventStore<Id, Event, Tls>> {
         let store = EventStore {
             pool: self.pool.clone(),
-            type_name,
+            type_name: type_name.to_string(),
             id: std::marker::PhantomData,
             payload: std::marker::PhantomData,
         };
@@ -204,15 +204,16 @@ where
     /// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html
     /// [`build`]: struct.EventStoreBuilderMigrated.html#method.build
     #[inline]
-    pub async fn for_aggregate<'a, T>(
+    pub async fn for_aggregate<'a, T, Name: ToString>(
         &'a self,
-        type_name: &'static str,
+        type_name: Name,
         _: &'a T,
     ) -> PoolResult<EventStore<AggregateId<T>, T::Event, Tls>>
     where
         T: Aggregate,
     {
-        self.build::<AggregateId<T>, T::Event>(type_name).await
+        self.build::<AggregateId<T>, T::Event, Name>(type_name)
+            .await
     }
 }
 
@@ -242,7 +243,7 @@ where
     <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
     <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
-    pub(crate) type_name: &'static str,
+    pub(crate) type_name: String,
     pool: Pool<PostgresConnectionManager<Tls>>,
     id: std::marker::PhantomData<Id>,
     payload: std::marker::PhantomData<Event>,

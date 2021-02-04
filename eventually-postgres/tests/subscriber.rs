@@ -42,7 +42,7 @@ async fn subscribe_all_works() {
     let source_id = "subscriber_test";
 
     let mut event_store = event_store_builder
-        .build::<String, Event>(source_name)
+        .build::<String, Event, _>(source_name)
         .await
         .expect("failed to create event store");
 
@@ -129,7 +129,7 @@ async fn persistent_subscription_works() {
     let source_id = "persistent_subscription_test";
 
     let mut event_store = event_store_builder
-        .build::<String, Event>(source_name)
+        .build::<String, Event, _>(source_name)
         .await
         .expect("failed to create event store");
 

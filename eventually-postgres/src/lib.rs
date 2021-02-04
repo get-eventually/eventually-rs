@@ -37,7 +37,7 @@
 //! // to distinguish between different aggregates.
 //! //
 //! // You can also use std::any::type_name for that.
-//! let store = builder.build::<String, SomeEvent>("aggregate-name").await?;
+//! let store = builder.build::<String, SomeEvent, _>("aggregate-name").await?;
 //!
 //! # Ok(())
 //! # }
