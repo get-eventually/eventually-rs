@@ -1,7 +1,7 @@
 [package]
 name = "eventually"
 description = "Crate for using Event Sourcing in Rust applications"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
@@ -12,19 +12,3 @@ categories = ["rust-patterns", "web-programming", "asynchronous", "data-structur
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [features]
-default = []
-serde = ["eventually-core/serde"]
-# TODO: is there a way to exclude eventually-postgres/with-tracing if postgres
-# hasn't been specified in features?
-tracing = ["eventually-core/with-tracing", "eventually-util/with-tracing", "eventually-postgres/with-tracing"]
-postgres = ["eventually-postgres"]
-full = ["serde", "tracing", "postgres"]
-
-[dependencies]
-eventually-core = { version = "0.4.0", path = "../eventually-core" }
-eventually-util = { version = "0.4.0", path = "../eventually-util" }
-eventually-postgres = { version = "0.3.0", path = "../eventually-postgres", optional = true }
-
-[dev-dependencies]
-futures = { version = "0.3", features = ["async-await"] }
-tokio-test = "0.2"
