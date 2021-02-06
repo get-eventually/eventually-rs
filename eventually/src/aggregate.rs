@@ -1,12 +1,22 @@
+use std::convert::TryInto;
+use std::error::Error as StdError;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::ops::DerefMut;
 
+use futures::stream::TryStreamExt;
+
+use crate::eventstore::{
+    ConflictError, EventStore, IntoConflictError, Select, StreamInstance, VersionCheck,
+};
+
 pub trait Aggregate: Sized {
-    type Id;
+    type Id: From<String> + Display;
     type Event;
     type Error;
 
     fn id(&self) -> &Self::Id;
+    fn type_name() -> &'static str;
     fn apply_first(event: Self::Event) -> Result<Self, Self::Error>;
     fn apply(&mut self, event: Self::Event) -> Result<(), Self::Error>;
 }
@@ -74,19 +84,6 @@ where
     }
 
     #[inline]
-    fn rehydrate(mut events: impl Iterator<Item = A::Event>) -> Result<Option<Self>, A::Error> {
-        events.try_fold(None, |ctx, event| {
-            if ctx.is_none() {
-                return Context::new(event).map(Some);
-            }
-
-            let mut ctx = ctx.unwrap();
-            ctx.record_event(event)?;
-            Ok(Some(ctx))
-        })
-    }
-
-    #[inline]
     fn record_event(&mut self, event: A::Event) -> Result<(), A::Error> {
         self.aggregate.apply(event)?;
         self.version += 1;
@@ -99,53 +96,130 @@ where
     }
 }
 
-#[derive(Debug, Default)]
-pub struct Repository<A, R>
+#[derive(Debug, thiserror::Error)]
+pub enum RepositoryError<A>
+where
+    A: StdError + 'static,
+{
+    #[error("failed to rehydrate aggregate: {0}")]
+    Rehydrate(#[source] A),
+
+    #[error("failed to append to event store due to conflict: {0}")]
+    Conflict(#[from] ConflictError),
+
+    #[error("failed to convert from event store to aggregate event: {0}")]
+    AggregateEventConversion(#[source] anyhow::Error),
+
+    #[error("error while streaming from event store: {0}")]
+    StreamError(#[source] anyhow::Error),
+
+    #[error("failed to append to event store: {0}")]
+    AppendToEventStore(#[source] anyhow::Error),
+}
+
+#[derive(Debug)]
+pub struct Repository<A, R, ES>
 where
     A: Aggregate,
     A::Event: Clone,
     R: AggregateRoot<A>,
+    ES: EventStore,
+    ES::Event: TryInto<A::Event> + From<A::Event>,
 {
-    events: std::collections::HashMap<A::Id, Vec<A::Event>>,
+    event_store: ES,
     aggregate: std::marker::PhantomData<A>,
     aggregate_root: std::marker::PhantomData<R>,
 }
 
-impl<A, R> Repository<A, R>
+impl<A, R, ES> Repository<A, R, ES>
 where
     A: Aggregate,
     A::Id: Eq + Hash + Clone,
     A::Event: Clone,
+    A::Error: StdError + 'static,
     R: AggregateRoot<A>,
+    ES: EventStore,
+    ES::Event: TryInto<A::Event> + From<A::Event>,
+    <ES::Event as TryInto<A::Event>>::Error: StdError + Send + Sync + 'static,
+    ES::StreamError: StdError + 'static,
+    ES::AppendError: StdError + 'static,
 {
-    pub fn new() -> Self {
+    pub fn new(event_store: ES) -> Self {
         Self {
-            events: std::collections::HashMap::new(),
+            event_store,
             aggregate: std::marker::PhantomData,
             aggregate_root: std::marker::PhantomData,
         }
     }
 
-    pub fn get(&self, id: &A::Id) -> Result<Option<R>, A::Error> {
-        let events = match self.events.get(id) {
-            None => return Ok(None),
-            Some(events) => events,
-        };
+    pub async fn get(&self, id: &A::Id) -> Result<Option<R>, RepositoryError<A::Error>> {
+        let id = id.to_string();
 
-        Ok(Context::<A>::rehydrate(events.iter().cloned())?.map(R::from))
+        let events = self
+            .event_store
+            .stream(StreamInstance(A::type_name(), &id).into(), Select::All);
+
+        events
+            .map_err(anyhow::Error::from)
+            .map_err(RepositoryError::StreamError)
+            // Cast from Event Store event into Aggregate event.
+            //
+            // NOTE: this is necessary as the Event Store may use
+            // a "bigger" number of events than the one necessary
+            // for the current aggregate.
+            .try_filter_map(|evt| async move {
+                let casted_event: A::Event = evt
+                    .event
+                    .try_into()
+                    .map_err(anyhow::Error::from)
+                    .map_err(RepositoryError::AggregateEventConversion)?;
+
+                Ok(Some(casted_event))
+            })
+            // Rehydrate the Aggregate state from the incoming Event Stream.
+            .try_fold(None, |ctx: Option<Context<A>>, event| async {
+                if ctx.is_none() {
+                    return Ok(Some(
+                        Context::new(event).map_err(RepositoryError::Rehydrate)?,
+                    ));
+                }
+
+                let mut ctx = ctx.unwrap();
+
+                ctx.record_event(event)
+                    .map_err(RepositoryError::Rehydrate)?;
+
+                Ok(Some(ctx))
+            })
+            .await
+            // Create an Aggregate Root instance from the rehydrated context.
+            .map(|ctx| ctx.map(R::from))
     }
 
-    pub fn add(&mut self, root: &mut R) -> Result<(), A::Error> {
-        let mut new_events = root.flush_recorded_events();
+    pub async fn add(&mut self, root: &mut R) -> Result<(), RepositoryError<A::Error>> {
+        let new_events = root.flush_recorded_events();
 
         if new_events.is_empty() {
             return Ok(());
         }
 
-        self.events
-            .entry(root.aggregate().id().clone())
-            .and_modify(|events| events.append(&mut new_events))
-            .or_insert(new_events);
+        let id = root.aggregate().id().to_string();
+        let stream_name = StreamInstance(A::type_name(), &id);
+
+        let mapped_new_events: Vec<ES::Event> =
+            new_events.into_iter().map(ES::Event::from).collect();
+
+        let expected_version =
+            VersionCheck::Exact(root.version() - (mapped_new_events.len() as u64));
+
+        self.event_store
+            .append(stream_name, expected_version, mapped_new_events)
+            .await
+            .map_err(|e| {
+                e.into_conflict_error()
+                    .map(RepositoryError::Conflict)
+                    .unwrap_or_else(|| RepositoryError::AppendToEventStore(e.into()))
+            })?;
 
         Ok(())
     }
@@ -156,11 +230,28 @@ mod tests {
     use super::*;
     use std::ops::Deref;
 
+    use crate::inmemory::InMemoryEventStore;
+
     #[derive(Debug, Clone)]
     enum OrderEvent {
         WasCreated { order_id: String },
         ItemWasAdded { item_sku: String },
         WasCompleted,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+    enum OrderError {
+        #[error("order is already created")]
+        AlreadyCreated,
+
+        #[error("order is not created yet")]
+        NotYetCreated,
+
+        #[error("item already added to the order")]
+        ItemAlreadyAdded,
+
+        #[error("item is marked as complete")]
+        MarkedAsComplete,
     }
 
     #[derive(Debug)]
@@ -183,7 +274,11 @@ mod tests {
     impl Aggregate for Order {
         type Id = String;
         type Event = OrderEvent;
-        type Error = ();
+        type Error = OrderError;
+
+        fn type_name() -> &'static str {
+            "order"
+        }
 
         fn id(&self) -> &Self::Id {
             &self.order_id
@@ -192,13 +287,13 @@ mod tests {
         fn apply_first(event: Self::Event) -> Result<Self, Self::Error> {
             match event {
                 OrderEvent::WasCreated { order_id } => Ok(Self::new(order_id)),
-                _ => Err(()),
+                _ => Err(OrderError::NotYetCreated),
             }
         }
 
         fn apply(&mut self, event: Self::Event) -> Result<(), Self::Error> {
             match event {
-                OrderEvent::WasCreated { .. } => return Err(()),
+                OrderEvent::WasCreated { .. } => return Err(OrderError::AlreadyCreated),
                 OrderEvent::ItemWasAdded { item_sku } => self.items_sku.push(item_sku),
                 OrderEvent::WasCompleted => self.is_completed = true,
             };
@@ -234,40 +329,56 @@ mod tests {
     }
 
     impl OrderRoot {
-        pub fn create_new_order(order_id: String) -> Result<Self, ()> {
+        pub fn create_new_order(order_id: String) -> Result<Self, OrderError> {
             AggregateRoot::<Order>::new(OrderEvent::WasCreated { order_id })
         }
 
-        pub fn add_new_item(&mut self, item_sku: String) -> Result<(), ()> {
-            let item_is_already_added = self.aggregate().items_sku.iter().any(|it| it == &item_sku);
-            if item_is_already_added {
-                return Err(());
+        pub fn add_new_item(mut self, item_sku: String) -> Result<Self, OrderError> {
+            if self.aggregate().is_completed {
+                return Err(OrderError::MarkedAsComplete);
             }
 
-            self.record_that(OrderEvent::ItemWasAdded { item_sku })
+            let item_is_already_added = self.aggregate().items_sku.iter().any(|it| it == &item_sku);
+
+            if item_is_already_added {
+                return Err(OrderError::ItemAlreadyAdded);
+            }
+
+            self.record_that(OrderEvent::ItemWasAdded { item_sku })?;
+
+            Ok(self)
         }
 
-        pub fn mark_as_complete(&mut self) -> Result<(), ()> {
+        pub fn mark_as_complete(mut self) -> Result<Self, OrderError> {
             if self.aggregate().is_completed {
-                return Err(());
+                return Err(OrderError::MarkedAsComplete);
             }
 
-            self.record_that(OrderEvent::WasCompleted)
+            self.record_that(OrderEvent::WasCompleted)?;
+
+            Ok(self)
         }
     }
 
-    #[test]
-    fn it_works() {
-        let mut order = OrderRoot::create_new_order("my-order".to_owned()).unwrap();
-        order.add_new_item("DE-CB-3-2-0".to_owned()).unwrap();
-        order.mark_as_complete().unwrap();
+    #[tokio::test]
+    async fn it_works() {
+        let mut order = OrderRoot::create_new_order("my-order".to_owned())
+            .unwrap()
+            .add_new_item("DE-CB-3-2-0".to_owned())
+            .unwrap()
+            .mark_as_complete()
+            .unwrap();
 
         println!("Order: {:?}", order);
 
-        let mut repository = Repository::new();
-        repository.add(&mut order).unwrap();
+        let event_store = InMemoryEventStore::<OrderEvent>::default();
+        let mut repository = Repository::new(event_store.clone());
+        repository.add(&mut order).await.unwrap();
+
+        let persisted_order = repository.get(order.aggregate().id()).await.unwrap();
 
         println!("Order: {:?}", order);
-        println!("Repository: {:?}", repository);
+        println!("[Recovered] Order: {:?}", persisted_order);
+        println!("Event store: {:?}", event_store);
     }
 }

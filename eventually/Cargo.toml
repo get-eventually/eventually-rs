@@ -12,3 +12,11 @@ categories = ["rust-patterns", "web-programming", "asynchronous", "data-structur
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [features]
+
+[dependencies]
+anyhow = "1.0.38"
+futures = "0.3.12"
+thiserror = "1.0.23"
+
+[dev-dependencies]
+tokio = { version = "1.2.0", features = ["rt", "macros"] }
