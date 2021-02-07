@@ -1,7 +1,6 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
-use std::hash::Hash;
 use std::ops::DerefMut;
 
 use futures::stream::TryStreamExt;
@@ -11,7 +10,7 @@ use crate::eventstore::{
 };
 
 pub trait Aggregate: Sized {
-    type Id: From<String> + Display;
+    type Id: TryFrom<String> + Display;
     type Event;
     type Error;
 
@@ -27,7 +26,7 @@ where
     A::Event: Clone,
 {
     fn new(event: A::Event) -> Result<Self, A::Error> {
-        Ok(Self::from(Context::<A>::new(event)?))
+        Ok(Self::from(Context::<A>::new(event, true)?))
     }
 }
 
@@ -39,7 +38,7 @@ where
 {
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Context<A>
 where
     A: Aggregate,
@@ -71,10 +70,13 @@ where
     }
 
     #[inline]
-    fn new(event: A::Event) -> Result<Self, A::Error> {
+    fn new(event: A::Event, record_event: bool) -> Result<Self, A::Error> {
         let aggregate = A::apply_first(event.clone())?;
         let mut recorded_events = Vec::new();
-        recorded_events.push(event);
+
+        if record_event {
+            recorded_events.push(event);
+        }
 
         Ok(Self {
             version: 1,
@@ -117,7 +119,7 @@ where
     AppendToEventStore(#[source] anyhow::Error),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Repository<A, R, ES>
 where
     A: Aggregate,
@@ -134,7 +136,6 @@ where
 impl<A, R, ES> Repository<A, R, ES>
 where
     A: Aggregate,
-    A::Id: Eq + Hash + Clone,
     A::Event: Clone,
     A::Error: StdError + 'static,
     R: AggregateRoot<A>,
@@ -179,9 +180,8 @@ where
             // Rehydrate the Aggregate state from the incoming Event Stream.
             .try_fold(None, |ctx: Option<Context<A>>, event| async {
                 if ctx.is_none() {
-                    return Ok(Some(
-                        Context::new(event).map_err(RepositoryError::Rehydrate)?,
-                    ));
+                    let ctx = Context::new(event, false).map_err(RepositoryError::Rehydrate)?;
+                    return Ok(Some(ctx));
                 }
 
                 let mut ctx = ctx.unwrap();
@@ -250,7 +250,7 @@ mod tests {
         #[error("item already added to the order")]
         ItemAlreadyAdded,
 
-        #[error("item is marked as complete")]
+        #[error("order is already marked as complete")]
         MarkedAsComplete,
     }
 
@@ -380,5 +380,8 @@ mod tests {
         println!("Order: {:?}", order);
         println!("[Recovered] Order: {:?}", persisted_order);
         println!("Event store: {:?}", event_store);
+
+        let result = persisted_order.unwrap().mark_as_complete();
+        println!("Marked as complete twice: \"{}\"", result.unwrap_err());
     }
 }
