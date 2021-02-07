@@ -58,6 +58,7 @@ where
         self.version
     }
 
+    #[inline]
     pub fn record_that(&mut self, event: A::Event) -> Result<(), A::Error> {
         self.record_event(event.clone())?;
         self.recorded_events.push(event);
@@ -69,7 +70,6 @@ where
         &self.aggregate
     }
 
-    #[inline]
     fn new(event: A::Event, record_event: bool) -> Result<Self, A::Error> {
         let aggregate = A::apply_first(event.clone())?;
         let mut recorded_events = Vec::new();
@@ -179,17 +179,10 @@ where
             })
             // Rehydrate the Aggregate state from the incoming Event Stream.
             .try_fold(None, |ctx: Option<Context<A>>, event| async {
-                if ctx.is_none() {
-                    let ctx = Context::new(event, false).map_err(RepositoryError::Rehydrate)?;
-                    return Ok(Some(ctx));
-                }
-
-                let mut ctx = ctx.unwrap();
-
-                ctx.record_event(event)
-                    .map_err(RepositoryError::Rehydrate)?;
-
-                Ok(Some(ctx))
+                ctx.map(|mut ctx| ctx.record_event(event.clone()).map(|_| ctx))
+                    .or_else(|| Some(Context::new(event, false)))
+                    .transpose()
+                    .map_err(RepositoryError::Rehydrate)
             })
             .await
             // Create an Aggregate Root instance from the rehydrated context.
