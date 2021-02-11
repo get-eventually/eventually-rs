@@ -15,7 +15,7 @@ DECLARE
 BEGIN
 
     -- Retrieve the global offset value from the aggregate_type.
-    SELECT "offset" INTO sequence_number FROM aggregate_types WHERE id = aggregate_type;
+    PERFORM FROM aggregate_types WHERE id = aggregate_type;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'invalid aggregate type provided: %', aggregate_type;
     END IF;
@@ -36,17 +36,18 @@ BEGIN
         RAISE EXCEPTION 'invalid aggregate version provided: %, expected: %', current_version, aggregate_version;
     END IF;
 
+    SELECT last_value INTO sequence_number from events_number_seq;
+
     FOREACH "event" IN ARRAY events
     LOOP
         -- Increment the aggregate version prior to inserting the new event.
         aggregate_version = aggregate_version + 1;
-        -- Increment the new sequence number value.
-        sequence_number  = sequence_number + 1;
 
         -- Insert the event into the events table.
         -- Version numbers should start from 1; sequence numbers should start from 0.
-        INSERT INTO events (aggregate_id, aggregate_type, "version", sequence_number, "event")
-        VALUES (aggregate_id, aggregate_type, aggregate_version, sequence_number, "event");
+        INSERT INTO events (aggregate_id, aggregate_type, "version", "event")
+        VALUES (aggregate_id, aggregate_type, aggregate_version, "event")
+        RETURNING events.sequence_number INTO sequence_number;
 
         -- Send a notification to all listeners of the newly added events.
         PERFORM pg_notify(aggregate_type, ''

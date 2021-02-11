@@ -84,7 +84,7 @@ async fn different_types_can_share_id() {
     assert_eq!(
         vec![Persisted::from(shared_id.to_owned(), Ivent::A(1))
             .version(1)
-            .sequence_number(0),],
+            .sequence_number(2),],
         ivents
     );
     assert_eq!(
