@@ -1,16 +1,13 @@
-CREATE OR REPLACE FUNCTION append_to_store(
+CREATE OR REPLACE PROCEDURE append_to_store(
     aggregate_type     TEXT,
     aggregate_id          TEXT,
     current_version       INTEGER,
     perform_version_check BOOLEAN,
-    events                JSONB[]
-) RETURNS TABLE (
-    "version"       INTEGER,
-    sequence_number BIGINT
+    events                JSONB[],
+    INOUT aggregate_version INTEGER DEFAULT NULL,
+    INOUT sequence_number BIGINT DEFAULT NULL
 ) AS $$
 DECLARE
-    aggregate_version INTEGER;
-    sequence_number   BIGINT;
     "event"           JSONB;
 BEGIN
 
@@ -57,6 +54,7 @@ BEGIN
             || '"sequence_number": ' || sequence_number   || ', '
             || '"event": '           || "event"::TEXT
             || '}');
+        COMMIT;
 
     END LOOP;
 
@@ -65,9 +63,6 @@ BEGIN
 
     -- Update the global offset with the latest sequence number.
     UPDATE aggregate_types SET "offset" = sequence_number WHERE id = aggregate_type;
-
-    RETURN QUERY
-        SELECT aggregate_version, sequence_number;
 
 END;
 $$ LANGUAGE PLPGSQL;
