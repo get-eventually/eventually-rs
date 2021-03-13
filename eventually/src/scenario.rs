@@ -3,9 +3,7 @@ use std::fmt::Debug;
 use futures::stream::TryStreamExt;
 
 use crate::command::CommandHandler;
-use crate::eventstore::{
-    EventStore, PersistedEvent, Select, StreamInstance, StreamName, VersionCheck,
-};
+use crate::eventstore::{EventStore, PersistedEvent, Select, Stream, VersionCheck};
 use crate::inmemory::InMemoryEventStore;
 
 pub struct CommandHandlerScenario;
@@ -65,7 +63,7 @@ pub struct CommandHandlerThen<T, C, E> {
 
 impl<T, C, E> CommandHandlerThen<T, C, E>
 where
-    T: Debug + PartialEq + Clone + Send + Sync,
+    T: Debug + PartialEq + Clone + Send + Sync + Unpin,
     E: Debug + PartialEq,
 {
     pub async fn assert_on<CH, F>(self, handler_factory: F)
@@ -78,10 +76,13 @@ where
         let expected_offset = self.given.len();
 
         for event in self.given {
-            let stream_name = StreamInstance(&event.stream_type, &event.stream_name);
-
             event_store
-                .append(stream_name, VersionCheck::Any, vec![event.event])
+                .append(
+                    &event.stream_category,
+                    &event.stream_id,
+                    VersionCheck::Any,
+                    vec![event.event],
+                )
                 .await
                 .unwrap();
         }
@@ -97,7 +98,7 @@ where
         result.unwrap();
 
         let recorded_events: Vec<PersistedEvent<T>> = event_store
-            .stream(StreamName::All, Select::From(expected_offset as u64))
+            .stream(Stream::All, Select::From(expected_offset as i64))
             .try_collect()
             .await
             .unwrap();

@@ -6,8 +6,9 @@ use std::ops::DerefMut;
 use futures::stream::TryStreamExt;
 
 use crate::eventstore::{
-    ConflictError, EventStore, IntoConflictError, Select, StreamInstance, VersionCheck,
+    ConflictError, EventStore, IntoConflictError, Select, Stream, VersionCheck,
 };
+use crate::{Event, Events};
 
 pub trait Aggregate: Sized {
     type Id: TryFrom<String> + Display;
@@ -15,7 +16,6 @@ pub trait Aggregate: Sized {
     type Error;
 
     fn id(&self) -> &Self::Id;
-    fn type_name() -> &'static str;
     fn apply_first(event: Self::Event) -> Result<Self, Self::Error>;
     fn apply(&mut self, event: Self::Event) -> Result<(), Self::Error>;
 }
@@ -25,7 +25,7 @@ where
     A: Aggregate,
     A::Event: Clone,
 {
-    fn new(event: A::Event) -> Result<Self, A::Error> {
+    fn new(event: Event<A::Event>) -> Result<Self, A::Error> {
         Ok(Self::from(Context::<A>::new(event, true)?))
     }
 }
@@ -44,8 +44,8 @@ where
     A: Aggregate,
 {
     aggregate: A,
-    recorded_events: Vec<A::Event>,
-    version: u64,
+    recorded_events: Events<A::Event>,
+    version: i64,
 }
 
 impl<A> Context<A>
@@ -54,13 +54,13 @@ where
     A::Event: Clone,
 {
     #[inline]
-    pub fn version(&self) -> u64 {
+    pub fn version(&self) -> i64 {
         self.version
     }
 
     #[inline]
-    pub fn record_that(&mut self, event: A::Event) -> Result<(), A::Error> {
-        self.record_event(event.clone())?;
+    pub fn record_that(&mut self, event: Event<A::Event>) -> Result<(), A::Error> {
+        self.record_event(event.payload.clone())?;
         self.recorded_events.push(event);
         Ok(())
     }
@@ -70,8 +70,8 @@ where
         &self.aggregate
     }
 
-    fn new(event: A::Event, record_event: bool) -> Result<Self, A::Error> {
-        let aggregate = A::apply_first(event.clone())?;
+    fn new(event: Event<A::Event>, record_event: bool) -> Result<Self, A::Error> {
+        let aggregate = A::apply_first(event.payload.clone())?;
         let mut recorded_events = Vec::new();
 
         if record_event {
@@ -93,7 +93,7 @@ where
     }
 
     #[inline]
-    fn flush_recorded_events(&mut self) -> Vec<A::Event> {
+    fn flush_recorded_events(&mut self) -> Events<A::Event> {
         std::mem::replace(&mut self.recorded_events, Vec::new())
     }
 }
@@ -129,6 +129,7 @@ where
     ES::Event: TryInto<A::Event> + From<A::Event>,
 {
     event_store: ES,
+    aggregate_type_name: String,
     aggregate: std::marker::PhantomData<A>,
     aggregate_root: std::marker::PhantomData<R>,
 }
@@ -142,12 +143,11 @@ where
     ES: EventStore,
     ES::Event: TryInto<A::Event> + From<A::Event>,
     <ES::Event as TryInto<A::Event>>::Error: StdError + Send + Sync + 'static,
-    ES::StreamError: StdError + 'static,
-    ES::AppendError: StdError + 'static,
 {
-    pub fn new(event_store: ES) -> Self {
+    pub fn new(aggregate_type_name: String, event_store: ES) -> Self {
         Self {
             event_store,
+            aggregate_type_name,
             aggregate: std::marker::PhantomData,
             aggregate_root: std::marker::PhantomData,
         }
@@ -156,9 +156,13 @@ where
     pub async fn get(&self, id: &A::Id) -> Result<Option<R>, RepositoryError<A::Error>> {
         let id = id.to_string();
 
-        let events = self
-            .event_store
-            .stream(StreamInstance(A::type_name(), &id).into(), Select::All);
+        let events = self.event_store.stream(
+            Stream::Id {
+                id: &id,
+                category: &self.aggregate_type_name,
+            },
+            Select::All,
+        );
 
         events
             .map_err(anyhow::Error::from)
@@ -171,6 +175,7 @@ where
             .try_filter_map(|evt| async move {
                 let casted_event: A::Event = evt
                     .event
+                    .payload
                     .try_into()
                     .map_err(anyhow::Error::from)
                     .map_err(RepositoryError::AggregateEventConversion)?;
@@ -180,7 +185,7 @@ where
             // Rehydrate the Aggregate state from the incoming Event Stream.
             .try_fold(None, |ctx: Option<Context<A>>, event| async {
                 ctx.map(|mut ctx| ctx.record_event(event.clone()).map(|_| ctx))
-                    .or_else(|| Some(Context::new(event, false)))
+                    .or_else(|| Some(Context::new(Event::from(event), false)))
                     .transpose()
                     .map_err(RepositoryError::Rehydrate)
             })
@@ -197,16 +202,25 @@ where
         }
 
         let id = root.aggregate().id().to_string();
-        let stream_name = StreamInstance(A::type_name(), &id);
 
-        let mapped_new_events: Vec<ES::Event> =
-            new_events.into_iter().map(ES::Event::from).collect();
+        let mapped_new_events: Events<ES::Event> = new_events
+            .into_iter()
+            .map(|event| Event {
+                payload: ES::Event::from(event.payload),
+                metadata: event.metadata,
+            })
+            .collect();
 
         let expected_version =
-            VersionCheck::Exact(root.version() - (mapped_new_events.len() as u64));
+            VersionCheck::Exact(root.version() - (mapped_new_events.len() as i64));
 
         self.event_store
-            .append(stream_name, expected_version, mapped_new_events)
+            .append(
+                &self.aggregate_type_name,
+                &id,
+                expected_version,
+                mapped_new_events,
+            )
             .await
             .map_err(|e| {
                 e.into_conflict_error()
@@ -269,10 +283,6 @@ mod tests {
         type Event = OrderEvent;
         type Error = OrderError;
 
-        fn type_name() -> &'static str {
-            "order"
-        }
-
         fn id(&self) -> &Self::Id {
             &self.order_id
         }
@@ -323,7 +333,7 @@ mod tests {
 
     impl OrderRoot {
         pub fn create_new_order(order_id: String) -> Result<Self, OrderError> {
-            AggregateRoot::<Order>::new(OrderEvent::WasCreated { order_id })
+            AggregateRoot::<Order>::new(OrderEvent::WasCreated { order_id }.into())
         }
 
         pub fn add_new_item(mut self, item_sku: String) -> Result<Self, OrderError> {
@@ -337,7 +347,7 @@ mod tests {
                 return Err(OrderError::ItemAlreadyAdded);
             }
 
-            self.record_that(OrderEvent::ItemWasAdded { item_sku })?;
+            self.record_that(OrderEvent::ItemWasAdded { item_sku }.into())?;
 
             Ok(self)
         }
@@ -347,7 +357,7 @@ mod tests {
                 return Err(OrderError::MarkedAsComplete);
             }
 
-            self.record_that(OrderEvent::WasCompleted)?;
+            self.record_that(OrderEvent::WasCompleted.into())?;
 
             Ok(self)
         }
@@ -365,7 +375,7 @@ mod tests {
         println!("Order: {:?}", order);
 
         let event_store = InMemoryEventStore::<OrderEvent>::default();
-        let mut repository = Repository::new(event_store.clone());
+        let mut repository = Repository::new("order".to_owned(), event_store.clone());
         repository.add(&mut order).await.unwrap();
 
         let persisted_order = repository.get(order.aggregate().id()).await.unwrap();

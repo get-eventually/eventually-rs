@@ -1,70 +1,64 @@
-use futures::future::BoxFuture;
+use std::error::Error as StdError;
+
+use async_trait::async_trait;
+
 use futures::stream::BoxStream;
 
-pub type EventStream<'a, T, E> = BoxStream<'a, Result<PersistedEvent<T>, E>>;
+use serde::Serialize;
 
-pub trait EventStore: Sync + Send {
-    type Event: Send + Sync;
-    type AppendError: IntoConflictError + Send + Sync;
-    type StreamError: Send + Sync;
+use crate::{Event, Events, MetadataValue};
 
-    fn append<'a>(
-        &'a mut self,
-        stream: StreamInstance<'a>,
-        expected: VersionCheck,
-        events: Vec<Self::Event>,
-    ) -> BoxFuture<'a, Result<u64, Self::AppendError>>;
+pub const GLOBAL_SEQUENCE_NUMBER_METADATA_KEY: &str = "Global-Sequence-Number";
 
-    fn stream(
-        &self,
-        stream: StreamName,
-        select: Select,
-    ) -> EventStream<Self::Event, Self::StreamError>;
-
-    fn subscribe(stream: StreamName) -> EventStream<Self::Event, Self::StreamError>;
+pub fn global_sequence_number<T>(event: &Event<T>) -> Option<i64> {
+    event
+        .metadata
+        .get(GLOBAL_SEQUENCE_NUMBER_METADATA_KEY)
+        .and_then(|v| match v {
+            MetadataValue::Integer(i) => Some(*i),
+            _ => None,
+        })
 }
 
-pub struct StreamInstance<'a>(pub &'a str, pub &'a str);
+pub fn with_global_sequence_number<T>(mut event: Event<T>, sequence_number: i64) -> Event<T> {
+    event.metadata.insert(
+        GLOBAL_SEQUENCE_NUMBER_METADATA_KEY.to_owned(),
+        MetadataValue::Integer(sequence_number),
+    );
 
-impl<'a> StreamInstance<'a> {
-    #[inline]
-    pub fn typ(&self) -> &str {
-        self.0
-    }
-
-    #[inline]
-    pub fn name(&self) -> &str {
-        self.1
-    }
+    event
 }
 
-impl<'a> From<StreamInstance<'a>> for StreamName<'a> {
-    #[inline]
-    fn from(instance: StreamInstance<'a>) -> Self {
-        Self::Instance(instance)
-    }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PersistedEvent<T> {
+    pub stream_category: String,
+    pub stream_id: String,
+    pub version: i64,
+    #[serde(flatten)]
+    pub event: Event<T>,
 }
 
 pub enum Select {
     All,
-    From(u64),
+    From(i64),
 }
 
-pub enum StreamName<'a> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stream<'a> {
     All,
-    Type(&'a str),
-    Instance(StreamInstance<'a>),
+    Category(&'a str),
+    Id { category: &'a str, id: &'a str },
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum VersionCheck {
     Any,
-    Exact(u64),
+    Exact(i64),
 }
 
 impl VersionCheck {
     #[inline]
-    pub fn check(&self, current_version: u64) -> Result<(), ConflictError> {
+    pub fn check(&self, current_version: i64) -> Result<(), ConflictError> {
         match *self {
             VersionCheck::Any => Ok(()),
             VersionCheck::Exact(expected) if current_version == expected => Ok(()),
@@ -97,14 +91,28 @@ impl IntoConflictError for ConflictError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[error("conflict error: expected stream version {expected}, actual {actual}")]
 pub struct ConflictError {
-    pub expected: u64,
-    pub actual: u64,
+    pub expected: i64,
+    pub actual: i64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PersistedEvent<T> {
-    pub stream_type: String,
-    pub stream_name: String,
-    pub version: u64,
-    pub event: T,
+pub type EventStream<'a, T, E> = BoxStream<'a, Result<PersistedEvent<T>, E>>;
+
+#[async_trait]
+pub trait EventStore: Sync + Send {
+    type Event: Send + Sync;
+    type AppendError: StdError + IntoConflictError + Send + Sync + 'static;
+    type StreamError: StdError + Send + Sync + 'static;
+
+    async fn append(
+        &mut self,
+        category: &str,
+        stream_id: &str,
+        expected: VersionCheck,
+        events: Events<Self::Event>,
+    ) -> Result<i64, Self::AppendError>;
+
+    fn stream(&self, stream: Stream, select: Select)
+        -> EventStream<Self::Event, Self::StreamError>;
+
+    fn subscribe(&self, stream: Stream) -> EventStream<Self::Event, Self::StreamError>;
 }
