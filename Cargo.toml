@@ -3,6 +3,6 @@ members = [
     "eventually",
     "eventually-core",
     "eventually-postgres",
-    "eventually-util",
-    "eventually-app-example"
+    "eventually-redis",
+    "eventually-util"
 ]

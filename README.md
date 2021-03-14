@@ -16,14 +16,14 @@
 
 <div align="center">
     <!-- Testing pipeline -->
-    <a href="https://github.com/ar3s3ru/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
+    <a href="https://github.com/eventually-rs/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
         <img alt="GitHub Workflow Status"
-        src="https://img.shields.io/github/workflow/status/ar3s3ru/eventually-rs/Rust%20(stable)?style=flat-square">
+        src="https://img.shields.io/github/workflow/status/eventually-rs/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
     <!-- Codecov -->
-    <a href="https://codecov.io/gh/ar3s3ru/eventually-rs">
+    <a href="https://codecov.io/gh/eventually-rs/eventually-rs">
             <img alt="Codecov"
-            src="https://img.shields.io/codecov/c/github/ar3s3ru/eventually-rs?style=flat-square">
+            src="https://img.shields.io/codecov/c/github/eventually-rs/eventually-rs?style=flat-square">
     </a>
     <!-- Crates.io -->
     <a href="https://crates.io/crates/eventually">
@@ -31,7 +31,7 @@
         src="https://img.shields.io/crates/v/eventually?style=flat-square">
     </a>
     <!-- Github pages docs -->
-    <a href="https://ar3s3ru.github.io/eventually-rs/eventually/">
+    <a href="https://eventually-rs.github.io/eventually-rs/eventually/">
         <img alt="latest master docs"
         src="https://img.shields.io/badge/docs-master-important?style=flat-square" />
     </a>
@@ -41,14 +41,14 @@
         src="https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=docs.rs&query=%24.crate.newest_version&url=https%3A%2F%2Fcrates.io%2Fapi%2Fv1%2Fcrates%2Feventually" />
     </a>
     <!-- License -->
-    <a href="https://github.com/ar3s3ru/eventually-rs/blob/master/LICENSE">
+    <a href="https://github.com/eventually-rs/eventually-rs/blob/master/LICENSE">
         <img alt="GitHub license"
-        src="https://img.shields.io/github/license/ar3s3ru/eventually-rs?style=flat-square">
+        src="https://img.shields.io/github/license/eventually-rs/eventually-rs?style=flat-square">
     </a>
-    <!-- Gitter -->
-    <a href="https://gitter.im/eventually-rs/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
-        <img alt="Gitter"
-         src="https://img.shields.io/gitter/room/eventually-rs/community?style=flat-square">
+    <!-- Discord -->
+    <a href="https://discord.gg/yww3mXHbRF">
+        <img alt="Discord"
+        src="https://img.shields.io/discord/803263157803417652?color=magenta&label=discord&style=flat-square">
     </a>
 </div>
 
@@ -73,10 +73,20 @@ to save these Events using an _Event Store_ (the append-only event log).
 
 For more information, [check out the crate documentation](https://docs.rs/eventually).
 
-You can also take a look at [`eventually-app-example`](./eventually-app-example),
+You can also take a look at [`eventually-app-example`](https://github.com/eventually-rs/eventually-app-example),
 showcasing an example event-sourced microservice using HTTP transport layer.
 
 All other questions are more than welcome on our [Gitter chat](https://gitter.im/eventually-rs/community).
+
+### Event Store backends
+
+`eventually` provides the necessary abstractions for modeling and interacting
+with an Event Store.
+
+These are the following officially-supported backend implementations:
+* [`eventually::inmemory::EventStore`](): simple inmemory Event Store implementation, using `std::collections::HashMap`,
+* [`eventually-postgres`](./eventually-postgres): Event Store implementation for PostgreSQL databases,
+* [`eventually-redis`](./eventually-redis): Event Store implementation for Redis stores.
 
 ## Installation
 
@@ -94,6 +104,16 @@ is being adopted:
 
 * Breaking changes are tagged with a new `MINOR` release
 * New features, patches and documentation are tagged with a new `PATCH` release
+
+## Contributing
+
+You want to contribute to `eventually` but you don't know where to start?
+
+First of all, thank you for considering contributing :heart:
+
+You can head over our [`CONTRIBUTING`](./CONTRIBUTING.md) section to know
+how to contribute to the project, and — in case you don't have a clear idea what
+to contribute — what is most needed needed from contributors.
 
 ## License
 

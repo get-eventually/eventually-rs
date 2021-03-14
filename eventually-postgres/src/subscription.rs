@@ -7,22 +7,24 @@ use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
-use std::sync::Arc;
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
 
 use serde::{Deserialize, Serialize};
 
-use tokio_postgres::Client;
+use bb8::Pool;
+use bb8_postgres::PostgresConnectionManager;
+use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
+use tokio_postgres::Socket;
 
 use eventually_core::store::{EventStore as EventStoreTrait, Select};
 use eventually_core::subscription::{
     EventSubscriber as EventSubscriberTrait, Subscription, SubscriptionStream,
 };
 
-use crate::store::{Error as EventStoreError, EventStore};
-use crate::subscriber::{DeserializeError, EventSubscriber};
+use crate::store::{Error as EventStoreError, EventStore, PoolResult};
+use crate::subscriber::{EventSubscriber, SubscriberError};
 use crate::Params;
 
 const GET_OR_CREATE_SUBSCRIPTION: &str = "SELECT * FROM get_or_create_subscription($1, $2)";
@@ -45,38 +47,48 @@ pub enum Error {
     ///
     /// [`EventSubscriber`]: ../store/struct.EventSubscriber.html
     #[error("error detected while reading catch-up event stream from the subscription: {0}")]
-    Subscriber(#[source] DeserializeError),
+    Subscriber(#[source] SubscriberError),
 
     /// Error variant returned when an issue has occurred during the checkpoint
     /// of a processed event.
     #[error("failed to checkpoint persistent subscription version: {0}")]
-    Checkpoint(#[source] tokio_postgres::Error),
+    Checkpoint(#[source] bb8::RunError<tokio_postgres::Error>),
 }
 
 /// Builder type for multiple [`Persistent`] Subscription instance.
 ///
 /// [`Persistent`]: struct.Persistent.html
-pub struct PersistentBuilder<SourceId, Event> {
-    client: Arc<Client>,
-    store: EventStore<SourceId, Event>,
+pub struct PersistentBuilder<SourceId, Event, Tls>
+where
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    pool: Pool<PostgresConnectionManager<Tls>>,
+    store: EventStore<SourceId, Event, Tls>,
     subscriber: EventSubscriber<SourceId, Event>,
 }
 
-impl<SourceId, Event> PersistentBuilder<SourceId, Event>
+impl<SourceId, Event, Tls> PersistentBuilder<SourceId, Event, Tls>
 where
     SourceId: Clone,
     Event: Clone,
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     /// Creates a new [`PersistentBuilder`] instance.
     ///
     /// [`PersistentBuilder`]: struct.PersistentBuilder.html
     pub fn new(
-        client: Arc<Client>,
-        store: EventStore<SourceId, Event>,
+        pool: Pool<PostgresConnectionManager<Tls>>,
+        store: EventStore<SourceId, Event, Tls>,
         subscriber: EventSubscriber<SourceId, Event>,
     ) -> Self {
         Self {
-            client,
+            pool,
             store,
             subscriber,
         }
@@ -93,20 +105,18 @@ where
     pub async fn get_or_create(
         &self,
         name: String,
-    ) -> Result<Persistent<SourceId, Event>, tokio_postgres::Error> {
+    ) -> PoolResult<Persistent<SourceId, Event, Tls>> {
         let params: Params = &[&name, &self.store.type_name];
 
-        let row = self
-            .client
-            .query_one(GET_OR_CREATE_SUBSCRIPTION, params)
-            .await?;
+        let client = self.pool.get().await?;
+        let row = client.query_one(GET_OR_CREATE_SUBSCRIPTION, params).await?;
 
         let last_sequence_number: i64 = row.try_get("last_sequence_number")?;
 
         Ok(Persistent {
             name,
             last_sequence_number: AtomicI64::from(last_sequence_number),
-            client: self.client.clone(),
+            pool: self.pool.clone(),
             store: self.store.clone(),
             subscriber: self.subscriber.clone(),
         })
@@ -120,20 +130,30 @@ where
 ///
 /// [`PersistentBuilder`]: struct.PersistentBuilder.html
 /// [`Subscription`]: ../../eventually-core/subscription/trait.Subscription.html
-pub struct Persistent<SourceId, Event> {
+pub struct Persistent<SourceId, Event, Tls>
+where
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     name: String,
     last_sequence_number: AtomicI64,
-    client: Arc<Client>,
-    store: EventStore<SourceId, Event>,
+    pool: Pool<PostgresConnectionManager<Tls>>,
+    store: EventStore<SourceId, Event, Tls>,
     subscriber: EventSubscriber<SourceId, Event>,
 }
 
-impl<SourceId, Event> Subscription for Persistent<SourceId, Event>
+impl<SourceId, Event, Tls> Subscription for Persistent<SourceId, Event, Tls>
 where
-    SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync,
-    Event: Serialize + Clone + Send + Sync + Debug,
+    SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync + 'static,
+    Event: Serialize + Clone + Send + Sync + Debug + 'static,
     for<'de> Event: Deserialize<'de>,
     <SourceId as TryFrom<String>>::Error: StdError + Send + Sync + 'static,
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     type SourceId = SourceId;
     type Event = Event;
@@ -224,9 +244,11 @@ where
                 "Checkpointing persistent subscription"
             );
 
-            self.client
+            let client = self.pool.get().await.map_err(Error::Checkpoint)?;
+            client
                 .execute(CHECKPOINT_SUBSCRIPTION, params)
                 .await
+                .map_err(bb8::RunError::User)
                 .map_err(Error::Checkpoint)?;
 
             self.last_sequence_number

@@ -5,7 +5,7 @@
 
 use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
-use std::sync::Arc;
+use std::ops::DerefMut;
 
 use eventually_core::aggregate::{Aggregate, AggregateId};
 use eventually_core::store::{AppendError, EventStream, Expected, Persisted, Select};
@@ -15,7 +15,11 @@ use futures::stream::{StreamExt, TryStreamExt};
 
 use serde::{Deserialize, Serialize};
 
-use tokio_postgres::Client;
+use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
+use tokio_postgres::Socket;
+
+use bb8::{Pool, RunError};
+use bb8_postgres::PostgresConnectionManager;
 
 #[cfg(feature = "with-tracing")]
 use tracing_futures::Instrument;
@@ -32,6 +36,11 @@ mod embedded {
 ///
 /// [`Error`]: enum.Error.html
 pub type Result<T> = std::result::Result<T, Error>;
+
+/// Result returning the connection pool [`Error`] type.
+///
+/// [`Error`]: enum.Error.html
+pub type PoolResult<T> = std::result::Result<T, RunError<tokio_postgres::Error>>;
 
 /// Error type returned by the [`EventStore`] implementation, which is
 /// a _newtype_ wrapper around `tokio_postgres::Error`.
@@ -58,6 +67,10 @@ pub enum Error {
     /// Error returned by Postgres when executing queries.
     #[error("postgres client returned an error: ${0}")]
     Postgres(#[from] tokio_postgres::Error),
+
+    /// Error returned by bb8 connection pool.
+    #[error("bb8 connnection pool returned an error: ${0}")]
+    Bb8(#[from] RunError<tokio_postgres::Error>),
 }
 
 impl AppendError for Error {
@@ -68,17 +81,19 @@ impl AppendError for Error {
     }
 }
 
-const APPEND: &str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)";
+const APPEND: &str = "CALL append_to_store($1::text, $2::text, $3, $4, $5)";
 
 const CREATE_AGGREGATE_TYPE: &str = "SELECT * FROM create_aggregate_type($1::text)";
 
 const STREAM: &str = "SELECT e.*
-    FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
+    FROM events e LEFT JOIN aggregates a
+        ON a.id = e.aggregate_id AND a.aggregate_type_id = e.aggregate_type
     WHERE a.aggregate_type_id = $1 AND e.aggregate_id = $2 AND e.version >= $3
     ORDER BY version ASC";
 
 const STREAM_ALL: &str = "SELECT e.*
-    FROM events e LEFT JOIN aggregates a ON a.id = e.aggregate_id
+    FROM events e LEFT JOIN aggregates a
+         ON a.id = e.aggregate_id AND a.aggregate_type_id = e.aggregate_type
     WHERE a.aggregate_type_id = $1 AND e.sequence_number >= $2
     ORDER BY e.sequence_number ASC";
 
@@ -100,18 +115,38 @@ impl EventStoreBuilder {
             err,
             level = "debug",
             name = "EventStoreBuilder::migrate_database",
-            skip(client)
+            skip(pool)
         )
     )]
-    pub async fn migrate_database(client: &mut Client) -> anyhow::Result<Self> {
-        embedded::migrations::runner().run_async(client).await?;
+    pub async fn migrate_database<Tls>(
+        pool: Pool<PostgresConnectionManager<Tls>>,
+    ) -> anyhow::Result<Self>
+    where
+        Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+        <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+        <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+        <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+    {
+        let mut connection = pool.get().await?;
+        embedded::migrations::runner()
+            .run_async(connection.deref_mut())
+            .await?;
 
         Ok(Self { inner: () })
     }
 
     /// Returns a new builder instance after migrations have been completed.
-    pub fn builder(self, client: Arc<Client>) -> EventStoreBuilderMigrated {
-        EventStoreBuilderMigrated { client }
+    pub fn builder<Tls>(
+        self,
+        pool: Pool<PostgresConnectionManager<Tls>>,
+    ) -> EventStoreBuilderMigrated<Tls>
+    where
+        Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+        <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+        <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+        <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+    {
+        EventStoreBuilderMigrated { pool }
     }
 }
 
@@ -121,11 +156,23 @@ impl EventStoreBuilder {
 ///
 /// [`EventStore`]: struct.EventStore.html
 /// [`EventStoreBuilder`]: struct.EventStoreBuilder.html
-pub struct EventStoreBuilderMigrated {
-    client: Arc<Client>,
+pub struct EventStoreBuilderMigrated<Tls>
+where
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
+    pool: Pool<PostgresConnectionManager<Tls>>,
 }
 
-impl EventStoreBuilderMigrated {
+impl<Tls> EventStoreBuilderMigrated<Tls>
+where
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     /// Creates a new [`EventStore`] instance using the specified name
     /// to identify the source/aggregate type.
     ///
@@ -136,9 +183,9 @@ impl EventStoreBuilderMigrated {
     pub async fn build<Id, Event>(
         &self,
         type_name: &'static str,
-    ) -> std::result::Result<EventStore<Id, Event>, tokio_postgres::Error> {
+    ) -> PoolResult<EventStore<Id, Event, Tls>> {
         let store = EventStore {
-            client: self.client.clone(),
+            pool: self.pool.clone(),
             type_name,
             id: std::marker::PhantomData,
             payload: std::marker::PhantomData,
@@ -161,7 +208,7 @@ impl EventStoreBuilderMigrated {
         &'a self,
         type_name: &'static str,
         _: &'a T,
-    ) -> std::result::Result<EventStore<AggregateId<T>, T::Event>, tokio_postgres::Error>
+    ) -> PoolResult<EventStore<AggregateId<T>, T::Event, Tls>>
     where
         T: Aggregate,
     {
@@ -188,14 +235,20 @@ impl EventStoreBuilderMigrated {
 /// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html
 /// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
 #[derive(Debug, Clone)]
-pub struct EventStore<Id, Event> {
+pub struct EventStore<Id, Event, Tls>
+where
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     pub(crate) type_name: &'static str,
-    client: Arc<Client>,
+    pool: Pool<PostgresConnectionManager<Tls>>,
     id: std::marker::PhantomData<Id>,
     payload: std::marker::PhantomData<Event>,
 }
 
-impl<Id, Event> eventually_core::store::EventStore for EventStore<Id, Event>
+impl<Id, Event, Tls> eventually_core::store::EventStore for EventStore<Id, Event, Tls>
 where
     Id: TryFrom<String> + Display + Eq + Send + Sync,
     // This bound is for the translation into an anyhow::Error.
@@ -203,6 +256,10 @@ where
     <Id as TryFrom<String>>::Error: Into<anyhow::Error>,
     Event: Serialize + Send + Sync + Debug,
     for<'de> Event: Deserialize<'de>,
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     type SourceId = Id;
     type Event = Event;
@@ -242,9 +299,10 @@ where
                 &serialized,
             ];
 
-            let row = self.client.query_one(APPEND, params).await?;
+            let client = self.pool.get().await?;
+            let row = client.query_one(APPEND, params).await?;
 
-            let id: i32 = row.try_get("version")?;
+            let id: i32 = row.try_get("aggregate_version")?;
             Ok(id as u32)
         };
 
@@ -313,8 +371,8 @@ where
         );
 
         let fut = async move {
-            Ok(self
-                .client
+            let client = self.pool.get().await?;
+            Ok(client
                 .execute(REMOVE, &[&self.type_name, &id.to_string()])
                 .await
                 .map(|_| ())?)
@@ -327,7 +385,13 @@ where
     }
 }
 
-impl<Id, Event> EventStore<Id, Event> {
+impl<Id, Event, Tls> EventStore<Id, Event, Tls>
+where
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
+{
     #[cfg_attr(
         feature = "with-tracing",
         tracing::instrument(
@@ -337,26 +401,31 @@ impl<Id, Event> EventStore<Id, Event> {
             skip(self)
         )
     )]
-    async fn create_aggregate_type(&self) -> std::result::Result<(), tokio_postgres::Error> {
+    async fn create_aggregate_type(&self) -> PoolResult<()> {
         let params: Params = &[&self.type_name];
 
-        self.client.execute(CREATE_AGGREGATE_TYPE, params).await?;
+        let client = self.pool.get().await?;
+        client.execute(CREATE_AGGREGATE_TYPE, params).await?;
 
         Ok(())
     }
 }
 
-impl<Id, Event> EventStore<Id, Event>
+impl<Id, Event, Tls> EventStore<Id, Event, Tls>
 where
     Id: TryFrom<String> + Display + Eq + Send + Sync,
     // This bound is for the translation into an anyhow::Error.
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
     Event: Serialize + Send + Sync + Debug,
     for<'de> Event: Deserialize<'de>,
+    Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
+    <Tls as MakeTlsConnect<Socket>>::Stream: Send + Sync,
+    <Tls as MakeTlsConnect<Socket>>::TlsConnect: Send,
+    <<Tls as MakeTlsConnect<Socket>>::TlsConnect as TlsConnect<Socket>>::Future: Send,
 {
     async fn stream_query(&self, query: &str, params: Params<'_>) -> Result<EventStream<'_, Self>> {
-        Ok(self
-            .client
+        let client = self.pool.get().await?;
+        Ok(client
             .query_raw(query, slice_iter(params))
             .await
             .map_err(Error::from)?

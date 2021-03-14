@@ -8,35 +8,28 @@
 //! Example usage:
 //!
 //! ```no_run
-//! # use std::sync::Arc;
 //! # use eventually_postgres::EventStoreBuilder;
 //! #
 //! # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
-//! // Open a connection with Postgres.
-//! let (mut client, connection) =
-//!     tokio_postgres::connect("postgres://user@pass:localhost:5432/db", tokio_postgres::NoTls)
-//!         .await
-//!         .map_err(|err| {
-//!             eprintln!("failed to connect to Postgres: {}", err);
-//!             err
-//!         })?;
-//!
-//! // The connection, responsible for the actual IO, must be handled by a different
-//! // execution context.
-//! tokio::spawn(async move {
-//!     if let Err(e) = connection.await {
-//!         eprintln!("connection error: {}", e);
-//!     }
-//! });
+//! // Open a connection with bb8.
+//! let pg_manager = bb8_postgres::PostgresConnectionManager::new_from_stringlike(
+//!     "postgres://user@pass:localhost:5432/db",
+//!     tokio_postgres::NoTls,
+//!     )
+//!     .map_err(|err| {
+//!         eprintln!("Failed configuring a Postgres Connection pool: {}", err);
+//!         err
+//!     })?;
+//! let pool = bb8::Pool::builder().build(pg_manager).await?;
 //!
 //! // A domain event example -- it is deliberately simple.
 //! #[derive(Debug, Clone)]
 //! struct SomeEvent;
 //!
 //! // Use an EventStoreBuilder to build multiple EventStore instances.
-//! let builder = EventStoreBuilder::migrate_database(&mut client)
+//! let builder = EventStoreBuilder::migrate_database(pool.clone())
 //!     .await?
-//!     .builder(Arc::new(client));
+//!     .builder(pool);
 //!
 //! // Event store for the events.
 //! //

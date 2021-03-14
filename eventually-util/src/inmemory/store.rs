@@ -17,7 +17,8 @@ use futures::stream::{empty, iter, StreamExt, TryStreamExt};
 
 use parking_lot::RwLock;
 
-use tokio::sync::broadcast::{channel, RecvError, Sender};
+use tokio::sync::broadcast::{channel, Receiver, Sender};
+use tokio_stream::wrappers::{errors::BroadcastStreamRecvError, BroadcastStream};
 
 #[cfg(feature = "with-tracing")]
 use tracing_futures::Instrument;
@@ -49,8 +50,8 @@ impl AppendError for ConflictError {
 /// [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
 /// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
 #[derive(Debug, thiserror::Error)]
-#[error("failed to read event from subscription watch channel: {0}")]
-pub struct SubscriberError(#[from] RecvError);
+#[error("failed to read event from subscription watch channel: receiver lagged messages {0}")]
+pub struct LaggedError(u64);
 
 /// Builder for [`EventStore`] instances.
 ///
@@ -65,7 +66,8 @@ impl EventStoreBuilder {
     pub fn for_aggregate<T>(_: &T) -> EventStore<T::Id, T::Event>
     where
         T: Aggregate,
-        T::Id: Hash + Eq,
+        T::Id: Hash + Eq + Clone,
+        T::Event: Clone,
     {
         Default::default()
     }
@@ -82,12 +84,17 @@ where
 {
     global_offset: Arc<AtomicU32>,
     tx: Sender<Persisted<Id, Event>>,
+    // NOTE(ar3s3ru): this value is required to avoid dropping the
+    // original receiver returned by `channel()`, which would make the
+    // send operation fail if no subscribers are present.
+    rx: Arc<Receiver<Persisted<Id, Event>>>,
     backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
 }
 
 impl<Id, Event> EventStore<Id, Event>
 where
-    Id: Hash + Eq,
+    Id: Hash + Eq + Clone,
+    Event: Clone,
 {
     /// Creates a new EventStore with a specified in-memory broadcast channel
     /// size, which will used by the [`subscribe_all`] method to notify
@@ -98,10 +105,11 @@ where
     pub fn new(subscribe_capacity: usize) -> Self {
         // Use this broadcast channel to send append events to
         // subscriptions from .subscribe_all()
-        let (tx, _) = channel(subscribe_capacity);
+        let (tx, rx) = channel(subscribe_capacity);
 
         Self {
             tx,
+            rx: Arc::new(rx),
             global_offset: Arc::new(AtomicU32::new(0)),
             backend: Arc::new(RwLock::new(HashMap::new())),
         }
@@ -110,7 +118,8 @@ where
 
 impl<Id, Event> Default for EventStore<Id, Event>
 where
-    Id: Hash + Eq,
+    Id: Hash + Eq + Clone,
+    Event: Clone,
 {
     #[inline]
     fn default() -> Self {
@@ -120,12 +129,12 @@ where
 
 impl<Id, Event> EventSubscriber for EventStore<Id, Event>
 where
-    Id: Hash + Eq + Sync + Send + Clone,
-    Event: Sync + Send + Clone,
+    Id: Hash + Eq + Sync + Send + Clone + 'static,
+    Event: Sync + Send + Clone + 'static,
 {
     type SourceId = Id;
     type Event = Event;
-    type Error = SubscriberError;
+    type Error = LaggedError;
 
     fn subscribe_all(
         &self,
@@ -136,7 +145,14 @@ where
         // with the definition of the EventStream.
         let rx = self.tx.subscribe();
 
-        Box::pin(async move { Ok(rx.into_stream().map_err(SubscriberError).boxed()) })
+        Box::pin(async move {
+            let stream = BroadcastStream::new(rx);
+            Ok(stream
+                .map_err(|v| match v {
+                    BroadcastStreamRecvError::Lagged(n) => LaggedError(n),
+                })
+                .boxed())
+        })
     }
 }
 

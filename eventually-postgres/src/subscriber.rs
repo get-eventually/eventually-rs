@@ -17,26 +17,33 @@ use eventually_core::subscription::EventStream;
 
 use serde::Deserialize;
 
-use tokio::sync::broadcast;
+use tokio::sync::broadcast::{channel, Receiver, Sender};
+use tokio_stream::wrappers::BroadcastStream;
 
 use tokio_postgres::AsyncMessage;
 
 const DEFAULT_BROADCAST_CHANNEL_SIZE: usize = 128;
 
-/// Alias type for a `Result` having [`DeserializeError`] as error type.alloc
+/// Alias type for a `Result` having [`SubscriberError`] as error type.alloc
 ///
-/// [`DeserializeError`]: struct.DeserializeError.html
-pub type Result<T> = std::result::Result<T, DeserializeError>;
+/// [`SubscriberError`]: struct.SubscriberError.html
+pub type Result<T> = std::result::Result<T, SubscriberError>;
 
 /// Error returned by the `TryStream` on [`subscribe_all`]
-/// when deserializing payloads coming from Postgres' `LISTEN`
-/// asynchronous notifications.
 ///
 /// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
 #[derive(Debug, Clone, thiserror::Error)]
-#[error("failed to deserialize notification payload from JSON: {message}")]
-pub struct DeserializeError {
-    message: String,
+pub enum SubscriberError {
+    /// Error variant returned when deserializing payloads coming from Postgres' `LISTEN`
+    /// asynchronous notifications.
+    #[error("failed to deserialize notification payload from JSON: {0}")]
+    Deserialize(String),
+
+    /// Error variant returned when the connection, used for `LISTEN` asynchronous notifications
+    /// gets dropped. Currently the subscriber cannot recover from this error and a new one should
+    /// be created.
+    #[error("postgres connection error: {0}")]
+    Connection(String),
 }
 
 /// Subscriber for listening to new events committed to an [`EventStore`],
@@ -45,13 +52,17 @@ pub struct DeserializeError {
 /// [`EventStore`]: ../store/struct.EventStore.html
 #[derive(Clone)]
 pub struct EventSubscriber<Id, Event> {
-    tx: broadcast::Sender<Result<Persisted<Id, Event>>>,
+    tx: Sender<Result<Persisted<Id, Event>>>,
+    // NOTE(ar3s3ru): this value is required to avoid dropping the
+    // original receiver returned by `channel()`, which would make the
+    // send operation fail if no subscribers are present.
+    rx: Arc<Receiver<Result<Persisted<Id, Event>>>>,
 }
 
 impl<Id, Event> EventSubscriber<Id, Event>
 where
-    Id: TryFrom<String> + Debug + Send + Sync + 'static,
-    Event: Debug + Send + Sync + 'static,
+    Id: TryFrom<String> + Debug + Send + Sync + Clone + 'static,
+    Event: Debug + Send + Sync + Clone + 'static,
     for<'de> Id: Deserialize<'de>,
     for<'de> Event: Deserialize<'de>,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
@@ -72,25 +83,34 @@ where
         let client = Arc::new(client);
         let client_captured = client.clone();
 
-        let (tx, _) = broadcast::channel(DEFAULT_BROADCAST_CHANNEL_SIZE);
+        let (tx, rx) = channel(DEFAULT_BROADCAST_CHANNEL_SIZE);
         let tx_captured = tx.clone();
 
         let mut stream = futures::stream::poll_fn(move |cx| connection.poll_message(cx));
 
         eventually_util::spawn(async move {
             while let Some(event) = stream.next().await {
-                let event = event.expect("subscriber connection failed");
-
-                if let AsyncMessage::Notification(not) = event {
-                    #[allow(unused_must_use)]
-                    {
-                        tx_captured.send(
-                            serde_json::from_str::<NotificationPayload<Event>>(not.payload())
-                                .map_err(|e| DeserializeError {
-                                    message: e.to_string(),
-                                })
-                                .and_then(TryInto::try_into),
-                        );
+                match event {
+                    Ok(event) => {
+                        if let AsyncMessage::Notification(not) = event {
+                            #[allow(unused_must_use)]
+                            {
+                                tx_captured.send(
+                                    serde_json::from_str::<NotificationPayload<Event>>(
+                                        not.payload(),
+                                    )
+                                    .map_err(|e| SubscriberError::Deserialize(e.to_string()))
+                                    .and_then(TryInto::try_into),
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        #[allow(unused_must_use)]
+                        {
+                            tx_captured.send(Err(SubscriberError::Connection(e.to_string())));
+                        }
+                        break;
                     }
                 }
             }
@@ -102,25 +122,25 @@ where
             .batch_execute(&("LISTEN ".to_owned() + type_name + ";"))
             .await?;
 
-        Ok(Self { tx })
+        Ok(Self {
+            tx,
+            rx: Arc::new(rx),
+        })
     }
 }
 
 impl<Id, Event> eventually_core::subscription::EventSubscriber for EventSubscriber<Id, Event>
 where
-    Id: Eq + Send + Sync + Clone,
-    Event: Send + Sync + Clone,
+    Id: Eq + Send + Sync + Clone + 'static,
+    Event: Send + Sync + Clone + 'static,
 {
     type SourceId = Id;
     type Event = Event;
-    type Error = DeserializeError;
+    type Error = SubscriberError;
 
     fn subscribe_all(&self) -> BoxFuture<Result<EventStream<Self>>> {
         Box::pin(async move {
-            Ok(self
-                .tx
-                .subscribe()
-                .into_stream()
+            Ok(BroadcastStream::new(self.tx.subscribe())
                 .filter_map(|r| async { r.ok() })
                 .boxed())
         })
@@ -143,11 +163,14 @@ where
     SourceId: TryFrom<String>,
     <SourceId as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
 {
-    type Error = DeserializeError;
+    type Error = SubscriberError;
 
     fn try_from(payload: NotificationPayload<Event>) -> Result<Self> {
-        let source_id: SourceId = payload.source_id.try_into().map_err(|e| DeserializeError {
-            message: format!("could not deserialize source id from string: {:?}", e),
+        let source_id: SourceId = payload.source_id.try_into().map_err(|e| {
+            SubscriberError::Deserialize(format!(
+                "could not deserialize source id from string: {:?}",
+                e
+            ))
         })?;
 
         Ok(Persisted::from(source_id, payload.event)

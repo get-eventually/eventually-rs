@@ -6,7 +6,7 @@ edition = "2018"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 readme = "../README.md"
-repository = "https://github.com/ar3s3ru/eventually-rs"
+repository = "https://github.com/eventually-rs/eventually-rs"
 
 categories = ["rust-patterns", "web-programming", "asynchronous", "data-structures"]
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
@@ -23,7 +23,7 @@ full = ["serde", "tracing", "postgres"]
 [dependencies]
 eventually-core = { version = "0.4.0", path = "../eventually-core" }
 eventually-util = { version = "0.4.0", path = "../eventually-util" }
-eventually-postgres = { version = "0.2.0", path = "../eventually-postgres", optional = true }
+eventually-postgres = { version = "0.3.0", path = "../eventually-postgres", optional = true }
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }
