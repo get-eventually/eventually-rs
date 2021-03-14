@@ -1,5 +1,4 @@
 (function() {var implementors = {};
-implementors["eventually_app_example"] = [{"text":"impl PartialEq&lt;OrderError&gt; for OrderError","synthetic":false,"types":[]}];
 implementors["eventually_core"] = [{"text":"impl&lt;T&gt; PartialEq&lt;AggregateRoot&lt;T&gt;&gt; for AggregateRoot&lt;T&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: Aggregate,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;Select&gt; for Select","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;Expected&gt; for Expected","synthetic":false,"types":[]},{"text":"impl&lt;SourceId:&nbsp;PartialEq, T:&nbsp;PartialEq&gt; PartialEq&lt;Persisted&lt;SourceId, T&gt;&gt; for Persisted&lt;SourceId, T&gt;","synthetic":false,"types":[]}];
 implementors["eventually_util"] = [{"text":"impl PartialEq&lt;ConflictError&gt; for ConflictError","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

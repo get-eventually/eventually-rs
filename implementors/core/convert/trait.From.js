@@ -1,6 +1,5 @@
 (function() {var implementors = {};
-implementors["eventually_app_example"] = [{"text":"impl From&lt;Vec&lt;OrderItem&gt;&gt; for OrderItems","synthetic":false,"types":[]},{"text":"impl From&lt;OrderItems&gt; for Vec&lt;OrderItem&gt;","synthetic":false,"types":[]}];
 implementors["eventually_core"] = [{"text":"impl&lt;T&gt; From&lt;T&gt; for AggregateRootBuilder&lt;T&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: Aggregate,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl&lt;SourceId, T&gt; From&lt;(SourceId, T)&gt; for EventBuilder&lt;SourceId, T&gt;","synthetic":false,"types":[]}];
 implementors["eventually_postgres"] = [{"text":"impl From&lt;Error&gt; for Error","synthetic":false,"types":[]},{"text":"impl From&lt;RunError&lt;Error&gt;&gt; for Error","synthetic":false,"types":[]}];
-implementors["eventually_util"] = [{"text":"impl From&lt;RecvError&gt; for SubscriberError","synthetic":false,"types":[]},{"text":"impl&lt;A&gt; From&lt;A&gt; for AsAggregate&lt;A&gt;","synthetic":false,"types":[]}];
+implementors["eventually_util"] = [{"text":"impl&lt;A&gt; From&lt;A&gt; for AsAggregate&lt;A&gt;","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
