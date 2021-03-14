@@ -81,7 +81,7 @@ impl AppendError for Error {
     }
 }
 
-const APPEND: &str = "SELECT * FROM append_to_store($1::text, $2::text, $3, $4, $5)";
+const APPEND: &str = "CALL append_to_store($1::text, $2::text, $3, $4, $5)";
 
 const CREATE_AGGREGATE_TYPE: &str = "SELECT * FROM create_aggregate_type($1::text)";
 
@@ -303,7 +303,7 @@ where
             let client = self.pool.get().await?;
             let row = client.query_one(APPEND, params).await?;
 
-            let id: i32 = row.try_get("version")?;
+            let id: i32 = row.try_get("aggregate_version")?;
             Ok(id as u32)
         };
 

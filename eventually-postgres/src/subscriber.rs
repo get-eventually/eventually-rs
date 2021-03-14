@@ -17,7 +17,8 @@ use eventually_core::subscription::EventStream;
 
 use serde::Deserialize;
 
-use tokio::sync::broadcast;
+use tokio::sync::broadcast::{channel, Receiver, Sender};
+use tokio_stream::wrappers::BroadcastStream;
 
 use tokio_postgres::AsyncMessage;
 
@@ -51,13 +52,17 @@ pub enum SubscriberError {
 /// [`EventStore`]: ../store/struct.EventStore.html
 #[derive(Clone)]
 pub struct EventSubscriber<Id, Event> {
-    tx: broadcast::Sender<Result<Persisted<Id, Event>>>,
+    tx: Sender<Result<Persisted<Id, Event>>>,
+    // NOTE(ar3s3ru): this value is required to avoid dropping the
+    // original receiver returned by `channel()`, which would make the
+    // send operation fail if no subscribers are present.
+    rx: Arc<Receiver<Result<Persisted<Id, Event>>>>,
 }
 
 impl<Id, Event> EventSubscriber<Id, Event>
 where
-    Id: TryFrom<String> + Debug + Send + Sync + 'static,
-    Event: Debug + Send + Sync + 'static,
+    Id: TryFrom<String> + Debug + Send + Sync + Clone + 'static,
+    Event: Debug + Send + Sync + Clone + 'static,
     for<'de> Id: Deserialize<'de>,
     for<'de> Event: Deserialize<'de>,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
@@ -78,7 +83,7 @@ where
         let client = Arc::new(client);
         let client_captured = client.clone();
 
-        let (tx, _) = broadcast::channel(DEFAULT_BROADCAST_CHANNEL_SIZE);
+        let (tx, rx) = channel(DEFAULT_BROADCAST_CHANNEL_SIZE);
         let tx_captured = tx.clone();
 
         let mut stream = futures::stream::poll_fn(move |cx| connection.poll_message(cx));
@@ -117,14 +122,17 @@ where
             .batch_execute(&("LISTEN ".to_owned() + type_name + ";"))
             .await?;
 
-        Ok(Self { tx })
+        Ok(Self {
+            tx,
+            rx: Arc::new(rx),
+        })
     }
 }
 
 impl<Id, Event> eventually_core::subscription::EventSubscriber for EventSubscriber<Id, Event>
 where
-    Id: Eq + Send + Sync + Clone,
-    Event: Send + Sync + Clone,
+    Id: Eq + Send + Sync + Clone + 'static,
+    Event: Send + Sync + Clone + 'static,
 {
     type SourceId = Id;
     type Event = Event;
@@ -132,10 +140,7 @@ where
 
     fn subscribe_all(&self) -> BoxFuture<Result<EventStream<Self>>> {
         Box::pin(async move {
-            Ok(self
-                .tx
-                .subscribe()
-                .into_stream()
+            Ok(BroadcastStream::new(self.tx.subscribe())
                 .filter_map(|r| async { r.ok() })
                 .boxed())
         })

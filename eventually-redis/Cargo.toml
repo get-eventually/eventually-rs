@@ -15,7 +15,7 @@ keywords = ["redis", "eventually", "event-store", "ddd", "event-sourcing"]
 eventually = { version = "0.4.0", path = "../eventually", features = ["serde"] }
 
 futures = "0.3"
-redis = { version = "0.17", features = ["r2d2", "tokio-rt-core"] }
+redis = { version = "0.20.0", features = ["r2d2", "tokio-comp"] }
 serde = { version = "1.0", features = ["derive"] }
 lazy_static = "1.4.0"
 async-stream = "0.3.0"
@@ -25,4 +25,4 @@ serde_json = "1.0.59"
 
 [dev-dependencies]
 testcontainers = "0.11"
-tokio = { version = "0.2", features = ["sync", "macros", "time"] }
+tokio = { version = "1.3.0", features = ["sync", "macros", "time"] }
