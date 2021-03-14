@@ -191,7 +191,7 @@ async fn it_creates_persistent_subscription_successfully() {
 
     // Wait to make sure enough time has been passed for the subscription
     // stream to pick up other messages from the consumer group.
-    tokio::time::delay_for(tokio::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     assert_eq!(size, counter.read().await.0);
 }
