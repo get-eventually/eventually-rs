@@ -1,21 +1,18 @@
-CREATE OR REPLACE FUNCTION append_to_store(
+CREATE OR REPLACE PROCEDURE append_to_store(
     aggregate_type     TEXT,
     aggregate_id          TEXT,
     current_version       INTEGER,
     perform_version_check BOOLEAN,
-    events                JSONB[]
-) RETURNS TABLE (
-    "version"       INTEGER,
-    sequence_number BIGINT
+    events                JSONB[],
+    INOUT aggregate_version INTEGER DEFAULT NULL,
+    INOUT sequence_number BIGINT DEFAULT NULL
 ) AS $$
 DECLARE
-    aggregate_version INTEGER;
-    sequence_number   BIGINT;
     "event"           JSONB;
 BEGIN
 
     -- Retrieve the global offset value from the aggregate_type.
-    SELECT "offset" INTO sequence_number FROM aggregate_types WHERE id = aggregate_type;
+    PERFORM FROM aggregate_types WHERE id = aggregate_type;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'invalid aggregate type provided: %', aggregate_type;
     END IF;
@@ -36,17 +33,18 @@ BEGIN
         RAISE EXCEPTION 'invalid aggregate version provided: %, expected: %', current_version, aggregate_version;
     END IF;
 
+    SELECT last_value INTO sequence_number from events_number_seq;
+
     FOREACH "event" IN ARRAY events
     LOOP
         -- Increment the aggregate version prior to inserting the new event.
         aggregate_version = aggregate_version + 1;
-        -- Increment the new sequence number value.
-        sequence_number  = sequence_number + 1;
 
         -- Insert the event into the events table.
         -- Version numbers should start from 1; sequence numbers should start from 0.
-        INSERT INTO events (aggregate_id, aggregate_type, "version", sequence_number, "event")
-        VALUES (aggregate_id, aggregate_type, aggregate_version, sequence_number, "event");
+        INSERT INTO events (aggregate_id, aggregate_type, "version", "event")
+        VALUES (aggregate_id, aggregate_type, aggregate_version, "event")
+        RETURNING events.sequence_number INTO sequence_number;
 
         -- Send a notification to all listeners of the newly added events.
         PERFORM pg_notify(aggregate_type, ''
@@ -56,6 +54,7 @@ BEGIN
             || '"sequence_number": ' || sequence_number   || ', '
             || '"event": '           || "event"::TEXT
             || '}');
+        COMMIT;
 
     END LOOP;
 
@@ -64,9 +63,6 @@ BEGIN
 
     -- Update the global offset with the latest sequence number.
     UPDATE aggregate_types SET "offset" = sequence_number WHERE id = aggregate_type;
-
-    RETURN QUERY
-        SELECT aggregate_version, sequence_number;
 
 END;
 $$ LANGUAGE PLPGSQL;
