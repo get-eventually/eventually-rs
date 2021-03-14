@@ -45,10 +45,10 @@
         <img alt="GitHub license"
         src="https://img.shields.io/github/license/eventually-rs/eventually-rs?style=flat-square">
     </a>
-    <!-- Gitter -->
-    <a href="https://gitter.im/eventually-rs/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
-        <img alt="Gitter"
-         src="https://img.shields.io/gitter/room/eventually-rs/community?style=flat-square">
+    <!-- Discord -->
+    <a href="https://discord.gg/yww3mXHbRF">
+        <img alt="Discord"
+        src="https://img.shields.io/discord/803263157803417652?color=magenta&label=discord&style=flat-square">
     </a>
 </div>
 
@@ -73,7 +73,7 @@ to save these Events using an _Event Store_ (the append-only event log).
 
 For more information, [check out the crate documentation](https://docs.rs/eventually).
 
-You can also take a look at [`eventually-app-example`](./eventually-app-example),
+You can also take a look at [`eventually-app-example`](https://github.com/eventually-rs/eventually-app-example),
 showcasing an example event-sourced microservice using HTTP transport layer.
 
 All other questions are more than welcome on our [Gitter chat](https://gitter.im/eventually-rs/community).
