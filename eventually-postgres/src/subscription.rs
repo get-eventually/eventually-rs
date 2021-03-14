@@ -146,8 +146,8 @@ where
 
 impl<SourceId, Event, Tls> Subscription for Persistent<SourceId, Event, Tls>
 where
-    SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync,
-    Event: Serialize + Clone + Send + Sync + Debug,
+    SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync + 'static,
+    Event: Serialize + Clone + Send + Sync + Debug + 'static,
     for<'de> Event: Deserialize<'de>,
     <SourceId as TryFrom<String>>::Error: StdError + Send + Sync + 'static,
     Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,
