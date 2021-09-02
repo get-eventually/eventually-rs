@@ -25,9 +25,7 @@ use tracing_futures::Instrument;
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
-/// Error returned by the [`EventStore::append`] when a conflict has been detected.
-///
-/// [`EventStore::append`]: trait.EventStore.html#method.append
+/// Error returned by the [`EventStore::apend`](eventually_core::store::EventStore) when a conflict has been detected.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 #[error("conflicting versions, expected {expected}, got instead {actual}")]
 pub struct ConflictError {
@@ -44,24 +42,16 @@ impl AppendError for ConflictError {
 }
 
 /// Error returned by the [`EventSubscriber`] when reading elements
-/// from the [`EventStream`] produced by [`subscribe_all`].
-///
-/// [`EventSubscriber`]: struct.EventSubscriber.html
-/// [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
-/// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
+/// from the [`EventStream`] produced by [`subscribe_all`](EventSubscriber::subscribe_all).
 #[derive(Debug, thiserror::Error)]
 #[error("failed to read event from subscription watch channel: receiver lagged messages {0}")]
 pub struct LaggedError(u64);
 
 /// Builder for [`EventStore`] instances.
-///
-/// [`EventStore`]: struct.EventStore.html
 pub struct EventStoreBuilder;
 
 impl EventStoreBuilder {
     /// Builds a new [`EventStore`] instance compatible with the provided [`Aggregate`].
-    ///
-    /// [`Aggregate`]: ../../eventually-core/aggregate/trait.Aggregate.html
     #[inline]
     pub fn for_aggregate<T>(_: &T) -> EventStore<T::Id, T::Event>
     where
@@ -74,9 +64,6 @@ impl EventStoreBuilder {
 }
 
 /// An in-memory [`EventStore`] implementation, backed by an [`HashMap`].
-///
-/// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html
-/// [`HashMap`]: something
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Event>
 where

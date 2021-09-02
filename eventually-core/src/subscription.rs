@@ -25,7 +25,7 @@ pub type EventStream<'a, S> = BoxStream<
 
 /// Component to let users subscribe to newly-inserted events into the [`EventStore`].
 ///
-/// Check out [`subscribe_all`] for more information.
+/// Check out [`subscribe_all`](EventSubscriber::subscribe_all) for more information.
 ///
 /// Additional information can be found in the [_Volatile Subscription_] section
 /// of eventstore.com

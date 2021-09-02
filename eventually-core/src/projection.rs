@@ -2,7 +2,7 @@
 //! of an [`Aggregate`] or of a number of `Aggregate`s.
 //!
 //! More information about projections can be found here:
-//! https://eventstore.com/docs/getting-started/projections/index.html
+//! <https://eventstore.com/docs/getting-started/projections/index.html>
 //!
 //! [`Projection`]: trait.Projection.html
 //! [`Aggregate`]: ../aggregate/trait.Aggregate.html

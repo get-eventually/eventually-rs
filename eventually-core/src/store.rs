@@ -110,11 +110,11 @@ pub trait EventStore {
     /// The desired version for the new [`Event`]s to append must be specified
     /// through an [`Expected`] element.
     ///
-    /// When using `Expected::Any`, no checks on the current [`Aggregate`]
+    /// When using `Expected::Any`, no checks on the current [`Aggregate`](crate::aggregate::Aggregate)
     /// values will be performed, disregarding optimistic locking.
     ///
     /// When using `Expected::Exact`, the Store will check that the current
-    /// version of the [`Aggregate`] is _exactly_ the one specified.
+    /// version of the [`Aggregate`](crate::aggregate::Aggregate) is _exactly_ the one specified.
     ///
     /// If the version is not the one expected from the Store, implementations
     /// should raise an [`AppendError::Conflict`] error.
@@ -243,7 +243,7 @@ impl<SourceId, T> Persisted<SourceId, T> {
 ///
 /// [`PersistentEvent`]: struct.Persisted.html
 pub mod persistent {
-    /// Creates a new [`Persisted`] by wrapping an Event value.
+    /// Creates a new [`Persisted`](super::Persisted) by wrapping an Event value.
     ///
     /// [`PersistentEvent`]: ../struct.Persisted.html
     pub struct EventBuilder<SourceId, T> {
@@ -287,7 +287,7 @@ pub mod persistent {
         }
     }
 
-    /// Next step in creating a new [`Persisted`] carrying an Event value
+    /// Next step in creating a new [`Persisted`](super::Persisted) carrying an Event value
     /// and its version.
     ///
     /// [`PersistentEvent`]: ../struct.Persisted.html
@@ -313,7 +313,7 @@ pub mod persistent {
         }
     }
 
-    /// Next step in creating a new [`Persisted`] carrying an Event value
+    /// Next step in creating a new [`Persisted`](super::Persisted) carrying an Event value
     /// and its sequence number.
     ///
     /// [`PersistentEvent`]: ../struct.Persisted.html
