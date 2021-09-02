@@ -296,7 +296,7 @@ where
             .collect();
 
         // Events must be sorted by the sequence number when using $all.
-        events.sort_by(|a, b| a.sequence_number().cmp(&b.sequence_number()));
+        events.sort_by_key(|a| a.sequence_number());
 
         let fut = futures::future::ok(iter(events).map(Ok).boxed());
 
