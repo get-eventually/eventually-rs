@@ -25,7 +25,7 @@ use tracing_futures::Instrument;
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
-/// Error returned by the [`EventStore::apend`](eventually_core::store::EventStore) when a conflict has been detected.
+/// Error returned by the [`EventStore::append`](eventually_core::store::EventStore) when a conflict has been detected.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 #[error("conflicting versions, expected {expected}, got instead {actual}")]
 pub struct ConflictError {
@@ -84,11 +84,8 @@ where
     Event: Clone,
 {
     /// Creates a new EventStore with a specified in-memory broadcast channel
-    /// size, which will used by the [`subscribe_all`] method to notify
-    /// of newly [`append`] events.
-    ///
-    /// [`subscribe_all`]: struct.EventStore.html#method.subscribe_all
-    /// [`append`]: struct.EventStore.html#method.append
+    /// size, which will used by the [`subscribe_all`](EventSubscriber::subscribe_all) method to notify
+    /// of newly [`EventStore::append`](eventually_core::store::EventStore) events.
     pub fn new(subscribe_capacity: usize) -> Self {
         // Use this broadcast channel to send append events to
         // subscriptions from .subscribe_all()
