@@ -53,18 +53,19 @@ where
         let entry = entry.0;
 
         let source_id: String = entry
-            .get("source_id").ok_or(ToPersistedError::NoKey("source_id"))?;
+            .get("source_id")
+            .ok_or(ToPersistedError::NoKey("source_id"))?;
 
         let source_id: SourceId = SourceId::try_from(source_id)
             .map_err(anyhow::Error::from)
             .map_err(ToPersistedError::DecodeSourceId)?;
 
-        let event: Vec<u8> = entry
-            .get("event").ok_or(ToPersistedError::NoKey("event"))?;
+        let event: Vec<u8> = entry.get("event").ok_or(ToPersistedError::NoKey("event"))?;
         let event: Event = serde_json::from_slice(&event).map_err(ToPersistedError::DecodeJSON)?;
 
         let version: u32 = entry
-            .get("version").ok_or(ToPersistedError::NoKey("version"))?;
+            .get("version")
+            .ok_or(ToPersistedError::NoKey("version"))?;
 
         let sequence_number = parse_version(&entry.id);
 

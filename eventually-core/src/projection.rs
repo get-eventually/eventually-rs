@@ -36,8 +36,8 @@ pub trait Projection {
     type Error;
 
     /// Updates the next value of the `Projection` using the provided event value.
-    fn project<'a>(
-        &'a mut self,
+    fn project(
+        &mut self,
         event: Persisted<Self::SourceId, Self::Event>,
-    ) -> BoxFuture<'a, Result<(), Self::Error>>;
+    ) -> BoxFuture<Result<(), Self::Error>>;
 }

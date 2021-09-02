@@ -146,10 +146,10 @@ async fn it_creates_persistent_subscription_successfully() {
         type Event = Event;
         type Error = std::convert::Infallible;
 
-        fn project<'a>(
-            &'a mut self,
+        fn project(
+            &mut self,
             _event: Persisted<Self::SourceId, Self::Event>,
-        ) -> BoxFuture<'a, Result<(), Self::Error>> {
+        ) -> BoxFuture<Result<(), Self::Error>> {
             Box::pin(async move { Ok(self.0 += 1) })
         }
     }
