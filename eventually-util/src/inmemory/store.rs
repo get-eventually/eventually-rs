@@ -492,7 +492,7 @@ mod tests {
             .is_ok());
 
         // Wait for both subscribers to be done.
-        tokio::join!(join_handle_1, join_handle_2);
+        tokio::try_join!(join_handle_1, join_handle_2).unwrap();
     }
 
     #[tokio::test]
