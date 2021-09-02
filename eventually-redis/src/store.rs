@@ -152,14 +152,12 @@ where
                 .map(move |res| res.map(|v| (id.clone(), v)))
                 .and_then(move |(id, entry)| async move {
                     let event: Vec<u8> = entry
-                        .get("event")
-                        .ok_or_else(|| StoreError::NoKey("event"))?;
+                        .get("event").ok_or(StoreError::NoKey("event"))?;
                     let event: Event =
                         serde_json::from_slice(&event).map_err(StoreError::DecodeJSON)?;
 
                     let sequence_number: u32 = entry
-                        .get("sequence_number")
-                        .ok_or_else(|| StoreError::NoKey("sequence_number"))?;
+                        .get("sequence_number").ok_or(StoreError::NoKey("sequence_number"))?;
 
                     let version = stream::parse_version(&entry.id);
 
