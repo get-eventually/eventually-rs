@@ -61,6 +61,6 @@ pub(crate) type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
 
 #[inline]
 #[allow(trivial_casts)]
-pub(crate) fn slice_iter<'a>(s: Params<'a>) -> impl ExactSizeIterator<Item = &'a dyn ToSql> + 'a {
+pub(crate) fn slice_iter(s: Params) -> impl ExactSizeIterator<Item = &dyn ToSql> {
     s.iter().map(|s| *s as _)
 }

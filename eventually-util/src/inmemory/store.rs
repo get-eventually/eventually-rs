@@ -296,7 +296,7 @@ where
             .collect();
 
         // Events must be sorted by the sequence number when using $all.
-        events.sort_by(|a, b| a.sequence_number().cmp(&b.sequence_number()));
+        events.sort_by_key(|a| a.sequence_number());
 
         let fut = futures::future::ok(iter(events).map(Ok).boxed());
 
@@ -492,7 +492,7 @@ mod tests {
             .is_ok());
 
         // Wait for both subscribers to be done.
-        tokio::join!(join_handle_1, join_handle_2);
+        tokio::try_join!(join_handle_1, join_handle_2).unwrap();
     }
 
     #[tokio::test]
