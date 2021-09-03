@@ -11,19 +11,13 @@ use serde::Serialize;
 
 use crate::versioning::Versioned;
 
-/// A short extractor type for the Aggregate [`Id`].
-///
-/// [`Id`]: trait.Aggregate.html#associatedtype.Id
+/// A short extractor type for the [`Aggregate`] [`Id`](Aggregate::Id).
 pub type AggregateId<A> = <A as Aggregate>::Id;
 
-/// An Aggregate manages a domain entity [`State`], acting as a _transaction boundary_.
+/// An [`Aggregate`] manages a domain entity [`State`](Aggregate::State), acting as a _transaction boundary_.
 ///
-/// It allows **state mutations** through the use of [`Command`]s, which the
-/// Aggregate instance handles and emits a number of Domain [`Event`]s.
-///
-/// [`Event`]: trait.Aggregate.html#associatedtype.Event
-/// [`State`]: trait.Aggregate.html#associatedtype.State
-/// [`Command`]: trait.Aggregate.html#associatedtype.Command
+/// It allows **state mutations** through the use of [`Command`](Aggregate::Command)s, which the
+/// Aggregate instance handles and emits a number of Domain [`Event`](Aggregate::Event)s.
 pub trait Aggregate {
     /// Aggregate identifier: this should represent an unique identifier to refer
     /// to a unique Aggregate instance.
@@ -32,40 +26,25 @@ pub trait Aggregate {
     /// State of the Aggregate: this should represent the Domain Entity data structure.
     type State: Default;
 
-    /// Represents a specific, domain-related change to the Aggregate [`State`].
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// Represents a specific, domain-related change to the Aggregate [`State`](Aggregate::State).
     type Event;
 
     /// Commands are all the possible operations available on an Aggregate.
-    /// Use Commands to model business use-cases or [`State`] mutations.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// Use Commands to model business use-cases or [`State`](Aggregate::State) mutations.
     type Command;
 
-    /// Possible failures while [`apply`]ing [`Event`]s or handling [`Command`]s.
-    ///
-    /// [`apply`]: trait.Aggregate.html#method.apply
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    /// Possible failures while [`apply`](Aggregate::apply)ing [`Event`](Aggregate::Event)s or handling [`Command`](Aggregate::Command)s.
     type Error;
 
-    /// Applies an [`Event`] to the current Aggregate [`State`].
+    /// Applies an [`Event`](Aggregate::Event) to the current Aggregate [`State`](Aggregate::State).
     ///
-    /// To enforce immutability, this method takes ownership of the previous [`State`]
-    /// and the current [`Event`] to apply, and returns the new version of the [`State`]
+    /// To enforce immutability, this method takes ownership of the previous [`State`](Aggregate::State)
+    /// and the current [`Event`](Aggregate::Event) to apply, and returns the new version of the [`State`](Aggregate::State)
     /// or an error.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
 
-    /// Handles the requested [`Command`] and returns a list of [`Event`]s
-    /// to apply the [`State`] mutation based on the current representation of the State.
-    ///
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
+    /// Handles the requested [`Command`](Aggregate::Command) and returns a list of [`Event`](Aggregate::Event)s
+    /// to apply the [`State`](Aggregate::State) mutation based on the current representation of the State.
     fn handle<'a, 's: 'a>(
         &'a self,
         id: &'s Self::Id,
@@ -77,17 +56,12 @@ pub trait Aggregate {
 }
 
 /// Extension trait with some handy methods to use with [`Aggregate`]s.
-///
-/// [`Aggregate`]: trait.Aggregate.html
 pub trait AggregateExt: Aggregate {
-    /// Applies a list of [`Event`]s from an `Iterator`
-    /// to the current Aggregate [`State`].
+    /// Applies a list of [`Event`](Aggregate::Event)s from an `Iterator`
+    /// to the current Aggregate [`State`](Aggregate::State).
     ///
-    /// Useful to recreate the [`State`] of an Aggregate when the [`Event`]s
+    /// Useful to recreate the [`State`](Aggregate::State) of an Aggregate when the [`Event`](Aggregate::Event)s
     /// are located in-memory.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    /// [`Event`]: trait.Aggregate.html#associatedtype.Event
     #[inline]
     fn fold<I>(state: Self::State, mut events: I) -> Result<Self::State, Self::Error>
     where
@@ -100,8 +74,6 @@ pub trait AggregateExt: Aggregate {
 impl<T> AggregateExt for T where T: Aggregate {}
 
 /// Builder type for new [`AggregateRoot`] instances.
-///
-/// [`AggregateRoot`]: struct.AggregateRoot.html
 #[derive(Clone)]
 pub struct AggregateRootBuilder<T>
 where
@@ -124,20 +96,14 @@ impl<T> AggregateRootBuilder<T>
 where
     T: Aggregate + Clone,
 {
-    /// Builds a new [`AggregateRoot`] instance for the specified Aggregate [`Id`].
-    ///
-    /// [`Id`]: trait.Aggregate.html#associatedtype.Id
-    /// [`AggregateRoot`]: struct.AggregateRoot.html
+    /// Builds a new [`AggregateRoot`] instance for the specified [`Aggregate`] [`Id`](Aggregate::Id).
     #[inline]
     pub fn build(&self, id: T::Id) -> AggregateRoot<T> {
         self.build_with_state(id, 0, Default::default())
     }
 
     /// Builds a new [`AggregateRoot`] instance for the specified Aggregate
-    /// with a specified [`State`] value.
-    ///
-    /// [`AggregateRoot`]: struct.AggregateRoot.html
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// with a specified [`State`](Aggregate::State) value.
     #[inline]
     pub fn build_with_state(&self, id: T::Id, version: u32, state: T::State) -> AggregateRoot<T> {
         AggregateRoot {
@@ -150,28 +116,19 @@ where
     }
 }
 
-/// An `AggregateRoot` represents an handler to the [`Aggregate`] it's managing,
+/// An [`AggregateRoot`] represents an handler to the [`Aggregate`] it's managing,
 /// such as:
 ///
-/// * Owning its [`State`], [`Id`] and version,
-/// * Proxying [`Command`]s to the [`Aggregate`] using the current [`State`],
-/// * Keeping a list of [`Event`]s to commit after [`Command`] execution.
+/// * Owning its [`State`](Aggregate::State), [`Id`](Aggregate::Id) and version,
+/// * Proxying [`Command`](Aggregate::Command)s to the [`Aggregate`] using the current [`State`](Aggregate::State),
+/// * Keeping a list of [`Event`](Aggregate::Event)s to commit after [`Command`](Aggregate::Command) execution.
 ///
 /// ## Initialize
 ///
-/// An `AggregateRoot` can only be initialized using the [`AggregateRootBuilder`].
+/// An [`AggregateRoot`] can only be initialized using the [`AggregateRootBuilder`].
 ///
 /// Check [`AggregateRootBuilder::build`] for more information.
-///
-/// [`Aggregate`]: trait.Aggregate.html
-/// [`AggregateExt`]: trait.AggregateExt.html
-/// [`root()`]: trait.AggregateExt.html#method.root
-/// [`Id`]: trait.Aggregate.html@associatedtype.Id
-/// [`Event`]: trait.Aggregate.html#associatedtype.Event
-/// [`State`]: trait.Aggregate.html#associatedtype.State
-/// [`Command`]: trait.Aggregate.html#associatedtype.Event
-/// [`AggregateRootBuilder`]: struct.AggregateRootBuilder.html
-/// [`AggregateRootBuilder::build`]: struct.AggregateRootBuilder.html#method.build
+
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct AggregateRoot<T>
@@ -215,19 +172,14 @@ impl<T> AggregateRoot<T>
 where
     T: Aggregate,
 {
-    /// Returns a reference to the Aggregate [`Id`] that represents
+    /// Returns a reference to the Aggregate [`Id`](Aggregate::Id) that represents
     /// the entity wrapped by this [`AggregateRoot`] instance.
-    ///
-    /// [`Id`]: trait.Aggregate.html#associatedtype.Id
-    /// [`AggregateRoot`]: struct.AggregateRoot.html
     #[inline]
     pub fn id(&self) -> &T::Id {
         &self.id
     }
 
-    /// Returns a reference to the current Aggregate [`State`].
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
+    /// Returns a reference to the current Aggregate [`State`](Aggregate::State).
     #[inline]
     pub fn state(&self) -> &T::State {
         &self.state
@@ -240,7 +192,7 @@ where
         std::mem::replace(&mut self.to_commit, None)
     }
 
-    /// Returns a new `AggregateRoot` having the specified version.
+    /// Returns a new [`AggregateRoot`] having the specified version.
     #[inline]
     pub(crate) fn with_version(mut self, version: u32) -> Self {
         self.version = version;
@@ -266,14 +218,10 @@ where
     T::State: Clone,
     T::Command: Debug,
 {
-    /// Handles the submitted [`Command`] using the [`Aggregate::handle`] method
-    /// and updates the Aggregate [`State`].
+    /// Handles the submitted [`Command`](Aggregate::Command) using the [`Aggregate::handle`] method
+    /// and updates the Aggregate [`State`](Aggregate::State).
     ///
     /// Returns a `&mut self` reference to allow for _method chaining_.
-    ///
-    /// [`State`]: trait.Aggregate.html#associatedtype.State
-    /// [`Command`]: trait.Aggregate.html#associatedtype.Command
-    /// [`Aggregate::handle`]: trait.Aggregate.html#method.handle
     #[cfg_attr(
         feature = "with-tracing",
         tracing::instrument(level = "debug", name = "AggregateRoot::handle", skip(self))
