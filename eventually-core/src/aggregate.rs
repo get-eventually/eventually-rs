@@ -14,37 +14,48 @@ use crate::versioning::Versioned;
 /// A short extractor type for the [`Aggregate`] [`Id`](Aggregate::Id).
 pub type AggregateId<A> = <A as Aggregate>::Id;
 
-/// An [`Aggregate`] manages a domain entity [`State`](Aggregate::State), acting as a _transaction boundary_.
+/// An [`Aggregate`] manages a domain entity [`State`](Aggregate::State), acting
+/// as a _transaction boundary_.
 ///
-/// It allows **state mutations** through the use of [`Command`](Aggregate::Command)s, which the
-/// Aggregate instance handles and emits a number of Domain [`Event`](Aggregate::Event)s.
+/// It allows **state mutations** through the use of
+/// [`Command`](Aggregate::Command)s, which the Aggregate instance handles and
+/// emits a number of Domain [`Event`](Aggregate::Event)s.
 pub trait Aggregate {
-    /// Aggregate identifier: this should represent an unique identifier to refer
-    /// to a unique Aggregate instance.
+    /// Aggregate identifier: this should represent an unique identifier to
+    /// refer to a unique Aggregate instance.
     type Id: Eq;
 
-    /// State of the Aggregate: this should represent the Domain Entity data structure.
+    /// State of the Aggregate: this should represent the Domain Entity data
+    /// structure.
     type State: Default;
 
-    /// Represents a specific, domain-related change to the Aggregate [`State`](Aggregate::State).
+    /// Represents a specific, domain-related change to the Aggregate
+    /// [`State`](Aggregate::State).
     type Event;
 
     /// Commands are all the possible operations available on an Aggregate.
-    /// Use Commands to model business use-cases or [`State`](Aggregate::State) mutations.
+    /// Use Commands to model business use-cases or [`State`](Aggregate::State)
+    /// mutations.
     type Command;
 
-    /// Possible failures while [`apply`](Aggregate::apply)ing [`Event`](Aggregate::Event)s or handling [`Command`](Aggregate::Command)s.
+    /// Possible failures while [`apply`](Aggregate::apply)ing
+    /// [`Event`](Aggregate::Event)s or handling
+    /// [`Command`](Aggregate::Command)s.
     type Error;
 
-    /// Applies an [`Event`](Aggregate::Event) to the current Aggregate [`State`](Aggregate::State).
+    /// Applies an [`Event`](Aggregate::Event) to the current Aggregate
+    /// [`State`](Aggregate::State).
     ///
-    /// To enforce immutability, this method takes ownership of the previous [`State`](Aggregate::State)
-    /// and the current [`Event`](Aggregate::Event) to apply, and returns the new version of the [`State`](Aggregate::State)
-    /// or an error.
+    /// To enforce immutability, this method takes ownership of the previous
+    /// [`State`](Aggregate::State) and the current
+    /// [`Event`](Aggregate::Event) to apply, and returns the new version of the
+    /// [`State`](Aggregate::State) or an error.
     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
 
-    /// Handles the requested [`Command`](Aggregate::Command) and returns a list of [`Event`](Aggregate::Event)s
-    /// to apply the [`State`](Aggregate::State) mutation based on the current representation of the State.
+    /// Handles the requested [`Command`](Aggregate::Command) and returns a list
+    /// of [`Event`](Aggregate::Event)s to apply the
+    /// [`State`](Aggregate::State) mutation based on the current representation
+    /// of the State.
     fn handle<'a, 's: 'a>(
         &'a self,
         id: &'s Self::Id,
@@ -60,8 +71,8 @@ pub trait AggregateExt: Aggregate {
     /// Applies a list of [`Event`](Aggregate::Event)s from an `Iterator`
     /// to the current Aggregate [`State`](Aggregate::State).
     ///
-    /// Useful to recreate the [`State`](Aggregate::State) of an Aggregate when the [`Event`](Aggregate::Event)s
-    /// are located in-memory.
+    /// Useful to recreate the [`State`](Aggregate::State) of an Aggregate when
+    /// the [`Event`](Aggregate::Event)s are located in-memory.
     #[inline]
     fn fold<I>(state: Self::State, mut events: I) -> Result<Self::State, Self::Error>
     where
@@ -96,7 +107,8 @@ impl<T> AggregateRootBuilder<T>
 where
     T: Aggregate + Clone,
 {
-    /// Builds a new [`AggregateRoot`] instance for the specified [`Aggregate`] [`Id`](Aggregate::Id).
+    /// Builds a new [`AggregateRoot`] instance for the specified [`Aggregate`]
+    /// [`Id`](Aggregate::Id).
     #[inline]
     pub fn build(&self, id: T::Id) -> AggregateRoot<T> {
         self.build_with_state(id, 0, Default::default())
@@ -116,16 +128,19 @@ where
     }
 }
 
-/// An [`AggregateRoot`] represents an handler to the [`Aggregate`] it's managing,
-/// such as:
+/// An [`AggregateRoot`] represents an handler to the [`Aggregate`] it's
+/// managing, such as:
 ///
 /// * Owning its [`State`](Aggregate::State), [`Id`](Aggregate::Id) and version,
-/// * Proxying [`Command`](Aggregate::Command)s to the [`Aggregate`] using the current [`State`](Aggregate::State),
-/// * Keeping a list of [`Event`](Aggregate::Event)s to commit after [`Command`](Aggregate::Command) execution.
+/// * Proxying [`Command`](Aggregate::Command)s to the [`Aggregate`] using the
+///   current [`State`](Aggregate::State),
+/// * Keeping a list of [`Event`](Aggregate::Event)s to commit after
+///   [`Command`](Aggregate::Command) execution.
 ///
 /// ## Initialize
 ///
-/// An [`AggregateRoot`] can only be initialized using the [`AggregateRootBuilder`].
+/// An [`AggregateRoot`] can only be initialized using the
+/// [`AggregateRootBuilder`].
 ///
 /// Check [`AggregateRootBuilder::build`] for more information.
 
@@ -172,14 +187,15 @@ impl<T> AggregateRoot<T>
 where
     T: Aggregate,
 {
-    /// Returns a reference to the Aggregate [`Id`](Aggregate::Id) that represents
-    /// the entity wrapped by this [`AggregateRoot`] instance.
+    /// Returns a reference to the Aggregate [`Id`](Aggregate::Id) that
+    /// represents the entity wrapped by this [`AggregateRoot`] instance.
     #[inline]
     pub fn id(&self) -> &T::Id {
         &self.id
     }
 
-    /// Returns a reference to the current Aggregate [`State`](Aggregate::State).
+    /// Returns a reference to the current Aggregate
+    /// [`State`](Aggregate::State).
     #[inline]
     pub fn state(&self) -> &T::State {
         &self.state
@@ -218,8 +234,9 @@ where
     T::State: Clone,
     T::Command: Debug,
 {
-    /// Handles the submitted [`Command`](Aggregate::Command) using the [`Aggregate::handle`] method
-    /// and updates the Aggregate [`State`](Aggregate::State).
+    /// Handles the submitted [`Command`](Aggregate::Command) using the
+    /// [`Aggregate::handle`] method and updates the Aggregate
+    /// [`State`](Aggregate::State).
     ///
     /// Returns a `&mut self` reference to allow for _method chaining_.
     #[cfg_attr(

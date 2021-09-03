@@ -8,8 +8,8 @@ use futures::future::BoxFuture;
 /// An [`Option`]-flavoured, [`Aggregate`]-compatible trait
 /// to model Aggregates having an optional [`State`](Aggregate::State).
 ///
-/// Use [`as_aggregate`](Aggregate::as_aggregate) to get an [`Aggregate`]-compatible instance
-/// of this trait.
+/// Use [`as_aggregate`](Aggregate::as_aggregate) to get an
+/// [`Aggregate`]-compatible instance of this trait.
 pub trait Aggregate {
     /// Identifier type of the Aggregate.
     ///
@@ -31,17 +31,21 @@ pub trait Aggregate {
     /// Check out [`Aggregate::Command`] for more information.
     type Command;
 
-    /// Error produced by the the Aggregate while applying [`Event`](Aggregate::Event)s
-    /// or handling [`Command`](Aggregate::Command)s.
+    /// Error produced by the the Aggregate while applying
+    /// [`Event`](Aggregate::Event)s or handling
+    /// [`Command`](Aggregate::Command)s.
     type Error;
 
-    /// Applies the specified [`Event`](Aggregate::Event) when the [`State`](Aggregate::State) is empty.
+    /// Applies the specified [`Event`](Aggregate::Event) when the
+    /// [`State`](Aggregate::State) is empty.
     fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error>;
 
-    /// Applies the specified [`Event`](Aggregate::Event) on a pre-existing [`State`](Aggregate::State) value.
+    /// Applies the specified [`Event`](Aggregate::Event) on a pre-existing
+    /// [`State`](Aggregate::State) value.
     fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
 
-    /// Handles the specified [`Command`](Aggregate::Command)when the [`State`](Aggregate::State) is empty.
+    /// Handles the specified [`Command`](Aggregate::Command)when the
+    /// [`State`](Aggregate::State) is empty.
     fn handle_first<'s, 'a: 's>(
         &'s self,
         id: &'a Self::Id,
@@ -50,7 +54,8 @@ pub trait Aggregate {
     where
         Self: Sized;
 
-    /// Handles the specified [`Command`](Aggregate::Command) on a pre-existing [`State`](Aggregate::State) value.
+    /// Handles the specified [`Command`](Aggregate::Command) on a pre-existing
+    /// [`State`](Aggregate::State) value.
     fn handle_next<'a, 's: 'a>(
         &'a self,
         id: &'a Self::Id,
@@ -61,7 +66,8 @@ pub trait Aggregate {
         Self: Sized;
 
     /// Translates the current [`optional::Aggregate`](Aggregate) instance into
-    /// a _newtype instance_ compatible with the core [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
+    /// a _newtype instance_ compatible with the core
+    /// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
     #[inline]
     fn as_aggregate(self) -> AsAggregate<Self>
     where
@@ -71,8 +77,9 @@ pub trait Aggregate {
     }
 }
 
-/// _Newtype pattern_ to ensure compatibility between [`optional::Aggregate`](Aggregate) trait
-/// and the core [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
+/// _Newtype pattern_ to ensure compatibility between
+/// [`optional::Aggregate`](Aggregate) trait and the core
+/// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
 ///
 /// ## Usage
 ///

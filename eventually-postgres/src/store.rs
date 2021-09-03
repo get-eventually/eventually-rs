@@ -227,13 +227,16 @@ where
 ///
 /// The `Id` type supplied to the `EventStore` has to be
 /// able to `to_string()` (so implement the `std::fmt::Display` trait)
-/// and to be parsed from a `String` (so to implement the `std::convert::TryFrom<String>` trait).
+/// and to be parsed from a `String` (so to implement the
+/// `std::convert::TryFrom<String>` trait).
 ///
-/// The error for the `TryFrom<String>` conversion has to be a `std::error::Error`,
-/// so as to be able to map it into an `anyhow::Error` generic error value.
+/// The error for the `TryFrom<String>` conversion has to be a
+/// `std::error::Error`, so as to be able to map it into an `anyhow::Error`
+/// generic error value.
 ///
 /// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html
-/// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html
+/// [`EventStoreBuilder`]:
+/// ../../eventually_core/store/trait.EventStoreBuilder.html
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Event, Tls>
 where

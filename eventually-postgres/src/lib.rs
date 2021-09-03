@@ -15,11 +15,11 @@
 //! let pg_manager = bb8_postgres::PostgresConnectionManager::new_from_stringlike(
 //!     "postgres://user@pass:localhost:5432/db",
 //!     tokio_postgres::NoTls,
-//!     )
-//!     .map_err(|err| {
-//!         eprintln!("Failed configuring a Postgres Connection pool: {}", err);
-//!         err
-//!     })?;
+//! )
+//! .map_err(|err| {
+//!     eprintln!("Failed configuring a Postgres Connection pool: {}", err);
+//!     err
+//! })?;
 //! let pool = bb8::Pool::builder().build(pg_manager).await?;
 //!
 //! // A domain event example -- it is deliberately simple.
@@ -56,7 +56,8 @@ pub use subscription::*;
 
 use tokio_postgres::types::ToSql;
 
-/// Adapter type for parameters compatible with `tokio_postgres::Client` methods.
+/// Adapter type for parameters compatible with `tokio_postgres::Client`
+/// methods.
 pub(crate) type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
 
 #[inline]

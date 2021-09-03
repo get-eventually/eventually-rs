@@ -1,4 +1,5 @@
-//! Contains the Event Store trait for storing and streaming [`Aggregate::Event`](super::aggregate::Aggregate::Event)s.
+//! Contains the Event Store trait for storing and streaming
+//! [`Aggregate::Event`](super::aggregate::Aggregate::Event)s.
 
 use std::ops::Deref;
 
@@ -17,22 +18,24 @@ pub enum Select {
     All,
 
     /// To return a slice of the [`EventStream`], starting from
-    /// those [`Event`](EventStore::Event)s with version **greater or equal** than
-    /// the one specified in this variant.
+    /// those [`Event`](EventStore::Event)s with version **greater or equal**
+    /// than the one specified in this variant.
     From(u32),
 }
 
-/// Specifies the optimistic locking level when performing [`append`](EventStore::append) from
-/// an [`EventStore`].
+/// Specifies the optimistic locking level when performing
+/// [`append`](EventStore::append) from an [`EventStore`].
 ///
 /// Check out [`append`](EventStore::append) documentation for more info.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Expected {
-    /// Append events disregarding the current [`Aggregate`](super::aggregate::Aggregate) version.
+    /// Append events disregarding the current
+    /// [`Aggregate`](super::aggregate::Aggregate) version.
     Any,
 
-    /// Append events only if the current version of the [`Aggregate`](super::aggregate::Aggregate)
-    /// is the one specified by the value provided here.
+    /// Append events only if the current version of the
+    /// [`Aggregate`](super::aggregate::Aggregate) is the one specified by
+    /// the value provided here.
     Exact(u32),
 }
 
@@ -45,7 +48,8 @@ pub type EventStream<'a, S> = BoxStream<
     >,
 >;
 
-/// Error type returned by [`append`](EventStore::append) in [`EventStore`] implementations.
+/// Error type returned by [`append`](EventStore::append) in [`EventStore`]
+/// implementations.
 pub trait AppendError: std::error::Error {
     /// Returns true if the error is due to a version conflict
     /// during [`append`](EventStore::append).
@@ -58,32 +62,39 @@ impl AppendError for std::convert::Infallible {
     }
 }
 
-/// An Event Store is an append-only, ordered list of [`Event`](super::aggregate::Aggregate::Event)s
-/// for a certain "source" -- e.g. an [`Aggregate`](super::aggregate::Aggregate).
+/// An Event Store is an append-only, ordered list of
+/// [`Event`](super::aggregate::Aggregate::Event)s for a certain "source" --
+/// e.g. an [`Aggregate`](super::aggregate::Aggregate).
 pub trait EventStore {
-    /// Type of the Source id, typically an [`AggregateId`](super::aggregate::AggregateId).
+    /// Type of the Source id, typically an
+    /// [`AggregateId`](super::aggregate::AggregateId).
     type SourceId: Eq;
 
-    /// Event to be stored in the [`EventStore`], typically an [`Aggregate::Event`](super::aggregate::Aggregate::Event).
+    /// Event to be stored in the [`EventStore`], typically an
+    /// [`Aggregate::Event`](super::aggregate::Aggregate::Event).
     type Event;
 
-    /// Possible errors returned by the [`EventStore`] when requesting operations.
+    /// Possible errors returned by the [`EventStore`] when requesting
+    /// operations.
     type Error: AppendError;
 
-    /// Appends a new list of [`Event`](EventStore::Event)s to the Event Store, for the Source
-    /// entity specified by [`SourceId`](EventStore::SourceId).
+    /// Appends a new list of [`Event`](EventStore::Event)s to the Event Store,
+    /// for the Source entity specified by
+    /// [`SourceId`](EventStore::SourceId).
     ///
     /// `append` is a transactional operation: it either appends all the events,
     /// or none at all and returns an [`AppendError`].
     ///
-    /// The desired version for the new [`Event`](EventStore::Event)s to append must be specified
-    /// through an [`Expected`] element.
+    /// The desired version for the new [`Event`](EventStore::Event)s to append
+    /// must be specified through an [`Expected`] element.
     ///
-    /// When using [`Expected::Any`], no checks on the current [`Aggregate`](crate::aggregate::Aggregate)
-    /// values will be performed, disregarding optimistic locking.
+    /// When using [`Expected::Any`], no checks on the current
+    /// [`Aggregate`](crate::aggregate::Aggregate) values will be performed,
+    /// disregarding optimistic locking.
     ///
     /// When using [`Expected::Exact`], the Store will check that the current
-    /// version of the [`Aggregate`](crate::aggregate::Aggregate) is _exactly_ the one specified.
+    /// version of the [`Aggregate`](crate::aggregate::Aggregate) is _exactly_
+    /// the one specified.
     ///
     /// If the version is not the one expected from the Store, implementations
     /// should raise a conflict error.
@@ -97,10 +108,12 @@ pub trait EventStore {
         events: Vec<Self::Event>,
     ) -> BoxFuture<Result<u32, Self::Error>>;
 
-    /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`] back to the application,
-    /// by specifying the desired [`SourceId`](EventStore::SourceId) and [`Select`] operation.
+    /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]
+    /// back to the application, by specifying the desired
+    /// [`SourceId`](EventStore::SourceId) and [`Select`] operation.
     ///
-    /// [`SourceId`](EventStore::SourceId) will be used to request a particular `EventStream`.
+    /// [`SourceId`](EventStore::SourceId) will be used to request a particular
+    /// `EventStream`.
     ///
     /// [`Select`] specifies the selection strategy for the [`Event`]s
     /// in the returned [`EventStream`]: take a look at type documentation
@@ -111,18 +124,21 @@ pub trait EventStore {
         select: Select,
     ) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
 
-    /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`] back to the application,
-    /// disregarding the [`SourceId`](EventStore::SourceId) values but using a [`Select`] operation.
+    /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]
+    /// back to the application, disregarding the
+    /// [`SourceId`](EventStore::SourceId) values but using a [`Select`]
+    /// operation.
     ///
-    /// [`SourceId`](EventStore::SourceId) will be used to request a particular [`EventStream`].
+    /// [`SourceId`](EventStore::SourceId) will be used to request a particular
+    /// [`EventStream`].
     ///
-    /// [`Select`] specifies the selection strategy for the [`Event`](EventStore::Event)s
-    /// in the returned [`EventStream`]: take a look at type documentation
-    /// for all the available options.
+    /// [`Select`] specifies the selection strategy for the
+    /// [`Event`](EventStore::Event)s in the returned [`EventStream`]: take
+    /// a look at type documentation for all the available options.
     fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
 
-    /// Drops all the [`Event`](EventStore::Event)s related to one `Source`, specified by
-    /// the provided [`SourceId`](EventStore::SourceId).
+    /// Drops all the [`Event`](EventStore::Event)s related to one `Source`,
+    /// specified by the provided [`SourceId`](EventStore::SourceId).
     ///
     /// [`Event`]: trait.EventStore.html#associatedtype.Event
     fn remove(&mut self, source_id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>>;
@@ -158,7 +174,8 @@ impl<SourceId, T> Deref for Persisted<SourceId, T> {
 }
 
 impl<SourceId, T> Persisted<SourceId, T> {
-    /// Creates a new [`EventBuilder`](persistent::EventBuilder) from the provided Event value.
+    /// Creates a new [`EventBuilder`](persistent::EventBuilder) from the
+    /// provided Event value.
     #[inline]
     pub fn from(source_id: SourceId, event: T) -> persistent::EventBuilder<SourceId, T> {
         persistent::EventBuilder { source_id, event }
@@ -176,7 +193,8 @@ impl<SourceId, T> Persisted<SourceId, T> {
         &self.source_id
     }
 
-    /// Unwraps the inner [`Event`](EventStore::Event) from the `Persisted` wrapper.
+    /// Unwraps the inner [`Event`](EventStore::Event) from the `Persisted`
+    /// wrapper.
     #[inline]
     pub fn take(self) -> T {
         self.event
@@ -185,7 +203,8 @@ impl<SourceId, T> Persisted<SourceId, T> {
 
 /// Contains a type-state builder for [`Persisted`](super::Persisted) type.
 pub mod persistent {
-    /// Creates a new [`Persisted`](super::Persisted) by wrapping an Event value.
+    /// Creates a new [`Persisted`](super::Persisted) by wrapping an Event
+    /// value.
     pub struct EventBuilder<SourceId, T> {
         pub(super) event: T,
         pub(super) source_id: SourceId,
@@ -200,8 +219,8 @@ pub mod persistent {
     }
 
     impl<SourceId, T> EventBuilder<SourceId, T> {
-        /// Specifies the [`Persisted`](super::Persisted) version and moves to the next
-        /// builder state.
+        /// Specifies the [`Persisted`](super::Persisted) version and moves to
+        /// the next builder state.
         #[inline]
         pub fn version(self, value: u32) -> EventBuilderWithVersion<SourceId, T> {
             EventBuilderWithVersion {
@@ -211,8 +230,8 @@ pub mod persistent {
             }
         }
 
-        /// Specifies the [`Persisted`](super::Persisted) sequence number and moves to the next
-        /// builder state.
+        /// Specifies the [`Persisted`](super::Persisted) sequence number and
+        /// moves to the next builder state.
         #[inline]
         pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<SourceId, T> {
             EventBuilderWithSequenceNumber {
@@ -223,8 +242,8 @@ pub mod persistent {
         }
     }
 
-    /// Next step in creating a new [`Persisted`](super::Persisted) carrying an Event value
-    /// and its version.
+    /// Next step in creating a new [`Persisted`](super::Persisted) carrying an
+    /// Event value and its version.
     pub struct EventBuilderWithVersion<SourceId, T> {
         version: u32,
         event: T,
@@ -232,8 +251,8 @@ pub mod persistent {
     }
 
     impl<SourceId, T> EventBuilderWithVersion<SourceId, T> {
-        /// Specifies the [`Persisted`](super::Persisted) sequence number and moves to the next
-        /// builder state.
+        /// Specifies the [`Persisted`](super::Persisted) sequence number and
+        /// moves to the next builder state.
         #[inline]
         pub fn sequence_number(self, value: u32) -> super::Persisted<SourceId, T> {
             super::Persisted {
@@ -245,8 +264,8 @@ pub mod persistent {
         }
     }
 
-    /// Next step in creating a new [`Persisted`](super::Persisted) carrying an Event value
-    /// and its sequence number.
+    /// Next step in creating a new [`Persisted`](super::Persisted) carrying an
+    /// Event value and its sequence number.
     pub struct EventBuilderWithSequenceNumber<SourceId, T> {
         sequence_number: u32,
         event: T,
@@ -254,8 +273,8 @@ pub mod persistent {
     }
 
     impl<SourceId, T> EventBuilderWithSequenceNumber<SourceId, T> {
-        /// Specifies the [`Persisted`](super::Persisted) version and moves to the next
-        /// builder state.
+        /// Specifies the [`Persisted`](super::Persisted) version and moves to
+        /// the next builder state.
         #[inline]
         pub fn version(self, value: u32) -> super::Persisted<SourceId, T> {
             super::Persisted {

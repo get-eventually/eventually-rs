@@ -25,7 +25,9 @@ use tracing_futures::Instrument;
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
-/// Error returned by the [`EventStore::append`](eventually_core::store::EventStore) when a conflict has been detected.
+/// Error returned by the
+/// [`EventStore::append`](eventually_core::store::EventStore) when a conflict
+/// has been detected.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 #[error("conflicting versions, expected {expected}, got instead {actual}")]
 pub struct ConflictError {
@@ -42,7 +44,8 @@ impl AppendError for ConflictError {
 }
 
 /// Error returned by the [`EventSubscriber`] when reading elements
-/// from the [`EventStream`] produced by [`subscribe_all`](EventSubscriber::subscribe_all).
+/// from the [`EventStream`] produced by
+/// [`subscribe_all`](EventSubscriber::subscribe_all).
 #[derive(Debug, thiserror::Error)]
 #[error("failed to read event from subscription watch channel: receiver lagged messages {0}")]
 pub struct LaggedError(u64);
@@ -51,7 +54,8 @@ pub struct LaggedError(u64);
 pub struct EventStoreBuilder;
 
 impl EventStoreBuilder {
-    /// Builds a new [`EventStore`] instance compatible with the provided [`Aggregate`].
+    /// Builds a new [`EventStore`] instance compatible with the provided
+    /// [`Aggregate`].
     #[inline]
     pub fn for_aggregate<T>(_: &T) -> EventStore<T::Id, T::Event>
     where
@@ -84,8 +88,10 @@ where
     Event: Clone,
 {
     /// Creates a new EventStore with a specified in-memory broadcast channel
-    /// size, which will used by the [`subscribe_all`](EventSubscriber::subscribe_all) method to notify
-    /// of newly [`EventStore::append`](eventually_core::store::EventStore) events.
+    /// size, which will used by the
+    /// [`subscribe_all`](EventSubscriber::subscribe_all) method to notify
+    /// of newly [`EventStore::append`](eventually_core::store::EventStore)
+    /// events.
     pub fn new(subscribe_capacity: usize) -> Self {
         // Use this broadcast channel to send append events to
         // subscriptions from .subscribe_all()
@@ -409,17 +415,21 @@ mod tests {
         let store = RefCell::new(store);
         barrier.wait().await;
 
-        assert!(store
-            .borrow_mut()
-            .append(id_1, Expected::Exact(0), vec![Event::A])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .borrow_mut()
+                .append(id_1, Expected::Exact(0), vec![Event::A])
+                .await
+                .is_ok()
+        );
 
-        assert!(store
-            .borrow_mut()
-            .append(id_1, Expected::Exact(1), vec![Event::B])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .borrow_mut()
+                .append(id_1, Expected::Exact(1), vec![Event::B])
+                .await
+                .is_ok()
+        );
 
         let store = store.into_inner();
         let store_2 = store.clone();
@@ -463,17 +473,21 @@ mod tests {
         let store = RefCell::new(store);
         barrier.wait().await;
 
-        assert!(store
-            .borrow_mut()
-            .append(id_1, Expected::Exact(2), vec![Event::C])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .borrow_mut()
+                .append(id_1, Expected::Exact(2), vec![Event::C])
+                .await
+                .is_ok()
+        );
 
-        assert!(store
-            .borrow_mut()
-            .append(id_2, Expected::Exact(0), vec![Event::A])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .borrow_mut()
+                .append(id_2, Expected::Exact(0), vec![Event::A])
+                .await
+                .is_ok()
+        );
 
         // Wait for both subscribers to be done.
         tokio::try_join!(join_handle_1, join_handle_2).unwrap();
@@ -486,15 +500,19 @@ mod tests {
 
         let events = vec![Event::A, Event::B, Event::C];
 
-        assert!(store
-            .append(id, Expected::Any, events.clone())
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id, Expected::Any, events.clone())
+                .await
+                .is_ok()
+        );
 
-        assert!(store
-            .append(id, Expected::Any, events.clone())
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id, Expected::Any, events.clone())
+                .await
+                .is_ok()
+        );
     }
 
     #[tokio::test]
@@ -509,10 +527,12 @@ mod tests {
 
         let last_version = result.unwrap();
 
-        assert!(store
-            .append(id, Expected::Exact(last_version), events.clone())
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id, Expected::Exact(last_version), events.clone())
+                .await
+                .is_ok()
+        );
     }
 
     #[tokio::test]
@@ -548,23 +568,29 @@ mod tests {
 
         // Removing an empty stream works.
         assert!(store.remove(id).await.is_ok());
-        assert!(stream_to_vec(&store, id, Select::All)
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            stream_to_vec(&store, id, Select::All)
+                .await
+                .unwrap()
+                .is_empty()
+        );
 
         // Add some events and lets remove them after
         let events = vec![Event::A, Event::B, Event::C];
-        assert!(store
-            .append(id, Expected::Exact(0), events.clone())
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id, Expected::Exact(0), events.clone())
+                .await
+                .is_ok()
+        );
 
         assert!(store.remove(id).await.is_ok());
-        assert!(stream_to_vec(&store, id, Select::All)
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            stream_to_vec(&store, id, Select::All)
+                .await
+                .unwrap()
+                .is_empty()
+        );
     }
 
     #[tokio::test]
@@ -579,10 +605,12 @@ mod tests {
         assert!(result.is_ok());
 
         let last_version = result.unwrap();
-        assert!(store
-            .append(id, Expected::Exact(last_version), events_2)
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id, Expected::Exact(last_version), events_2)
+                .await
+                .is_ok()
+        );
 
         // Stream from the start.
         assert_eq!(
@@ -606,10 +634,12 @@ mod tests {
         );
 
         // Stream from an unexistent offset.
-        assert!(stream_to_vec(&store, id, Select::From(10))
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            stream_to_vec(&store, id, Select::From(10))
+                .await
+                .unwrap()
+                .is_empty()
+        );
     }
 
     #[tokio::test]
@@ -619,25 +649,33 @@ mod tests {
 
         let mut store = InMemoryStore::<&'static str, Event>::default();
 
-        assert!(store
-            .append(id_1, Expected::Any, vec![Event::A])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id_1, Expected::Any, vec![Event::A])
+                .await
+                .is_ok()
+        );
 
-        assert!(store
-            .append(id_2, Expected::Any, vec![Event::B])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id_2, Expected::Any, vec![Event::B])
+                .await
+                .is_ok()
+        );
 
-        assert!(store
-            .append(id_1, Expected::Any, vec![Event::C])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id_1, Expected::Any, vec![Event::C])
+                .await
+                .is_ok()
+        );
 
-        assert!(store
-            .append(id_2, Expected::Any, vec![Event::A])
-            .await
-            .is_ok());
+        assert!(
+            store
+                .append(id_2, Expected::Any, vec![Event::A])
+                .await
+                .is_ok()
+        );
 
         // Stream from the start.
         let result: anyhow::Result<Vec<Persisted<&str, Event>>> = store
