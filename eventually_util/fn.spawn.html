@@ -1,7 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `spawn` fn in crate `eventually_util`."><meta name="keywords" content="rust, rustlang, rust-lang, spawn"><title>eventually_util::spawn - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Spawns a new asynchronous task, returning a `JoinHandle` for it."><meta name="keywords" content="rust, rustlang, rust-lang, spawn"><title>spawn in eventually_util - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../eventually_util/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="index.html">eventually_util</a></p><script>window.sidebarCurrent = {name: "spawn", ty: "fn", relpath: ""};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></span><span class="in-band">Function <a href="index.html">eventually_util</a>::<wbr><a class="fn" href="">spawn</a></span></h1><pre class="rust fn">pub fn spawn&lt;T&gt;(task: T) -&gt; JoinHandle&lt;&lt;T as <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html#associatedtype.Output" title="type core::future::future::Future::Output">Output</a>&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static,<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;T as <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html#associatedtype.Output" title="type core::future::future::Future::Output">Output</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;T as <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html#associatedtype.Output" title="type core::future::future::Future::Output">Output</a>: 'static,&nbsp;</span></pre><div class="docblock"><p>Spawns a new asynchronous task, returning a
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../eventually_util/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><h2 class="location">Other items in<br><a href="index.html">eventually_util</a></h2><div id="sidebar-vars" data-name="spawn" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="index.html">eventually_util</a>::<wbr><a class="fn" href="#">spawn</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></span></h1><pre class="rust fn">pub fn spawn&lt;T&gt;(future: T) -&gt; JoinHandle&lt;&lt;T as <a class="trait" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&gt;::<a class="type" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html#associatedtype.Output" title="type core::future::future::Future::Output">Output</a>&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: <a class="trait" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a> + <a class="trait" href="https://doc.rust-lang.org/1.54.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static,<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;T as <a class="trait" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&gt;::<a class="type" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html#associatedtype.Output" title="type core::future::future::Future::Output">Output</a>: <a class="trait" href="https://doc.rust-lang.org/1.54.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;T as <a class="trait" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&gt;::<a class="type" href="https://doc.rust-lang.org/1.54.0/core/future/future/trait.Future.html#associatedtype.Output" title="type core::future::future::Future::Output">Output</a>: 'static,&nbsp;</span></pre><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Spawns a new asynchronous task, returning a
 <a href="super::JoinHandle"><code>JoinHandle</code></a> for it.</p>
 <p>Spawning a task enables the task to execute concurrently to other tasks. The
 spawned task may execute on the current thread, or it may be sent to a
@@ -18,22 +17,22 @@ using the <a href="crate::runtime::Runtime::enter()"><code>Runtime::enter</code>
 that processes each received connection.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">net</span>::{<span class="ident">TcpListener</span>, <span class="ident">TcpStream</span>};
+<span class="kw">use</span> <span class="ident">tokio::net</span>::{<span class="ident">TcpListener</span>, <span class="ident">TcpStream</span>};
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
+<span class="kw">use</span> <span class="ident">std::io</span>;
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">process</span>(<span class="ident">socket</span>: <span class="ident">TcpStream</span>) {
     <span class="comment">// ...</span>
 }
 
-<span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">listener</span> <span class="op">=</span> <span class="ident">TcpListener</span>::<span class="ident">bind</span>(<span class="string">&quot;127.0.0.1:8080&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+<span class="attribute">#[<span class="ident">tokio::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">listener</span> <span class="op">=</span> <span class="ident">TcpListener::bind</span>(<span class="string">&quot;127.0.0.1:8080&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="kw">loop</span> {
         <span class="kw">let</span> (<span class="ident">socket</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">listener</span>.<span class="ident">accept</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+        <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="comment">// Process each socket concurrently.</span>
             <span class="ident">process</span>(<span class="ident">socket</span>).<span class="kw">await</span>
         });
@@ -48,43 +47,43 @@ exist between calls to <code>.await</code>.</p>
 <p>For example, this will work:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">task</span>;
+<span class="kw">use</span> <span class="ident">tokio::task</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">fn</span> <span class="ident">use_rc</span>(<span class="ident">rc</span>: <span class="ident">Rc</span><span class="op">&lt;</span>()<span class="op">&gt;</span>) {
     <span class="comment">// Do stuff w/ rc</span>
 }
 
-<span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
+<span class="attribute">#[<span class="ident">tokio::main</span>]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
-    <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> {
+    <span class="ident">tokio::spawn</span>(<span class="kw">async</span> {
         <span class="comment">// Force the `Rc` to stay in a scope with no `.await`</span>
         {
-            <span class="kw">let</span> <span class="ident">rc</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(());
+            <span class="kw">let</span> <span class="ident">rc</span> <span class="op">=</span> <span class="ident">Rc::new</span>(());
             <span class="ident">use_rc</span>(<span class="ident">rc</span>.<span class="ident">clone</span>());
         }
 
-        <span class="ident">task</span>::<span class="ident">yield_now</span>().<span class="kw">await</span>;
+        <span class="ident">task::yield_now</span>().<span class="kw">await</span>;
     }).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }</pre></div>
 <p>This will <strong>not</strong> work:</p>
 
 <div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">task</span>;
+<span class="kw">use</span> <span class="ident">tokio::task</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">fn</span> <span class="ident">use_rc</span>(<span class="ident">rc</span>: <span class="ident">Rc</span><span class="op">&lt;</span>()<span class="op">&gt;</span>) {
     <span class="comment">// Do stuff w/ rc</span>
 }
 
-<span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
+<span class="attribute">#[<span class="ident">tokio::main</span>]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
-    <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> {
-        <span class="kw">let</span> <span class="ident">rc</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(());
+    <span class="ident">tokio::spawn</span>(<span class="kw">async</span> {
+        <span class="kw">let</span> <span class="ident">rc</span> <span class="op">=</span> <span class="ident">Rc::new</span>(());
 
-        <span class="ident">task</span>::<span class="ident">yield_now</span>().<span class="kw">await</span>;
+        <span class="ident">task::yield_now</span>().<span class="kw">await</span>;
 
         <span class="ident">use_rc</span>(<span class="ident">rc</span>.<span class="ident">clone</span>());
     }).<span class="kw">await</span>.<span class="ident">unwrap</span>();
@@ -96,4 +95,4 @@ an unfriendly compile error message similar to:</p>
 <p>or:</p>
 <pre><code class="language-text">error[E0391]: cycle detected when processing `main`
 </code></pre>
-</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "eventually_util";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
+</div></details></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="eventually_util" data-search-index-js="../search-index.js" data-search-js="../search.js"></div><script src="../main.js"></script></body></html>

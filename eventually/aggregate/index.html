@@ -1,7 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `aggregate` mod in crate `eventually`."><meta name="keywords" content="rust, rustlang, rust-lang, aggregate"><title>eventually::aggregate - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Module containing support for the Aggergate pattern."><meta name="keywords" content="rust, rustlang, rust-lang, aggregate"><title>eventually::aggregate - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../eventually/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><p class="location">Module aggregate</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class="location"><a href="../index.html">eventually</a></p><script>window.sidebarCurrent = {name: "aggregate", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/eventually/lib.rs.html#61-251" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../index.html">eventually</a>::<wbr><a class="mod" href="">aggregate</a></span></h1><div class="docblock"><p>Module containing support for the Aggergate pattern.</p>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../eventually/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><h2 class="location">Module aggregate</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="aggregate" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../index.html">eventually</a>::<wbr><a class="mod" href="#">aggregate</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/eventually/lib.rs.html#61-251" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Module containing support for the Aggergate pattern.</p>
 <h2 id="what-is-an-aggregate" class="section-header"><a href="#what-is-an-aggregate">What is an Aggregate?</a></h2>
 <p>An <a href="https://martinfowler.com/bliki/DDD_Aggregate.html">Aggregate</a> is the most important concept in your domain.</p>
 <p>It represents the entities your business domain is composed of,
@@ -10,7 +9,7 @@ and the business logic your domain is exposing.</p>
 the concepts of Order or Customer are two potential <a href="https://martinfowler.com/bliki/DDD_Aggregate.html">Aggregate</a>s.</p>
 <p>Aggregates expose mutations with the concept of <strong>commands</strong>:
 from the previous example, an Order might expose some commands such as
-<em>&quot;Add Order Item&quot;</em>, or <em>&quot;Remove Order Item&quot;</em>, or <em>&quot;Place Order&quot;</em>
+<em>“Add Order Item”</em>, or <em>“Remove Order Item”</em>, or <em>“Place Order”</em>
 to close the transaction.</p>
 <p>In Event Sourcing, the Aggregate state is modified by the usage of
 <strong>Domain Events</strong>, which carry some or all the fields in the state
@@ -25,19 +24,19 @@ current value of the state, to produce the next state.</p>
 <li>specify the available commands through the <a href="trait.Aggregate.html#associatedType.Command"><code>Command</code></a> associated type,
 usually an <code>enum</code>,</li>
 <li>define how to handle commands through the <a href="trait.Aggregate.html#tymethod.handle"><code>handle</code></a> method,</li>
-<li>specify the Aggregate's Domain Events through the <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>
+<li>specify the Aggregate’s Domain Events through the <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>
 associated type, usually an <code>enum</code>,</li>
 <li>define the transition logic from one state to another by an <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>,
 through the <a href="trait.Aggregate.html#tymethod.apply"><code>apply</code></a> method.</li>
 </ul>
 <p>An <a href="trait.Aggregate.html"><code>Aggregate</code></a> is essentialy an <em>actor</em>, which means it should contain
 all the dependencies it needs to execute commands (e.g. repositories,
-external clients, validators, etc...)</p>
-<p>Let's take the Orders Management example:</p>
+external clients, validators, etc…)</p>
+<p>Let’s take the Orders Management example:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">eventually</span>::<span class="ident">Aggregate</span>;
-<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">BoxFuture</span>;
+<span class="kw">use</span> <span class="ident">eventually::Aggregate</span>;
+<span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
 
 <span class="comment">// This is the state of our Order, which contains one or more items,</span>
 <span class="comment">// and whether it has been placed or not.</span>
@@ -99,7 +98,7 @@ external clients, validators, etc...)</p>
 <span class="comment">//</span>
 <span class="comment">// In this case, it will only contain the OrderItemCatalog.</span>
 <span class="kw">struct</span> <span class="ident">OrderAggregate</span> {
-    <span class="ident">catalog</span>: <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">OrderItemsCatalog</span><span class="op">&gt;</span>,
+    <span class="ident">catalog</span>: <span class="ident">std::sync::Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">OrderItemsCatalog</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// Implementation for the Aggregate trait.</span>
@@ -108,31 +107,31 @@ external clients, validators, etc...)</p>
     <span class="kw">type</span> <span class="ident">State</span> <span class="op">=</span> <span class="ident">OrderState</span>;
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">OrderEvent</span>;
     <span class="kw">type</span> <span class="ident">Command</span> <span class="op">=</span> <span class="ident">OrderCommand</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">Infallible</span>; <span class="comment">// This should be a meaningful error.</span>
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::convert::Infallible</span>; <span class="comment">// This should be a meaningful error.</span>
 
-    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">event</span>: <span class="self">Self</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">State</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="self">Self</span><span class="ident">::State</span>, <span class="ident">event</span>: <span class="self">Self</span><span class="ident">::Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::State</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
+        <span class="macro">unimplemented!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span>::<span class="ident">Id</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span>::<span class="ident">State</span>,
-        <span class="ident">command</span>: <span class="self">Self</span>::<span class="ident">Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::Id</span>,
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::State</span>,
+        <span class="ident">command</span>: <span class="self">Self</span><span class="ident">::Command</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>
     {
-        <span class="macro">unimplemented</span><span class="macro">!</span>()
+        <span class="macro">unimplemented!</span>()
     }
 }</pre></div>
 <h3 id="note-on-state" class="section-header"><a href="#note-on-state">Note on <code>State</code></a></h3>
-<p>An <a href="trait.Aggregate.html"><code>Aggregate</code></a>'s <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> type needs to implement the <code>Default</code> trait,
+<p>An <a href="trait.Aggregate.html"><code>Aggregate</code></a>’s <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> type needs to implement the <code>Default</code> trait,
 to always have an initial state representation.</p>
 <p>This is very important for functional <em>folding</em> of <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>s
 done by <a href="trait.Aggregate.html#tymethod.apply"><code>apply</code></a>.</p>
 <p>A common type used in <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> is <code>Option&lt;StateType&gt;</code>, where
-<code>StateType</code> doesn't usually implement <code>Default</code>. This is to represent
+<code>StateType</code> doesn’t usually implement <code>Default</code>. This is to represent
 a nullable state before the first command is received.</p>
 <p>Given the common use-case, <code>eventually</code> has included support for
 the <a href="trait.Optional.html"><code>Optional</code></a> aggregate trait, where you can use <code>StateType</code>
@@ -150,8 +149,8 @@ by managing its <a href="trait.Aggregate.html#associatedType.State"><code>State<
 <li>Through a <a href="struct.Repository.html"><code>Repository</code></a> instance</li>
 </ol>
 <p>More on the <a href="struct.Repository.html"><code>Repository</code></a> in the <a href="../repository/index.html">module-level documentation</a>.</p>
-</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="module-item"><td><a class="struct" href="struct.AggregateRoot.html" title="eventually::aggregate::AggregateRoot struct">AggregateRoot</a></td><td class="docblock-short"><p>An <code>AggregateRoot</code> represents an handler to the <a href="trait.Aggregate.html"><code>Aggregate</code></a> it's managing,
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.AggregateRoot.html" title="eventually::aggregate::AggregateRoot struct">AggregateRoot</a></td><td class="docblock-short"><p>An <code>AggregateRoot</code> represents an handler to the <a href="trait.Aggregate.html"><code>Aggregate</code></a> it’s managing,
 such as:</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.AggregateRootBuilder.html" title="eventually::aggregate::AggregateRootBuilder struct">AggregateRootBuilder</a></td><td class="docblock-short"><p>Builder type for new <a href="struct.AggregateRoot.html"><code>AggregateRoot</code></a> instances.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.Repository.html" title="eventually::aggregate::Repository struct">Repository</a></td><td class="docblock-short"><p>Implementation of the <a href="https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern">Repository pattern</a> for storing, retrieving
@@ -163,4 +162,4 @@ and deleting <a href="../aggregate/trait.Aggregate.html"><code>Aggregate</code><
 to model Aggregates having an optional <a href="../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State"><code>State</code></a>.</p>
 </td></tr></table><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
 <table><tr class="module-item"><td><a class="type" href="type.AggregateId.html" title="eventually::aggregate::AggregateId type">AggregateId</a></td><td class="docblock-short"><p>A short extractor type for the Aggregate <a href="trait.Aggregate.html#associatedtype.Id"><code>Id</code></a>.</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "eventually";</script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>
+</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script></body></html>

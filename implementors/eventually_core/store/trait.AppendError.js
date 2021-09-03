@@ -1,6 +1,6 @@
 (function() {var implementors = {};
 implementors["eventually_core"] = [];
-implementors["eventually_postgres"] = [{"text":"impl AppendError for Error","synthetic":false,"types":[]}];
-implementors["eventually_redis"] = [{"text":"impl AppendError for StoreError","synthetic":false,"types":[]}];
-implementors["eventually_util"] = [{"text":"impl AppendError for ConflictError","synthetic":false,"types":[]}];
+implementors["eventually_postgres"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/store/trait.AppendError.html\" title=\"trait eventually_core::store::AppendError\">AppendError</a> for <a class=\"enum\" href=\"eventually_postgres/store/enum.Error.html\" title=\"enum eventually_postgres::store::Error\">Error</a>","synthetic":false,"types":["eventually_postgres::store::Error"]}];
+implementors["eventually_redis"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/store/trait.AppendError.html\" title=\"trait eventually_core::store::AppendError\">AppendError</a> for <a class=\"enum\" href=\"eventually_redis/enum.StoreError.html\" title=\"enum eventually_redis::StoreError\">StoreError</a>","synthetic":false,"types":["eventually_redis::store::StoreError"]}];
+implementors["eventually_util"] = [{"text":"impl <a class=\"trait\" href=\"eventually_core/store/trait.AppendError.html\" title=\"trait eventually_core::store::AppendError\">AppendError</a> for <a class=\"struct\" href=\"eventually_util/inmemory/struct.ConflictError.html\" title=\"struct eventually_util::inmemory::ConflictError\">ConflictError</a>","synthetic":false,"types":["eventually_util::inmemory::store::ConflictError"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
