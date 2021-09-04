@@ -115,9 +115,9 @@ pub trait EventStore {
     /// [`SourceId`](EventStore::SourceId) will be used to request a particular
     /// `EventStream`.
     ///
-    /// [`Select`] specifies the selection strategy for the [`Event`]s
-    /// in the returned [`EventStream`]: take a look at type documentation
-    /// for all the available options.
+    /// [`Select`] specifies the selection strategy for the
+    /// [`Event`](EventStore::Event)s in the returned [`EventStream`]: take
+    /// a look at type documentation for all the available options.
     fn stream(
         &self,
         source_id: Self::SourceId,
@@ -201,7 +201,7 @@ impl<SourceId, T> Persisted<SourceId, T> {
     }
 }
 
-/// Contains a type-state builder for [`Persisted`](super::Persisted) type.
+/// Contains a type-state builder for [`Persisted`] type.
 pub mod persistent {
     /// Creates a new [`Persisted`](super::Persisted) by wrapping an Event
     /// value.

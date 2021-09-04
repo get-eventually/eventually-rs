@@ -394,12 +394,8 @@ pub mod subscription {
 pub mod optional {
     //! Module for the Aggregate extension trait using an `Option` state.
     //!
-    //! For more information, take a look at the [relevant `aggregate`
-    //! documentation section] on the [`Optional`] aggregate trait.
-    //!
-    //! [relevant `aggregate` documentation section]:
-    //! ../aggregate/index.html#note-on-state [`Optional`]:
-    //! trait.Aggregate.html
+    //! For more information, take a look at the documentation on the
+    //! [`optional::Aggregate`](Aggregate) trait.
 
     pub use eventually_util::optional::*;
 }
