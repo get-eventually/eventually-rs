@@ -14,7 +14,8 @@ use crate::store::{EventStore, Persisted, Select};
 
 /// Stream of events returned by the [`EventSubscriber::subscribe_all`] method.
 ///
-/// [`EventSubscriber::subscribe_all`]: trait.EventSubscriber.html#method.subscribe_all
+/// [`EventSubscriber::subscribe_all`]:
+/// trait.EventSubscriber.html#method.subscribe_all
 pub type EventStream<'a, S> = BoxStream<
     'a,
     Result<
@@ -23,9 +24,11 @@ pub type EventStream<'a, S> = BoxStream<
     >,
 >;
 
-/// Component to let users subscribe to newly-inserted events into the [`EventStore`].
+/// Component to let users subscribe to newly-inserted events into the
+/// [`EventStore`].
 ///
-/// Check out [`subscribe_all`] for more information.
+/// Check out [`subscribe_all`](EventSubscriber::subscribe_all) for more
+/// information.
 ///
 /// Additional information can be found in the [_Volatile Subscription_] section
 /// of eventstore.com
@@ -38,13 +41,16 @@ pub trait EventSubscriber {
     /// [`AggregateId`]: ../aggregate/type.AggregateId.html
     type SourceId: Eq;
 
-    /// Event type stored in the [`EventStore`], typically an [`Aggregate::Event`].
+    /// Event type stored in the [`EventStore`], typically an
+    /// [`Aggregate::Event`].
     ///
-    /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
+    /// [`Aggregate::Event`]:
+    /// ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`EventStore`]: ../store/trait.EventStore.html
     type Event;
 
-    /// Possible errors returned when receiving events from the notification channel.
+    /// Possible errors returned when receiving events from the notification
+    /// channel.
     type Error;
 
     /// Subscribes to all new events persisted in the [`EventStore`], from
@@ -80,8 +86,9 @@ pub type SubscriptionStream<'a, S> = BoxStream<
 >;
 
 /// A Subscription to an [`EventStream`] which can be "checkpointed":
-/// keeps a record of the latest message processed by itself using [`checkpoint`],
-/// and can resume working from such message by using the [`resume`].
+/// keeps a record of the latest message processed by itself using
+/// [`checkpoint`], and can resume working from such message by using the
+/// [`resume`].
 ///
 /// [`EventStream`]: type.EventStream.html
 /// [`resume`]: trait.Subscription.html#method.resume
@@ -92,17 +99,21 @@ pub trait Subscription {
     /// [`AggregateId`]: ../aggregate/type.AggregateId.html
     type SourceId: Eq;
 
-    /// Event type stored in the [`EventStore`], typically an [`Aggregate::Event`].
+    /// Event type stored in the [`EventStore`], typically an
+    /// [`Aggregate::Event`].
     ///
-    /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
+    /// [`Aggregate::Event`]:
+    /// ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`EventStore`]: ../store/trait.EventStore.html
     type Event;
 
-    /// Possible errors returned when receiving events from the notification channel.
+    /// Possible errors returned when receiving events from the notification
+    /// channel.
     type Error;
 
-    /// Resumes the current state of a `Subscription` by returning the [`EventStream`],
-    /// starting from the last event processed by the `Subscription`.
+    /// Resumes the current state of a `Subscription` by returning the
+    /// [`EventStream`], starting from the last event processed by the
+    /// `Subscription`.
     ///
     /// [`EventStream`]: type.EventStream.html
     fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>>;

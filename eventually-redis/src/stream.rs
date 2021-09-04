@@ -116,13 +116,15 @@ pub(crate) fn into_xrange_stream(
 }
 
 /// Returns a long-running [`futures::Stream`] instance returning
-/// the results of reading a Redis Stream using Consumer Groups with `XREADGROUP`.
+/// the results of reading a Redis Stream using Consumer Groups with
+/// `XREADGROUP`.
 ///
 /// Each read block should be as big as `page_size`; for each page requested,
 /// all the keys in [`StreamReadReply`] are yielded in the stream,
 /// until the entries are fully exhausted.
 ///
-/// The stream won't be closed until **program termination** or **explicitly dropped**.
+/// The stream won't be closed until **program termination** or **explicitly
+/// dropped**.
 ///
 /// [`futures::Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
 /// [`StreamReadReply`]: https://docs.rs/redis/0.17.0/redis/streams/struct.StreamReadReply.html
@@ -140,7 +142,7 @@ pub(crate) fn into_xread_stream(
                 .group(&group_name, "eventually-consumer");
 
             let result: StreamReadReply = conn
-                .xread_options(&[&stream_name], &[">"], opts)
+                .xread_options(&[&stream_name], &[">"], &opts)
                 .await?;
 
             for key in result.keys {

@@ -10,7 +10,8 @@ use futures::TryFutureExt;
 use crate::sync::RwLock;
 
 /// A `Projector` manages the state of a single [`Projection`]
-/// by opening a long-running stream of all events coming from the [`EventStore`].
+/// by opening a long-running stream of all events coming from the
+/// [`EventStore`].
 ///
 /// New instances of a `Projector` are obtainable through a [`ProjectorBuilder`]
 /// instance.
@@ -48,7 +49,8 @@ where
     /// [`Subscription`] values.
     ///
     /// [`Projection`]: ../../eventually-core/projection/trait.Projection.html
-    /// [`Subscription`]: ../../eventually-core/subscription/trait.Subscription.html
+    /// [`Subscription`]:
+    /// ../../eventually-core/subscription/trait.Subscription.html
     pub fn new(projection: Arc<RwLock<P>>, subscription: S) -> Self {
         Self {
             projection,

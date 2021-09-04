@@ -3,8 +3,6 @@
 //!
 //! Check out [`Repository`] for more information.
 //!
-//! [`Repository`]: struct.Repository.html
-//! [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
 //! [Repository pattern]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern
 
 use std::fmt::Debug;
@@ -16,31 +14,23 @@ use crate::store::{EventStore, Expected, Select};
 use crate::versioning::Versioned;
 
 /// Error type returned by the [`Repository`].
-///
-/// [`Repository`]: trait.Repository.html
 #[derive(Debug, thiserror::Error)]
 pub enum Error<A, S>
 where
     A: std::error::Error + 'static,
     S: std::error::Error + 'static,
 {
-    /// Error returned by the [`Aggregate`], usually when recreating the [`State`].
-    ///
-    /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
-    /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
+    /// Error returned by the [`Aggregate`], usually when recreating the
+    /// [`State`](Aggregate::State).
     #[error("failed to rebuild aggregate state: {0}")]
     Aggregate(#[source] A),
 
     /// Error returned by the underlying [`EventStore`].
-    ///
-    /// [`EventStore`]: ../store/trait.EventStore.html
     #[error("event store failed: {0}")]
     Store(#[source] S),
 }
 
 /// Result type returned by the [`Repository`].
-///
-/// [`Repository`]: ../struct.Repository.html
 pub type Result<T, A, S> =
     std::result::Result<T, Error<<A as Aggregate>::Error, <S as EventStore>::Error>>;
 
@@ -49,8 +39,10 @@ pub type Result<T, A, S> =
 ///
 /// A `Repository` instruments an [`EventStore`] to:
 ///
-/// * **Insert** [`Event`]s in the [`EventStore`] for an Aggregate, using the [`AggregateRoot`],
-/// * **Get** all the [`Event`]s in the [`EventStore`] and rebuild the [`State`] of an Aggregate,
+/// * **Insert** [`Event`]s in the [`EventStore`] for an Aggregate, using the
+///   [`AggregateRoot`],
+/// * **Get** all the [`Event`]s in the [`EventStore`] and rebuild the [`State`]
+///   of an Aggregate,
 /// into a new [`AggregateRoot`] instance,
 /// * **Remove** all the [`Event`]s for an Aggregate in the [`EventStore`].
 ///

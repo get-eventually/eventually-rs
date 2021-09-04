@@ -1,5 +1,5 @@
-//! Container for the fundamental types and abstraction to support Event Sourcing
-//! and Command-Query Responsibility Segregation patterns.
+//! Container for the fundamental types and abstraction to support Event
+//! Sourcing and Command-Query Responsibility Segregation patterns.
 //!
 //! ## Note
 //!
