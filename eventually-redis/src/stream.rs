@@ -142,7 +142,7 @@ pub(crate) fn into_xread_stream(
                 .group(&group_name, "eventually-consumer");
 
             let result: StreamReadReply = conn
-                .xread_options(&[&stream_name], &[">"], opts)
+                .xread_options(&[&stream_name], &[">"], &opts)
                 .await?;
 
             for key in result.keys {
