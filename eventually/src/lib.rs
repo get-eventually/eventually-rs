@@ -12,31 +12,35 @@
 //! as a list of **_Domain Events_**, rather than serializing the whole state
 //! to the database (as you would do with a typical CRUD architecture).
 //!
-//! Events are persisted in an **_Event Store_**: an ordered, append-only log of all
-//! the events produced in your domain.
+//! Events are persisted in an **_Event Store_**: an ordered, append-only log of
+//! all the events produced in your domain.
 //!
 //! Events can be retrieved from an Event Store through **_Event Streams_**,
 //! stream of chronologically-ordered events.
 //!
-//! The state of your Aggregates can thus be rebuilt by **streaming all the Events**
-//! back in the application, as they happened in time, to build the latest version
-//! of the state.
+//! The state of your Aggregates can thus be rebuilt by **streaming all the
+//! Events** back in the application, as they happened in time, to build the
+//! latest version of the state.
 //!
 //! This architectural pattern brings in a lot of interesting goodies:
 //! * **Auditing**: never need to guess what happened in your system,
-//! thanks to the Event Store, you have a list of all the Events that have been committed
-//! during time.
-//! * **Time-machine**: _travel back in time_, by setting the state of your service
-//! to a specific point in time, thanks to the Event Store; useful for debugging purposes.
+//! thanks to the Event Store, you have a list of all the Events that have been
+//! committed during time.
+//! * **Time-machine**: _travel back in time_, by setting the state of your
+//!   service
+//! to a specific point in time, thanks to the Event Store; useful for debugging
+//! purposes.
 //! * **Projections**: create read-optimized models of your Aggregates as needed
-//! for you business operations, continuously, every time new Events are committed
-//! to the Event Store.
+//! for you business operations, continuously, every time new Events are
+//! committed to the Event Store.
 //! * **Concurrency Handling**: Event-sourced application make extensive use
-//! of Optimistic Concurrency to handle concurrent-writes scenarios -- concurrency
-//! conflicts and state reconciliation can become part of your Domain!
-//! * **High Performance, High Availability**: thanks to the append-only Event Store
-//! and the use of Projections, you can write highly performant and highly available
-//! services that handle an intense amount of traffic.
+//! of Optimistic Concurrency to handle concurrent-writes scenarios --
+//! concurrency conflicts and state reconciliation can become part of your
+//! Domain!
+//! * **High Performance, High Availability**: thanks to the append-only Event
+//!   Store
+//! and the use of Projections, you can write highly performant and highly
+//! available services that handle an intense amount of traffic.
 //!
 //! [More information about this pattern can be found here.](https://eventstore.com/blog/what-is-event-sourcing/)
 //!
@@ -68,8 +72,9 @@ pub mod aggregate {
     //! It represents the entities your business domain is composed of,
     //! and the business logic your domain is exposing.
     //!
-    //! For example: in an Order Management bounded-context (e.g. a microservice),
-    //! the concepts of Order or Customer are two potential [Aggregate]s.
+    //! For example: in an Order Management bounded-context (e.g. a
+    //! microservice), the concepts of Order or Customer are two potential
+    //! [Aggregate]s.
     //!
     //! Aggregates expose mutations with the concept of **commands**:
     //! from the previous example, an Order might expose some commands such as
@@ -90,7 +95,8 @@ pub mod aggregate {
     //! `eventually` supports the Aggregates through the [`Aggregate`] trait.
     //!
     //! An [`Aggregate`] allows to:
-    //! * specify the available commands through the [`Command`] associated type,
+    //! * specify the available commands through the [`Command`] associated
+    //!   type,
     //! usually an `enum`,
     //! * define how to handle commands through the [`handle`] method,
     //! * specify the Aggregate's Domain Events through the [`Event`]
@@ -140,25 +146,17 @@ pub mod aggregate {
     //!     // Make the order final and place it to the production line.
     //!     PlaceOrder,
     //!     // Add an OrderItem to the Order, specifying a quantity.
-    //!     AddOrderItem {
-    //!         sku: String,
-    //!         quantity: u32,
-    //!     },
+    //!     AddOrderItem { sku: String, quantity: u32 },
     //!     // Remove an OrderItem from the Order: the item is removed
     //!     // when the quantity in the Order is less or equal than
     //!     // the quantity asked to be removed by the command.
-    //!     RemoveOrderItem {
-    //!         sku: String,
-    //!         quantity: u32,
-    //!     },
+    //!     RemoveOrderItem { sku: String, quantity: u32 },
     //! }
     //!
     //! // This is the list of all the domain events defined on the Order aggregate.
     //! enum OrderEvent {
     //!     // The list of OrderItems is updated with the specified value.
-    //!     OrderItemsUpdated {
-    //!         items: Vec<OrderItem>,
-    //!     },
+    //!     OrderItemsUpdated { items: Vec<OrderItem> },
     //!     // Marks the order as placed.
     //!     OrderPlaced,
     //! }
@@ -190,7 +188,7 @@ pub mod aggregate {
     //!         command: Self::Command,
     //!     ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     //!     where
-    //!         Self: Sized
+    //!         Self: Sized,
     //!     {
     //!         unimplemented!()
     //!     }
@@ -199,8 +197,8 @@ pub mod aggregate {
     //!
     //! ### Note on [`State`]
     //!
-    //! An [`Aggregate`]'s [`State`] type needs to implement the `Default` trait,
-    //! to always have an initial state representation.
+    //! An [`Aggregate`]'s [`State`] type needs to implement the `Default`
+    //! trait, to always have an initial state representation.
     //!
     //! This is very important for functional _folding_ of [`Event`]s
     //! done by [`apply`].
@@ -228,7 +226,8 @@ pub mod aggregate {
     //! 1. Through the [`AggregateRootBuilder`], useful for testing
     //! 2. Through a [`Repository`] instance
     //!
-    //! More on the [`Repository`] in the [module-level documentation](../repository/index.html).
+    //! More on the [`Repository`] in the [module-level
+    //! documentation](../repository/index.html).
     //!
     //! [Aggregate]: https://martinfowler.com/bliki/DDD_Aggregate.html
     //! [`Aggregate`]: trait.Aggregate.html
@@ -268,7 +267,8 @@ pub mod repository {
     //!
     //! As described in the [Interacting with Aggregates using `AggregateRoot`]
     //! section in the `aggregate` module-level documentation, in order to
-    //! interact with an Aggregate instance you need to use an [`AggregateRoot`].
+    //! interact with an Aggregate instance you need to use an
+    //! [`AggregateRoot`].
     //!
     //! To get an [`AggregateRoot`], you can use a [`Repository`] instance.
     //!
@@ -279,10 +279,11 @@ pub mod repository {
     //! A [`Repository`] will **always** return an [`AggregateRoot`] instance
     //! on read, whether or not events are present in the [`EventStore`].
     //!
-    //! Use the [`Repository`] to implement your bounded-context application logic,
-    //! for example in HTTP or RPC handlers.
+    //! Use the [`Repository`] to implement your bounded-context application
+    //! logic, for example in HTTP or RPC handlers.
     //!
-    //! [Interacting with Aggregates using `AggregateRoot`]: ../aggregate/index.html#interacting-with-aggregates-using-aggregateroot
+    //! [Interacting with Aggregates using `AggregateRoot`]:
+    //! ../aggregate/index.html#interacting-with-aggregates-using-aggregateroot
     //! [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
     //! [`Repository`]: struct.Repository.html
     //! [`EventStore`]: ../store/trait.EventStore.html
@@ -313,7 +314,8 @@ pub mod store {
     //! application, since `eventually` exposes multiple utilities that
     //! instrument the usage of the store for you. For example:
     //! * [`Repository`] for retrieving, saving and deleting Aggregates
-    //! * [`Projector`] to run [`Projection`]s (check out the [`projection` module documentation])
+    //! * [`Projector`] to run [`Projection`]s (check out the [`projection`
+    //!   module documentation])
     //!
     //! [`EventStore`]: trait.EventStore.html
     //! [`Repository`]: ../repository/struct.Repository.html
@@ -335,18 +337,20 @@ pub mod subscription {
     //! when they get committed to the Store.
     //!
     //! This allows for near real-time processing of multiple things, such as
-    //! publishing committed events on a message broker, or running **projections**
-    //! (more on that on [`Projection` documentation]).
+    //! publishing committed events on a message broker, or running
+    //! **projections** (more on that on [`Projection` documentation]).
     //!
     //! ## Subscriptions in `eventually`
     //!
     //! ### `EventSubscriber` trait
     //!
-    //! In order to subscribe to Events, `eventually` exposes the [`EventSubscriber`]
-    //! trait, usually implemented by [`EventStore`] implementations.
+    //! In order to subscribe to Events, `eventually` exposes the
+    //! [`EventSubscriber`] trait, usually implemented by [`EventStore`]
+    //! implementations.
     //!
     //! An [`EventSubscriber`] opens an _endless_ [`EventStream`], that gets
-    //! closed only at application shutdown, or if the stream gets explicitly dropped.
+    //! closed only at application shutdown, or if the stream gets explicitly
+    //! dropped.
     //!
     //! The [`EventStream`] receives all the **new Events** committed
     //! to the [`EventStore`].
@@ -360,15 +364,17 @@ pub mod subscription {
     //! returns an _endless_ stream of Events called [`SubscriptionStream`].
     //!
     //! However, [`Subscription`]s are **stateful**: they save the latest
-    //! Event sequence number that has been processed through the [`SubscriptionStream`],
-    //! by using the [`checkpoint`] method. Later, the [`Subscription`] can be
-    //! restarted from where it was left off using the [`resume`] method.
+    //! Event sequence number that has been processed through the
+    //! [`SubscriptionStream`], by using the [`checkpoint`] method. Later,
+    //! the [`Subscription`] can be restarted from where it was left off
+    //! using the [`resume`] method.
     //!
     //! This module exposes a simple [`Subscription`] implementation:
     //! [`Transient`], for in-memory, one-off subscriptions.
     //!
     //! For a long-running [`Subscription`] implementation,
-    //! take a look at persisted subscriptions, such as [`postgres::subscription::Persisted`].
+    //! take a look at persisted subscriptions, such as
+    //! [`postgres::subscription::Persisted`].
     //!
     //! [`Projection` documentation]: ../trait.Projection.html
     //! [`EventSubscriber`]: trait.EventSubscriber.html
@@ -379,7 +385,8 @@ pub mod subscription {
     //! [`checkpoint`]: trait.Subscription.html#tymethod.checkpoint
     //! [`resume`]: trait.Subscription.html#tymethod.resume
     //! [`Transient`]: struct.Transient.html
-    //! [`postgres::subscription::Persisted`]: ../postgres/subscription/struct.Persisted.html
+    //! [`postgres::subscription::Persisted`]:
+    //! ../postgres/subscription/struct.Persisted.html
 
     pub use eventually_core::subscription::*;
 }
@@ -387,11 +394,8 @@ pub mod subscription {
 pub mod optional {
     //! Module for the Aggregate extension trait using an `Option` state.
     //!
-    //! For more information, take a look at the [relevant `aggregate` documentation section]
-    //! on the [`Optional`] aggregate trait.
-    //!
-    //! [relevant `aggregate` documentation section]: ../aggregate/index.html#note-on-state
-    //! [`Optional`]: trait.Aggregate.html
+    //! For more information, take a look at the documentation on the
+    //! [`optional::Aggregate`](Aggregate) trait.
 
     pub use eventually_util::optional::*;
 }

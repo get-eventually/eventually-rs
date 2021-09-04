@@ -25,9 +25,9 @@ use tracing_futures::Instrument;
 
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
-/// Error returned by the [`EventStore::append`] when a conflict has been detected.
-///
-/// [`EventStore::append`]: trait.EventStore.html#method.append
+/// Error returned by the
+/// [`EventStore::append`](eventually_core::store::EventStore) when a conflict
+/// has been detected.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 #[error("conflicting versions, expected {expected}, got instead {actual}")]
 pub struct ConflictError {
@@ -44,24 +44,18 @@ impl AppendError for ConflictError {
 }
 
 /// Error returned by the [`EventSubscriber`] when reading elements
-/// from the [`EventStream`] produced by [`subscribe_all`].
-///
-/// [`EventSubscriber`]: struct.EventSubscriber.html
-/// [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
-/// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
+/// from the [`EventStream`] produced by
+/// [`subscribe_all`](EventSubscriber::subscribe_all).
 #[derive(Debug, thiserror::Error)]
 #[error("failed to read event from subscription watch channel: receiver lagged messages {0}")]
 pub struct LaggedError(u64);
 
 /// Builder for [`EventStore`] instances.
-///
-/// [`EventStore`]: struct.EventStore.html
 pub struct EventStoreBuilder;
 
 impl EventStoreBuilder {
-    /// Builds a new [`EventStore`] instance compatible with the provided [`Aggregate`].
-    ///
-    /// [`Aggregate`]: ../../eventually-core/aggregate/trait.Aggregate.html
+    /// Builds a new [`EventStore`] instance compatible with the provided
+    /// [`Aggregate`].
     #[inline]
     pub fn for_aggregate<T>(_: &T) -> EventStore<T::Id, T::Event>
     where
@@ -74,9 +68,6 @@ impl EventStoreBuilder {
 }
 
 /// An in-memory [`EventStore`] implementation, backed by an [`HashMap`].
-///
-/// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html
-/// [`HashMap`]: something
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Event>
 where
@@ -97,11 +88,10 @@ where
     Event: Clone,
 {
     /// Creates a new EventStore with a specified in-memory broadcast channel
-    /// size, which will used by the [`subscribe_all`] method to notify
-    /// of newly [`append`] events.
-    ///
-    /// [`subscribe_all`]: struct.EventStore.html#method.subscribe_all
-    /// [`append`]: struct.EventStore.html#method.append
+    /// size, which will used by the
+    /// [`subscribe_all`](EventSubscriber::subscribe_all) method to notify
+    /// of newly [`EventStore::append`](eventually_core::store::EventStore)
+    /// events.
     pub fn new(subscribe_capacity: usize) -> Self {
         // Use this broadcast channel to send append events to
         // subscriptions from .subscribe_all()

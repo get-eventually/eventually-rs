@@ -2,7 +2,7 @@
 //! of an [`Aggregate`] or of a number of `Aggregate`s.
 //!
 //! More information about projections can be found here:
-//! https://eventstore.com/docs/getting-started/projections/index.html
+//! <https://eventstore.com/docs/getting-started/projections/index.html>
 //!
 //! [`Projection`]: trait.Projection.html
 //! [`Aggregate`]: ../aggregate/trait.Aggregate.html
@@ -26,16 +26,19 @@ pub trait Projection {
     /// [`AggregateId`]: ../aggregate/type.AggregateId.html
     type SourceId: Eq;
 
-    /// Event to be stored in the `EventStore`, typically an [`Aggregate::Event`].
+    /// Event to be stored in the `EventStore`, typically an
+    /// [`Aggregate::Event`].
     ///
-    /// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
+    /// [`Aggregate::Event`]:
+    /// ../aggregate/trait.Aggregate.html#associatedtype.Event
     type Event;
 
     /// Type of the possible error that might occur when projecting
     /// the next state.
     type Error;
 
-    /// Updates the next value of the `Projection` using the provided event value.
+    /// Updates the next value of the `Projection` using the provided event
+    /// value.
     fn project(
         &mut self,
         event: Persisted<Self::SourceId, Self::Event>,

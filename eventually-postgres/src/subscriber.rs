@@ -2,7 +2,8 @@
 //! as a backend data store and `NOTIFY`/`LISTEN` functionality
 //! to power the [`EventStream`].
 //!
-//! [`EventSubscriber`]: ../../eventually-core/subscription/trait.EventSubscriber.html
+//! [`EventSubscriber`]:
+//! ../../eventually-core/subscription/trait.EventSubscriber.html
 //! [`EventStream`]: ../../eventually-core/subscription/type.EventStream.html
 
 use std::convert::{TryFrom, TryInto};
@@ -34,14 +35,14 @@ pub type Result<T> = std::result::Result<T, SubscriberError>;
 /// [`subscribe_all`]: struct.EventSubscriber.html#method.subscribe_all
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum SubscriberError {
-    /// Error variant returned when deserializing payloads coming from Postgres' `LISTEN`
-    /// asynchronous notifications.
+    /// Error variant returned when deserializing payloads coming from Postgres'
+    /// `LISTEN` asynchronous notifications.
     #[error("failed to deserialize notification payload from JSON: {0}")]
     Deserialize(String),
 
-    /// Error variant returned when the connection, used for `LISTEN` asynchronous notifications
-    /// gets dropped. Currently the subscriber cannot recover from this error and a new one should
-    /// be created.
+    /// Error variant returned when the connection, used for `LISTEN`
+    /// asynchronous notifications gets dropped. Currently the subscriber
+    /// cannot recover from this error and a new one should be created.
     #[error("postgres connection error: {0}")]
     Connection(String),
 }
@@ -67,8 +68,9 @@ where
     for<'de> Event: Deserialize<'de>,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
 {
-    /// Opens a new `LISTEN` stream on the database pointed by the specified DSN,
-    /// for the specified [`Aggregate`] type by the `type_name` parameter.
+    /// Opens a new `LISTEN` stream on the database pointed by the specified
+    /// DSN, for the specified [`Aggregate`] type by the `type_name`
+    /// parameter.
     ///
     /// Returns an error if the connection with the Postgres database
     /// could not be established or experienced some issues.
@@ -147,7 +149,8 @@ where
     }
 }
 
-/// JSON payload coming from a `NOTIFY` instruction on the Postgres [`EventStore`].
+/// JSON payload coming from a `NOTIFY` instruction on the Postgres
+/// [`EventStore`].
 ///
 /// [`EventStore`]: ../store/struct.EventStore.html
 #[derive(Debug, Deserialize)]
