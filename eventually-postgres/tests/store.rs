@@ -82,11 +82,9 @@ async fn different_types_can_share_id() {
         .await
         .expect("failed to collect events from subscription");
     assert_eq!(
-        vec![
-            Persisted::from(shared_id.to_owned(), Ivent::A(1))
-                .version(1)
-                .sequence_number(2),
-        ],
+        vec![Persisted::from(shared_id.to_owned(), Ivent::A(1))
+            .version(1)
+            .sequence_number(2),],
         ivents
     );
     assert_eq!(
@@ -285,11 +283,9 @@ async fn stream_works() {
         .expect("failed to collect events from subscription");
 
     assert_eq!(
-        vec![
-            Persisted::from(source_id.to_owned(), Event::C)
-                .version(3)
-                .sequence_number(2)
-        ],
+        vec![Persisted::from(source_id.to_owned(), Event::C)
+            .version(3)
+            .sequence_number(2)],
         events
     );
 }
