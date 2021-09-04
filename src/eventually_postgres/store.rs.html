@@ -467,6 +467,9 @@
 <span id="465">465</span>
 <span id="466">466</span>
 <span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains an [`EventStore`] implementation using PostgreSQL</span>
 <span class="doccomment">//! as a backend data store.</span>
@@ -697,13 +700,16 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// The `Id` type supplied to the `EventStore` has to be</span>
 <span class="doccomment">/// able to `to_string()` (so implement the `std::fmt::Display` trait)</span>
-<span class="doccomment">/// and to be parsed from a `String` (so to implement the `std::convert::TryFrom&lt;String&gt;` trait).</span>
+<span class="doccomment">/// and to be parsed from a `String` (so to implement the</span>
+<span class="doccomment">/// `std::convert::TryFrom&lt;String&gt;` trait).</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// The error for the `TryFrom&lt;String&gt;` conversion has to be a `std::error::Error`,</span>
-<span class="doccomment">/// so as to be able to map it into an `anyhow::Error` generic error value.</span>
+<span class="doccomment">/// The error for the `TryFrom&lt;String&gt;` conversion has to be a</span>
+<span class="doccomment">/// `std::error::Error`, so as to be able to map it into an `anyhow::Error`</span>
+<span class="doccomment">/// generic error value.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`EventStore`]: ../../eventually_core/store/trait.EventStore.html</span>
-<span class="doccomment">/// [`EventStoreBuilder`]: ../../eventually_core/store/trait.EventStoreBuilder.html</span>
+<span class="doccomment">/// [`EventStoreBuilder`]:</span>
+<span class="doccomment">/// ../../eventually_core/store/trait.EventStoreBuilder.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span>, <span class="ident">Tls</span><span class="op">&gt;</span>
 <span class="kw">where</span>

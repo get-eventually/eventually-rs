@@ -142,110 +142,55 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
-<span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
-<span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
-<span id="156">156</span>
-<span id="157">157</span>
-<span id="158">158</span>
-<span id="159">159</span>
-<span id="160">160</span>
-<span id="161">161</span>
-<span id="162">162</span>
-<span id="163">163</span>
-<span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
-<span id="169">169</span>
-<span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-<span id="173">173</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains a different flavour of the [`Aggregate`] trait,</span>
 <span class="doccomment">//! while still maintaining compatibility through [`AsAggregate`] type.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Check out [`optional::Aggregate`] for more information.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
-<span class="doccomment">//! [`AsAggregate`]: struct.AsAggregate.html</span>
-<span class="doccomment">//! [`optional::Aggregate`]: trait.Aggregate.html</span>
+<span class="doccomment">//! Check out [`optional::Aggregate`](Aggregate) for more information.</span>
 
 <span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
 
-<span class="doccomment">/// An `Option`-flavoured, [`Aggregate`]-compatible trait</span>
-<span class="doccomment">/// to model Aggregates having an optional [`State`].</span>
+<span class="doccomment">/// An [`Option`]-flavoured, [`Aggregate`]-compatible trait</span>
+<span class="doccomment">/// to model Aggregates having an optional [`State`](Aggregate::State).</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Use [`as_aggregate`] to get an [`Aggregate`]-compatible instance</span>
-<span class="doccomment">/// of this trait.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
-<span class="doccomment">/// [`State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State</span>
-<span class="doccomment">/// [`as_aggregate`]: trait.Aggregate.html#method.as_aggregate</span>
+<span class="doccomment">/// Use [`as_aggregate`](Aggregate::as_aggregate) to get an</span>
+<span class="doccomment">/// [`Aggregate`]-compatible instance of this trait.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Aggregate</span> {
     <span class="doccomment">/// Identifier type of the Aggregate.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Check out [`Aggregate::Id`] for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State</span>
     <span class="kw">type</span> <span class="ident">Id</span>: <span class="ident">Eq</span>;
 
     <span class="doccomment">/// State of the Aggregate.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Check out [`Aggregate::State`] for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::State`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.State</span>
     <span class="kw">type</span> <span class="ident">State</span>;
 
     <span class="doccomment">/// Events produced and supported by the Aggregate.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Check out [`Aggregate::Event`] for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.Event</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
     <span class="doccomment">/// Commands supported by the Aggregate.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Check out [`Aggregate::Command`] for more information.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Command`]: ../../eventually_core/aggregate/trait.Aggregate.html#associatedtype.Command</span>
     <span class="kw">type</span> <span class="ident">Command</span>;
 
-    <span class="doccomment">/// Error produced by the the Aggregate while applying [`Event`]s</span>
-    <span class="doccomment">/// or handling [`Command`]s.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.Aggregate.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`Command`]: trait.Aggregate.html#associatedtype.Command</span>
+    <span class="doccomment">/// Error produced by the the Aggregate while applying</span>
+    <span class="doccomment">/// [`Event`](Aggregate::Event)s or handling</span>
+    <span class="doccomment">/// [`Command`](Aggregate::Command)s.</span>
     <span class="kw">type</span> <span class="ident">Error</span>;
 
-    <span class="doccomment">/// Applies the specified [`Event`] when the [`State`] is empty.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.Aggregate.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`State`]: trait.Aggregate.html#associatedtype.State</span>
+    <span class="doccomment">/// Applies the specified [`Event`](Aggregate::Event) when the</span>
+    <span class="doccomment">/// [`State`](Aggregate::State) is empty.</span>
     <span class="kw">fn</span> <span class="ident">apply_first</span>(<span class="ident">event</span>: <span class="self">Self</span><span class="ident">::Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::State</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Applies the specified [`Event`] on a pre-existing [`State`] value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.Aggregate.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`State`]: trait.Aggregate.html#associatedtype.State</span>
+    <span class="doccomment">/// Applies the specified [`Event`](Aggregate::Event) on a pre-existing</span>
+    <span class="doccomment">/// [`State`](Aggregate::State) value.</span>
     <span class="kw">fn</span> <span class="ident">apply_next</span>(<span class="ident">state</span>: <span class="self">Self</span><span class="ident">::State</span>, <span class="ident">event</span>: <span class="self">Self</span><span class="ident">::Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::State</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Handles the specified [`Command`] when the [`State`] is empty.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Command`]: trait.Aggregate.html#associatedtype.Command</span>
-    <span class="doccomment">/// [`State`]: trait.Aggregate.html#associatedtype.State</span>
+    <span class="doccomment">/// Handles the specified [`Command`](Aggregate::Command)when the</span>
+    <span class="doccomment">/// [`State`](Aggregate::State) is empty.</span>
     <span class="kw">fn</span> <span class="ident">handle_first</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;s</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="ident">::Id</span>,
@@ -254,10 +199,8 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>;
 
-    <span class="doccomment">/// Handles the specified [`Command`] on a pre-existing [`State`] value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Command`]: trait.Aggregate.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`State`]: trait.Aggregate.html#associatedtype.State</span>
+    <span class="doccomment">/// Handles the specified [`Command`](Aggregate::Command) on a pre-existing</span>
+    <span class="doccomment">/// [`State`](Aggregate::State) value.</span>
     <span class="kw">fn</span> <span class="ident">handle_next</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="ident">::Id</span>,
@@ -267,11 +210,9 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>;
 
-    <span class="doccomment">/// Translates the current [`optional::Aggregate`] instance into</span>
-    <span class="doccomment">/// a _newtype instance_ compatible with the core [`Aggregate`] trait.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`optional::Aggregate`]: trait.Aggregate.html</span>
-    <span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
+    <span class="doccomment">/// Translates the current [`optional::Aggregate`](Aggregate) instance into</span>
+    <span class="doccomment">/// a _newtype instance_ compatible with the core</span>
+    <span class="doccomment">/// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">as_aggregate</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -281,8 +222,9 @@
     }
 }
 
-<span class="doccomment">/// _Newtype pattern_ to ensure compatibility between [`optional::Aggregate`] trait</span>
-<span class="doccomment">/// and the core [`Aggregate`] trait.</span>
+<span class="doccomment">/// _Newtype pattern_ to ensure compatibility between</span>
+<span class="doccomment">/// [`optional::Aggregate`](Aggregate) trait and the core</span>
+<span class="doccomment">/// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ## Usage</span>
 <span class="doccomment">///</span>
@@ -296,10 +238,6 @@
 <span class="doccomment">///     ```text</span>
 <span class="doccomment">///     let aggregate = MyOptionalAggregate.as_aggregate();</span>
 <span class="doccomment">///     ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`optional::Aggregate`]: trait.Aggregate.html</span>
-<span class="doccomment">/// [`Aggregate::as_aggregate`]: trait.Aggregate.html#method.as_aggregate</span>
-<span class="doccomment">/// [`Aggregate`]: ../../eventually_core/aggregate/trait.Aggregate.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">A</span>);
 

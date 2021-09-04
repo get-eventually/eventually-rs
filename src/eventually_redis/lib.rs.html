@@ -162,6 +162,8 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Redis backend implementation for [`eventually` crate](https://crates.io/crates/eventually).</span>
 <span class="doccomment">//!</span>
@@ -193,18 +195,19 @@
 <span class="doccomment">/// Default size of a paginated request to Redis `XRANGE .. COUNT n`</span>
 <span class="doccomment">/// for the [`EventStore::stream`] and [`EventStore::stream_all`] operations.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Page size can be overridden through the [`EventStoreBuilder::stream_page_size`]</span>
-<span class="doccomment">/// option.</span>
+<span class="doccomment">/// Page size can be overridden through the</span>
+<span class="doccomment">/// [`EventStoreBuilder::stream_page_size`] option.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream</span>
 <span class="doccomment">/// [`EventStore::stream_all`]: struct.EventStore.html#tymethod.stream_all</span>
-<span class="doccomment">/// [`EventStoreBuilder::stream_page_size`]: struct.EventStoreBuilder.html#method.stream_page_size</span>
+<span class="doccomment">/// [`EventStoreBuilder::stream_page_size`]:</span>
+<span class="doccomment">/// struct.EventStoreBuilder.html#method.stream_page_size</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STREAM_PAGE_DEFAULT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">128</span>;
 
 <span class="doccomment">/// Builder type for [`EventStore`] and [`EventSubscriber`] types.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// The same builder instance can be used to build multiple instances of [`EventStore`]</span>
-<span class="doccomment">/// and [`EventSubscriber`].</span>
+<span class="doccomment">/// The same builder instance can be used to build multiple instances of</span>
+<span class="doccomment">/// [`EventStore`] and [`EventSubscriber`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
 <span class="doccomment">/// [`EventSubscriber`]: struct.EventSubscriber.html</span>
@@ -223,8 +226,8 @@
         }
     }
 
-    <span class="doccomment">/// Changes the page size used by the [`Stream`] returned in [`EventStore::stream`]</span>
-    <span class="doccomment">/// and [`EventStore::stream_all`].</span>
+    <span class="doccomment">/// Changes the page size used by the [`Stream`] returned in</span>
+    <span class="doccomment">/// [`EventStore::stream`] and [`EventStore::stream_all`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html</span>
     <span class="doccomment">/// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream</span>
@@ -236,7 +239,8 @@
 
     <span class="doccomment">/// Assignes the specified source name to a copy of the current builder</span>
     <span class="doccomment">/// instance, in order to create [`EventStore`] and [`EventSubscriber`]</span>
-    <span class="doccomment">/// for the same source type identifier (e.g. the Aggregate type identifier).</span>
+    <span class="doccomment">/// for the same source type identifier (e.g. the Aggregate type</span>
+    <span class="doccomment">/// identifier).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
     <span class="doccomment">/// [`EventSubscriber`]: struct.EventSubscriber.html</span>
@@ -265,8 +269,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BuilderWithSourceName</span> {
-    <span class="doccomment">/// Changes the page size used by the [`Stream`] returned in [`EventStore::stream`]</span>
-    <span class="doccomment">/// and [`EventStore::stream_all`].</span>
+    <span class="doccomment">/// Changes the page size used by the [`Stream`] returned in</span>
+    <span class="doccomment">/// [`EventStore::stream`] and [`EventStore::stream_all`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html</span>
     <span class="doccomment">/// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream</span>

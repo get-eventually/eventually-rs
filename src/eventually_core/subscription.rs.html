@@ -258,6 +258,17 @@
 <span id="256">256</span>
 <span id="257">257</span>
 <span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Module for creating and managing long-running Subscriptions</span>
 <span class="doccomment">//! to incoming events in the [`EventStore`].</span>
@@ -275,7 +286,8 @@
 
 <span class="doccomment">/// Stream of events returned by the [`EventSubscriber::subscribe_all`] method.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [`EventSubscriber::subscribe_all`]: trait.EventSubscriber.html#method.subscribe_all</span>
+<span class="doccomment">/// [`EventSubscriber::subscribe_all`]:</span>
+<span class="doccomment">/// trait.EventSubscriber.html#method.subscribe_all</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoxStream</span><span class="op">&lt;</span>
     <span class="lifetime">&#39;a</span>,
     <span class="prelude-ty">Result</span><span class="op">&lt;</span>
@@ -284,9 +296,11 @@
     <span class="op">&gt;</span>,
 <span class="op">&gt;</span>;
 
-<span class="doccomment">/// Component to let users subscribe to newly-inserted events into the [`EventStore`].</span>
+<span class="doccomment">/// Component to let users subscribe to newly-inserted events into the</span>
+<span class="doccomment">/// [`EventStore`].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Check out [`subscribe_all`] for more information.</span>
+<span class="doccomment">/// Check out [`subscribe_all`](EventSubscriber::subscribe_all) for more</span>
+<span class="doccomment">/// information.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Additional information can be found in the [_Volatile Subscription_] section</span>
 <span class="doccomment">/// of eventstore.com</span>
@@ -299,13 +313,16 @@
     <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
     <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">Eq</span>;
 
-    <span class="doccomment">/// Event type stored in the [`EventStore`], typically an [`Aggregate::Event`].</span>
+    <span class="doccomment">/// Event type stored in the [`EventStore`], typically an</span>
+    <span class="doccomment">/// [`Aggregate::Event`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
+    <span class="doccomment">/// [`Aggregate::Event`]:</span>
+    <span class="doccomment">/// ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
     <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
-    <span class="doccomment">/// Possible errors returned when receiving events from the notification channel.</span>
+    <span class="doccomment">/// Possible errors returned when receiving events from the notification</span>
+    <span class="doccomment">/// channel.</span>
     <span class="kw">type</span> <span class="ident">Error</span>;
 
     <span class="doccomment">/// Subscribes to all new events persisted in the [`EventStore`], from</span>
@@ -341,8 +358,9 @@
 <span class="op">&gt;</span>;
 
 <span class="doccomment">/// A Subscription to an [`EventStream`] which can be &quot;checkpointed&quot;:</span>
-<span class="doccomment">/// keeps a record of the latest message processed by itself using [`checkpoint`],</span>
-<span class="doccomment">/// and can resume working from such message by using the [`resume`].</span>
+<span class="doccomment">/// keeps a record of the latest message processed by itself using</span>
+<span class="doccomment">/// [`checkpoint`], and can resume working from such message by using the</span>
+<span class="doccomment">/// [`resume`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
 <span class="doccomment">/// [`resume`]: trait.Subscription.html#method.resume</span>
@@ -353,17 +371,21 @@
     <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
     <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">Eq</span>;
 
-    <span class="doccomment">/// Event type stored in the [`EventStore`], typically an [`Aggregate::Event`].</span>
+    <span class="doccomment">/// Event type stored in the [`EventStore`], typically an</span>
+    <span class="doccomment">/// [`Aggregate::Event`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
+    <span class="doccomment">/// [`Aggregate::Event`]:</span>
+    <span class="doccomment">/// ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
     <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
-    <span class="doccomment">/// Possible errors returned when receiving events from the notification channel.</span>
+    <span class="doccomment">/// Possible errors returned when receiving events from the notification</span>
+    <span class="doccomment">/// channel.</span>
     <span class="kw">type</span> <span class="ident">Error</span>;
 
-    <span class="doccomment">/// Resumes the current state of a `Subscription` by returning the [`EventStream`],</span>
-    <span class="doccomment">/// starting from the last event processed by the `Subscription`.</span>
+    <span class="doccomment">/// Resumes the current state of a `Subscription` by returning the</span>
+    <span class="doccomment">/// [`EventStream`], starting from the last event processed by the</span>
+    <span class="doccomment">/// `Subscription`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
     <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;

@@ -157,6 +157,8 @@
 <span id="155">155</span>
 <span id="156">156</span>
 <span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
@@ -276,13 +278,15 @@
 }
 
 <span class="doccomment">/// Returns a long-running [`futures::Stream`] instance returning</span>
-<span class="doccomment">/// the results of reading a Redis Stream using Consumer Groups with `XREADGROUP`.</span>
+<span class="doccomment">/// the results of reading a Redis Stream using Consumer Groups with</span>
+<span class="doccomment">/// `XREADGROUP`.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Each read block should be as big as `page_size`; for each page requested,</span>
 <span class="doccomment">/// all the keys in [`StreamReadReply`] are yielded in the stream,</span>
 <span class="doccomment">/// until the entries are fully exhausted.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// The stream won&#39;t be closed until **program termination** or **explicitly dropped**.</span>
+<span class="doccomment">/// The stream won&#39;t be closed until **program termination** or **explicitly</span>
+<span class="doccomment">/// dropped**.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`futures::Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html</span>
 <span class="doccomment">/// [`StreamReadReply`]: https://docs.rs/redis/0.17.0/redis/streams/struct.StreamReadReply.html</span>

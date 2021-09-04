@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A library providing components to build event-sourced applications."><meta name="keywords" content="rust, rustlang, rust-lang, eventually"><title>eventually - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../eventually/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><h2 class="location">Crate eventually</h2><div class="block version"><p>Version 0.4.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all eventually's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="eventually" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">eventually</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/eventually/lib.rs.html#1-416" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A library providing components to build event-sourced applications.</p>
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../eventually/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><h2 class="location">Crate eventually</h2><div class="block version"><p>Version 0.4.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all eventually's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="eventually" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">eventually</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/eventually/lib.rs.html#1-420" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A library providing components to build event-sourced applications.</p>
 <p>The <code>eventually</code> crate provides base abstractions to design your application
 domain using <a href="https://en.wikipedia.org/wiki/Domain-driven_design">Domain-driven Design</a>, using the <a href="trait.Aggregate.html"><code>Aggregate</code></a> trait,
 and provides a set of nice utilities around those core abstractions:
@@ -10,29 +10,33 @@ and provides a set of nice utilities around those core abstractions:
 (in ES lingo, <strong><em>Aggregates</em></strong>) internal state to be mutated and persisted
 as a list of <strong><em>Domain Events</em></strong>, rather than serializing the whole state
 to the database (as you would do with a typical CRUD architecture).</p>
-<p>Events are persisted in an <strong><em>Event Store</em></strong>: an ordered, append-only log of all
-the events produced in your domain.</p>
+<p>Events are persisted in an <strong><em>Event Store</em></strong>: an ordered, append-only log of
+all the events produced in your domain.</p>
 <p>Events can be retrieved from an Event Store through <strong><em>Event Streams</em></strong>,
 stream of chronologically-ordered events.</p>
-<p>The state of your Aggregates can thus be rebuilt by <strong>streaming all the Events</strong>
-back in the application, as they happened in time, to build the latest version
-of the state.</p>
+<p>The state of your Aggregates can thus be rebuilt by <strong>streaming all the
+Events</strong> back in the application, as they happened in time, to build the
+latest version of the state.</p>
 <p>This architectural pattern brings in a lot of interesting goodies:</p>
 <ul>
 <li><strong>Auditing</strong>: never need to guess what happened in your system,
-thanks to the Event Store, you have a list of all the Events that have been committed
-during time.</li>
-<li><strong>Time-machine</strong>: <em>travel back in time</em>, by setting the state of your service
-to a specific point in time, thanks to the Event Store; useful for debugging purposes.</li>
+thanks to the Event Store, you have a list of all the Events that have been
+committed during time.</li>
+<li><strong>Time-machine</strong>: <em>travel back in time</em>, by setting the state of your
+service
+to a specific point in time, thanks to the Event Store; useful for debugging
+purposes.</li>
 <li><strong>Projections</strong>: create read-optimized models of your Aggregates as needed
-for you business operations, continuously, every time new Events are committed
-to the Event Store.</li>
+for you business operations, continuously, every time new Events are
+committed to the Event Store.</li>
 <li><strong>Concurrency Handling</strong>: Event-sourced application make extensive use
-of Optimistic Concurrency to handle concurrent-writes scenarios – concurrency
-conflicts and state reconciliation can become part of your Domain!</li>
-<li><strong>High Performance, High Availability</strong>: thanks to the append-only Event Store
-and the use of Projections, you can write highly performant and highly available
-services that handle an intense amount of traffic.</li>
+of Optimistic Concurrency to handle concurrent-writes scenarios –
+concurrency conflicts and state reconciliation can become part of your
+Domain!</li>
+<li><strong>High Performance, High Availability</strong>: thanks to the append-only Event
+Store
+and the use of Projections, you can write highly performant and highly
+available services that handle an intense amount of traffic.</li>
 </ul>
 <p><a href="https://eventstore.com/blog/what-is-event-sourcing/">More information about this pattern can be found here.</a></p>
 </div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
@@ -48,29 +52,34 @@ from the Event Store.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="versioning/index.html" title="eventually::versioning mod">versioning</a></td><td class="docblock-short"><p>Module containing support for Optimistic Concurrency using
 Versioning.</p>
 </td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="module-item"><td><a class="struct" href="struct.AggregateRoot.html" title="eventually::AggregateRoot struct">AggregateRoot</a></td><td class="docblock-short"><p>An <code>AggregateRoot</code> represents an handler to the <a href="trait.Aggregate.html"><code>Aggregate</code></a> it’s managing,
-such as:</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.AggregateRootBuilder.html" title="eventually::AggregateRootBuilder struct">AggregateRootBuilder</a></td><td class="docblock-short"><p>Builder type for new <a href="struct.AggregateRoot.html"><code>AggregateRoot</code></a> instances.</p>
+<table><tr class="module-item"><td><a class="struct" href="struct.AggregateRoot.html" title="eventually::AggregateRoot struct">AggregateRoot</a></td><td class="docblock-short"><p>An <a href="struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> represents an handler to the <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> it’s
+managing, such as:</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.AggregateRootBuilder.html" title="eventually::AggregateRootBuilder struct">AggregateRootBuilder</a></td><td class="docblock-short"><p>Builder type for new <a href="struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> instances.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.Projector.html" title="eventually::Projector struct">Projector</a></td><td class="docblock-short"><p>A <code>Projector</code> manages the state of a single <a href="../../../eventually-core/projection/trait.Projection.html"><code>Projection</code></a>
-by opening a long-running stream of all events coming from the <a href="../../../eventually-core/store/trait.EventStore.html"><code>EventStore</code></a>.</p>
+by opening a long-running stream of all events coming from the
+<a href="../../../eventually-core/store/trait.EventStore.html"><code>EventStore</code></a>.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.Repository.html" title="eventually::Repository struct">Repository</a></td><td class="docblock-short"><p>Implementation of the <a href="https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern">Repository pattern</a> for storing, retrieving
 and deleting <a href="../aggregate/trait.Aggregate.html"><code>Aggregate</code></a>s.</p>
 </td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
-<table><tr class="module-item"><td><a class="trait" href="trait.Aggregate.html" title="eventually::Aggregate trait">Aggregate</a></td><td class="docblock-short"><p>An Aggregate manages a domain entity <a href="trait.Aggregate.html#associatedtype.State"><code>State</code></a>, acting as a <em>transaction boundary</em>.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.AggregateExt.html" title="eventually::AggregateExt trait">AggregateExt</a></td><td class="docblock-short"><p>Extension trait with some handy methods to use with <a href="trait.Aggregate.html"><code>Aggregate</code></a>s.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.EventStore.html" title="eventually::EventStore trait">EventStore</a></td><td class="docblock-short"><p>An Event Store is an append-only, ordered list of <a href="../aggregate/trait.Aggregate.html#associatedtype.Event"><code>Event</code></a>s
-for a certain “source” – e.g. an <a href="../aggregate/trait.Aggregate.html"><code>Aggregate</code></a>.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.EventSubscriber.html" title="eventually::EventSubscriber trait">EventSubscriber</a></td><td class="docblock-short"><p>Component to let users subscribe to newly-inserted events into the <a href="../store/trait.EventStore.html"><code>EventStore</code></a>.</p>
+<table><tr class="module-item"><td><a class="trait" href="trait.Aggregate.html" title="eventually::Aggregate trait">Aggregate</a></td><td class="docblock-short"><p>An <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> manages a domain entity <a href="trait.Aggregate.html#associatedtype.State"><code>State</code></a>, acting
+as a <em>transaction boundary</em>.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.AggregateExt.html" title="eventually::AggregateExt trait">AggregateExt</a></td><td class="docblock-short"><p>Extension trait with some handy methods to use with <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a>s.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.EventStore.html" title="eventually::EventStore trait">EventStore</a></td><td class="docblock-short"><p>An Event Store is an append-only, ordered list of
+<a href="trait.Aggregate.html#associatedtype.Event"><code>Event</code></a>s for a certain “source” –
+e.g. an <a href="trait.Aggregate.html"><code>Aggregate</code></a>.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.EventSubscriber.html" title="eventually::EventSubscriber trait">EventSubscriber</a></td><td class="docblock-short"><p>Component to let users subscribe to newly-inserted events into the
+<a href="../store/trait.EventStore.html"><code>EventStore</code></a>.</p>
 </td></tr><tr class="module-item"><td><a class="trait" href="trait.Projection.html" title="eventually::Projection trait">Projection</a></td><td class="docblock-short"><p>A <code>Projection</code> is an optimized read model (or materialized view)
 of an <a href="../aggregate/trait.Aggregate.html"><code>Aggregate</code></a> model(s), that can be assembled by left-folding
 its previous state and a number of ordered, consecutive events.</p>
 </td></tr><tr class="module-item"><td><a class="trait" href="trait.Subscription.html" title="eventually::Subscription trait">Subscription</a></td><td class="docblock-short"><p>A Subscription to an <a href="type.EventStream.html"><code>EventStream</code></a> which can be “checkpointed”:
-keeps a record of the latest message processed by itself using <a href="trait.Subscription.html#method.checkpoint"><code>checkpoint</code></a>,
-and can resume working from such message by using the <a href="trait.Subscription.html#method.resume"><code>resume</code></a>.</p>
+keeps a record of the latest message processed by itself using
+<a href="trait.Subscription.html#method.checkpoint"><code>checkpoint</code></a>, and can resume working from such message by using the
+<a href="trait.Subscription.html#method.resume"><code>resume</code></a>.</p>
 </td></tr><tr class="module-item"><td><a class="trait" href="trait.Versioned.html" title="eventually::Versioned trait">Versioned</a></td><td class="docblock-short"><p>Data type that carries a version for Optimistic Concurrency Control.</p>
 </td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
 <table><tr class="module-item"><td><a class="fn" href="fn.spawn.html" title="eventually::spawn fn">spawn</a></td><td class="docblock-short"><p>Spawns a new asynchronous task, returning a
 <a href="super::JoinHandle"><code>JoinHandle</code></a> for it.</p>
 </td></tr></table><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
-<table><tr class="module-item"><td><a class="type" href="type.AggregateId.html" title="eventually::AggregateId type">AggregateId</a></td><td class="docblock-short"><p>A short extractor type for the Aggregate <a href="trait.Aggregate.html#associatedtype.Id"><code>Id</code></a>.</p>
+<table><tr class="module-item"><td><a class="type" href="type.AggregateId.html" title="eventually::AggregateId type">AggregateId</a></td><td class="docblock-short"><p>A short extractor type for the <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> <a href="trait.Aggregate.html#associatedtype.Id"><code>Id</code></a>.</p>
 </td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="eventually" data-search-index-js="../search-index.js" data-search-js="../search.js"></div><script src="../main.js"></script></body></html>

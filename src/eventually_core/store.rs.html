@@ -288,63 +288,9 @@
 <span id="286">286</span>
 <span id="287">287</span>
 <span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
-<span id="297">297</span>
-<span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
 </pre><pre class="rust">
-<span class="doccomment">//! Contains the Event Store trait for storing and streaming Aggregate [`Event`]s.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
+<span class="doccomment">//! Contains the Event Store trait for storing and streaming</span>
+<span class="doccomment">//! [`Aggregate::Event`](super::aggregate::Aggregate::Event)s.</span>
 
 <span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
 
@@ -357,49 +303,34 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::versioning::Versioned</span>;
 
 <span class="doccomment">/// Selection operation for the events to capture in an [`EventStream`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Select</span> {
-    <span class="doccomment">/// To return all the [`Event`]s in the [`EventStream`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
+    <span class="doccomment">/// To return all the [`Event`](EventStore::Event)s in the [`EventStream`].</span>
     <span class="ident">All</span>,
 
     <span class="doccomment">/// To return a slice of the [`EventStream`], starting from</span>
-    <span class="doccomment">/// those [`Event`]s with version **greater or equal** than</span>
-    <span class="doccomment">/// the one specified in this variant.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
+    <span class="doccomment">/// those [`Event`](EventStore::Event)s with version **greater or equal**</span>
+    <span class="doccomment">/// than the one specified in this variant.</span>
     <span class="ident">From</span>(<span class="ident">u32</span>),
 }
 
-<span class="doccomment">/// Specifies the optimistic locking level when performing [`append`] from</span>
-<span class="doccomment">/// an [`EventStore`].</span>
+<span class="doccomment">/// Specifies the optimistic locking level when performing</span>
+<span class="doccomment">/// [`append`](EventStore::append) from an [`EventStore`].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Check out [`append`] documentation for more info.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`append`]: trait.EventStore.html#method.append</span>
-<span class="doccomment">/// [`EventStore`]: trait.EventStore.html</span>
+<span class="doccomment">/// Check out [`append`](EventStore::append) documentation for more info.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Expected</span> {
-    <span class="doccomment">/// Append events disregarding the current [`Aggregate`] version.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
+    <span class="doccomment">/// Append events disregarding the current</span>
+    <span class="doccomment">/// [`Aggregate`](super::aggregate::Aggregate) version.</span>
     <span class="ident">Any</span>,
 
-    <span class="doccomment">/// Append events only if the current version of the [`Aggregate`]</span>
-    <span class="doccomment">/// is the one specified by the value provided here.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
+    <span class="doccomment">/// Append events only if the current version of the</span>
+    <span class="doccomment">/// [`Aggregate`](super::aggregate::Aggregate) is the one specified by</span>
+    <span class="doccomment">/// the value provided here.</span>
     <span class="ident">Exact</span>(<span class="ident">u32</span>),
 }
 
 <span class="doccomment">/// Stream type returned by the [`EventStore::stream`] method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`EventStore::stream`]: trait.EventStore.html#method.stream</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoxStream</span><span class="op">&lt;</span>
     <span class="lifetime">&#39;a</span>,
     <span class="prelude-ty">Result</span><span class="op">&lt;</span>
@@ -408,15 +339,11 @@
     <span class="op">&gt;</span>,
 <span class="op">&gt;</span>;
 
-<span class="doccomment">/// Error type returned by [`append`] in [`EventStore`] implementations.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`append`]: trait.EventStore.html#method.append</span>
-<span class="doccomment">/// [`EventStore`]: trait.EventStore.html</span>
+<span class="doccomment">/// Error type returned by [`append`](EventStore::append) in [`EventStore`]</span>
+<span class="doccomment">/// implementations.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AppendError</span>: <span class="ident">std::error::Error</span> {
     <span class="doccomment">/// Returns true if the error is due to a version conflict</span>
-    <span class="doccomment">/// during [`append`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`append`]: trait.EventStore.html#method.append</span>
+    <span class="doccomment">/// during [`append`](EventStore::append).</span>
     <span class="kw">fn</span> <span class="ident">is_conflict_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>;
 }
 
@@ -426,50 +353,45 @@
     }
 }
 
-<span class="doccomment">/// An Event Store is an append-only, ordered list of [`Event`]s</span>
-<span class="doccomment">/// for a certain &quot;source&quot; -- e.g. an [`Aggregate`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
-<span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
+<span class="doccomment">/// An Event Store is an append-only, ordered list of</span>
+<span class="doccomment">/// [`Event`](super::aggregate::Aggregate::Event)s for a certain &quot;source&quot; --</span>
+<span class="doccomment">/// e.g. an [`Aggregate`](super::aggregate::Aggregate).</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventStore</span> {
-    <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
+    <span class="doccomment">/// Type of the Source id, typically an</span>
+    <span class="doccomment">/// [`AggregateId`](super::aggregate::AggregateId).</span>
     <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">Eq</span>;
 
-    <span class="doccomment">/// Event to be stored in the `EventStore`, typically an [`Aggregate::Event`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
+    <span class="doccomment">/// Event to be stored in the [`EventStore`], typically an</span>
+    <span class="doccomment">/// [`Aggregate::Event`](super::aggregate::Aggregate::Event).</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
-    <span class="doccomment">/// Possible errors returned by the `EventStore` when requesting operations.</span>
+    <span class="doccomment">/// Possible errors returned by the [`EventStore`] when requesting</span>
+    <span class="doccomment">/// operations.</span>
     <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">AppendError</span>;
 
-    <span class="doccomment">/// Appends a new list of [`Event`]s to the Event Store, for the Source</span>
-    <span class="doccomment">/// entity specified by [`SourceId`].</span>
+    <span class="doccomment">/// Appends a new list of [`Event`](EventStore::Event)s to the Event Store,</span>
+    <span class="doccomment">/// for the Source entity specified by</span>
+    <span class="doccomment">/// [`SourceId`](EventStore::SourceId).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// `append` is a transactional operation: it either appends all the events,</span>
     <span class="doccomment">/// or none at all and returns an [`AppendError`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The desired version for the new [`Event`]s to append must be specified</span>
-    <span class="doccomment">/// through an [`Expected`] element.</span>
+    <span class="doccomment">/// The desired version for the new [`Event`](EventStore::Event)s to append</span>
+    <span class="doccomment">/// must be specified through an [`Expected`] element.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// When using `Expected::Any`, no checks on the current [`Aggregate`]</span>
-    <span class="doccomment">/// values will be performed, disregarding optimistic locking.</span>
+    <span class="doccomment">/// When using [`Expected::Any`], no checks on the current</span>
+    <span class="doccomment">/// [`Aggregate`](crate::aggregate::Aggregate) values will be performed,</span>
+    <span class="doccomment">/// disregarding optimistic locking.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// When using `Expected::Exact`, the Store will check that the current</span>
-    <span class="doccomment">/// version of the [`Aggregate`] is _exactly_ the one specified.</span>
+    <span class="doccomment">/// When using [`Expected::Exact`], the Store will check that the current</span>
+    <span class="doccomment">/// version of the [`Aggregate`](crate::aggregate::Aggregate) is _exactly_</span>
+    <span class="doccomment">/// the one specified.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the version is not the one expected from the Store, implementations</span>
-    <span class="doccomment">/// should raise an [`AppendError::Conflict`] error.</span>
+    <span class="doccomment">/// should raise a conflict error.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Implementations could decide to return an error if the expected</span>
     <span class="doccomment">/// version is different from the one supplied in the method invocation.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
-    <span class="doccomment">/// [`AppendError`]: enum.AppendError.html</span>
-    <span class="doccomment">/// [`AppendError::Conflict`]: enum.AppendError.html</span>
     <span class="kw">fn</span> <span class="ident">append</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">source_id</span>: <span class="self">Self</span><span class="ident">::SourceId</span>,
@@ -477,55 +399,46 @@
         <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Streams a list of [`Event`]s from the `EventStore` back to the application,</span>
-    <span class="doccomment">/// by specifying the desired [`SourceId`] and [`Select`] operation.</span>
+    <span class="doccomment">/// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]</span>
+    <span class="doccomment">/// back to the application, by specifying the desired</span>
+    <span class="doccomment">/// [`SourceId`](EventStore::SourceId) and [`Select`] operation.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`SourceId`] will be used to request a particular `EventStream`.</span>
+    <span class="doccomment">/// [`SourceId`](EventStore::SourceId) will be used to request a particular</span>
+    <span class="doccomment">/// `EventStream`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Select`] specifies the selection strategy for the [`Event`]s</span>
-    <span class="doccomment">/// in the returned [`EventStream`]: take a look at type documentation</span>
-    <span class="doccomment">/// for all the available options.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
-    <span class="doccomment">/// [`Select`]: enum.Select.html</span>
-    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
+    <span class="doccomment">/// [`Select`] specifies the selection strategy for the</span>
+    <span class="doccomment">/// [`Event`](EventStore::Event)s in the returned [`EventStream`]: take</span>
+    <span class="doccomment">/// a look at type documentation for all the available options.</span>
     <span class="kw">fn</span> <span class="ident">stream</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">source_id</span>: <span class="self">Self</span><span class="ident">::SourceId</span>,
         <span class="ident">select</span>: <span class="ident">Select</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Streams a list of [`Event`]s from the `EventStore` back to the application,</span>
-    <span class="doccomment">/// disregarding the [`SourceId`] values but using a [`Select`] operation.</span>
+    <span class="doccomment">/// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]</span>
+    <span class="doccomment">/// back to the application, disregarding the</span>
+    <span class="doccomment">/// [`SourceId`](EventStore::SourceId) values but using a [`Select`]</span>
+    <span class="doccomment">/// operation.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`SourceId`] will be used to request a particular `EventStream`.</span>
+    <span class="doccomment">/// [`SourceId`](EventStore::SourceId) will be used to request a particular</span>
+    <span class="doccomment">/// [`EventStream`].</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Select`] specifies the selection strategy for the [`Event`]s</span>
-    <span class="doccomment">/// in the returned [`EventStream`]: take a look at type documentation</span>
-    <span class="doccomment">/// for all the available options.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
-    <span class="doccomment">/// [`Select`]: enum.Select.html</span>
-    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
+    <span class="doccomment">/// [`Select`] specifies the selection strategy for the</span>
+    <span class="doccomment">/// [`Event`](EventStore::Event)s in the returned [`EventStream`]: take</span>
+    <span class="doccomment">/// a look at type documentation for all the available options.</span>
     <span class="kw">fn</span> <span class="ident">stream_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">select</span>: <span class="ident">Select</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Drops all the [`Event`]s related to one `Source`, specified by</span>
-    <span class="doccomment">/// the provided [`SourceId`].</span>
+    <span class="doccomment">/// Drops all the [`Event`](EventStore::Event)s related to one `Source`,</span>
+    <span class="doccomment">/// specified by the provided [`SourceId`](EventStore::SourceId).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedtype.SourceId</span>
     <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">source_id</span>: <span class="self">Self</span><span class="ident">::SourceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 }
 
-<span class="doccomment">/// An [`Event`] wrapper for events that have been</span>
+<span class="doccomment">/// An [`Event`](EventStore::Event) wrapper for events that have been</span>
 <span class="doccomment">/// successfully committed to the [`EventStore`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`EventStream`]s are composed of these events.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
-<span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
@@ -552,9 +465,8 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates a new [`EventBuilder`] from the provided Event value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`EventBuilder`]: persistent/struct.EventBuilder.html</span>
+    <span class="doccomment">/// Creates a new [`EventBuilder`](persistent::EventBuilder) from the</span>
+    <span class="doccomment">/// provided Event value.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">source_id</span>: <span class="ident">SourceId</span>, <span class="ident">event</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">persistent::EventBuilder</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">persistent::EventBuilder</span> { <span class="ident">source_id</span>, <span class="ident">event</span> }
@@ -566,30 +478,24 @@
         <span class="self">self</span>.<span class="ident">sequence_number</span>
     }
 
-    <span class="doccomment">/// Returns the [`SourceId`] of the persisted event.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`SourceId`]: trait.EventStore.html#associatedType.SourceId</span>
+    <span class="doccomment">/// Returns the [`SourceId`](EventStore::SourceId) of the persisted event.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">source_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">SourceId</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">source_id</span>
     }
 
-    <span class="doccomment">/// Unwraps the inner [`Event`] from the `Persisted` wrapper.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Event`]: trait.EventStore.html#associatedtype.Event</span>
+    <span class="doccomment">/// Unwraps the inner [`Event`](EventStore::Event) from the `Persisted`</span>
+    <span class="doccomment">/// wrapper.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
         <span class="self">self</span>.<span class="ident">event</span>
     }
 }
 
-<span class="doccomment">/// Contains a type-state builder for [`PersistentEvent`] type.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`PersistentEvent`]: struct.Persisted.html</span>
+<span class="doccomment">/// Contains a type-state builder for [`Persisted`] type.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">persistent</span> {
-    <span class="doccomment">/// Creates a new [`Persisted`] by wrapping an Event value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+    <span class="doccomment">/// Creates a new [`Persisted`](super::Persisted) by wrapping an Event</span>
+    <span class="doccomment">/// value.</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventBuilder</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">event</span>: <span class="ident">T</span>,
         <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">source_id</span>: <span class="ident">SourceId</span>,
@@ -604,10 +510,8 @@
     }
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">EventBuilder</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="doccomment">/// Specifies the [`PersistentEvent`] version and moves to the next</span>
-        <span class="doccomment">/// builder state.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+        <span class="doccomment">/// Specifies the [`Persisted`](super::Persisted) version and moves to</span>
+        <span class="doccomment">/// the next builder state.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventBuilderWithVersion</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="ident">EventBuilderWithVersion</span> {
@@ -617,10 +521,8 @@
             }
         }
 
-        <span class="doccomment">/// Specifies the [`PersistentEvent`] sequence number and moves to the next</span>
-        <span class="doccomment">/// builder state.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+        <span class="doccomment">/// Specifies the [`Persisted`](super::Persisted) sequence number and</span>
+        <span class="doccomment">/// moves to the next builder state.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence_number</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventBuilderWithSequenceNumber</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="ident">EventBuilderWithSequenceNumber</span> {
@@ -631,10 +533,8 @@
         }
     }
 
-    <span class="doccomment">/// Next step in creating a new [`Persisted`] carrying an Event value</span>
-    <span class="doccomment">/// and its version.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+    <span class="doccomment">/// Next step in creating a new [`Persisted`](super::Persisted) carrying an</span>
+    <span class="doccomment">/// Event value and its version.</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventBuilderWithVersion</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">version</span>: <span class="ident">u32</span>,
         <span class="ident">event</span>: <span class="ident">T</span>,
@@ -642,10 +542,8 @@
     }
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">EventBuilderWithVersion</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="doccomment">/// Specifies the [`PersistentEvent`] sequence number and moves to the next</span>
-        <span class="doccomment">/// builder state.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+        <span class="doccomment">/// Specifies the [`Persisted`](super::Persisted) sequence number and</span>
+        <span class="doccomment">/// moves to the next builder state.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence_number</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::Persisted</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="kw">super</span><span class="ident">::Persisted</span> {
@@ -657,10 +555,8 @@
         }
     }
 
-    <span class="doccomment">/// Next step in creating a new [`Persisted`] carrying an Event value</span>
-    <span class="doccomment">/// and its sequence number.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+    <span class="doccomment">/// Next step in creating a new [`Persisted`](super::Persisted) carrying an</span>
+    <span class="doccomment">/// Event value and its sequence number.</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventBuilderWithSequenceNumber</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">sequence_number</span>: <span class="ident">u32</span>,
         <span class="ident">event</span>: <span class="ident">T</span>,
@@ -668,10 +564,8 @@
     }
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">EventBuilderWithSequenceNumber</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="doccomment">/// Specifies the [`PersistentEvent`] version and moves to the next</span>
-        <span class="doccomment">/// builder state.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// [`PersistentEvent`]: ../struct.Persisted.html</span>
+        <span class="doccomment">/// Specifies the [`Persisted`](super::Persisted) version and moves to</span>
+        <span class="doccomment">/// the next builder state.</span>
         <span class="attribute">#[<span class="ident">inline</span>]</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::Persisted</span><span class="op">&lt;</span><span class="ident">SourceId</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="kw">super</span><span class="ident">::Persisted</span> {

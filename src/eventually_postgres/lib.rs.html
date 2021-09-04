@@ -66,6 +66,7 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
+<span id="67">67</span>
 </pre><pre class="rust">
 <span class="doccomment">//! [`eventually`] type implementations for PostgreSQL.</span>
 <span class="doccomment">//!</span>
@@ -84,11 +85,11 @@
 <span class="doccomment">//! let pg_manager = bb8_postgres::PostgresConnectionManager::new_from_stringlike(</span>
 <span class="doccomment">//!     &quot;postgres://user@pass:localhost:5432/db&quot;,</span>
 <span class="doccomment">//!     tokio_postgres::NoTls,</span>
-<span class="doccomment">//!     )</span>
-<span class="doccomment">//!     .map_err(|err| {</span>
-<span class="doccomment">//!         eprintln!(&quot;Failed configuring a Postgres Connection pool: {}&quot;, err);</span>
-<span class="doccomment">//!         err</span>
-<span class="doccomment">//!     })?;</span>
+<span class="doccomment">//! )</span>
+<span class="doccomment">//! .map_err(|err| {</span>
+<span class="doccomment">//!     eprintln!(&quot;Failed configuring a Postgres Connection pool: {}&quot;, err);</span>
+<span class="doccomment">//!     err</span>
+<span class="doccomment">//! })?;</span>
 <span class="doccomment">//! let pool = bb8::Pool::builder().build(pg_manager).await?;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! // A domain event example -- it is deliberately simple.</span>
@@ -125,7 +126,8 @@
 
 <span class="kw">use</span> <span class="ident">tokio_postgres::types::ToSql</span>;
 
-<span class="doccomment">/// Adapter type for parameters compatible with `tokio_postgres::Client` methods.</span>
+<span class="doccomment">/// Adapter type for parameters compatible with `tokio_postgres::Client`</span>
+<span class="doccomment">/// methods.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">Params</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> (<span class="kw">dyn</span> <span class="ident">ToSql</span> <span class="op">+</span> <span class="ident">Sync</span>)];
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
