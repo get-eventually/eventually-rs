@@ -27,4 +27,4 @@ eventually-postgres = { version = "0.3.0", path = "../eventually-postgres", opti
 
 [dev-dependencies]
 futures = { version = "0.3", features = ["async-await"] }
-tokio-test = "0.2"
+tokio-test = "0.4.2"
