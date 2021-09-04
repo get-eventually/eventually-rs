@@ -46,20 +46,20 @@ pub trait Aggregate {
 
     /// Handles the specified [`Command`](Aggregate::Command)when the
     /// [`State`](Aggregate::State) is empty.
-    fn handle_first<'s, 'a: 's>(
-        &'s self,
+    fn handle_first<'a>(
+        &'a self,
         id: &'a Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<'s, Result<Option<Vec<Self::Event>>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
         Self: Sized;
 
     /// Handles the specified [`Command`](Aggregate::Command) on a pre-existing
     /// [`State`](Aggregate::State) value.
-    fn handle_next<'a, 's: 'a>(
+    fn handle_next<'a>(
         &'a self,
         id: &'a Self::Id,
-        state: &'s Self::State,
+        state: &'a Self::State,
         command: Self::Command,
     ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
@@ -125,10 +125,10 @@ where
         }
     }
 
-    fn handle<'a, 's: 'a>(
+    fn handle<'a>(
         &'a self,
-        id: &'s Self::Id,
-        state: &'s Self::State,
+        id: &'a Self::Id,
+        state: &'a Self::State,
         command: Self::Command,
     ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where

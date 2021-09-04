@@ -56,10 +56,10 @@ pub trait Aggregate {
     /// of [`Event`](Aggregate::Event)s to apply the
     /// [`State`](Aggregate::State) mutation based on the current representation
     /// of the State.
-    fn handle<'a, 's: 'a>(
+    fn handle<'a>(
         &'a self,
-        id: &'s Self::Id,
-        state: &'s Self::State,
+        id: &'a Self::Id,
+        state: &'a Self::State,
         command: Self::Command,
     ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
     where
