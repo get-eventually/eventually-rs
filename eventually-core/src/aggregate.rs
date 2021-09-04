@@ -61,9 +61,7 @@ pub trait Aggregate {
         id: &'a Self::Id,
         state: &'a Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
-    where
-        Self: Sized;
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>;
 }
 
 /// Extension trait with some handy methods to use with [`Aggregate`]s.

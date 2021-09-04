@@ -187,8 +187,6 @@ pub mod aggregate {
     //!         state: &'a Self::State,
     //!         command: Self::Command,
     //!     ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
-    //!     where
-    //!         Self: Sized,
     //!     {
     //!         unimplemented!()
     //!     }

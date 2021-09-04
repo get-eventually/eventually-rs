@@ -50,9 +50,7 @@ pub trait Aggregate {
         &'a self,
         id: &'a Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
-    where
-        Self: Sized;
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>;
 
     /// Handles the specified [`Command`](Aggregate::Command) on a pre-existing
     /// [`State`](Aggregate::State) value.
@@ -61,9 +59,7 @@ pub trait Aggregate {
         id: &'a Self::Id,
         state: &'a Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
-    where
-        Self: Sized;
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>;
 
     /// Translates the current [`optional::Aggregate`](Aggregate) instance into
     /// a _newtype instance_ compatible with the core
@@ -130,10 +126,7 @@ where
         id: &'a Self::Id,
         state: &'a Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
-    where
-        Self: Sized,
-    {
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>> {
         match state {
             None => self.0.handle_first(id, command),
             Some(state) => self.0.handle_next(id, state, command),
