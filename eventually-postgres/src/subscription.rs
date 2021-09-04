@@ -191,11 +191,7 @@ where
             // and the subscription stream. Luckily, we can discard those by
             // keeping an internal state of the last processed sequence number,
             // and discard all those events that are found.
-            let subscription = self
-                .subscriber
-                .subscribe_all()
-                .await
-                .map_err(Error::Subscriber)?;
+            let subscription = self.subscriber.subscribe_all();
 
             let one_off_stream = self
                 .store

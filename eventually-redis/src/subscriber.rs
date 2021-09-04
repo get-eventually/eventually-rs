@@ -4,8 +4,8 @@ use std::fmt::Debug;
 use eventually::store::Persisted;
 use eventually::subscription::EventStream as SubscriberEventStream;
 
-use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
+use futures::TryFutureExt;
 
 use redis::RedisError;
 
@@ -72,7 +72,7 @@ where
     type Event = Event;
     type Error = SubscriberError;
 
-    fn subscribe_all(&self) -> BoxFuture<SubscriberResult<SubscriberEventStream<Self>>> {
+    fn subscribe_all(&self) -> SubscriberEventStream<Self> {
         #[derive(Deserialize)]
         struct SubscribeMessage<Event> {
             source_id: String,
@@ -109,10 +109,9 @@ where
                     Ok(Persisted::from(source_id, msg.event)
                         .sequence_number(msg.sequence_number)
                         .version(msg.version))
-                })
-                .boxed())
+                }))
         };
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 }

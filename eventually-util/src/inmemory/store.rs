@@ -121,23 +121,18 @@ where
     type Event = Event;
     type Error = LaggedError;
 
-    fn subscribe_all(
-        &self,
-    ) -> BoxFuture<Result<eventually_core::subscription::EventStream<Self>, Self::Error>> {
+    fn subscribe_all(&self) -> eventually_core::subscription::EventStream<Self> {
         // Create a new Receiver from the store Sender.
         //
         // This receiver implements the TryStream trait, which works perfectly
         // with the definition of the EventStream.
         let rx = self.tx.subscribe();
 
-        Box::pin(async move {
-            let stream = BroadcastStream::new(rx);
-            Ok(stream
-                .map_err(|v| match v {
-                    BroadcastStreamRecvError::Lagged(n) => LaggedError(n),
-                })
-                .boxed())
-        })
+        BroadcastStream::new(rx)
+            .map_err(|v| match v {
+                BroadcastStreamRecvError::Lagged(n) => LaggedError(n),
+            })
+            .boxed()
     }
 }
 
@@ -363,7 +358,7 @@ mod tests {
 
         // First subscription.
         let join_handle_1 = tokio::spawn(async move {
-            let mut events = store_1.subscribe_all().await.unwrap().enumerate();
+            let mut events = store_1.subscribe_all().enumerate();
             barrier_1.wait().await;
 
             while let Some((i, res)) = events.next().await {
@@ -433,7 +428,7 @@ mod tests {
         // Second subscriber, it will only see events of the second batch,
         // which is when it started listening to events.
         let join_handle_2 = tokio::spawn(async move {
-            let mut events = store_2.subscribe_all().await.unwrap().enumerate();
+            let mut events = store_2.subscribe_all().enumerate();
             barrier_2.wait().await;
 
             while let Some((i, res)) = events.next().await {

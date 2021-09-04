@@ -10,7 +10,6 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use futures::future::BoxFuture;
 use futures::stream::StreamExt;
 
 use eventually_core::store::Persisted;
@@ -133,12 +132,10 @@ where
     type Event = Event;
     type Error = SubscriberError;
 
-    fn subscribe_all(&self) -> BoxFuture<Result<EventStream<Self>>> {
-        Box::pin(async move {
-            Ok(BroadcastStream::new(self.tx.subscribe())
-                .filter_map(|r| async { r.ok() })
-                .boxed())
-        })
+    fn subscribe_all(&self) -> EventStream<Self> {
+        BroadcastStream::new(self.tx.subscribe())
+            .filter_map(|r| async { r.ok() })
+            .boxed()
     }
 }
 
