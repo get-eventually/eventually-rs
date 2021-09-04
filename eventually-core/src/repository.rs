@@ -143,18 +143,13 @@ where
     )]
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
         let mut version = root.version();
-        let events_to_commit = root.take_events_to_commit();
+        let events = root.take_events_to_commit();
 
-        if let Some(events) = events_to_commit {
-            if !events.is_empty() {
-                // Version is incremented at each events flush by the EventStore.
-                version = self
-                    .store
-                    .append(root.id().clone(), Expected::Exact(version), events)
-                    .await
-                    .map_err(Error::Store)?;
-            }
-        }
+        version = self
+            .store
+            .append(root.id().clone(), Expected::Exact(version), events)
+            .await
+            .map_err(Error::Store)?;
 
         Ok(root.with_version(version))
     }
