@@ -28,18 +28,19 @@ use redis::RedisResult;
 /// Default size of a paginated request to Redis `XRANGE .. COUNT n`
 /// for the [`EventStore::stream`] and [`EventStore::stream_all`] operations.
 ///
-/// Page size can be overridden through the [`EventStoreBuilder::stream_page_size`]
-/// option.
+/// Page size can be overridden through the
+/// [`EventStoreBuilder::stream_page_size`] option.
 ///
 /// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream
 /// [`EventStore::stream_all`]: struct.EventStore.html#tymethod.stream_all
-/// [`EventStoreBuilder::stream_page_size`]: struct.EventStoreBuilder.html#method.stream_page_size
+/// [`EventStoreBuilder::stream_page_size`]:
+/// struct.EventStoreBuilder.html#method.stream_page_size
 pub const STREAM_PAGE_DEFAULT: usize = 128;
 
 /// Builder type for [`EventStore`] and [`EventSubscriber`] types.
 ///
-/// The same builder instance can be used to build multiple instances of [`EventStore`]
-/// and [`EventSubscriber`].
+/// The same builder instance can be used to build multiple instances of
+/// [`EventStore`] and [`EventSubscriber`].
 ///
 /// [`EventStore`]: struct.EventStore.html
 /// [`EventSubscriber`]: struct.EventSubscriber.html
@@ -58,8 +59,8 @@ impl Builder {
         }
     }
 
-    /// Changes the page size used by the [`Stream`] returned in [`EventStore::stream`]
-    /// and [`EventStore::stream_all`].
+    /// Changes the page size used by the [`Stream`] returned in
+    /// [`EventStore::stream`] and [`EventStore::stream_all`].
     ///
     /// [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
     /// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream
@@ -71,7 +72,8 @@ impl Builder {
 
     /// Assignes the specified source name to a copy of the current builder
     /// instance, in order to create [`EventStore`] and [`EventSubscriber`]
-    /// for the same source type identifier (e.g. the Aggregate type identifier).
+    /// for the same source type identifier (e.g. the Aggregate type
+    /// identifier).
     ///
     /// [`EventStore`]: struct.EventStore.html
     /// [`EventSubscriber`]: struct.EventSubscriber.html
@@ -100,8 +102,8 @@ pub struct BuilderWithSourceName {
 }
 
 impl BuilderWithSourceName {
-    /// Changes the page size used by the [`Stream`] returned in [`EventStore::stream`]
-    /// and [`EventStore::stream_all`].
+    /// Changes the page size used by the [`Stream`] returned in
+    /// [`EventStore::stream`] and [`EventStore::stream_all`].
     ///
     /// [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
     /// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream
