@@ -186,7 +186,7 @@ pub mod aggregate {
     //!         id: &'a Self::Id,
     //!         state: &'a Self::State,
     //!         command: Self::Command,
-    //!     ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
+    //!     ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
     //!     where
     //!         Self: Sized,
     //!     {

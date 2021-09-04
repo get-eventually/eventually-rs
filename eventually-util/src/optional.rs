@@ -50,7 +50,7 @@ pub trait Aggregate {
         &'a self,
         id: &'a Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
     where
         Self: Sized;
 
@@ -61,7 +61,7 @@ pub trait Aggregate {
         id: &'a Self::Id,
         state: &'a Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
     where
         Self: Sized;
 
@@ -130,13 +130,13 @@ where
         id: &'a Self::Id,
         state: &'a Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
     where
         Self: Sized,
     {
-        Box::pin(match state {
+        match state {
             None => self.0.handle_first(id, command),
             Some(state) => self.0.handle_next(id, state, command),
-        })
+        }
     }
 }

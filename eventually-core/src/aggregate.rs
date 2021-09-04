@@ -61,7 +61,7 @@ pub trait Aggregate {
         id: &'a Self::Id,
         state: &'a Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
+    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
     where
         Self: Sized;
 }
@@ -244,23 +244,21 @@ where
         tracing::instrument(level = "debug", name = "AggregateRoot::handle", skip(self))
     )]
     pub async fn handle(&mut self, command: T::Command) -> Result<&mut Self, T::Error> {
-        let events = self
+        let mut events = self
             .aggregate
             .handle(self.id(), self.state(), command)
             .await?;
 
         // Only apply new events if the command handling actually
         // produced new ones.
-        if let Some(mut events) = events {
-            self.state = T::fold(self.state.clone(), events.clone().into_iter())?;
-            self.to_commit = Some(match self.to_commit.take() {
-                None => events,
-                Some(mut list) => {
-                    list.append(&mut events);
-                    list
-                }
-            });
-        }
+        self.state = T::fold(self.state.clone(), events.clone().into_iter())?;
+        self.to_commit = Some(match self.to_commit.take() {
+            None => events,
+            Some(mut list) => {
+                list.append(&mut events);
+                list
+            }
+        });
 
         Ok(self)
     }
