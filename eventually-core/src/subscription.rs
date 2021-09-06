@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use futures::future::{ok, BoxFuture, FutureExt};
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
+use futures::TryFutureExt;
 
 use crate::store::{EventStore, Persisted, Select};
 
@@ -116,7 +117,7 @@ pub trait Subscription {
     /// `Subscription`.
     ///
     /// [`EventStream`]: type.EventStream.html
-    fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>>;
+    fn resume(&self) -> SubscriptionStream<Self>;
 
     /// Saves the provided version (or sequence number) as the latest
     /// version processed.
@@ -200,8 +201,8 @@ where
     type Event = Store::Event;
     type Error = Error;
 
-    fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
-        Box::pin(async move {
+    fn resume(&self) -> SubscriptionStream<Self> {
+        let fut = async move {
             // Create the Subscription first, so that once the future has been resolved
             // we'll start receiving events right away.
             //
@@ -253,7 +254,9 @@ where
                 .boxed();
 
             Ok(stream)
-        })
+        };
+
+        fut.try_flatten_stream().boxed()
     }
 
     fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {

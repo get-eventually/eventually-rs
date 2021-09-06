@@ -6,6 +6,7 @@ use eventually::subscription::{Subscription, SubscriptionStream};
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
+use futures::TryFutureExt;
 
 use redis::streams::StreamKey;
 use redis::{AsyncCommands, RedisError, RedisResult};
@@ -98,7 +99,7 @@ where
     type Event = Event;
     type Error = SubscriptionError;
 
-    fn resume(&self) -> BoxFuture<SubscriptionResult<SubscriptionStream<Self>>> {
+    fn resume(&self) -> SubscriptionStream<Self> {
         let fut = async move {
             let keys_stream = stream::into_xread_stream(
                 self.conn.clone(),
@@ -120,7 +121,7 @@ where
                 .boxed())
         };
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
     fn checkpoint(&self, version: u32) -> BoxFuture<SubscriptionResult<()>> {

@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
+use futures::TryFutureExt;
 
 use serde::{Deserialize, Serialize};
 
@@ -159,7 +160,7 @@ where
     type Event = Event;
     type Error = Error;
 
-    fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
+    fn resume(&self) -> SubscriptionStream<Self> {
         let fut = async move {
             let last_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
 
@@ -225,7 +226,7 @@ where
             Ok(stream)
         };
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
     fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
