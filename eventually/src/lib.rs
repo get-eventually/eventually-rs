@@ -181,12 +181,12 @@ pub mod aggregate {
     //!         unimplemented!()
     //!     }
     //!
-    //!     fn handle<'a>(
-    //!         &'a self,
-    //!         id: &'a Self::Id,
-    //!         state: &'a Self::State,
+    //!     fn handle(
+    //!         &self,
+    //!         id: &Self::Id,
+    //!         state: &Self::State,
     //!         command: Self::Command,
-    //!     ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>
+    //!     ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>
     //!     {
     //!         unimplemented!()
     //!     }

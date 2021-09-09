@@ -46,20 +46,20 @@ pub trait Aggregate {
 
     /// Handles the specified [`Command`](Aggregate::Command)when the
     /// [`State`](Aggregate::State) is empty.
-    fn handle_first<'a>(
-        &'a self,
-        id: &'a Self::Id,
+    fn handle_first(
+        &self,
+        id: &Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>;
+    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>;
 
     /// Handles the specified [`Command`](Aggregate::Command) on a pre-existing
     /// [`State`](Aggregate::State) value.
-    fn handle_next<'a>(
-        &'a self,
-        id: &'a Self::Id,
-        state: &'a Self::State,
+    fn handle_next(
+        &self,
+        id: &Self::Id,
+        state: &Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>>;
+    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>;
 
     /// Translates the current [`optional::Aggregate`](Aggregate) instance into
     /// a _newtype instance_ compatible with the core
@@ -121,12 +121,12 @@ where
         }
     }
 
-    fn handle<'a>(
-        &'a self,
-        id: &'a Self::Id,
-        state: &'a Self::State,
+    fn handle(
+        &self,
+        id: &Self::Id,
+        state: &Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Vec<Self::Event>, Self::Error>> {
+    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>> {
         match state {
             None => self.0.handle_first(id, command),
             Some(state) => self.0.handle_next(id, state, command),
