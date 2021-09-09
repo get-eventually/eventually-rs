@@ -4,7 +4,7 @@
 use std::fmt::Debug;
 use std::ops::Deref;
 
-use futures::future::BoxFuture;
+use async_trait::async_trait;
 
 #[cfg(feature = "serde")]
 use serde::Serialize;
@@ -20,6 +20,7 @@ pub type AggregateId<A> = <A as Aggregate>::Id;
 /// It allows **state mutations** through the use of
 /// [`Command`](Aggregate::Command)s, which the Aggregate instance handles and
 /// emits a number of Domain [`Event`](Aggregate::Event)s.
+#[async_trait]
 pub trait Aggregate {
     /// Aggregate identifier: this should represent an unique identifier to
     /// refer to a unique Aggregate instance.
@@ -56,12 +57,12 @@ pub trait Aggregate {
     /// of [`Event`](Aggregate::Event)s to apply the
     /// [`State`](Aggregate::State) mutation based on the current representation
     /// of the State.
-    fn handle(
+    async fn handle(
         &self,
         id: &Self::Id,
         state: &Self::State,
         command: Self::Command,
-    ) -> BoxFuture<Result<Vec<Self::Event>, Self::Error>>;
+    ) -> Result<Vec<Self::Event>, Self::Error>;
 }
 
 /// Extension trait with some handy methods to use with [`Aggregate`]s.
