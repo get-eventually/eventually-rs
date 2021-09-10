@@ -209,8 +209,7 @@ where
                     }
 
                     Ok(Some(event))
-                })
-                .boxed();
+                });
 
             Ok(stream)
         };
