@@ -66,7 +66,7 @@ pub trait Aggregate {
     /// a _newtype instance_ compatible with the core
     /// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
     #[inline]
-    fn as_aggregate(self) -> AsAggregate<Self>
+    fn into_aggregate(self) -> AsAggregate<Self>
     where
         Self: Sized,
     {
