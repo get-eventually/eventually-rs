@@ -7,7 +7,8 @@ use std::error::Error as StdError;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
-use futures::future::{ok, BoxFuture, FutureExt};
+use async_trait::async_trait;
+use futures::future::BoxFuture;
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use futures::TryFutureExt;
 
@@ -75,6 +76,7 @@ pub type SubscriptionStream<'a, S> = BoxStream<
 /// keeps a record of the latest message processed by itself using
 /// [`Subscription::checkpoint`], and can resume working from such message by using the
 /// [`Subscription::resume`].
+#[async_trait]
 pub trait Subscription {
     /// Type of the Source id, typically an [`AggregateId`](super::aggregate::AggregateId).
     type SourceId: Eq;
@@ -97,7 +99,7 @@ pub trait Subscription {
 
     /// Saves the provided version (or sequence number) as the latest
     /// version processed.
-    fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>>;
+    async fn checkpoint(&self, version: u32) -> Result<(), Self::Error>;
 }
 
 /// Error type returned by a [`Transient`] Subscription.
@@ -143,6 +145,7 @@ impl<Store, Subscriber> Transient<Store, Subscriber> {
     }
 }
 
+#[async_trait]
 impl<Store, Subscriber> Subscription for Transient<Store, Subscriber>
 where
     Store: EventStore + Send + Sync,
@@ -217,9 +220,9 @@ where
         fut.try_flatten_stream().boxed()
     }
 
-    fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
+    async fn checkpoint(&self, version: u32) -> Result<(), Self::Error> {
         // Checkpointing happens in memory on the atomic sequence number checkpoint.
         self.last_sequence_number.store(version, Ordering::Relaxed);
-        ok(()).boxed()
+        Ok(())
     }
 }

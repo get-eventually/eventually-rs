@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use eventually::store::Persisted;
 use eventually::subscription::{Subscription, SubscriptionStream};
 
-use futures::future::BoxFuture;
+use async_trait::async_trait;
 use futures::stream::{StreamExt, TryStreamExt};
 use futures::TryFutureExt;
 
@@ -88,6 +88,7 @@ impl<Id, Event> PersistentSubscription<Id, Event> {
     }
 }
 
+#[async_trait]
 impl<Id, Event> Subscription for PersistentSubscription<Id, Event>
 where
     Id: TryFrom<String> + Debug + Eq + Clone + Send + Sync,
@@ -117,30 +118,25 @@ where
                 .and_then(|entry| async move {
                     Persisted::<Id, Event>::try_from(stream::ToPersisted::from(entry))
                         .map_err(SubscriptionError::DecodeEvents)
-                })
-                .boxed())
+                }))
         };
 
         fut.try_flatten_stream().boxed()
     }
 
-    fn checkpoint(&self, version: u32) -> BoxFuture<SubscriptionResult<()>> {
-        let fut = async move {
-            let mut conn = self.conn.clone();
-            let stream_version = format!("{}-1", version);
+    async fn checkpoint(&self, version: u32) -> SubscriptionResult<()> {
+        let mut conn = self.conn.clone();
+        let stream_version = format!("{}-1", version);
 
-            let ok: bool = conn
-                .xack(self.stream, self.group_name, &[&stream_version])
-                .await
-                .map_err(|e| SubscriptionError::CheckpointFromRedis(version, e))?;
+        let ok: bool = conn
+            .xack(self.stream, self.group_name, &[&stream_version])
+            .await
+            .map_err(|e| SubscriptionError::CheckpointFromRedis(version, e))?;
 
-            if !ok {
-                return Err(SubscriptionError::Checkpoint(version));
-            }
+        if !ok {
+            return Err(SubscriptionError::Checkpoint(version));
+        }
 
-            Ok(())
-        };
-
-        Box::pin(fut)
+        Ok(())
     }
 }
