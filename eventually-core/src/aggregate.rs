@@ -51,7 +51,7 @@ pub trait Aggregate {
     /// [`State`](Aggregate::State) and the current
     /// [`Event`](Aggregate::Event) to apply, and returns the new version of the
     /// [`State`](Aggregate::State) or an error.
-    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
+    fn apply(state: Self::State, event: &Self::Event) -> Result<Self::State, Self::Error>;
 
     /// Handles the requested [`Command`](Aggregate::Command) and returns a list
     /// of [`Event`](Aggregate::Event)s to apply the
@@ -73,9 +73,10 @@ pub trait AggregateExt: Aggregate {
     /// Useful to recreate the [`State`](Aggregate::State) of an Aggregate when
     /// the [`Event`](Aggregate::Event)s are located in-memory.
     #[inline]
-    fn fold<I>(state: Self::State, mut events: I) -> Result<Self::State, Self::Error>
+    fn fold<'a, I>(state: Self::State, mut events: I) -> Result<Self::State, Self::Error>
     where
-        I: Iterator<Item = Self::Event>,
+        Self: 'a,
+        I: Iterator<Item = &'a Self::Event> + 'a,
     {
         events.try_fold(state, Self::apply)
     }
@@ -250,7 +251,7 @@ where
 
         // Only apply new events if the command handling actually
         // produced new ones.
-        self.state = T::fold(self.state.clone(), events.clone().into_iter())?;
+        self.state = T::fold(self.state.clone(), events.iter())?;
         self.to_commit = Some(match self.to_commit.take() {
             None => events,
             Some(mut list) => {

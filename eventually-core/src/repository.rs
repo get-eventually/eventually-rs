@@ -115,7 +115,7 @@ where
                 |(version, state), event| async move {
                     // Always consider the max version number for the next version.
                     let new_version = std::cmp::max(event.version(), version);
-                    let state = T::apply(state, event.take()).map_err(Error::Aggregate)?;
+                    let state = T::apply(state, &event).map_err(Error::Aggregate)?;
 
                     Ok((new_version, state))
                 },

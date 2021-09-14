@@ -39,11 +39,11 @@ pub trait Aggregate {
 
     /// Applies the specified [`Event`](Aggregate::Event) when the
     /// [`State`](Aggregate::State) is empty.
-    fn apply_first(event: Self::Event) -> Result<Self::State, Self::Error>;
+    fn apply_first(event: &Self::Event) -> Result<Self::State, Self::Error>;
 
     /// Applies the specified [`Event`](Aggregate::Event) on a pre-existing
     /// [`State`](Aggregate::State) value.
-    fn apply_next(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error>;
+    fn apply_next(state: Self::State, event: &Self::Event) -> Result<Self::State, Self::Error>;
 
     /// Handles the specified [`Command`](Aggregate::Command)when the
     /// [`State`](Aggregate::State) is empty.
@@ -116,7 +116,7 @@ where
     type Error = A::Error;
 
     #[inline]
-    fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+    fn apply(state: Self::State, event: &Self::Event) -> Result<Self::State, Self::Error> {
         match state {
             None => A::apply_first(event).map(Some),
             Some(state) => A::apply_next(state, event).map(Some),
