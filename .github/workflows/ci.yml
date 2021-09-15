@@ -41,12 +41,12 @@ jobs:
           command: test
           args: --workspace --all-features
 
-  lint:
-    name: Lint
+  formatting:
+    name: Rustfmt Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
 
       - name: Install nightly toolchain
         uses: actions-rs/toolchain@v1
@@ -54,13 +54,28 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-          components: rustfmt, clippy
+          components: rustfmt
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
+
+  lint:
+    name: Clippy Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: clippy
 
       - name: Run cargo clippy
         uses: actions-rs/clippy-check@v1
