@@ -7,20 +7,10 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [msrv, stable, nightly]
-        include:
-          - build: msrv
-            os: ubuntu-latest
-            rust: 1.46
-          - build: stable
-            os: ubuntu-latest
-            rust: stable
-          - build: nightly
-            os: ubuntu-latest
-            rust: nightly
+        toolchain: [1.46, stable, nightly]
 
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +18,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust }}
+          toolchain: ${{ matrix.toolchain }}
           override: true
 
       - uses: actions-rs/cargo@v1
