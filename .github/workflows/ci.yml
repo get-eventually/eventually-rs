@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [msrv, stable, beta, nightly, macos, windows]
+        build: [msrv, stable, beta, nightly, windows]
         include:
           - build: msrv
             os: ubuntu-latest
@@ -25,9 +25,6 @@ jobs:
           - build: nightly
             os: ubuntu-latest
             rust: nightly
-          - build: macos
-            os: macos-latest
-            rust: stable
           - build: windows
             os: windows-latest
             rust: stable
