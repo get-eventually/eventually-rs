@@ -18,7 +18,7 @@ use eventually_core::subscription::EventStream;
 
 use serde::Deserialize;
 
-use tokio::sync::broadcast::{channel, Receiver, Sender};
+use tokio::sync::broadcast::{channel, Sender};
 use tokio_stream::wrappers::BroadcastStream;
 
 use tokio_postgres::AsyncMessage;
@@ -54,10 +54,6 @@ pub enum SubscriberError {
 #[derive(Clone)]
 pub struct EventSubscriber<Id, Event> {
     tx: Sender<Result<Persisted<Id, Event>>>,
-    // NOTE(ar3s3ru): this value is required to avoid dropping the
-    // original receiver returned by `channel()`, which would make the
-    // send operation fail if no subscribers are present.
-    rx: Arc<Receiver<Result<Persisted<Id, Event>>>>,
 }
 
 impl<Id, Event> EventSubscriber<Id, Event>
@@ -85,7 +81,7 @@ where
         let client = Arc::new(client);
         let client_captured = client.clone();
 
-        let (tx, rx) = channel(DEFAULT_BROADCAST_CHANNEL_SIZE);
+        let (tx, _rx) = channel(DEFAULT_BROADCAST_CHANNEL_SIZE);
         let tx_captured = tx.clone();
 
         let mut stream = futures::stream::poll_fn(move |cx| connection.poll_message(cx));
@@ -124,10 +120,7 @@ where
             .batch_execute(&("LISTEN ".to_owned() + type_name + ";"))
             .await?;
 
-        Ok(Self {
-            tx,
-            rx: Arc::new(rx),
-        })
+        Ok(Self { tx })
     }
 }
 

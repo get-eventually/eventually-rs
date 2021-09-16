@@ -17,7 +17,7 @@ use futures::stream::{empty, iter, StreamExt, TryStreamExt};
 
 use parking_lot::RwLock;
 
-use tokio::sync::broadcast::{channel, Receiver, Sender};
+use tokio::sync::broadcast::{channel, Sender};
 use tokio_stream::wrappers::{errors::BroadcastStreamRecvError, BroadcastStream};
 
 #[cfg(feature = "with-tracing")]
@@ -75,10 +75,6 @@ where
 {
     global_offset: Arc<AtomicU32>,
     tx: Sender<Persisted<Id, Event>>,
-    // NOTE(ar3s3ru): this value is required to avoid dropping the
-    // original receiver returned by `channel()`, which would make the
-    // send operation fail if no subscribers are present.
-    rx: Arc<Receiver<Persisted<Id, Event>>>,
     backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
 }
 
@@ -95,11 +91,10 @@ where
     pub fn new(subscribe_capacity: usize) -> Self {
         // Use this broadcast channel to send append events to
         // subscriptions from .subscribe_all()
-        let (tx, rx) = channel(subscribe_capacity);
+        let (tx, _rx) = channel(subscribe_capacity);
 
         Self {
             tx,
-            rx: Arc::new(rx),
             global_offset: Arc::new(AtomicU32::new(0)),
             backend: Arc::new(RwLock::new(HashMap::new())),
         }
