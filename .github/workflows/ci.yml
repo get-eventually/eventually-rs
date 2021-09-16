@@ -10,8 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [1.46, stable, nightly]
-
+        build: [msrv, stable, nightly]
+        include:
+          - build: msrv
+            toolchain: 1.46
+          - build: stable
+            toolchain: stable
+          - build: nightly
+            toolchain: nightly
     steps:
       - uses: actions/checkout@v2
 
