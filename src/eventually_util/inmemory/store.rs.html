@@ -709,11 +709,6 @@
 <span id="709">709</span>
 <span id="710">710</span>
 <span id="711">711</span>
-<span id="712">712</span>
-<span id="713">713</span>
-<span id="714">714</span>
-<span id="715">715</span>
-<span id="716">716</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains supporting entities using an in-memory backend.</span>
 
@@ -734,7 +729,7 @@
 
 <span class="kw">use</span> <span class="ident">parking_lot::RwLock</span>;
 
-<span class="kw">use</span> <span class="ident">tokio::sync::broadcast</span>::{<span class="ident">channel</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>};
+<span class="kw">use</span> <span class="ident">tokio::sync::broadcast</span>::{<span class="ident">channel</span>, <span class="ident">Sender</span>};
 <span class="kw">use</span> <span class="ident">tokio_stream::wrappers</span>::{<span class="ident">errors::BroadcastStreamRecvError</span>, <span class="ident">BroadcastStream</span>};
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;with-tracing&quot;</span>)]</span>
@@ -792,10 +787,6 @@
 {
     <span class="ident">global_offset</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicU32</span><span class="op">&gt;</span>,
     <span class="ident">tx</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="comment">// NOTE(ar3s3ru): this value is required to avoid dropping the</span>
-    <span class="comment">// original receiver returned by `channel()`, which would make the</span>
-    <span class="comment">// send operation fail if no subscribers are present.</span>
-    <span class="ident">rx</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">backend</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
@@ -812,11 +803,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">subscribe_capacity</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="comment">// Use this broadcast channel to send append events to</span>
         <span class="comment">// subscriptions from .subscribe_all()</span>
-        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">channel</span>(<span class="ident">subscribe_capacity</span>);
+        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">channel</span>(<span class="ident">subscribe_capacity</span>);
 
         <span class="self">Self</span> {
             <span class="ident">tx</span>,
-            <span class="ident">rx</span>: <span class="ident">Arc::new</span>(<span class="ident">rx</span>),
             <span class="ident">global_offset</span>: <span class="ident">Arc::new</span>(<span class="ident">AtomicU32::new</span>(<span class="number">0</span>)),
             <span class="ident">backend</span>: <span class="ident">Arc::new</span>(<span class="ident">RwLock::new</span>(<span class="ident">HashMap::new</span>())),
         }
