@@ -50,10 +50,7 @@ async fn subscribe_all_works() {
         .await
         .expect("failed to create event subscription");
 
-    let mut subscription = event_subscriber
-        .subscribe_all()
-        .await
-        .expect("failed to create subscription from event subscriber");
+    let mut subscription = event_subscriber.subscribe_all();
 
     event_store
         .append(

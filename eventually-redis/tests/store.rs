@@ -39,8 +39,6 @@ async fn it_works() {
         builder_clone
             .build_subscriber::<String, Event>()
             .subscribe_all()
-            .await
-            .unwrap()
             .try_for_each(|_event| async { Ok(()) })
             .await
             .unwrap();

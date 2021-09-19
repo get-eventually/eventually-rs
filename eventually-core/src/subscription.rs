@@ -71,7 +71,7 @@ pub trait EventSubscriber {
     ///
     /// [`EventStore`]: ../store/trait.EventStore.html
     /// [`EventStream`]: type.EventStream.html
-    fn subscribe_all(&self) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
+    fn subscribe_all(&self) -> EventStream<Self>;
 }
 
 /// Stream of events returned by the [`Subscription::resume`] method.
@@ -212,12 +212,7 @@ where
             // and the subscription stream. Luckily, we can discard those by
             // keeping an internal state of the last processed sequence number,
             // and discard all those events that are found.
-            let subscription = self
-                .subscriber
-                .subscribe_all()
-                .await
-                .map_err(anyhow::Error::from)
-                .map_err(Error::Store)?;
+            let subscription = self.subscriber.subscribe_all();
 
             let one_off_stream = self
                 .store
