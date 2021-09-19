@@ -179,7 +179,7 @@ pub mod aggregate {
     //!     type Command = OrderCommand;
     //!     type Error = std::convert::Infallible; // This should be a meaningful error.
     //!
-    //!     fn apply(state: Self::State, event: Self::Event) -> Result<Self::State, Self::Error> {
+    //!     fn apply(state: Self::State, event: &Self::Event) -> Result<Self::State, Self::Error> {
     //!         unimplemented!()
     //!     }
     //!
