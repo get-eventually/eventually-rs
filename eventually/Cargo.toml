@@ -26,5 +26,6 @@ eventually-util = { version = "0.4.0", path = "../eventually-util" }
 eventually-postgres = { version = "0.3.0", path = "../eventually-postgres", optional = true }
 
 [dev-dependencies]
+async-trait = "0.1.51"
 futures = { version = "0.3", features = ["async-await"] }
 tokio-test = "0.4.2"

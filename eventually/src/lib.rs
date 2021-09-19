@@ -113,6 +113,7 @@ pub mod aggregate {
     //! ```rust
     //! use eventually::Aggregate;
     //! use futures::future::BoxFuture;
+    //! use async_trait::async_trait;
     //!
     //! // This is the state of our Order, which contains one or more items,
     //! // and whether it has been placed or not.
@@ -137,7 +138,7 @@ pub mod aggregate {
     //! //
     //! // We're going to use this trait in the Aggregate implementation,
     //! // when handling events to add OrderItems.
-    //! trait OrderItemsCatalog {
+    //! trait OrderItemsCatalog: Send + Sync {
     //!     fn get_item(&self, sku: String) -> BoxFuture<OrderItem>;
     //! }
     //!
@@ -170,6 +171,7 @@ pub mod aggregate {
     //! }
     //!
     //! // Implementation for the Aggregate trait.
+    //! #[async_trait]
     //! impl Aggregate for OrderAggregate {
     //!     type Id = u64;
     //!     type State = OrderState;
@@ -181,14 +183,12 @@ pub mod aggregate {
     //!         unimplemented!()
     //!     }
     //!
-    //!     fn handle<'a, 's: 'a>(
-    //!         &'a self,
-    //!         id: &'s Self::Id,
-    //!         state: &'s Self::State,
+    //!     async fn handle(
+    //!         &self,
+    //!         id: &Self::Id,
+    //!         state: &Self::State,
     //!         command: Self::Command,
-    //!     ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
-    //!     where
-    //!         Self: Sized,
+    //!     ) -> Result<Vec<Self::Event>, Self::Error>
     //!     {
     //!         unimplemented!()
     //!     }
