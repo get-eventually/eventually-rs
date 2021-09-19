@@ -115,7 +115,6 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
-<span id="118">118</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
@@ -123,8 +122,8 @@
 <span class="kw">use</span> <span class="ident">eventually::store::Persisted</span>;
 <span class="kw">use</span> <span class="ident">eventually::subscription::EventStream</span> <span class="kw">as</span> <span class="ident">SubscriberEventStream</span>;
 
-<span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
 <span class="kw">use</span> <span class="ident">futures::stream</span>::{<span class="ident">StreamExt</span>, <span class="ident">TryStreamExt</span>};
+<span class="kw">use</span> <span class="ident">futures::TryFutureExt</span>;
 
 <span class="kw">use</span> <span class="ident">redis::RedisError</span>;
 
@@ -191,7 +190,7 @@
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SubscriberError</span>;
 
-    <span class="kw">fn</span> <span class="ident">subscribe_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">SubscriberResult</span><span class="op">&lt;</span><span class="ident">SubscriberEventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">subscribe_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SubscriberEventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
         <span class="kw">struct</span> <span class="ident">SubscribeMessage</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span> {
             <span class="ident">source_id</span>: <span class="ident">String</span>,
@@ -228,11 +227,10 @@
                     <span class="prelude-val">Ok</span>(<span class="ident">Persisted::from</span>(<span class="ident">source_id</span>, <span class="ident">msg</span>.<span class="ident">event</span>)
                         .<span class="ident">sequence_number</span>(<span class="ident">msg</span>.<span class="ident">sequence_number</span>)
                         .<span class="ident">version</span>(<span class="ident">msg</span>.<span class="ident">version</span>))
-                })
-                .<span class="ident">boxed</span>())
+                }))
         };
 
-        <span class="ident">Box::pin</span>(<span class="ident">fut</span>)
+        <span class="ident">fut</span>.<span class="ident">try_flatten_stream</span>().<span class="ident">boxed</span>()
     }
 }
 </pre></div>

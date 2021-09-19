@@ -254,10 +254,6 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains a persisted implementation of the [`Subscription`] trait</span>
 <span class="doccomment">//! using Postgres as the backend data source for its state.</span>
@@ -452,11 +448,7 @@
             <span class="comment">// and the subscription stream. Luckily, we can discard those by</span>
             <span class="comment">// keeping an internal state of the last processed sequence number,</span>
             <span class="comment">// and discard all those events that are found.</span>
-            <span class="kw">let</span> <span class="ident">subscription</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">subscriber</span>
-                .<span class="ident">subscribe_all</span>()
-                .<span class="kw">await</span>
-                .<span class="ident">map_err</span>(<span class="ident">Error::Subscriber</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">subscription</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">subscriber</span>.<span class="ident">subscribe_all</span>();
 
             <span class="kw">let</span> <span class="ident">one_off_stream</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">store</span>

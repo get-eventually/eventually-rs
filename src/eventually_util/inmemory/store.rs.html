@@ -704,11 +704,6 @@
 <span id="704">704</span>
 <span id="705">705</span>
 <span id="706">706</span>
-<span id="707">707</span>
-<span id="708">708</span>
-<span id="709">709</span>
-<span id="710">710</span>
-<span id="711">711</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains supporting entities using an in-memory backend.</span>
 
@@ -833,23 +828,18 @@
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">LaggedError</span>;
 
-    <span class="kw">fn</span> <span class="ident">subscribe_all</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">eventually_core::subscription::EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">subscribe_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">eventually_core::subscription::EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// Create a new Receiver from the store Sender.</span>
         <span class="comment">//</span>
         <span class="comment">// This receiver implements the TryStream trait, which works perfectly</span>
         <span class="comment">// with the definition of the EventStream.</span>
         <span class="kw">let</span> <span class="ident">rx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx</span>.<span class="ident">subscribe</span>();
 
-        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">BroadcastStream::new</span>(<span class="ident">rx</span>);
-            <span class="prelude-val">Ok</span>(<span class="ident">stream</span>
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">v</span> {
-                    <span class="ident">BroadcastStreamRecvError::Lagged</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LaggedError</span>(<span class="ident">n</span>),
-                })
-                .<span class="ident">boxed</span>())
-        })
+        <span class="ident">BroadcastStream::new</span>(<span class="ident">rx</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">v</span> {
+                <span class="ident">BroadcastStreamRecvError::Lagged</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LaggedError</span>(<span class="ident">n</span>),
+            })
+            .<span class="ident">boxed</span>()
     }
 }
 
@@ -1075,7 +1065,7 @@
 
         <span class="comment">// First subscription.</span>
         <span class="kw">let</span> <span class="ident">join_handle_1</span> <span class="op">=</span> <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">store_1</span>.<span class="ident">subscribe_all</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">enumerate</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">store_1</span>.<span class="ident">subscribe_all</span>().<span class="ident">enumerate</span>();
             <span class="ident">barrier_1</span>.<span class="ident">wait</span>().<span class="kw">await</span>;
 
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">res</span>)) <span class="op">=</span> <span class="ident">events</span>.<span class="ident">next</span>().<span class="kw">await</span> {
@@ -1145,7 +1135,7 @@
         <span class="comment">// Second subscriber, it will only see events of the second batch,</span>
         <span class="comment">// which is when it started listening to events.</span>
         <span class="kw">let</span> <span class="ident">join_handle_2</span> <span class="op">=</span> <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">store_2</span>.<span class="ident">subscribe_all</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">enumerate</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">store_2</span>.<span class="ident">subscribe_all</span>().<span class="ident">enumerate</span>();
             <span class="ident">barrier_2</span>.<span class="ident">wait</span>().<span class="kw">await</span>;
 
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">res</span>)) <span class="op">=</span> <span class="ident">events</span>.<span class="ident">next</span>().<span class="kw">await</span> {
