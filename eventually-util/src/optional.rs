@@ -3,13 +3,14 @@
 //!
 //! Check out [`optional::Aggregate`](Aggregate) for more information.
 
-use futures::future::BoxFuture;
+use async_trait::async_trait;
 
 /// An [`Option`]-flavoured, [`Aggregate`]-compatible trait
 /// to model Aggregates having an optional [`State`](Aggregate::State).
 ///
 /// Use [`as_aggregate`](Aggregate::as_aggregate) to get an
 /// [`Aggregate`]-compatible instance of this trait.
+#[async_trait]
 pub trait Aggregate {
     /// Identifier type of the Aggregate.
     ///
@@ -46,24 +47,20 @@ pub trait Aggregate {
 
     /// Handles the specified [`Command`](Aggregate::Command)when the
     /// [`State`](Aggregate::State) is empty.
-    fn handle_first<'s, 'a: 's>(
-        &'s self,
-        id: &'a Self::Id,
+    async fn handle_first(
+        &self,
+        id: &Self::Id,
         command: Self::Command,
-    ) -> BoxFuture<'s, Result<Option<Vec<Self::Event>>, Self::Error>>
-    where
-        Self: Sized;
+    ) -> Result<Vec<Self::Event>, Self::Error>;
 
     /// Handles the specified [`Command`](Aggregate::Command) on a pre-existing
     /// [`State`](Aggregate::State) value.
-    fn handle_next<'a, 's: 'a>(
-        &'a self,
-        id: &'a Self::Id,
-        state: &'s Self::State,
+    async fn handle_next(
+        &self,
+        id: &Self::Id,
+        state: &Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
-    where
-        Self: Sized;
+    ) -> Result<Vec<Self::Event>, Self::Error>;
 
     /// Translates the current [`optional::Aggregate`](Aggregate) instance into
     /// a _newtype instance_ compatible with the core
@@ -103,6 +100,7 @@ impl<A> From<A> for AsAggregate<A> {
     }
 }
 
+#[async_trait]
 impl<A> eventually_core::aggregate::Aggregate for AsAggregate<A>
 where
     A: Aggregate,
@@ -125,18 +123,15 @@ where
         }
     }
 
-    fn handle<'a, 's: 'a>(
-        &'a self,
-        id: &'s Self::Id,
-        state: &'s Self::State,
+    async fn handle(
+        &self,
+        id: &Self::Id,
+        state: &Self::State,
         command: Self::Command,
-    ) -> BoxFuture<'a, Result<Option<Vec<Self::Event>>, Self::Error>>
-    where
-        Self: Sized,
-    {
-        Box::pin(match state {
-            None => self.0.handle_first(id, command),
-            Some(state) => self.0.handle_next(id, state, command),
-        })
+    ) -> Result<Vec<Self::Event>, Self::Error> {
+        match state {
+            None => self.0.handle_first(id, command).await,
+            Some(state) => self.0.handle_next(id, state, command).await,
+        }
     }
 }
