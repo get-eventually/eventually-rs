@@ -21,9 +21,9 @@
         src="https://img.shields.io/github/workflow/status/eventually-rs/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
     <!-- Codecov -->
-    <a href="https://codecov.io/gh/eventually-rs/eventually-rs">
+    <a href="https://codecov.io/gh/get-eventuallyeventually-rs">
             <img alt="Codecov"
-            src="https://img.shields.io/codecov/c/github/eventually-rs/eventually-rs?style=flat-square">
+            src="https://img.shields.io/codecov/c/github/get-eventually/eventually-rs?style=flat-square">
     </a>
     <!-- Crates.io -->
     <a href="https://crates.io/crates/eventually">
