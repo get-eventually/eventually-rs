@@ -57,6 +57,8 @@
 
 Collection of traits and other utilities to help you build your Event-sourced applications in Rust.
 
+> :warning: **version 0.5.0 is under active develoment**: Breaking changes are expected. If you are using `Eventually` as a git dependency you should use a pinned version.
+
 ## What is Event Sourcing?
 
 Before diving into the crate's internals, you may be wondering what Event Sourcing is.
