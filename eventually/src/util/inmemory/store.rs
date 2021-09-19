@@ -12,8 +12,10 @@ use crate::store::{AppendError, EventStream, Expected, Persisted, Select};
 use crate::subscription::EventSubscriber;
 use crate::versioning::Versioned;
 
-use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt, TryStreamExt};
+use futures::TryFutureExt;
+
+use async_trait::async_trait;
 
 use parking_lot::RwLock;
 
@@ -138,6 +140,7 @@ where
     }
 }
 
+#[async_trait]
 impl<Id, Event> crate::store::EventStore for EventStore<Id, Event>
 where
     Id: Hash + Eq + Sync + Send + Debug + Clone,
@@ -147,88 +150,66 @@ where
     type Event = Event;
     type Error = ConflictError;
 
-    fn append(
+    async fn append(
         &mut self,
         id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<u32, Self::Error>> {
-        #[cfg(feature = "with-tracing")]
-        let span = tracing::info_span!(
-            "EventStore::append",
-            id = ?id,
-            version = ?version,
-            events = ?events
-        );
+    ) -> Result<u32, Self::Error> {
+        let expected = self
+            .backend
+            .read()
+            .get(&id)
+            .and_then(|events| events.last())
+            .map(|event| event.version())
+            .unwrap_or(0);
 
-        let fut = async move {
-            let expected = self
-                .backend
-                .read()
-                .get(&id)
-                .and_then(|events| events.last())
-                .map_or(0, Versioned::version);
-
-            if let Expected::Exact(actual) = version {
-                if expected != actual {
-                    return Err(ConflictError { expected, actual });
-                }
+        if let Expected::Exact(actual) = version {
+            if expected != actual {
+                return Err(ConflictError { expected, actual });
             }
+        }
 
-            let mut persisted_events: Vec<Persisted<Id, Event>> =
-                into_persisted_events(expected, id.clone(), events)
-                    .into_iter()
-                    .map(|event| {
-                        let offset = self.global_offset.fetch_add(1, Ordering::SeqCst);
-                        event.sequence_number(offset)
-                    })
-                    .collect();
+        let mut persisted_events: Vec<Persisted<Id, Event>> =
+            into_persisted_events(expected, id.clone(), events)
+                .into_iter()
+                .map(|event| {
+                    let offset = self.global_offset.fetch_add(1, Ordering::SeqCst);
+                    event.sequence_number(offset)
+                })
+                .collect();
 
-            // Copy of the events for broadcasting.
-            let broadcast_copy = persisted_events.clone();
+        // Copy of the events for broadcasting.
+        let broadcast_copy = persisted_events.clone();
 
-            let last_version = persisted_events.last().map_or(expected, Persisted::version);
+        let last_version = persisted_events
+            .last()
+            .map(Persisted::version)
+            .unwrap_or(expected);
 
-            self.backend
-                .write()
-                .entry(id)
-                .and_modify(|events| events.append(&mut persisted_events))
-                .or_insert_with(|| persisted_events);
+        self.backend
+            .write()
+            .entry(id)
+            .and_modify(|events| events.append(&mut persisted_events))
+            .or_insert_with(|| persisted_events);
 
-            // From tokio documentation, the send() operation can only
-            // fail if there are no active receivers to listen to these events.
-            //
-            // From our perspective, this is not an issue, since appends
-            // might be done without any active subscription.
-            #[allow(unused_must_use)]
-            {
-                // Broadcast events into the store's Sender channel.
-                for event in broadcast_copy {
-                    self.tx.send(event);
-                }
-            }
+        // From tokio documentation, the send() operation can only
+        // fail if there are no active receivers to listen to these events.
+        //
+        // From our perspective, this is not an issue, since appends
+        // might be done without any active subscription.
+        #[allow(unused_must_use)]
+        {
+            // Broadcast events into the store's Sender channel.
+            broadcast_copy.into_iter().for_each(|event| {
+                self.tx.send(event);
+            });
+        }
 
-            Ok(last_version)
-        };
-
-        #[cfg(feature = "with-tracing")]
-        let fut = fut.instrument(span);
-
-        Box::pin(fut)
+        Ok(last_version)
     }
 
-    fn stream(
-        &self,
-        id: Self::SourceId,
-        select: Select,
-    ) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
-        #[cfg(feature = "with-tracing")]
-        let span = tracing::info_span!(
-            "EventStore::stream",
-            id = ?id,
-            select = ?select
-        );
-
+    fn stream(&self, id: Self::SourceId, select: Select) -> EventStream<Self> {
         let fut = async move {
             Ok(self
                 .backend
@@ -248,19 +229,10 @@ where
                 .unwrap_or_else(|| empty().boxed()))
         };
 
-        #[cfg(feature = "with-tracing")]
-        let fut = fut.instrument(span);
-
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
-    fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>> {
-        #[cfg(feature = "with-tracing")]
-        let span = tracing::info_span!(
-            "EventStore::stream_all",
-            select = ?select
-        );
-
+    fn stream_all(&self, select: Select) -> EventStream<Self> {
         let mut events: Vec<Persisted<Id, Event>> = self
             .backend
             .read()
@@ -276,31 +248,13 @@ where
         // Events must be sorted by the sequence number when using $all.
         events.sort_by_key(Persisted::sequence_number);
 
-        let fut = futures::future::ok(iter(events).map(Ok).boxed());
-
-        #[cfg(feature = "with-tracing")]
-        let fut = fut.instrument(span);
-
-        Box::pin(fut)
+        Box::pin(iter(events).map(Ok))
     }
 
-    fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>> {
-        #[cfg(feature = "with-tracing")]
-        let span = tracing::info_span!(
-            "EventStore::remove",
-            id = ?id
-        );
+    async fn remove(&mut self, id: Self::SourceId) -> Result<(), Self::Error> {
+        self.backend.write().remove(&id);
 
-        let fut = async move {
-            self.backend.write().remove(&id);
-
-            Ok(())
-        };
-
-        #[cfg(feature = "with-tracing")]
-        let fut = fut.instrument(span);
-
-        Box::pin(fut)
+        Ok(())
     }
 }
 
@@ -636,8 +590,6 @@ mod tests {
         // Stream from the start.
         let result: anyhow::Result<Vec<Persisted<&str, Event>>> = store
             .stream_all(Select::All)
-            .await
-            .unwrap()
             .try_collect()
             .await
             .map_err(anyhow::Error::from);
@@ -666,8 +618,6 @@ mod tests {
         // Stream from a specified sequence number.
         let result: anyhow::Result<Vec<Persisted<&str, Event>>> = store
             .stream_all(Select::From(2))
-            .await
-            .unwrap()
             .try_collect()
             .await
             .map_err(anyhow::Error::from);
@@ -695,8 +645,6 @@ mod tests {
     ) -> anyhow::Result<Vec<Persisted<&'static str, Event>>> {
         store
             .stream(id, select)
-            .await
-            .map_err(anyhow::Error::from)?
             .try_collect()
             .await
             .map_err(anyhow::Error::from)

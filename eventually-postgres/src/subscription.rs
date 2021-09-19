@@ -195,11 +195,7 @@ where
             // and discard all those events that are found.
             let subscription = self.subscriber.subscribe_all();
 
-            let one_off_stream = self
-                .store
-                .stream_all(Select::From(checkpoint))
-                .await
-                .map_err(Error::Store)?;
+            let one_off_stream = self.store.stream_all(Select::From(checkpoint));
 
             let stream = one_off_stream
                 .map_err(Error::Store)

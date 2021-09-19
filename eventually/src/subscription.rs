@@ -234,9 +234,8 @@ where
                 .stream_all(Select::From(
                     self.last_sequence_number.load(Ordering::Relaxed),
                 ))
-                .await
                 .map_err(anyhow::Error::from)
-                .map_err(Error::Subscription)?;
+                .map_err(Error::Subscription);
 
             let stream = one_off_stream
                 .map_err(anyhow::Error::from)

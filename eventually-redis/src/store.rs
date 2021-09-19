@@ -5,7 +5,9 @@ use eventually::store::{
     AppendError, EventStream as StoreEventStream, Expected, Persisted, Select,
 };
 
-use futures::future::BoxFuture;
+use async_trait::async_trait;
+
+use futures::future::TryFutureExt;
 use futures::stream::{StreamExt, TryStreamExt};
 
 use lazy_static::lazy_static;
@@ -89,6 +91,7 @@ pub struct EventStore<Id, Event> {
     pub(crate) event: std::marker::PhantomData<Event>,
 }
 
+#[async_trait]
 impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
     Id: TryFrom<String> + Display + Eq + Clone + Send + Sync,
@@ -99,40 +102,32 @@ where
     type Event = Event;
     type Error = StoreError;
 
-    fn append(
+    async fn append(
         &mut self,
         id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<StoreResult<u32>> {
-        let fut = async move {
-            let events = events
-                .iter()
-                .map(serde_json::to_string)
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(StoreError::EncodeEvents)?;
+    ) -> StoreResult<u32> {
+        let events = events
+            .iter()
+            .map(serde_json::to_string)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(StoreError::EncodeEvents)?;
 
-            Ok(APPEND_TO_STORE_SCRIPT
-                .key(self.stream_name)
-                .key(id.to_string())
-                .arg(match version {
-                    Expected::Any => -1,
-                    Expected::Exact(v) => i64::from(v),
-                })
-                .arg(events)
-                .invoke_async(&mut self.conn)
-                .await
-                .unwrap())
-        };
-
-        Box::pin(fut)
+        Ok(APPEND_TO_STORE_SCRIPT
+            .key(self.stream_name)
+            .key(id.to_string())
+            .arg(match version {
+                Expected::Any => -1,
+                Expected::Exact(v) => v as i64,
+            })
+            .arg(events)
+            .invoke_async(&mut self.conn)
+            .await
+            .unwrap())
     }
 
-    fn stream(
-        &self,
-        id: Self::SourceId,
-        select: Select,
-    ) -> BoxFuture<StoreResult<StoreEventStream<Self>>> {
+    fn stream(&self, id: Self::SourceId, select: Select) -> StoreEventStream<Self> {
         let fut = async move {
             let stream_name = format!("{}.{}", self.stream_name, id);
 
@@ -163,14 +158,13 @@ where
                     Ok(Persisted::from(id, event)
                         .sequence_number(sequence_number)
                         .version(version as u32))
-                })
-                .boxed())
+                }))
         };
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
-    fn stream_all(&self, select: Select) -> BoxFuture<StoreResult<StoreEventStream<Self>>> {
+    fn stream_all(&self, select: Select) -> StoreEventStream<Self> {
         let fut = async move {
             let paginator = stream::into_xrange_stream(
                 self.conn.clone(),
@@ -187,14 +181,13 @@ where
                 .and_then(|entry| async move {
                     Persisted::<Id, Event>::try_from(stream::ToPersisted::from(entry))
                         .map_err(StoreError::DecodeEvents)
-                })
-                .boxed())
+                }))
         };
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
-    fn remove(&mut self, _id: Self::SourceId) -> BoxFuture<StoreResult<()>> {
+    async fn remove(&mut self, _id: Self::SourceId) -> StoreResult<()> {
         unimplemented!()
     }
 }

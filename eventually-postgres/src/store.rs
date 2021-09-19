@@ -6,11 +6,13 @@
 use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 
+use async_trait::async_trait;
+
 use eventually::aggregate::{Aggregate, AggregateId};
 use eventually::store::{AppendError, EventStream, Expected, Persisted, Select};
 
-use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
+use futures::TryFutureExt;
 
 use serde::{Deserialize, Serialize};
 
@@ -250,6 +252,7 @@ where
     payload: std::marker::PhantomData<Event>,
 }
 
+#[async_trait]
 impl<Id, Event, Tls> eventually::store::EventStore for EventStore<Id, Event, Tls>
 where
     Id: TryFrom<String> + Display + Eq + Send + Sync,
@@ -267,54 +270,39 @@ where
     type Event = Event;
     type Error = Error;
 
-    fn append(
+    async fn append(
         &mut self,
         id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<u32>> {
-        #[cfg(feature = "with-tracing")]
-        let span = tracing::info_span!(
-            "EventStore::append",
-            id = %id,
-            version = ?version,
-            events = ?events
-        );
+    ) -> Result<u32> {
+        let serialized = events
+            .into_iter()
+            .map(serde_json::to_value)
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(Error::EncodeEvents)?;
 
-        let fut = async move {
-            let serialized = events
-                .into_iter()
-                .map(serde_json::to_value)
-                .collect::<std::result::Result<Vec<_>, _>>()
-                .map_err(Error::EncodeEvents)?;
-
-            let (version, check) = match version {
-                Expected::Any => (0_i32, false),
-                Expected::Exact(v) => (v as i32, true),
-            };
-
-            let params: Params = &[
-                &self.type_name,
-                &id.to_string(),
-                &version,
-                &check,
-                &serialized,
-            ];
-
-            let client = self.pool.get().await?;
-            let row = client.query_one(APPEND, params).await?;
-
-            let id: i32 = row.try_get("aggregate_version")?;
-            Ok(id as u32)
+        let (version, check) = match version {
+            Expected::Any => (0i32, false),
+            Expected::Exact(v) => (v as i32, true),
         };
 
-        #[cfg(feature = "with-tracing")]
-        let fut = fut.instrument(span);
+        let params: Params = &[
+            &self.type_name,
+            &id.to_string(),
+            &version,
+            &check,
+            &serialized,
+        ];
 
-        Box::pin(fut)
+        let client = self.pool.get().await?;
+        let row = client.query_one(APPEND, params).await?;
+
+        let id: i32 = row.try_get("aggregate_version")?;
+        Ok(id as u32)
     }
 
-    fn stream(&self, id: Self::SourceId, select: Select) -> BoxFuture<Result<EventStream<Self>>> {
+    fn stream(&self, id: Self::SourceId, select: Select) -> EventStream<Self> {
         #[cfg(feature = "with-tracing")]
         let span = tracing::info_span!(
             "EventStore::stream",
@@ -338,10 +326,10 @@ where
         #[cfg(feature = "with-tracing")]
         let fut = fut.instrument(span);
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
-    fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>>> {
+    fn stream_all(&self, select: Select) -> EventStream<Self> {
         #[cfg(feature = "with-tracing")]
         let span = tracing::info_span!(
             "EventStore::stream_all",
@@ -362,28 +350,15 @@ where
         #[cfg(feature = "with-tracing")]
         let fut = fut.instrument(span);
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
-    fn remove(&mut self, id: Self::SourceId) -> BoxFuture<Result<()>> {
-        #[cfg(feature = "with-tracing")]
-        let span = tracing::info_span!(
-            "EventStore::remove",
-            id = %id,
-        );
-
-        let fut = async move {
-            let client = self.pool.get().await?;
-            Ok(client
-                .execute(REMOVE, &[&self.type_name, &id.to_string()])
-                .await
-                .map(|_| ())?)
-        };
-
-        #[cfg(feature = "with-tracing")]
-        let fut = fut.instrument(span);
-
-        Box::pin(fut)
+    async fn remove(&mut self, id: Self::SourceId) -> Result<()> {
+        let client = self.pool.get().await?;
+        Ok(client
+            .execute(REMOVE, &[&self.type_name, &id.to_string()])
+            .await
+            .map(|_| ())?)
     }
 }
 

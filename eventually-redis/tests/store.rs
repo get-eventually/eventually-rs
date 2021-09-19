@@ -76,8 +76,6 @@ async fn it_works() {
         5000usize,
         store
             .stream_all(Select::All)
-            .await
-            .unwrap()
             .try_fold(0usize, |acc, _x| async move { Ok(acc + 1) })
             .await
             .unwrap()
@@ -89,8 +87,6 @@ async fn it_works() {
         3000usize,
         store
             .stream("test-source-1".to_owned(), Select::All)
-            .await
-            .unwrap()
             .try_fold(0usize, |acc, _x| async move { Ok(acc + 1) })
             .await
             .unwrap()
@@ -100,8 +96,6 @@ async fn it_works() {
         2000usize,
         store
             .stream("test-source-2".to_owned(), Select::All)
-            .await
-            .unwrap()
             .try_fold(0usize, |acc, _x| async move { Ok(acc + 1) })
             .await
             .unwrap()
@@ -185,8 +179,6 @@ async fn it_creates_persistent_subscription_successfully() {
     // Get size of committed events from the Event Store.
     let size = store
         .stream_all(Select::All)
-        .await
-        .unwrap()
         .try_fold(0usize, |acc, _x| async move { Ok(acc + 1) })
         .await
         .unwrap();

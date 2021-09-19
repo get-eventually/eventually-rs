@@ -126,8 +126,6 @@ where
     pub async fn get(&self, id: T::Id) -> Result<AggregateRoot<T>, T, Store> {
         self.store
             .stream(id.clone(), Select::All)
-            .await
-            .map_err(Error::Store)?
             // Re-map any errors from the Stream into a Repository error
             .map_err(Error::Store)
             // Try to fold all the Events into an Aggregate State.

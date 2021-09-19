@@ -31,8 +31,9 @@
 
 use std::ops::Deref;
 
-use futures::future::BoxFuture;
 use futures::stream::BoxStream;
+
+use async_trait::async_trait;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -93,6 +94,7 @@ impl AppendError for std::convert::Infallible {
 /// An Event Store is an append-only, ordered list of
 /// [`Event`](super::aggregate::Aggregate::Event)s for a certain "source" --
 /// e.g. an [`Aggregate`](super::aggregate::Aggregate).
+#[async_trait]
 pub trait EventStore {
     /// Type of the Source id, typically an
     /// [`AggregateId`](super::aggregate::AggregateId).
@@ -129,12 +131,12 @@ pub trait EventStore {
     ///
     /// Implementations could decide to return an error if the expected
     /// version is different from the one supplied in the method invocation.
-    fn append(
+    async fn append(
         &mut self,
         source_id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<u32, Self::Error>>;
+    ) -> Result<u32, Self::Error>;
 
     /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]
     /// back to the application, by specifying the desired
@@ -146,11 +148,7 @@ pub trait EventStore {
     /// [`Select`] specifies the selection strategy for the
     /// [`Event`](EventStore::Event)s in the returned [`EventStream`]: take
     /// a look at type documentation for all the available options.
-    fn stream(
-        &self,
-        source_id: Self::SourceId,
-        select: Select,
-    ) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
+    fn stream(&self, source_id: Self::SourceId, select: Select) -> EventStream<Self>;
 
     /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]
     /// back to the application, disregarding the
@@ -163,13 +161,13 @@ pub trait EventStore {
     /// [`Select`] specifies the selection strategy for the
     /// [`Event`](EventStore::Event)s in the returned [`EventStream`]: take
     /// a look at type documentation for all the available options.
-    fn stream_all(&self, select: Select) -> BoxFuture<Result<EventStream<Self>, Self::Error>>;
+    fn stream_all(&self, select: Select) -> EventStream<Self>;
 
     /// Drops all the [`Event`](EventStore::Event)s related to one `Source`,
     /// specified by the provided [`SourceId`](EventStore::SourceId).
     ///
     /// [`Event`]: trait.EventStore.html#associatedtype.Event
-    fn remove(&mut self, source_id: Self::SourceId) -> BoxFuture<Result<(), Self::Error>>;
+    async fn remove(&mut self, source_id: Self::SourceId) -> Result<(), Self::Error>;
 }
 
 /// An [`Event`](EventStore::Event) wrapper for events that have been
