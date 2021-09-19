@@ -534,6 +534,7 @@
     <span class="doccomment">//! ```rust</span>
     <span class="doccomment">//! use eventually::Aggregate;</span>
     <span class="doccomment">//! use futures::future::BoxFuture;</span>
+    <span class="doccomment">//! use async_trait::async_trait;</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! // This is the state of our Order, which contains one or more items,</span>
     <span class="doccomment">//! // and whether it has been placed or not.</span>
@@ -558,7 +559,7 @@
     <span class="doccomment">//! //</span>
     <span class="doccomment">//! // We&#39;re going to use this trait in the Aggregate implementation,</span>
     <span class="doccomment">//! // when handling events to add OrderItems.</span>
-    <span class="doccomment">//! trait OrderItemsCatalog {</span>
+    <span class="doccomment">//! trait OrderItemsCatalog: Send + Sync {</span>
     <span class="doccomment">//!     fn get_item(&amp;self, sku: String) -&gt; BoxFuture&lt;OrderItem&gt;;</span>
     <span class="doccomment">//! }</span>
     <span class="doccomment">//!</span>
@@ -591,6 +592,7 @@
     <span class="doccomment">//! }</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! // Implementation for the Aggregate trait.</span>
+    <span class="doccomment">//! #[async_trait]</span>
     <span class="doccomment">//! impl Aggregate for OrderAggregate {</span>
     <span class="doccomment">//!     type Id = u64;</span>
     <span class="doccomment">//!     type State = OrderState;</span>
@@ -602,14 +604,12 @@
     <span class="doccomment">//!         unimplemented!()</span>
     <span class="doccomment">//!     }</span>
     <span class="doccomment">//!</span>
-    <span class="doccomment">//!     fn handle&lt;&#39;a, &#39;s: &#39;a&gt;(</span>
-    <span class="doccomment">//!         &amp;&#39;a self,</span>
-    <span class="doccomment">//!         id: &amp;&#39;s Self::Id,</span>
-    <span class="doccomment">//!         state: &amp;&#39;s Self::State,</span>
+    <span class="doccomment">//!     async fn handle(</span>
+    <span class="doccomment">//!         &amp;self,</span>
+    <span class="doccomment">//!         id: &amp;Self::Id,</span>
+    <span class="doccomment">//!         state: &amp;Self::State,</span>
     <span class="doccomment">//!         command: Self::Command,</span>
-    <span class="doccomment">//!     ) -&gt; BoxFuture&lt;&#39;a, Result&lt;Option&lt;Vec&lt;Self::Event&gt;&gt;, Self::Error&gt;&gt;</span>
-    <span class="doccomment">//!     where</span>
-    <span class="doccomment">//!         Self: Sized,</span>
+    <span class="doccomment">//!     ) -&gt; Result&lt;Vec&lt;Self::Event&gt;, Self::Error&gt;</span>
     <span class="doccomment">//!     {</span>
     <span class="doccomment">//!         unimplemented!()</span>
     <span class="doccomment">//!     }</span>

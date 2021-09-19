@@ -262,9 +262,6 @@
 <span id="262">262</span>
 <span id="263">263</span>
 <span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Foundation traits for creating Domain abstractions</span>
 <span class="doccomment">//! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).</span>
@@ -272,7 +269,7 @@
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
 <span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
 
-<span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
+<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
@@ -288,6 +285,7 @@
 <span class="doccomment">/// It allows **state mutations** through the use of</span>
 <span class="doccomment">/// [`Command`](Aggregate::Command)s, which the Aggregate instance handles and</span>
 <span class="doccomment">/// emits a number of Domain [`Event`](Aggregate::Event)s.</span>
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Aggregate</span> {
     <span class="doccomment">/// Aggregate identifier: this should represent an unique identifier to</span>
     <span class="doccomment">/// refer to a unique Aggregate instance.</span>
@@ -324,14 +322,12 @@
     <span class="doccomment">/// of [`Event`](Aggregate::Event)s to apply the</span>
     <span class="doccomment">/// [`State`](Aggregate::State) mutation based on the current representation</span>
     <span class="doccomment">/// of the State.</span>
-    <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::Id</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::State</span>,
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Id</span>,
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::State</span>,
         <span class="ident">command</span>: <span class="self">Self</span><span class="ident">::Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">Sized</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// Extension trait with some handy methods to use with [`Aggregate`]s.</span>
@@ -512,23 +508,21 @@
         <span class="ident">tracing::instrument</span>(<span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;debug&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;AggregateRoot::handle&quot;</span>, <span class="ident">skip</span>(<span class="self">self</span>))
     )]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">command</span>: <span class="ident">T::Command</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="self">self</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">aggregate</span>
             .<span class="ident">handle</span>(<span class="self">self</span>.<span class="ident">id</span>(), <span class="self">self</span>.<span class="ident">state</span>(), <span class="ident">command</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Only apply new events if the command handling actually</span>
         <span class="comment">// produced new ones.</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">events</span>) <span class="op">=</span> <span class="ident">events</span> {
-            <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">T::fold</span>(<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">clone</span>(), <span class="ident">events</span>.<span class="ident">clone</span>().<span class="ident">into_iter</span>())<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">to_commit</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">to_commit</span>.<span class="ident">take</span>() {
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">events</span>,
-                <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">list</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">events</span>);
-                    <span class="ident">list</span>
-                }
-            });
-        }
+        <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">T::fold</span>(<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">clone</span>(), <span class="ident">events</span>.<span class="ident">clone</span>().<span class="ident">into_iter</span>())<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">to_commit</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">to_commit</span>.<span class="ident">take</span>() {
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">events</span>,
+            <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">list</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">events</span>);
+                <span class="ident">list</span>
+            }
+        });
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }

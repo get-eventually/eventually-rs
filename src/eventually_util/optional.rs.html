@@ -135,24 +135,20 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains a different flavour of the [`Aggregate`] trait,</span>
 <span class="doccomment">//! while still maintaining compatibility through [`AsAggregate`] type.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Check out [`optional::Aggregate`](Aggregate) for more information.</span>
 
-<span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
+<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 
 <span class="doccomment">/// An [`Option`]-flavoured, [`Aggregate`]-compatible trait</span>
 <span class="doccomment">/// to model Aggregates having an optional [`State`](Aggregate::State).</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Use [`as_aggregate`](Aggregate::as_aggregate) to get an</span>
 <span class="doccomment">/// [`Aggregate`]-compatible instance of this trait.</span>
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Aggregate</span> {
     <span class="doccomment">/// Identifier type of the Aggregate.</span>
     <span class="doccomment">///</span>
@@ -189,24 +185,20 @@
 
     <span class="doccomment">/// Handles the specified [`Command`](Aggregate::Command)when the</span>
     <span class="doccomment">/// [`State`](Aggregate::State) is empty.</span>
-    <span class="kw">fn</span> <span class="ident">handle_first</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;s</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="ident">::Id</span>,
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_first</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Id</span>,
         <span class="ident">command</span>: <span class="self">Self</span><span class="ident">::Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">Sized</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Handles the specified [`Command`](Aggregate::Command) on a pre-existing</span>
     <span class="doccomment">/// [`State`](Aggregate::State) value.</span>
-    <span class="kw">fn</span> <span class="ident">handle_next</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="ident">::Id</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::State</span>,
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_next</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Id</span>,
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::State</span>,
         <span class="ident">command</span>: <span class="self">Self</span><span class="ident">::Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">Sized</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Translates the current [`optional::Aggregate`](Aggregate) instance into</span>
     <span class="doccomment">/// a _newtype instance_ compatible with the core</span>
@@ -246,6 +238,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">eventually_core::aggregate::Aggregate</span> <span class="kw">for</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">A</span>: <span class="ident">Aggregate</span>,
@@ -268,19 +261,16 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::Id</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::State</span>,
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Id</span>,
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::State</span>,
         <span class="ident">command</span>: <span class="self">Self</span><span class="ident">::Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">Sized</span>,
-    {
-        <span class="ident">Box::pin</span>(<span class="kw">match</span> <span class="ident">state</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">handle_first</span>(<span class="ident">id</span>, <span class="ident">command</span>),
-            <span class="prelude-val">Some</span>(<span class="ident">state</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">handle_next</span>(<span class="ident">id</span>, <span class="ident">state</span>, <span class="ident">command</span>),
-        })
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">state</span> {
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">handle_first</span>(<span class="ident">id</span>, <span class="ident">command</span>).<span class="kw">await</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">state</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">handle_next</span>(<span class="ident">id</span>, <span class="ident">state</span>, <span class="ident">command</span>).<span class="kw">await</span>,
+        }
     }
 }
 </pre></div>

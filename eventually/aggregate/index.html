@@ -37,6 +37,7 @@ external clients, validators, etc…)</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">eventually::Aggregate</span>;
 <span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
+<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 
 <span class="comment">// This is the state of our Order, which contains one or more items,</span>
 <span class="comment">// and whether it has been placed or not.</span>
@@ -61,7 +62,7 @@ external clients, validators, etc…)</p>
 <span class="comment">//</span>
 <span class="comment">// We&#39;re going to use this trait in the Aggregate implementation,</span>
 <span class="comment">// when handling events to add OrderItems.</span>
-<span class="kw">trait</span> <span class="ident">OrderItemsCatalog</span> {
+<span class="kw">trait</span> <span class="ident">OrderItemsCatalog</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
     <span class="kw">fn</span> <span class="ident">get_item</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sku</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span>;
 }
 
@@ -94,6 +95,7 @@ external clients, validators, etc…)</p>
 }
 
 <span class="comment">// Implementation for the Aggregate trait.</span>
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">Aggregate</span> <span class="kw">for</span> <span class="ident">OrderAggregate</span> {
     <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">u64</span>;
     <span class="kw">type</span> <span class="ident">State</span> <span class="op">=</span> <span class="ident">OrderState</span>;
@@ -105,14 +107,12 @@ external clients, validators, etc…)</p>
         <span class="macro">unimplemented!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">handle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::Id</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s</span> <span class="self">Self</span><span class="ident">::State</span>,
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Id</span>,
+        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::State</span>,
         <span class="ident">command</span>: <span class="self">Self</span><span class="ident">::Command</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="self">Self</span>: <span class="ident">Sized</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>
     {
         <span class="macro">unimplemented!</span>()
     }
