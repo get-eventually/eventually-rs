@@ -145,13 +145,17 @@ where
         let mut version = root.version();
         let events = root.take_events_to_commit();
 
-        version = self
-            .store
-            .append(root.id().clone(), Expected::Exact(version), events)
-            .await
-            .map_err(Error::Store)?;
+        if events.is_empty() {
+            Ok(root)
+        } else {
+            version = self
+                .store
+                .append(root.id().clone(), Expected::Exact(version), events)
+                .await
+                .map_err(Error::Store)?;
 
-        Ok(root.with_version(version))
+            Ok(root.with_version(version))
+        }
     }
 
     /// Removes the specified [`Aggregate`] from the `Repository`,
