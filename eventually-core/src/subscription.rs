@@ -8,7 +8,6 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use futures::future::BoxFuture;
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use futures::TryFutureExt;
 
@@ -82,10 +81,7 @@ pub trait Subscription {
     type SourceId: Eq;
 
     /// Event type stored in the [`EventStore`], typically an
-    /// [`Aggregate::Event`].
-    ///
-    /// [`Aggregate::Event`]:
-    /// ../aggregate/trait.Aggregate.html#associatedtype.Event
+    /// [`Aggregate::Event`](super::aggregate::Aggregate::Event).
     type Event;
 
     /// Possible errors returned when receiving events from the notification
