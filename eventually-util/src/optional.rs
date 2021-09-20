@@ -1,5 +1,5 @@
 //! Contains a different flavour of the [`Aggregate`] trait,
-//! while still maintaining compatibility through [`AsAggregate`] type.
+//! while still maintaining compatibility through [`IntoAggregate`] type.
 //!
 //! Check out [`optional::Aggregate`](Aggregate) for more information.
 
@@ -66,11 +66,11 @@ pub trait Aggregate {
     /// a _newtype instance_ compatible with the core
     /// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
     #[inline]
-    fn into_aggregate(self) -> AsAggregate<Self>
+    fn into_aggregate(self) -> IntoAggregate<Self>
     where
         Self: Sized,
     {
-        AsAggregate::from(self)
+        IntoAggregate::from(self)
     }
 }
 
@@ -82,26 +82,26 @@ pub trait Aggregate {
 ///
 /// 1. Use `From<Aggregate>` trait implementation:
 ///     ```text
-///     use eventually_util::optional::AsAggregate;
+///     use eventually_util::optional::IntoAggregate;
 ///
-///     let aggregate = AsAggregate::from(MyOptionalAggregate);
+///     let aggregate = IntoAggregate::from(MyOptionalAggregate);
 ///     ```
 /// 2. Use the [`Aggregate::as_aggregate`] method:
 ///     ```text
 ///     let aggregate = MyOptionalAggregate.as_aggregate();
 ///     ```
 #[derive(Clone)]
-pub struct AsAggregate<A>(A);
+pub struct IntoAggregate<A>(A);
 
-impl<A> From<A> for AsAggregate<A> {
+impl<A> From<A> for IntoAggregate<A> {
     #[inline]
     fn from(value: A) -> Self {
-        AsAggregate(value)
+        IntoAggregate(value)
     }
 }
 
 #[async_trait]
-impl<A> eventually_core::aggregate::Aggregate for AsAggregate<A>
+impl<A> eventually_core::aggregate::Aggregate for IntoAggregate<A>
 where
     A: Aggregate,
     A: Send + Sync,
