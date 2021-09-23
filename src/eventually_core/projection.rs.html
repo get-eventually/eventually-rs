@@ -44,6 +44,7 @@
 <span id="44">44</span>
 <span id="45">45</span>
 <span id="46">46</span>
+<span id="47">47</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contain support for [`Projection`], an optimized read model</span>
 <span class="doccomment">//! of an [`Aggregate`] or of a number of `Aggregate`s.</span>
@@ -54,7 +55,7 @@
 <span class="doccomment">//! [`Projection`]: trait.Projection.html</span>
 <span class="doccomment">//! [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
 
-<span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
+<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::store::Persisted</span>;
 
@@ -67,6 +68,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
 <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Projection</span> {
     <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`].</span>
     <span class="doccomment">///</span>
@@ -86,10 +88,10 @@
 
     <span class="doccomment">/// Updates the next value of the `Projection` using the provided event</span>
     <span class="doccomment">/// value.</span>
-    <span class="kw">fn</span> <span class="ident">project</span>(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">project</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">event</span>: <span class="ident">Persisted</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::SourceId</span>, <span class="self">Self</span><span class="ident">::Event</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually_core" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
