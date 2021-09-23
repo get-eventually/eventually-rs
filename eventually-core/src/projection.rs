@@ -7,7 +7,7 @@
 //! [`Projection`]: trait.Projection.html
 //! [`Aggregate`]: ../aggregate/trait.Aggregate.html
 
-use futures::future::BoxFuture;
+use async_trait::async_trait;
 
 use crate::store::Persisted;
 
@@ -20,6 +20,7 @@ use crate::store::Persisted;
 ///
 /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
 /// [`EventStore`]: ../store/trait.EventStore.html
+#[async_trait]
 pub trait Projection {
     /// Type of the Source id, typically an [`AggregateId`].
     ///
@@ -39,8 +40,8 @@ pub trait Projection {
 
     /// Updates the next value of the `Projection` using the provided event
     /// value.
-    fn project(
+    async fn project(
         &mut self,
         event: Persisted<Self::SourceId, Self::Event>,
-    ) -> BoxFuture<Result<(), Self::Error>>;
+    ) -> Result<(), Self::Error>;
 }
