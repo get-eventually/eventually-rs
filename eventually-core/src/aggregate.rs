@@ -116,7 +116,7 @@ where
     /// Builds a new [`AggregateRoot`] instance for the specified Aggregate
     /// with a specified [`State`](Aggregate::State) value.
     #[inline]
-    pub fn build_with_state(&self, id: T::Id, version: u32, state: T::State) -> AggregateRoot<T> {
+    pub fn build_with_state(&self, id: T::Id, version: i64, state: T::State) -> AggregateRoot<T> {
         AggregateRoot {
             id,
             version,
@@ -150,7 +150,7 @@ where
     T: Aggregate + 'static,
 {
     id: T::Id,
-    version: u32,
+    version: i64,
 
     #[cfg_attr(feature = "serde", serde(flatten))]
     state: T::State,
@@ -177,7 +177,7 @@ where
     T: Aggregate,
 {
     #[inline]
-    fn version(&self) -> u32 {
+    fn version(&self) -> i64 {
         self.version
     }
 }
@@ -209,7 +209,7 @@ where
 
     /// Returns a new [`AggregateRoot`] having the specified version.
     #[inline]
-    pub(crate) fn with_version(mut self, version: u32) -> Self {
+    pub(crate) fn with_version(mut self, version: i64) -> Self {
         self.version = version;
         self
     }

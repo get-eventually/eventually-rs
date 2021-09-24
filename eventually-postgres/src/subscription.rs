@@ -3,7 +3,7 @@
 //!
 //! [`Subscription`]: ../../eventually-core/subscription/trait.Subscription.html
 
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -167,10 +167,7 @@ where
             //
             // In the initial case, the last_sequence_number
             // would be -1, which will load everything from the start.
-            let checkpoint: u32 = (last_sequence_number + 1).try_into().expect(
-                "in case of overflow, it means there is a bug in the optimistic versioning code; \\
-                please open an issue with steps to reproduce the bug",
-            );
+            let checkpoint = last_sequence_number + 1;
 
             #[cfg(feature = "with-tracing")]
             tracing::trace!(
@@ -203,7 +200,7 @@ where
                 .map_err(Error::Store)
                 .chain(subscription.map_err(Error::Subscriber))
                 .try_filter_map(move |event| async move {
-                    let event_sequence_number = event.sequence_number() as i64;
+                    let event_sequence_number = event.sequence_number();
                     let expected_sequence_number =
                         self.last_sequence_number.load(Ordering::Relaxed);
 
@@ -228,9 +225,9 @@ where
         Box::pin(fut)
     }
 
-    fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
+    fn checkpoint(&self, version: i64) -> BoxFuture<Result<(), Self::Error>> {
         Box::pin(async move {
-            let params: Params = &[&self.name, &self.store.type_name, &(version as i64)];
+            let params: Params = &[&self.name, &self.store.type_name, &version];
 
             #[cfg(feature = "with-tracing")]
             tracing::trace!(
@@ -247,8 +244,7 @@ where
                 .map_err(bb8::RunError::User)
                 .map_err(Error::Checkpoint)?;
 
-            self.last_sequence_number
-                .store(version as i64, Ordering::Relaxed);
+            self.last_sequence_number.store(version, Ordering::Relaxed);
 
             Ok(())
         })

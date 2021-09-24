@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::Arc;
 
 use eventually_core::aggregate::Aggregate;
@@ -32,9 +32,9 @@ const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 #[error("conflicting versions, expected {expected}, got instead {actual}")]
 pub struct ConflictError {
     /// The last version value found the Store.
-    pub expected: u32,
+    pub expected: i64,
     /// The actual version passed by the caller to the Store.
-    pub actual: u32,
+    pub actual: i64,
 }
 
 impl AppendError for ConflictError {
@@ -73,7 +73,7 @@ pub struct EventStore<Id, Event>
 where
     Id: Hash + Eq,
 {
-    global_offset: Arc<AtomicU32>,
+    global_offset: Arc<AtomicI64>,
     tx: Sender<Persisted<Id, Event>>,
     backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
 }
@@ -95,7 +95,7 @@ where
 
         Self {
             tx,
-            global_offset: Arc::new(AtomicU32::new(0)),
+            global_offset: Arc::new(AtomicI64::new(0)),
             backend: Arc::new(RwLock::new(HashMap::new())),
         }
     }
@@ -150,7 +150,7 @@ where
         id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<u32, Self::Error>> {
+    ) -> BoxFuture<Result<i64, Self::Error>> {
         #[cfg(feature = "with-tracing")]
         let span = tracing::info_span!(
             "EventStore::append",
@@ -307,7 +307,7 @@ where
 }
 
 fn into_persisted_events<Id, T>(
-    last_version: u32,
+    last_version: i64,
     id: Id,
     events: Vec<T>,
 ) -> Vec<EventBuilderWithVersion<Id, T>>
@@ -317,7 +317,7 @@ where
     events
         .into_iter()
         .enumerate()
-        .map(|(i, event)| Persisted::from(id.clone(), event).version(last_version + (i as u32) + 1))
+        .map(|(i, event)| Persisted::from(id.clone(), event).version(last_version + (i as i64) + 1))
         .collect()
 }
 

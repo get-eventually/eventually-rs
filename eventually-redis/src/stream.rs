@@ -63,14 +63,14 @@ where
         let event: Vec<u8> = entry.get("event").ok_or(ToPersistedError::NoKey("event"))?;
         let event: Event = serde_json::from_slice(&event).map_err(ToPersistedError::DecodeJSON)?;
 
-        let version: u32 = entry
+        let version = entry
             .get("version")
             .ok_or(ToPersistedError::NoKey("version"))?;
 
         let sequence_number = parse_version(&entry.id);
 
         Ok(Persisted::from(source_id, event)
-            .sequence_number(sequence_number as u32)
+            .sequence_number(sequence_number as i64)
             .version(version))
     }
 }

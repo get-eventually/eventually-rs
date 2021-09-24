@@ -76,8 +76,8 @@ where
         #[derive(Deserialize)]
         struct SubscribeMessage<Event> {
             source_id: String,
-            sequence_number: u32,
-            version: u32,
+            sequence_number: i64,
+            version: i64,
             event: Event,
         }
 

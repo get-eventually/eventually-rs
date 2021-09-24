@@ -20,7 +20,7 @@ pub enum Select {
     /// To return a slice of the [`EventStream`], starting from
     /// those [`Event`](EventStore::Event)s with version **greater or equal**
     /// than the one specified in this variant.
-    From(u32),
+    From(i64),
 }
 
 /// Specifies the optimistic locking level when performing
@@ -36,7 +36,7 @@ pub enum Expected {
     /// Append events only if the current version of the
     /// [`Aggregate`](super::aggregate::Aggregate) is the one specified by
     /// the value provided here.
-    Exact(u32),
+    Exact(i64),
 }
 
 /// Stream type returned by the [`EventStore::stream`] method.
@@ -106,7 +106,7 @@ pub trait EventStore {
         source_id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<u32, Self::Error>>;
+    ) -> BoxFuture<Result<i64, Self::Error>>;
 
     /// Streams a list of [`Event`](EventStore::Event)s from the [`EventStore`]
     /// back to the application, by specifying the desired
@@ -152,15 +152,15 @@ pub trait EventStore {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Persisted<SourceId, T> {
     source_id: SourceId,
-    version: u32,
-    sequence_number: u32,
+    version: i64,
+    sequence_number: i64,
     #[cfg_attr(feature = "serde", serde(flatten))]
     event: T,
 }
 
 impl<SourceId, T> Versioned for Persisted<SourceId, T> {
     #[inline]
-    fn version(&self) -> u32 {
+    fn version(&self) -> i64 {
         self.version
     }
 }
@@ -183,7 +183,7 @@ impl<SourceId, T> Persisted<SourceId, T> {
 
     /// Returns the event sequence number.
     #[inline]
-    pub fn sequence_number(&self) -> u32 {
+    pub fn sequence_number(&self) -> i64 {
         self.sequence_number
     }
 
@@ -222,7 +222,7 @@ pub mod persistent {
         /// Specifies the [`Persisted`](super::Persisted) version and moves to
         /// the next builder state.
         #[inline]
-        pub fn version(self, value: u32) -> EventBuilderWithVersion<SourceId, T> {
+        pub fn version(self, value: i64) -> EventBuilderWithVersion<SourceId, T> {
             EventBuilderWithVersion {
                 version: value,
                 event: self.event,
@@ -233,7 +233,7 @@ pub mod persistent {
         /// Specifies the [`Persisted`](super::Persisted) sequence number and
         /// moves to the next builder state.
         #[inline]
-        pub fn sequence_number(self, value: u32) -> EventBuilderWithSequenceNumber<SourceId, T> {
+        pub fn sequence_number(self, value: i64) -> EventBuilderWithSequenceNumber<SourceId, T> {
             EventBuilderWithSequenceNumber {
                 sequence_number: value,
                 event: self.event,
@@ -245,7 +245,7 @@ pub mod persistent {
     /// Next step in creating a new [`Persisted`](super::Persisted) carrying an
     /// Event value and its version.
     pub struct EventBuilderWithVersion<SourceId, T> {
-        version: u32,
+        version: i64,
         event: T,
         source_id: SourceId,
     }
@@ -254,7 +254,7 @@ pub mod persistent {
         /// Specifies the [`Persisted`](super::Persisted) sequence number and
         /// moves to the next builder state.
         #[inline]
-        pub fn sequence_number(self, value: u32) -> super::Persisted<SourceId, T> {
+        pub fn sequence_number(self, value: i64) -> super::Persisted<SourceId, T> {
             super::Persisted {
                 version: self.version,
                 event: self.event,
@@ -267,7 +267,7 @@ pub mod persistent {
     /// Next step in creating a new [`Persisted`](super::Persisted) carrying an
     /// Event value and its sequence number.
     pub struct EventBuilderWithSequenceNumber<SourceId, T> {
-        sequence_number: u32,
+        sequence_number: i64,
         event: T,
         source_id: SourceId,
     }
@@ -276,7 +276,7 @@ pub mod persistent {
         /// Specifies the [`Persisted`](super::Persisted) version and moves to
         /// the next builder state.
         #[inline]
-        pub fn version(self, value: u32) -> super::Persisted<SourceId, T> {
+        pub fn version(self, value: i64) -> super::Persisted<SourceId, T> {
             super::Persisted {
                 version: value,
                 event: self.event,

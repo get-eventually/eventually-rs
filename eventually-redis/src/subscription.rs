@@ -39,12 +39,12 @@ pub enum SubscriptionError {
     /// Error returned when failed to acknowledge one Redis message
     /// using `XACK` command, due to an error occurred on Redis server.
     #[error("failed to checkpoint subscription due to Redis error: version {0}, {1}")]
-    CheckpointFromRedis(u32, #[source] RedisError),
+    CheckpointFromRedis(i64, #[source] RedisError),
 
     /// Error returned when Redis didn't acknowledge an `XACK` command,
     /// likely due to an incorrect version number provided.
     #[error("checkpoint subscription not acknowledged by Redis, check the version: version {0}")]
-    Checkpoint(u32),
+    Checkpoint(i64),
 }
 
 /// [`Subscription`] implementation with persistent state over a Redis
@@ -123,7 +123,7 @@ where
         Box::pin(fut)
     }
 
-    fn checkpoint(&self, version: u32) -> BoxFuture<SubscriptionResult<()>> {
+    fn checkpoint(&self, version: i64) -> BoxFuture<SubscriptionResult<()>> {
         let fut = async move {
             let mut conn = self.conn.clone();
             let stream_version = format!("{}-1", version);

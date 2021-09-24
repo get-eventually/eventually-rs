@@ -105,7 +105,7 @@ where
         id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<StoreResult<u32>> {
+    ) -> BoxFuture<StoreResult<i64>> {
         let fut = async move {
             let events = events
                 .iter()
@@ -118,7 +118,7 @@ where
                 .key(id.to_string())
                 .arg(match version {
                     Expected::Any => -1,
-                    Expected::Exact(v) => v as i64,
+                    Expected::Exact(v) => v,
                 })
                 .arg(events)
                 .invoke_async(&mut self.conn)
@@ -155,7 +155,7 @@ where
                     let event: Event =
                         serde_json::from_slice(&event).map_err(StoreError::DecodeJSON)?;
 
-                    let sequence_number: u32 = entry
+                    let sequence_number = entry
                         .get("sequence_number")
                         .ok_or(StoreError::NoKey("sequence_number"))?;
 
@@ -163,7 +163,7 @@ where
 
                     Ok(Persisted::from(id, event)
                         .sequence_number(sequence_number)
-                        .version(version as u32))
+                        .version(version as i64))
                 })
                 .boxed())
         };

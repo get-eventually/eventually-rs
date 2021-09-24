@@ -146,8 +146,8 @@ where
 #[derive(Debug, Deserialize)]
 struct NotificationPayload<Event> {
     source_id: String,
-    version: u32,
-    sequence_number: u32,
+    version: i64,
+    sequence_number: i64,
     event: Event,
 }
 

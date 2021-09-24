@@ -273,7 +273,7 @@ where
         id: Self::SourceId,
         version: Expected,
         events: Vec<Self::Event>,
-    ) -> BoxFuture<Result<u32>> {
+    ) -> BoxFuture<Result<i64>> {
         #[cfg(feature = "with-tracing")]
         let span = tracing::info_span!(
             "EventStore::append",
@@ -306,7 +306,7 @@ where
             let row = client.query_one(APPEND, params).await?;
 
             let id: i32 = row.try_get("aggregate_version")?;
-            Ok(id as u32)
+            Ok(id as i64)
         };
 
         #[cfg(feature = "with-tracing")]
@@ -351,8 +351,8 @@ where
 
         let fut = async move {
             let from = match select {
-                Select::All => 0i64,
-                Select::From(v) => v as i64,
+                Select::All => 0,
+                Select::From(v) => v,
             };
 
             let params: Params = &[&self.type_name, &from];
@@ -462,8 +462,8 @@ where
                     .map_err(Error::DecodeEvent)?;
 
                 Ok(Persisted::from(id, event)
-                    .version(version as u32)
-                    .sequence_number(sequence_number as u32))
+                    .version(version as i64)
+                    .sequence_number(sequence_number))
             })
             .boxed())
     }

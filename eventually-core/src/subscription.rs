@@ -4,7 +4,7 @@
 //! [`EventStore`]: ../store/trait.EventStore.html
 
 use std::error::Error as StdError;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::Arc;
 
 use futures::future::{ok, BoxFuture, FutureExt};
@@ -120,7 +120,7 @@ pub trait Subscription {
 
     /// Saves the provided version (or sequence number) as the latest
     /// version processed.
-    fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>>;
+    fn checkpoint(&self, version: i64) -> BoxFuture<Result<(), Self::Error>>;
 }
 
 /// Error type returned by a [`Transient`] Subscription.
@@ -151,7 +151,7 @@ pub enum Error {
 pub struct Transient<Store, Subscriber> {
     store: Store,
     subscriber: Subscriber,
-    last_sequence_number: Arc<AtomicU32>,
+    last_sequence_number: Arc<AtomicI64>,
 }
 
 impl<Store, Subscriber> Transient<Store, Subscriber> {
@@ -175,7 +175,7 @@ impl<Store, Subscriber> Transient<Store, Subscriber> {
     ///
     /// [`SubscriptionStream`]: type.SubscriptionStream.html
     /// [`run`]: struct.Transient.html#method.run
-    pub fn from(self, sequence_number: u32) -> Self {
+    pub fn from(self, sequence_number: i64) -> Self {
         self.last_sequence_number
             .store(sequence_number, Ordering::Relaxed);
 
@@ -256,7 +256,7 @@ where
         })
     }
 
-    fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
+    fn checkpoint(&self, version: i64) -> BoxFuture<Result<(), Self::Error>> {
         // Checkpointing happens in memory on the atomic sequence number checkpoint.
         self.last_sequence_number.store(version, Ordering::Relaxed);
         ok(()).boxed()
