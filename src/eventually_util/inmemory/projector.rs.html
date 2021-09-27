@@ -209,7 +209,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;with-tracing&quot;</span>)]</span>
         <span class="kw">let</span> <span class="ident">projection_type</span> <span class="op">=</span> <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">subscription</span>.<span class="ident">resume</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">subscription</span>.<span class="ident">resume</span>();
 
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result</span>) <span class="op">=</span> <span class="ident">stream</span>.<span class="ident">next</span>().<span class="kw">await</span> {
             <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">result</span><span class="question-mark">?</span>;

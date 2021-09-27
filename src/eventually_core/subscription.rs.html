@@ -222,46 +222,6 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
-<span id="247">247</span>
-<span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Module for creating and managing long-running Subscriptions</span>
 <span class="doccomment">//! to incoming events in the [`EventStore`].</span>
@@ -272,15 +232,13 @@
 <span class="kw">use</span> <span class="ident">std::sync::atomic</span>::{<span class="ident">AtomicU32</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
-<span class="kw">use</span> <span class="ident">futures::future</span>::{<span class="ident">ok</span>, <span class="ident">BoxFuture</span>, <span class="ident">FutureExt</span>};
+<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 <span class="kw">use</span> <span class="ident">futures::stream</span>::{<span class="ident">BoxStream</span>, <span class="ident">StreamExt</span>, <span class="ident">TryStreamExt</span>};
+<span class="kw">use</span> <span class="ident">futures::TryFutureExt</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::store</span>::{<span class="ident">EventStore</span>, <span class="ident">Persisted</span>, <span class="ident">Select</span>};
 
 <span class="doccomment">/// Stream of events returned by the [`EventSubscriber::subscribe_all`] method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`EventSubscriber::subscribe_all`]:</span>
-<span class="doccomment">/// trait.EventSubscriber.html#method.subscribe_all</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoxStream</span><span class="op">&lt;</span>
     <span class="lifetime">&#39;a</span>,
     <span class="prelude-ty">Result</span><span class="op">&lt;</span>
@@ -299,19 +257,12 @@
 <span class="doccomment">/// of eventstore.com</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [_Volatile Subscription_]: https://eventstore.com/docs/getting-started/reading-subscribing-events/index.html#volatile-subscriptions</span>
-<span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventSubscriber</span> {
-    <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
+    <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`](super::aggregate::AggregateId).</span>
     <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">Eq</span>;
 
     <span class="doccomment">/// Event type stored in the [`EventStore`], typically an</span>
-    <span class="doccomment">/// [`Aggregate::Event`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]:</span>
-    <span class="doccomment">/// ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
+    <span class="doccomment">/// [`Aggregate::Event`](super::aggregate::Aggregate::Event).</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
     <span class="doccomment">/// Possible errors returned when receiving events from the notification</span>
@@ -333,15 +284,10 @@
     <span class="doccomment">///     // Do stuff with the received event...</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
-    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
     <span class="kw">fn</span> <span class="ident">subscribe_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// Stream of events returned by the [`Subscription::resume`] method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Subscription::resume`]: trait.Subscription.html#method.resume</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoxStream</span><span class="op">&lt;</span>
     <span class="lifetime">&#39;a</span>,
     <span class="prelude-ty">Result</span><span class="op">&lt;</span>
@@ -352,24 +298,15 @@
 
 <span class="doccomment">/// A Subscription to an [`EventStream`] which can be &quot;checkpointed&quot;:</span>
 <span class="doccomment">/// keeps a record of the latest message processed by itself using</span>
-<span class="doccomment">/// [`checkpoint`], and can resume working from such message by using the</span>
-<span class="doccomment">/// [`resume`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
-<span class="doccomment">/// [`resume`]: trait.Subscription.html#method.resume</span>
-<span class="doccomment">/// [`checkpoint`]: trait.Subscription.html#method.checkpoint</span>
+<span class="doccomment">/// [`Subscription::checkpoint`], and can resume working from such message by using the</span>
+<span class="doccomment">/// [`Subscription::resume`].</span>
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Subscription</span> {
-    <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`AggregateId`]: ../aggregate/type.AggregateId.html</span>
+    <span class="doccomment">/// Type of the Source id, typically an [`AggregateId`](super::aggregate::AggregateId).</span>
     <span class="kw">type</span> <span class="ident">SourceId</span>: <span class="ident">Eq</span>;
 
     <span class="doccomment">/// Event type stored in the [`EventStore`], typically an</span>
-    <span class="doccomment">/// [`Aggregate::Event`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Aggregate::Event`]:</span>
-    <span class="doccomment">/// ../aggregate/trait.Aggregate.html#associatedtype.Event</span>
-    <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
+    <span class="doccomment">/// [`Aggregate::Event`](super::aggregate::Aggregate::Event).</span>
     <span class="kw">type</span> <span class="ident">Event</span>;
 
     <span class="doccomment">/// Possible errors returned when receiving events from the notification</span>
@@ -378,30 +315,22 @@
 
     <span class="doccomment">/// Resumes the current state of a `Subscription` by returning the</span>
     <span class="doccomment">/// [`EventStream`], starting from the last event processed by the</span>
-    <span class="doccomment">/// `Subscription`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`EventStream`]: type.EventStream.html</span>
-    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// [`Subscription`].</span>
+    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Saves the provided version (or sequence number) as the latest</span>
     <span class="doccomment">/// version processed.</span>
-    <span class="kw">fn</span> <span class="ident">checkpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">checkpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// Error type returned by a [`Transient`] Subscription.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Transient`]: struct.Transient.html</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="doccomment">/// Error caused by the Subscription&#39;s [`EventStore`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error received while listening to the event stream from the store: {0}&quot;</span>)]</span>
     <span class="ident">Store</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">anyhow::Error</span>),
 
     <span class="doccomment">/// Error caused by the Subscription&#39;s [`EventSubscriber`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`EventSubscriber`]: trait.EventSubscriber.html</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error received while listening to the event stream subscription: {0}&quot;</span>)]</span>
     <span class="ident">Subscription</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">anyhow::Error</span>),
 }
@@ -409,10 +338,7 @@
 <span class="doccomment">/// [`Subscription`] type which gets deleted once the process using it</span>
 <span class="doccomment">/// gets terminated.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Useful for in-memory or one-off [`Projection`]s.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Subscription`]: trait.Subscription.html</span>
-<span class="doccomment">/// [`Projection`]: ../projection/trait.Projection.html</span>
+<span class="doccomment">/// Useful for in-memory or one-off [`Projection`](super::projection::Projection)s.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Transient</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> {
     <span class="ident">store</span>: <span class="ident">Store</span>,
     <span class="ident">subscriber</span>: <span class="ident">Subscriber</span>,
@@ -422,11 +348,6 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> <span class="ident">Transient</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates a new [`Subscription`] using the specified [`EventStore`]</span>
     <span class="doccomment">/// and [`EventSubscriber`] to create the [`SubscriptionStream`] from.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Subscription`]: trait.Subscription.html</span>
-    <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
-    <span class="doccomment">/// [`EventSubscriber`]: trait.EventSubscriber.html</span>
-    <span class="doccomment">/// [`SubscriptionStream`]: type.SubscriptionStream.html</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">subscriber</span>: <span class="ident">Subscriber</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">store</span>,
@@ -436,10 +357,7 @@
     }
 
     <span class="doccomment">/// Specifies the sequence number of the `Event` the [`SubscriptionStream`]</span>
-    <span class="doccomment">/// should start from when calling [`run`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`SubscriptionStream`]: type.SubscriptionStream.html</span>
-    <span class="doccomment">/// [`run`]: struct.Transient.html#method.run</span>
+    <span class="doccomment">/// should start from when calling [`Transient::resume`](Subscription::resume).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="self">self</span>, <span class="ident">sequence_number</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">last_sequence_number</span>
             .<span class="ident">store</span>(<span class="ident">sequence_number</span>, <span class="ident">Ordering::Relaxed</span>);
@@ -448,6 +366,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span> <span class="ident">Subscription</span> <span class="kw">for</span> <span class="ident">Transient</span><span class="op">&lt;</span><span class="ident">Store</span>, <span class="ident">Subscriber</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Store</span>: <span class="ident">EventStore</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
@@ -465,8 +384,8 @@
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Store::Event</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
+    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
             <span class="comment">// Create the Subscription first, so that once the future has been resolved</span>
             <span class="comment">// we&#39;ll start receiving events right away.</span>
             <span class="comment">//</span>
@@ -514,17 +433,18 @@
                     }
 
                     <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">event</span>))
-                })
-                .<span class="ident">boxed</span>();
+                });
 
             <span class="prelude-val">Ok</span>(<span class="ident">stream</span>)
-        })
+        };
+
+        <span class="ident">fut</span>.<span class="ident">try_flatten_stream</span>().<span class="ident">boxed</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">checkpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">checkpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
         <span class="comment">// Checkpointing happens in memory on the atomic sequence number checkpoint.</span>
         <span class="self">self</span>.<span class="ident">last_sequence_number</span>.<span class="ident">store</span>(<span class="ident">version</span>, <span class="ident">Ordering::Relaxed</span>);
-        <span class="ident">ok</span>(()).<span class="ident">boxed</span>()
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </pre></div>

@@ -32,20 +32,20 @@ using the <a href="trait.Subscription.html#tymethod.resume"><code>resume</code><
 take a look at persisted subscriptions, such as
 <a href="../postgres/subscription/struct.Persisted.html"><code>postgres::subscription::Persisted</code></a>.</p>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.Transient.html" title="eventually::subscription::Transient struct">Transient</a></div><div class="item-right docblock-short"><p><a href="trait.Subscription.html"><code>Subscription</code></a> type which gets deleted once the process using it
+<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.Transient.html" title="eventually::subscription::Transient struct">Transient</a></div><div class="item-right docblock-short"><p><a href="../trait.Subscription.html" title="Subscription"><code>Subscription</code></a> type which gets deleted once the process using it
 gets terminated.</p>
 </div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="eventually::subscription::Error enum">Error</a></div><div class="item-right docblock-short"><p>Error type returned by a <a href="struct.Transient.html"><code>Transient</code></a> Subscription.</p>
+<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="eventually::subscription::Error enum">Error</a></div><div class="item-right docblock-short"><p>Error type returned by a <a href="struct.Transient.html" title="Transient"><code>Transient</code></a> Subscription.</p>
 </div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
 <div class="item-table"><div class="item-left module-item"><a class="trait" href="trait.EventSubscriber.html" title="eventually::subscription::EventSubscriber trait">EventSubscriber</a></div><div class="item-right docblock-short"><p>Component to let users subscribe to newly-inserted events into the
-<a href="../store/trait.EventStore.html"><code>EventStore</code></a>.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.Subscription.html" title="eventually::subscription::Subscription trait">Subscription</a></div><div class="item-right docblock-short"><p>A Subscription to an <a href="type.EventStream.html"><code>EventStream</code></a> which can be “checkpointed”:
+<a href="../trait.EventStore.html" title="EventStore"><code>EventStore</code></a>.</p>
+</div><div class="item-left module-item"><a class="trait" href="trait.Subscription.html" title="eventually::subscription::Subscription trait">Subscription</a></div><div class="item-right docblock-short"><p>A Subscription to an <a href="type.EventStream.html" title="EventStream"><code>EventStream</code></a> which can be “checkpointed”:
 keeps a record of the latest message processed by itself using
-<a href="trait.Subscription.html#method.checkpoint"><code>checkpoint</code></a>, and can resume working from such message by using the
-<a href="trait.Subscription.html#method.resume"><code>resume</code></a>.</p>
+<a href="../trait.Subscription.html#tymethod.checkpoint" title="Subscription::checkpoint"><code>Subscription::checkpoint</code></a>, and can resume working from such message by using the
+<a href="../trait.Subscription.html#tymethod.resume" title="Subscription::resume"><code>Subscription::resume</code></a>.</p>
 </div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="type" href="type.EventStream.html" title="eventually::subscription::EventStream type">EventStream</a></div><div class="item-right docblock-short"><p>Stream of events returned by the <a href="trait.EventSubscriber.html#method.subscribe_all"><code>EventSubscriber::subscribe_all</code></a> method.</p>
-</div><div class="item-left module-item"><a class="type" href="type.SubscriptionStream.html" title="eventually::subscription::SubscriptionStream type">SubscriptionStream</a></div><div class="item-right docblock-short"><p>Stream of events returned by the <a href="trait.Subscription.html#method.resume"><code>Subscription::resume</code></a> method.</p>
+<div class="item-table"><div class="item-left module-item"><a class="type" href="type.EventStream.html" title="eventually::subscription::EventStream type">EventStream</a></div><div class="item-right docblock-short"><p>Stream of events returned by the <a href="../trait.EventSubscriber.html#tymethod.subscribe_all" title="EventSubscriber::subscribe_all"><code>EventSubscriber::subscribe_all</code></a> method.</p>
+</div><div class="item-left module-item"><a class="type" href="type.SubscriptionStream.html" title="eventually::subscription::SubscriptionStream type">SubscriptionStream</a></div><div class="item-right docblock-short"><p>Stream of events returned by the <a href="../trait.Subscription.html#tymethod.resume" title="Subscription::resume"><code>Subscription::resume</code></a> method.</p>
 </div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script>
 </body></html>

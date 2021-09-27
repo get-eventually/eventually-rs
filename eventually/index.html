@@ -66,14 +66,14 @@ as a <em>transaction boundary</em>.</p>
 <a href="trait.Aggregate.html#associatedtype.Event"><code>Event</code></a>s for a certain “source” –
 e.g. an <a href="trait.Aggregate.html"><code>Aggregate</code></a>.</p>
 </div><div class="item-left module-item"><a class="trait" href="trait.EventSubscriber.html" title="eventually::EventSubscriber trait">EventSubscriber</a></div><div class="item-right docblock-short"><p>Component to let users subscribe to newly-inserted events into the
-<a href="../store/trait.EventStore.html"><code>EventStore</code></a>.</p>
+<a href="trait.EventStore.html" title="EventStore"><code>EventStore</code></a>.</p>
 </div><div class="item-left module-item"><a class="trait" href="trait.Projection.html" title="eventually::Projection trait">Projection</a></div><div class="item-right docblock-short"><p>A <code>Projection</code> is an optimized read model (or materialized view)
 of an <a href="../aggregate/trait.Aggregate.html"><code>Aggregate</code></a> model(s), that can be assembled by left-folding
 its previous state and a number of ordered, consecutive events.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.Subscription.html" title="eventually::Subscription trait">Subscription</a></div><div class="item-right docblock-short"><p>A Subscription to an <a href="type.EventStream.html"><code>EventStream</code></a> which can be “checkpointed”:
+</div><div class="item-left module-item"><a class="trait" href="trait.Subscription.html" title="eventually::Subscription trait">Subscription</a></div><div class="item-right docblock-short"><p>A Subscription to an <a href="subscription/type.EventStream.html" title="EventStream"><code>EventStream</code></a> which can be “checkpointed”:
 keeps a record of the latest message processed by itself using
-<a href="trait.Subscription.html#method.checkpoint"><code>checkpoint</code></a>, and can resume working from such message by using the
-<a href="trait.Subscription.html#method.resume"><code>resume</code></a>.</p>
+<a href="trait.Subscription.html#tymethod.checkpoint" title="Subscription::checkpoint"><code>Subscription::checkpoint</code></a>, and can resume working from such message by using the
+<a href="trait.Subscription.html#tymethod.resume" title="Subscription::resume"><code>Subscription::resume</code></a>.</p>
 </div><div class="item-left module-item"><a class="trait" href="trait.Versioned.html" title="eventually::Versioned trait">Versioned</a></div><div class="item-right docblock-short"><p>Data type that carries a version for Optimistic Concurrency Control.</p>
 </div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
 <div class="item-table"><div class="item-left module-item"><a class="fn" href="fn.spawn.html" title="eventually::spawn fn">spawn</a></div><div class="item-right docblock-short"><p>Spawns a new asynchronous task, returning a
