@@ -146,16 +146,15 @@ where
         let events = root.take_events_to_commit();
 
         if events.is_empty() {
-            Ok(root)
-        } else {
-            version = self
-                .store
-                .append(root.id().clone(), Expected::Exact(version), events)
-                .await
-                .map_err(Error::Store)?;
-
-            Ok(root.with_version(version))
+            return Ok(root);
         }
+        version = self
+            .store
+            .append(root.id().clone(), Expected::Exact(version), events)
+            .await
+            .map_err(Error::Store)?;
+
+        Ok(root.with_version(version))
     }
 
     /// Removes the specified [`Aggregate`] from the `Repository`,
