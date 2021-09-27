@@ -8,8 +8,9 @@ use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use futures::future::BoxFuture;
+use async_trait::async_trait;
 use futures::stream::{StreamExt, TryStreamExt};
+use futures::TryFutureExt;
 
 use serde::{Deserialize, Serialize};
 
@@ -144,6 +145,7 @@ where
     subscriber: EventSubscriber<SourceId, Event>,
 }
 
+#[async_trait]
 impl<SourceId, Event, Tls> Subscription for Persistent<SourceId, Event, Tls>
 where
     SourceId: TryFrom<String> + Display + Eq + Clone + Send + Sync + 'static,
@@ -159,7 +161,7 @@ where
     type Event = Event;
     type Error = Error;
 
-    fn resume(&self) -> BoxFuture<Result<SubscriptionStream<Self>, Self::Error>> {
+    fn resume(&self) -> SubscriptionStream<Self> {
         let fut = async move {
             let last_sequence_number = self.last_sequence_number.load(Ordering::Relaxed);
 
@@ -219,38 +221,35 @@ where
                     }
 
                     Ok(Some(event))
-                })
-                .boxed();
+                });
 
             Ok(stream)
         };
 
-        Box::pin(fut)
+        fut.try_flatten_stream().boxed()
     }
 
-    fn checkpoint(&self, version: u32) -> BoxFuture<Result<(), Self::Error>> {
-        Box::pin(async move {
-            let params: Params = &[&self.name, &self.store.type_name, &(version as i64)];
+    async fn checkpoint(&self, version: u32) -> Result<(), Self::Error> {
+        let params: Params = &[&self.name, &self.store.type_name, &(version as i64)];
 
-            #[cfg(feature = "with-tracing")]
-            tracing::trace!(
-                checkpoint = version,
-                subscription.name = %self.name,
-                subscription.aggregate_type = %self.store.type_name,
-                "Checkpointing persistent subscription"
-            );
+        #[cfg(feature = "with-tracing")]
+        tracing::trace!(
+            checkpoint = version,
+            subscription.name = %self.name,
+            subscription.aggregate_type = %self.store.type_name,
+            "Checkpointing persistent subscription"
+        );
 
-            let client = self.pool.get().await.map_err(Error::Checkpoint)?;
-            client
-                .execute(CHECKPOINT_SUBSCRIPTION, params)
-                .await
-                .map_err(bb8::RunError::User)
-                .map_err(Error::Checkpoint)?;
+        let client = self.pool.get().await.map_err(Error::Checkpoint)?;
+        client
+            .execute(CHECKPOINT_SUBSCRIPTION, params)
+            .await
+            .map_err(bb8::RunError::User)
+            .map_err(Error::Checkpoint)?;
 
-            self.last_sequence_number
-                .store(version as i64, Ordering::Relaxed);
+        self.last_sequence_number
+            .store(version as i64, Ordering::Relaxed);
 
-            Ok(())
-        })
+        Ok(())
     }
 }

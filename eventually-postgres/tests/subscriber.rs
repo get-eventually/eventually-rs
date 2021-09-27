@@ -150,8 +150,6 @@ async fn persistent_subscription_works() {
 
     let events: Vec<Persisted<String, Event>> = subscription
         .resume()
-        .await
-        .expect("failed to resume subscription")
         .take(3)
         .try_collect()
         .await

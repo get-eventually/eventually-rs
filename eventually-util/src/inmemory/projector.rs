@@ -66,7 +66,7 @@ where
         #[cfg(feature = "with-tracing")]
         let projection_type = std::any::type_name::<P>();
 
-        let mut stream = self.subscription.resume().await?;
+        let mut stream = self.subscription.resume();
 
         while let Some(result) = stream.next().await {
             let event = result?;
