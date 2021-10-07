@@ -9,7 +9,7 @@ use std::fmt::Debug;
 
 use futures::stream::TryStreamExt;
 
-use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootBuilder};
+use crate::aggregate::{Aggregate, AggregateRoot, AggregateRootFactory};
 use crate::store::{EventStore, Expected, Select};
 use crate::versioning::Versioned;
 
@@ -58,7 +58,7 @@ where
     T: Aggregate + Clone + 'static,
     Store: EventStore<SourceId = T::Id, Event = T::Event>,
 {
-    builder: AggregateRootBuilder<T>,
+    factory: AggregateRootFactory<T>,
     store: Store,
 }
 
@@ -73,8 +73,8 @@ where
     /// [`EventStore`]: ../store/trait.EventStore.html
     /// [`Aggregate`]: ../aggregate/trait.Aggregate.html
     #[inline]
-    pub fn new(builder: AggregateRootBuilder<T>, store: Store) -> Self {
-        Repository { builder, store }
+    pub fn new(factory: AggregateRootFactory<T>, store: Store) -> Self {
+        Repository { factory, store }
     }
 }
 
@@ -123,7 +123,7 @@ where
             .await
             // ...and map the State to a new AggregateRoot only if there is
             // at least one Event coming from the Event Stream.
-            .map(|(version, state)| self.builder.build_with_state(id, version, state))
+            .map(|(version, state)| self.factory.build_with_state(id, version, state))
     }
 
     /// Adds a new [`State`] of the [`Aggregate`] into the `Repository`,

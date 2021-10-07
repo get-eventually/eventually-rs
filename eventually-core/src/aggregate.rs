@@ -83,16 +83,16 @@ pub trait AggregateExt: Aggregate {
 
 impl<T> AggregateExt for T where T: Aggregate {}
 
-/// Builder type for new [`AggregateRoot`] instances.
+/// Factory type for new [`AggregateRoot`] instances.
 #[derive(Clone)]
-pub struct AggregateRootBuilder<T>
+pub struct AggregateRootFactory<T>
 where
     T: Aggregate,
 {
     aggregate: T,
 }
 
-impl<T> From<T> for AggregateRootBuilder<T>
+impl<T> From<T> for AggregateRootFactory<T>
 where
     T: Aggregate,
 {
@@ -102,7 +102,7 @@ where
     }
 }
 
-impl<T> AggregateRootBuilder<T>
+impl<T> AggregateRootFactory<T>
 where
     T: Aggregate + Clone,
 {
@@ -139,9 +139,9 @@ where
 /// ## Initialize
 ///
 /// An [`AggregateRoot`] can only be initialized using the
-/// [`AggregateRootBuilder`].
+/// [`AggregateRootFactory`].
 ///
-/// Check [`AggregateRootBuilder::build`] for more information.
+/// Check [`AggregateRootFactory::build`] for more information.
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize))]

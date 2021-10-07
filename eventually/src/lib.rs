@@ -52,7 +52,7 @@
 //! [`Projection`]: trait.Projection.html
 
 pub use eventually_core::aggregate::{
-    Aggregate, AggregateExt, AggregateId, AggregateRoot, AggregateRootBuilder,
+    Aggregate, AggregateExt, AggregateId, AggregateRoot, AggregateRootFactory,
 };
 pub use eventually_core::projection::Projection;
 pub use eventually_core::repository::Repository;
@@ -223,7 +223,7 @@ pub mod aggregate {
     //! by managing its [`State`] and the access to submit commands.
     //!
     //! Access to an [`AggregateRoot`] is obtainable in two ways:
-    //! 1. Through the [`AggregateRootBuilder`], useful for testing
+    //! 1. Through the [`AggregateRootFactory`], useful for testing
     //! 2. Through a [`Repository`] instance
     //!
     //! More on the [`Repository`] in the [module-level
@@ -240,7 +240,7 @@ pub mod aggregate {
     //! [`as_aggregate`]: trait.Optional.html#method.as_aggregate
     //! [`optional::AsAggregate`]: ../optional/struct.AsAggregate.html
     //! [`AggregateRoot`]: struct.AggregateRoot.html
-    //! [`AggregateRootBuilder`]: struct.AggregateRootBuilder.html
+    //! [`AggregateRootFactory`]: struct.AggregateRootFactory.html
     //! [`Repository`]: struct.Repository.html
 
     pub use eventually_core::aggregate::*;
