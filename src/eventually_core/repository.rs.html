@@ -182,7 +182,7 @@
 
 <span class="kw">use</span> <span class="ident">futures::stream::TryStreamExt</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootBuilder</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootFactory</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::store</span>::{<span class="ident">EventStore</span>, <span class="ident">Expected</span>, <span class="ident">Select</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::versioning::Versioned</span>;
 
@@ -231,7 +231,7 @@
     <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">Store</span>: <span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">T::Id</span>, <span class="ident">Event</span> <span class="op">=</span> <span class="ident">T::Event</span><span class="op">&gt;</span>,
 {
-    <span class="ident">builder</span>: <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="ident">factory</span>: <span class="ident">AggregateRootFactory</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">store</span>: <span class="ident">Store</span>,
 }
 
@@ -246,8 +246,8 @@
     <span class="doccomment">/// [`EventStore`]: ../store/trait.EventStore.html</span>
     <span class="doccomment">/// [`Aggregate`]: ../aggregate/trait.Aggregate.html</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">builder</span>: <span class="ident">AggregateRootBuilder</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">store</span>: <span class="ident">Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Repository</span> { <span class="ident">builder</span>, <span class="ident">store</span> }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">factory</span>: <span class="ident">AggregateRootFactory</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">store</span>: <span class="ident">Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Repository</span> { <span class="ident">factory</span>, <span class="ident">store</span> }
     }
 }
 
@@ -296,7 +296,7 @@
             .<span class="kw">await</span>
             <span class="comment">// ...and map the State to a new AggregateRoot only if there is</span>
             <span class="comment">// at least one Event coming from the Event Stream.</span>
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">version</span>, <span class="ident">state</span>)<span class="op">|</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">build_with_state</span>(<span class="ident">id</span>, <span class="ident">version</span>, <span class="ident">state</span>))
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">version</span>, <span class="ident">state</span>)<span class="op">|</span> <span class="self">self</span>.<span class="ident">factory</span>.<span class="ident">build_with_state</span>(<span class="ident">id</span>, <span class="ident">version</span>, <span class="ident">state</span>))
     }
 
     <span class="doccomment">/// Adds a new [`State`] of the [`Aggregate`] into the `Repository`,</span>

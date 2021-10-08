@@ -473,7 +473,7 @@
 <span class="doccomment">//! [`Projection`]: trait.Projection.html</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core::aggregate</span>::{
-    <span class="ident">Aggregate</span>, <span class="ident">AggregateExt</span>, <span class="ident">AggregateId</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootBuilder</span>,
+    <span class="ident">Aggregate</span>, <span class="ident">AggregateExt</span>, <span class="ident">AggregateId</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootFactory</span>,
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core::projection::Projection</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core::repository::Repository</span>;
@@ -644,7 +644,7 @@
     <span class="doccomment">//! by managing its [`State`] and the access to submit commands.</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! Access to an [`AggregateRoot`] is obtainable in two ways:</span>
-    <span class="doccomment">//! 1. Through the [`AggregateRootBuilder`], useful for testing</span>
+    <span class="doccomment">//! 1. Through the [`AggregateRootFactory`], useful for testing</span>
     <span class="doccomment">//! 2. Through a [`Repository`] instance</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! More on the [`Repository`] in the [module-level</span>
@@ -661,7 +661,7 @@
     <span class="doccomment">//! [`as_aggregate`]: trait.Optional.html#method.as_aggregate</span>
     <span class="doccomment">//! [`optional::AsAggregate`]: ../optional/struct.AsAggregate.html</span>
     <span class="doccomment">//! [`AggregateRoot`]: struct.AggregateRoot.html</span>
-    <span class="doccomment">//! [`AggregateRootBuilder`]: struct.AggregateRootBuilder.html</span>
+    <span class="doccomment">//! [`AggregateRootFactory`]: struct.AggregateRootFactory.html</span>
     <span class="doccomment">//! [`Repository`]: struct.Repository.html</span>
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">eventually_core::aggregate</span>::<span class="kw-2">*</span>;

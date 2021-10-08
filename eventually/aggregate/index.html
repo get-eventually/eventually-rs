@@ -137,7 +137,7 @@ newtype adapter.</p>
 by managing its <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> and the access to submit commands.</p>
 <p>Access to an <a href="struct.AggregateRoot.html"><code>AggregateRoot</code></a> is obtainable in two ways:</p>
 <ol>
-<li>Through the <a href="struct.AggregateRootBuilder.html"><code>AggregateRootBuilder</code></a>, useful for testing</li>
+<li>Through the <a href="struct.AggregateRootFactory.html"><code>AggregateRootFactory</code></a>, useful for testing</li>
 <li>Through a <a href="struct.Repository.html"><code>Repository</code></a> instance</li>
 </ol>
 <p>More on the <a href="struct.Repository.html"><code>Repository</code></a> in the <a href="../repository/index.html">module-level
@@ -145,7 +145,7 @@ documentation</a>.</p>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.AggregateRoot.html" title="eventually::aggregate::AggregateRoot struct">AggregateRoot</a></div><div class="item-right docblock-short"><p>An <a href="../struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> represents an handler to the <a href="../trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> it’s
 managing, such as:</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.AggregateRootBuilder.html" title="eventually::aggregate::AggregateRootBuilder struct">AggregateRootBuilder</a></div><div class="item-right docblock-short"><p>Builder type for new <a href="../struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> instances.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.AggregateRootFactory.html" title="eventually::aggregate::AggregateRootFactory struct">AggregateRootFactory</a></div><div class="item-right docblock-short"><p>Factory type for new <a href="../struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> instances.</p>
 </div><div class="item-left module-item"><a class="struct" href="struct.Repository.html" title="eventually::aggregate::Repository struct">Repository</a></div><div class="item-right docblock-short"><p>Implementation of the <a href="https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern">Repository pattern</a> for storing, retrieving
 and deleting <a href="../aggregate/trait.Aggregate.html"><code>Aggregate</code></a>s.</p>
 </div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
