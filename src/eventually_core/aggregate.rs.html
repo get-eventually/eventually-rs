@@ -256,12 +256,6 @@
 <span id="256">256</span>
 <span id="257">257</span>
 <span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Foundation traits for creating Domain abstractions</span>
 <span class="doccomment">//! using [the `Aggregate` pattern](https://martinfowler.com/bliki/DDD_Aggregate.html).</span>
@@ -387,7 +381,7 @@
             <span class="ident">version</span>,
             <span class="ident">state</span>,
             <span class="ident">aggregate</span>: <span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">clone</span>(),
-            <span class="ident">to_commit</span>: <span class="prelude-val">None</span>,
+            <span class="ident">to_commit</span>: <span class="ident">Vec::default</span>(),
         }
     }
 }
@@ -424,7 +418,7 @@
     <span class="ident">aggregate</span>: <span class="ident">T</span>,
 
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip_serializing</span>))]</span>
-    <span class="ident">to_commit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">to_commit</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">AggregateRoot</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -468,8 +462,8 @@
     <span class="doccomment">/// Takes the list of events to commit from the current instance,</span>
     <span class="doccomment">/// resetting it to `None`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">take_events_to_commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">to_commit</span>, <span class="prelude-val">None</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">take_events_to_commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span> {
+        <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">to_commit</span>)
     }
 
     <span class="doccomment">/// Returns a new [`AggregateRoot`] having the specified version.</span>
@@ -515,14 +509,8 @@
 
         <span class="comment">// Only apply new events if the command handling actually</span>
         <span class="comment">// produced new ones.</span>
-        <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">T::fold</span>(<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">clone</span>(), <span class="ident">events</span>.<span class="ident">clone</span>().<span class="ident">into_iter</span>())<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">to_commit</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">to_commit</span>.<span class="ident">take</span>() {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">events</span>,
-            <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">list</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">events</span>);
-                <span class="ident">list</span>
-            }
-        });
+        <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">T::fold</span>(<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">clone</span>(), <span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>())<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">to_commit</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">events</span>);
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }

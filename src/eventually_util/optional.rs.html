@@ -137,7 +137,7 @@
 <span id="137">137</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Contains a different flavour of the [`Aggregate`] trait,</span>
-<span class="doccomment">//! while still maintaining compatibility through [`AsAggregate`] type.</span>
+<span class="doccomment">//! while still maintaining compatibility through [`IntoAggregate`] type.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Check out [`optional::Aggregate`](Aggregate) for more information.</span>
 
@@ -204,11 +204,11 @@
     <span class="doccomment">/// a _newtype instance_ compatible with the core</span>
     <span class="doccomment">/// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_aggregate</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">into_aggregate</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IntoAggregate</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">AsAggregate::from</span>(<span class="self">self</span>)
+        <span class="ident">IntoAggregate::from</span>(<span class="self">self</span>)
     }
 }
 
@@ -220,26 +220,26 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// 1. Use `From&lt;Aggregate&gt;` trait implementation:</span>
 <span class="doccomment">///     ```text</span>
-<span class="doccomment">///     use eventually_util::optional::AsAggregate;</span>
+<span class="doccomment">///     use eventually_util::optional::IntoAggregate;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">///     let aggregate = AsAggregate::from(MyOptionalAggregate);</span>
+<span class="doccomment">///     let aggregate = IntoAggregate::from(MyOptionalAggregate);</span>
 <span class="doccomment">///     ```</span>
 <span class="doccomment">/// 2. Use the [`Aggregate::as_aggregate`] method:</span>
 <span class="doccomment">///     ```text</span>
 <span class="doccomment">///     let aggregate = MyOptionalAggregate.as_aggregate();</span>
 <span class="doccomment">///     ```</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">A</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntoAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">A</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntoAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">AsAggregate</span>(<span class="ident">value</span>)
+        <span class="ident">IntoAggregate</span>(<span class="ident">value</span>)
     }
 }
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">eventually_core::aggregate::Aggregate</span> <span class="kw">for</span> <span class="ident">AsAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">eventually_core::aggregate::Aggregate</span> <span class="kw">for</span> <span class="ident">IntoAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">A</span>: <span class="ident">Aggregate</span>,
     <span class="ident">A</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
