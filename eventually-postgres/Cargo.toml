@@ -17,7 +17,7 @@ with-tracing = ["tracing", "tracing-futures"]
 full = ["with-tracing"]
 
 [dependencies]
-eventually-core = { version = "0.4.0", path = "../eventually-core", features = ["serde"] }
+eventually = { version = "0.4.0", path = "../eventually", features = ["serde"] }
 eventually-util = { version = "0.4.0", path = "../eventually-util", features = ["serde"] }
 
 futures = "0.3"

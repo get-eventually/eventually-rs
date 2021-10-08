@@ -19,8 +19,8 @@ use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
 use tokio_postgres::Socket;
 
-use eventually_core::store::{EventStore as EventStoreTrait, Select};
-use eventually_core::subscription::{
+use eventually::store::{EventStore as EventStoreTrait, Select};
+use eventually::subscription::{
     EventSubscriber as EventSubscriberTrait, Subscription, SubscriptionStream,
 };
 

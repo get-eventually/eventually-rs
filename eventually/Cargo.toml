@@ -13,17 +13,16 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [features]
 default = []
-serde = ["eventually-core/serde"]
-# TODO: is there a way to exclude eventually-postgres/with-tracing if postgres
-# hasn't been specified in features?
-tracing = ["eventually-core/with-tracing", "eventually-util/with-tracing", "eventually-postgres/with-tracing"]
-postgres = ["eventually-postgres"]
-full = ["serde", "tracing", "postgres"]
+tracing = ["eventually-util/with-tracing"]
+full = ["serde", "tracing"]
 
 [dependencies]
-eventually-core = { version = "0.4.0", path = "../eventually-core" }
+anyhow = "1.0.44"
+async-trait = "0.1.51"
 eventually-util = { version = "0.4.0", path = "../eventually-util" }
-eventually-postgres = { version = "0.3.0", path = "../eventually-postgres", optional = true }
+futures = "0.3.17"
+serde = { version = "1.0.130", optional = true, features = ["derive"] }
+thiserror = "1.0.29"
 
 [dev-dependencies]
 async-trait = "0.1.51"

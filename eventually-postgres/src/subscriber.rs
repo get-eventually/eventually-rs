@@ -12,8 +12,8 @@ use std::sync::Arc;
 
 use futures::stream::StreamExt;
 
-use eventually_core::store::Persisted;
-use eventually_core::subscription::EventStream;
+use eventually::store::Persisted;
+use eventually::subscription::EventStream;
 
 use serde::Deserialize;
 
@@ -123,7 +123,7 @@ where
     }
 }
 
-impl<Id, Event> eventually_core::subscription::EventSubscriber for EventSubscriber<Id, Event>
+impl<Id, Event> eventually::subscription::EventSubscriber for EventSubscriber<Id, Event>
 where
     Id: Eq + Send + Sync + Clone + 'static,
     Event: Send + Sync + Clone + 'static,

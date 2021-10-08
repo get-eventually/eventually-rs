@@ -7,7 +7,7 @@ use eventually_core::subscription::Subscription;
 use futures::stream::StreamExt;
 use futures::TryFutureExt;
 
-use crate::sync::RwLock;
+use tokio::sync::RwLock;
 
 /// A `Projector` manages the state of a single [`Projection`]
 /// by opening a long-running stream of all events coming from the
