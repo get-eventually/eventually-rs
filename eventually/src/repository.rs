@@ -156,24 +156,27 @@ where
     /// [`State`]: ../aggregate/trait.Aggregate.html#associatedtype.State
     /// [`Event`]: ../aggregate/trait.Aggregate.html#associatedtype.Event
     /// [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
-    #[cfg_attr(
-        feature = "with-tracing",
-        tracing::instrument(level = "info", name = "Repository::add", skip(self, root))
-    )]
     pub async fn add(&mut self, mut root: AggregateRoot<T>) -> Result<AggregateRoot<T>, T, Store> {
-        let mut version = root.version();
         let events = root.take_events_to_commit();
-
         if events.is_empty() {
             return Ok(root);
         }
-        version = self
-            .store
-            .append(root.id().clone(), Expected::Exact(version), events)
-            .await
-            .map_err(Error::Store)?;
+        let id = root.id().clone();
+        let version = self.append_events(id, root.version(), events).await?;
 
         Ok(root.with_version(version))
+    }
+
+    #[cfg_attr(
+        feature = "with-tracing",
+        tracing::instrument(name = "Repository::add", skip(self))
+    )]
+    async fn append_events(&mut self, id: T::Id, version: u32, events: Vec<T::Event>) -> Result<u32, T, Store> {
+        self
+            .store
+            .append(id, Expected::Exact(version), events)
+            .await
+            .map_err(Error::Store)
     }
 
     /// Removes the specified [`Aggregate`] from the `Repository`,
