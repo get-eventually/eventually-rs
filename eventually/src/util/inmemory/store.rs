@@ -63,7 +63,7 @@ impl EventStoreBuilder {
         T::Id: Hash + Eq + Clone,
         T::Event: Clone,
     {
-        Default::default()
+        EventStore::default()
     }
 }
 
@@ -85,7 +85,7 @@ where
     Id: Hash + Eq + Clone,
     Event: Clone,
 {
-    /// Creates a new EventStore with a specified in-memory broadcast channel
+    /// Creates a new [`EventStore`] with a specified in-memory broadcast channel
     /// size, which will used by the
     /// [`subscribe_all`](EventSubscriber::subscribe_all) method to notify
     /// of newly [`EventStore::append`](crate::store::EventStore)
@@ -167,8 +167,7 @@ where
                 .read()
                 .get(&id)
                 .and_then(|events| events.last())
-                .map(|event| event.version())
-                .unwrap_or(0);
+                .map_or(0, Versioned::version);
 
             if let Expected::Exact(actual) = version {
                 if expected != actual {
@@ -188,10 +187,7 @@ where
             // Copy of the events for broadcasting.
             let broadcast_copy = persisted_events.clone();
 
-            let last_version = persisted_events
-                .last()
-                .map(Persisted::version)
-                .unwrap_or(expected);
+            let last_version = persisted_events.last().map_or(expected, Persisted::version);
 
             self.backend
                 .write()
@@ -207,9 +203,9 @@ where
             #[allow(unused_must_use)]
             {
                 // Broadcast events into the store's Sender channel.
-                broadcast_copy.into_iter().for_each(|event| {
+                for event in broadcast_copy {
                     self.tx.send(event);
-                });
+                }
             }
 
             Ok(last_version)
@@ -278,7 +274,7 @@ where
             .collect();
 
         // Events must be sorted by the sequence number when using $all.
-        events.sort_by_key(|a| a.sequence_number());
+        events.sort_by_key(Persisted::sequence_number);
 
         let fut = futures::future::ok(iter(events).map(Ok).boxed());
 

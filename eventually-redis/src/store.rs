@@ -93,8 +93,7 @@ impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
     Id: TryFrom<String> + Display + Eq + Clone + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
-    Event: Serialize + Send + Sync,
-    for<'de> Event: Deserialize<'de>,
+    for<'de> Event: Serialize + Send + Sync + Deserialize<'de>,
 {
     type SourceId = Id;
     type Event = Event;
