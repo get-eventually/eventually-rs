@@ -61,7 +61,7 @@ pub struct EventSubscriber<Id, Event> {
     pub(crate) event: std::marker::PhantomData<Event>,
 }
 
-impl<Id, Event> eventually::EventSubscriber for EventSubscriber<Id, Event>
+impl<Id, Event> eventually::subscription::EventSubscriber for EventSubscriber<Id, Event>
 where
     Id: TryFrom<String> + Eq + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,

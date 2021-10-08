@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use eventually::inmemory::Projector;
 use eventually::store::{Expected, Persisted, Select};
-use eventually::sync::RwLock;
-use eventually::{EventStore, EventSubscriber, Projection};
+use eventually::{EventStore, subscription::EventSubscriber, projection::Projection};
 use eventually_redis::{Builder, EventStore as RedisEventStore};
-
+use tokio::sync::RwLock;
 use async_trait::async_trait;
 
 use futures::stream::TryStreamExt;
@@ -157,7 +156,7 @@ async fn it_creates_persistent_subscription_successfully() {
     }
 
     let counter = Arc::new(RwLock::new(Counter::default()));
-    let mut projector = Projector::new(counter.clone(), subscription);
+    let mut projector = Projector::new(counter, subscription);
 
     // Run projection asynchronously.
     tokio::spawn(async move {
