@@ -122,7 +122,7 @@ where
             version,
             state,
             aggregate: self.aggregate.clone(),
-            to_commit: None,
+            to_commit: Vec::default(),
         }
     }
 }
@@ -159,7 +159,7 @@ where
     aggregate: T,
 
     #[cfg_attr(feature = "serde", serde(skip_serializing))]
-    to_commit: Option<Vec<T::Event>>,
+    to_commit: Vec<T::Event>,
 }
 
 impl<T> PartialEq for AggregateRoot<T>
@@ -203,8 +203,8 @@ where
     /// Takes the list of events to commit from the current instance,
     /// resetting it to `None`.
     #[inline]
-    pub(crate) fn take_events_to_commit(&mut self) -> Option<Vec<T::Event>> {
-        std::mem::replace(&mut self.to_commit, None)
+    pub(crate) fn take_events_to_commit(&mut self) -> Vec<T::Event> {
+        std::mem::take(&mut self.to_commit)
     }
 
     /// Returns a new [`AggregateRoot`] having the specified version.
@@ -250,14 +250,8 @@ where
 
         // Only apply new events if the command handling actually
         // produced new ones.
-        self.state = T::fold(self.state.clone(), events.clone().into_iter())?;
-        self.to_commit = Some(match self.to_commit.take() {
-            None => events,
-            Some(mut list) => {
-                list.append(&mut events);
-                list
-            }
-        });
+        self.state = T::fold(self.state.clone(), events.iter().cloned())?;
+        self.to_commit.append(&mut events);
 
         Ok(self)
     }
