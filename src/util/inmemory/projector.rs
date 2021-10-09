@@ -9,24 +9,12 @@ use futures::TryFutureExt;
 
 use tokio::sync::RwLock;
 
-/// A `Projector` manages the state of a single [`Projection`]
+/// A [`Projector`] manages the state of a single [`Projection`]
 /// by opening a long-running stream of all events coming from the
 /// [`EventStore`].
 ///
-/// New instances of a `Projector` are obtainable through a [`ProjectorBuilder`]
-/// instance.
-///
-/// The `Projector` will start updating the [`Projection`] state when [`run`]
+/// The [`Projector`] will start updating the [`Projection`] state when [`Projector::run`]
 /// is called.
-///
-/// At each update, the `Projector` will broadcast the latest version of the
-/// [`Projection`] on a `Stream` obtainable through [`watch`].
-///
-/// [`Projection`]: ../../../eventually-core/projection/trait.Projection.html
-/// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html
-/// [`ProjectorBuilder`]: struct.ProjectorBuilder.html
-/// [`run`]: struct.Projector.html#method.run
-/// [`watch`]: struct.Projector.html#method.watch
 pub struct Projector<P, S>
 where
     P: Projection,
@@ -47,10 +35,6 @@ where
 {
     /// Create a new Projector from the provided [`Projection`] and
     /// [`Subscription`] values.
-    ///
-    /// [`Projection`]: ../../eventually-core/projection/trait.Projection.html
-    /// [`Subscription`]:
-    /// ../../eventually-core/subscription/trait.Subscription.html
     pub fn new(projection: Arc<RwLock<P>>, subscription: S) -> Self {
         Self {
             projection,
@@ -59,9 +43,7 @@ where
     }
 
     /// Starts the update of the `Projection` by processing all the events
-    /// coming from the [`EventStore`].
-    ///
-    /// [`EventStore`]: ../../../eventually-core/store/trait.EventStore.html
+    /// coming from the [`EventStore`](crate::EventStore).
     pub async fn run(&mut self) -> anyhow::Result<()> {
         #[cfg(feature = "with-tracing")]
         let projection_type = std::any::type_name::<P>();
