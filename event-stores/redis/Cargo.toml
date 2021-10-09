@@ -1,0 +1,29 @@
+[package]
+name = "eventually-redis"
+description = "Event Store implementation using Redis, for Eventually crate"
+version = "0.4.0"
+edition = "2018"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/eventually-rs/eventually-rs"
+
+categories = ["web-programming", "asynchronous"]
+keywords = ["redis", "eventually", "event-store", "ddd", "event-sourcing"]
+
+[dependencies]
+eventually = { version = "0.4.0", path = "../..", features = ["serde"] }
+
+futures = "0.3"
+redis = { version = "0.21.2", features = ["r2d2", "tokio-comp"] }
+serde = { version = "1.0", features = ["derive"] }
+lazy_static = "1.4.0"
+async-stream = "0.3.0"
+thiserror = "1.0.21"
+anyhow = "1.0.33"
+serde_json = "1.0.59"
+async-trait = "0.1.51"
+
+[dev-dependencies]
+testcontainers = "0.12"
+tokio = { version = "1.3.0", features = ["sync", "macros", "time"] }

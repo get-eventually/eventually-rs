@@ -19,7 +19,6 @@ where all the crates share the same dependencies and lock file.
 
 The workspace has the following crates:
 - [`eventually`]\: the main crate, users should depend solely on this crate
-- [`eventually-core`]\: contains the foundational traits and data structures to enable users to model their domain using Domain-driven Design and Event Sourcing
 - [`eventually-util`]\: contains some utility implementations to the aforemetioned traits, and other utilities for the users (e.g. Projector actors, in-memory Event Store, etc)
 - [`eventually-app-example`]\: an example application to showcase a (not-so) real-world example of how to use the library
 
@@ -100,7 +99,6 @@ Make sure you run `rustfmt` **before committing any changes**, as failing to do 
 
 [workspace]: https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html
 [`eventually`]: ./eventually
-[`eventually-core`]: ./eventually-core
 [`eventually-util`]: ./eventually-util
 [`eventually-app-example`]: ./eventually-app-example
 [issues]: https://github.com/eventually-rs/eventually-rs/issues
