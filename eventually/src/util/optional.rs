@@ -103,8 +103,7 @@ impl<A> From<A> for IntoAggregate<A> {
 #[async_trait]
 impl<A> crate::aggregate::Aggregate for IntoAggregate<A>
 where
-    A: Aggregate,
-    A: Send + Sync,
+    A: Aggregate + Send + Sync,
     A::Id: Send + Sync,
     A::Command: Send + Sync,
     A::State: Send + Sync,

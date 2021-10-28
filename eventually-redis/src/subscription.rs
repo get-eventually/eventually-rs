@@ -93,8 +93,7 @@ impl<Id, Event> Subscription for PersistentSubscription<Id, Event>
 where
     Id: TryFrom<String> + Debug + Eq + Clone + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
-    Event: Debug + Send + Sync,
-    for<'de> Event: Deserialize<'de>,
+    for<'de> Event: Deserialize<'de> + Debug + Send + Sync,
 {
     type SourceId = Id;
     type Event = Event;

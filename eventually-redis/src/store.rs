@@ -117,7 +117,7 @@ where
                 .key(id.to_string())
                 .arg(match version {
                     Expected::Any => -1,
-                    Expected::Exact(v) => v as i64,
+                    Expected::Exact(v) => i64::from(v),
                 })
                 .arg(events)
                 .invoke_async(&mut self.conn)
@@ -134,7 +134,7 @@ where
         select: Select,
     ) -> BoxFuture<StoreResult<StoreEventStream<Self>>> {
         let fut = async move {
-            let stream_name = format!("{}.{}", self.stream_name, id.to_string());
+            let stream_name = format!("{}.{}", self.stream_name, id);
 
             let paginator = stream::into_xrange_stream(
                 self.conn.clone(),
