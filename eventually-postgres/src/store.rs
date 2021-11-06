@@ -1,14 +1,14 @@
 //! Contains an [`EventStore`] implementation using PostgreSQL
 //! as a backend data store.
 //!
-//! [`EventStore`]: ../../eventually-core/store/trait.EventStore.html
+//! [`EventStore`]: ../../eventually/store/trait.EventStore.html
 
 use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 use std::ops::DerefMut;
 
-use eventually_core::aggregate::{Aggregate, AggregateId};
-use eventually_core::store::{AppendError, EventStream, Expected, Persisted, Select};
+use eventually::aggregate::{Aggregate, AggregateId};
+use eventually::store::{AppendError, EventStream, Expected, Persisted, Select};
 
 use futures::future::BoxFuture;
 use futures::stream::{StreamExt, TryStreamExt};
@@ -251,7 +251,7 @@ where
     payload: std::marker::PhantomData<Event>,
 }
 
-impl<Id, Event, Tls> eventually_core::store::EventStore for EventStore<Id, Event, Tls>
+impl<Id, Event, Tls> eventually::store::EventStore for EventStore<Id, Event, Tls>
 where
     Id: TryFrom<String> + Display + Eq + Send + Sync,
     // This bound is for the translation into an anyhow::Error.

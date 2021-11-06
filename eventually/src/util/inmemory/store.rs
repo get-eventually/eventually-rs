@@ -6,11 +6,11 @@ use std::hash::Hash;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
-use eventually_core::aggregate::Aggregate;
-use eventually_core::store::persistent::EventBuilderWithVersion;
-use eventually_core::store::{AppendError, EventStream, Expected, Persisted, Select};
-use eventually_core::subscription::EventSubscriber;
-use eventually_core::versioning::Versioned;
+use crate::aggregate::Aggregate;
+use crate::store::persistent::EventBuilderWithVersion;
+use crate::store::{AppendError, EventStream, Expected, Persisted, Select};
+use crate::subscription::EventSubscriber;
+use crate::versioning::Versioned;
 
 use futures::future::BoxFuture;
 use futures::stream::{empty, iter, StreamExt, TryStreamExt};
@@ -26,7 +26,7 @@ use tracing_futures::Instrument;
 const SUBSCRIBE_CHANNEL_DEFAULT_CAP: usize = 128;
 
 /// Error returned by the
-/// [`EventStore::append`](eventually_core::store::EventStore) when a conflict
+/// [`EventStore::append`](crate::store::EventStore) when a conflict
 /// has been detected.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 #[error("conflicting versions, expected {expected}, got instead {actual}")]
@@ -67,6 +67,8 @@ impl EventStoreBuilder {
     }
 }
 
+type Backend<Id, Event> = HashMap<Id, Vec<Persisted<Id, Event>>>;
+
 /// An in-memory [`EventStore`] implementation, backed by an [`HashMap`].
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Event>
@@ -75,7 +77,7 @@ where
 {
     global_offset: Arc<AtomicU32>,
     tx: Sender<Persisted<Id, Event>>,
-    backend: Arc<RwLock<HashMap<Id, Vec<Persisted<Id, Event>>>>>,
+    backend: Arc<RwLock<Backend<Id, Event>>>,
 }
 
 impl<Id, Event> EventStore<Id, Event>
@@ -86,7 +88,7 @@ where
     /// Creates a new EventStore with a specified in-memory broadcast channel
     /// size, which will used by the
     /// [`subscribe_all`](EventSubscriber::subscribe_all) method to notify
-    /// of newly [`EventStore::append`](eventually_core::store::EventStore)
+    /// of newly [`EventStore::append`](crate::store::EventStore)
     /// events.
     pub fn new(subscribe_capacity: usize) -> Self {
         // Use this broadcast channel to send append events to
@@ -121,7 +123,7 @@ where
     type Event = Event;
     type Error = LaggedError;
 
-    fn subscribe_all(&self) -> eventually_core::subscription::EventStream<Self> {
+    fn subscribe_all(&self) -> crate::subscription::EventStream<Self> {
         // Create a new Receiver from the store Sender.
         //
         // This receiver implements the TryStream trait, which works perfectly
@@ -136,7 +138,7 @@ where
     }
 }
 
-impl<Id, Event> eventually_core::store::EventStore for EventStore<Id, Event>
+impl<Id, Event> crate::store::EventStore for EventStore<Id, Event>
 where
     Id: Hash + Eq + Sync + Send + Debug + Clone,
     Event: Sync + Send + Debug + Clone,
@@ -328,8 +330,8 @@ mod tests {
     use std::cell::RefCell;
     use std::sync::Arc;
 
-    use eventually_core::store::{EventStore, Expected, Persisted, Select};
-    use eventually_core::subscription::EventSubscriber;
+    use crate::store::{EventStore, Expected, Persisted, Select};
+    use crate::subscription::EventSubscriber;
 
     use futures::{StreamExt, TryStreamExt};
 

@@ -14,6 +14,13 @@
 //! [`EventStore`]: struct.EventStore.html
 //! [`EventSubscriber`]: struct.EventSubscriber.html
 
+#[deny(
+    clippy::all,
+    missing_docs,
+    unsafe_code,
+    unused_qualifications,
+    trivial_casts
+)]
 mod store;
 mod stream;
 mod subscriber;

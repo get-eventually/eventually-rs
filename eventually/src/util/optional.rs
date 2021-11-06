@@ -64,7 +64,7 @@ pub trait Aggregate {
 
     /// Translates the current [`optional::Aggregate`](Aggregate) instance into
     /// a _newtype instance_ compatible with the core
-    /// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
+    /// [`Aggregate`](crate::aggregate::Aggregate) trait.
     #[inline]
     fn into_aggregate(self) -> IntoAggregate<Self>
     where
@@ -76,7 +76,7 @@ pub trait Aggregate {
 
 /// _Newtype pattern_ to ensure compatibility between
 /// [`optional::Aggregate`](Aggregate) trait and the core
-/// [`Aggregate`](eventually_core::aggregate::Aggregate) trait.
+/// [`Aggregate`](crate::aggregate::Aggregate) trait.
 ///
 /// ## Usage
 ///
@@ -101,7 +101,7 @@ impl<A> From<A> for IntoAggregate<A> {
 }
 
 #[async_trait]
-impl<A> eventually_core::aggregate::Aggregate for IntoAggregate<A>
+impl<A> crate::aggregate::Aggregate for IntoAggregate<A>
 where
     A: Aggregate,
     A: Send + Sync,

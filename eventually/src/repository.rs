@@ -1,9 +1,30 @@
-//! Contains the [Repository pattern] implementation for [`AggregateRoot`]
-//! instances.
+//! Module containing Repository implementation to retrieve,
+//! save and delete Aggregates.
 //!
-//! Check out [`Repository`] for more information.
+//! ## Repository and Aggregates
 //!
-//! [Repository pattern]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern
+//! As described in the [Interacting with Aggregates using `AggregateRoot`]
+//! section in the `aggregate` module-level documentation, in order to
+//! interact with an Aggregate instance you need to use an
+//! [`AggregateRoot`].
+//!
+//! To get an [`AggregateRoot`], you can use a [`Repository`] instance.
+//!
+//! The [`Repository`] allows to **retrieve**, **save** and **remove**
+//! specific Aggregate instances, by using an underlying [`EventStore`]
+//! implementation that handles the Aggregate's events.
+//!
+//! A [`Repository`] will **always** return an [`AggregateRoot`] instance
+//! on read, whether or not events are present in the [`EventStore`].
+//!
+//! Use the [`Repository`] to implement your bounded-context application
+//! logic, for example in HTTP or RPC handlers.
+//!
+//! [Interacting with Aggregates using `AggregateRoot`]:
+//! ../aggregate/index.html#interacting-with-aggregates-using-aggregateroot
+//! [`AggregateRoot`]: ../aggregate/struct.AggregateRoot.html
+//! [`Repository`]: struct.Repository.html
+//! [`EventStore`]: ../store/trait.EventStore.html
 
 use std::fmt::Debug;
 

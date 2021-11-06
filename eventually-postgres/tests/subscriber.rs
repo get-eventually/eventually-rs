@@ -1,5 +1,5 @@
-use eventually_core::store::{EventStore, Expected, Persisted};
-use eventually_core::subscription::{EventSubscriber as EventSubscriberTrait, Subscription};
+use eventually::store::{EventStore, Expected, Persisted};
+use eventually::subscription::{EventSubscriber as EventSubscriberTrait, Subscription};
 use eventually_postgres::{EventStoreBuilder, EventSubscriber, PersistentBuilder};
 
 use futures::stream::{StreamExt, TryStreamExt};

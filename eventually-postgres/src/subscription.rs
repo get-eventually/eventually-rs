@@ -1,7 +1,7 @@
 //! Contains a persisted implementation of the [`Subscription`] trait
 //! using Postgres as the backend data source for its state.
 //!
-//! [`Subscription`]: ../../eventually-core/subscription/trait.Subscription.html
+//! [`Subscription`]: ../../eventually/subscription/trait.Subscription.html
 
 use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
@@ -19,8 +19,8 @@ use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::tls::{MakeTlsConnect, TlsConnect};
 use tokio_postgres::Socket;
 
-use eventually_core::store::{EventStore as EventStoreTrait, Select};
-use eventually_core::subscription::{
+use eventually::store::{EventStore as EventStoreTrait, Select};
+use eventually::subscription::{
     EventSubscriber as EventSubscriberTrait, Subscription, SubscriptionStream,
 };
 
@@ -130,7 +130,7 @@ where
 /// Use [`PersistentBuilder`] to create new instances of this type.
 ///
 /// [`PersistentBuilder`]: struct.PersistentBuilder.html
-/// [`Subscription`]: ../../eventually-core/subscription/trait.Subscription.html
+/// [`Subscription`]: ../../eventually/subscription/trait.Subscription.html
 pub struct Persistent<SourceId, Event, Tls>
 where
     Tls: MakeTlsConnect<Socket> + Clone + Send + Sync + 'static,

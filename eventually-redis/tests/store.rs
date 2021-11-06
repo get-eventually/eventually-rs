@@ -3,7 +3,7 @@ use std::sync::Arc;
 use eventually::inmemory::Projector;
 use eventually::store::{Expected, Persisted, Select};
 use eventually::sync::RwLock;
-use eventually::{EventStore, EventSubscriber, Projection};
+use eventually::{projection::Projection, subscription::EventSubscriber, EventStore};
 use eventually_redis::{Builder, EventStore as RedisEventStore};
 
 use async_trait::async_trait;

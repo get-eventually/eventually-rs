@@ -46,6 +46,13 @@
 //! [`eventually`]: https://docs.rs/eventually
 //! [`EventStore`]: struct.EventStore.html
 
+#[deny(
+    clippy::all,
+    missing_docs,
+    unsafe_code,
+    unused_qualifications,
+    trivial_casts
+)]
 pub mod store;
 pub mod subscriber;
 pub mod subscription;

@@ -1,5 +1,33 @@
-//! Contains the Event Store trait for storing and streaming
-//! [`Aggregate::Event`](super::aggregate::Aggregate::Event)s.
+//! Module containing support for the Event Store.
+//!
+//! ## Event Store and `eventually`
+//!
+//! An Event Store is an ordered, append-only log of many Domain Events
+//! related to one or more Aggregate instances.
+//!
+//! The Domain Events committed to the Event Store can be streamed back into
+//! the application to load the latest value of an Aggregate state,
+//! by using the concept of Event Streams.
+//!
+//! Since Domain Events in the Store are ordered both globally and
+//! on an Aggregate-instance basis, the Event Stream can either be global
+//! or related to a single Aggregate.
+//!
+//! `eventually` adds support for the Event Store through the [`EventStore`]
+//! trait.
+//!
+//! You rarely need to use the [`EventStore`] directly when writing your
+//! application, since `eventually` exposes multiple utilities that
+//! instrument the usage of the store for you. For example:
+//! * [`Repository`] for retrieving, saving and deleting Aggregates
+//! * [`Projector`] to run [`Projection`]s (check out the [`projection`
+//!   module documentation])
+//!
+//! [`EventStore`]: trait.EventStore.html
+//! [`Repository`]: ../repository/struct.Repository.html
+//! [`Projector`]: ../struct.Projector.html
+//! [`Projection`]: ../trait.Projection.html
+//! [`projection` module documentation]: ../projection/index.html
 
 use std::ops::Deref;
 

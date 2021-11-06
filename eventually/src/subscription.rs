@@ -1,7 +1,63 @@
-//! Module for creating and managing long-running Subscriptions
-//! to incoming events in the [`EventStore`].
+//! Module containing support for Subscriptions to Events coming
+//! from the Event Store.
 //!
+//! ## What are Subscriptions?
+//!
+//! Subscriptions, as the name suggest, allows to subscribe to changes
+//! in the Event Store. Essentialy, Subscriptions receive Events
+//! when they get committed to the Store.
+//!
+//! This allows for near real-time processing of multiple things, such as
+//! publishing committed events on a message broker, or running
+//! **projections** (more on that on [`Projection` documentation]).
+//!
+//! ## Subscriptions in `eventually`
+//!
+//! ### `EventSubscriber` trait
+//!
+//! In order to subscribe to Events, `eventually` exposes the
+//! [`EventSubscriber`] trait, usually implemented by [`EventStore`]
+//! implementations.
+//!
+//! An [`EventSubscriber`] opens an _endless_ [`EventStream`], that gets
+//! closed only at application shutdown, or if the stream gets explicitly
+//! dropped.
+//!
+//! The [`EventStream`] receives all the **new Events** committed
+//! to the [`EventStore`].
+//!
+//! ### `Subscription` trait
+//!
+//! The [`Subscription`] trait represent an ongoing subscription
+//! to Events coming from an [`EventStream`], as described above.
+//!
+//! Similarly to the [`EventSubscriber`], a [`Subscription`]
+//! returns an _endless_ stream of Events called [`SubscriptionStream`].
+//!
+//! However, [`Subscription`]s are **stateful**: they save the latest
+//! Event sequence number that has been processed through the
+//! [`SubscriptionStream`], by using the [`checkpoint`] method. Later,
+//! the [`Subscription`] can be restarted from where it was left off
+//! using the [`resume`] method.
+//!
+//! This module exposes a simple [`Subscription`] implementation:
+//! [`Transient`], for in-memory, one-off subscriptions.
+//!
+//! For a long-running [`Subscription`] implementation,
+//! take a look at persisted subscriptions, such as
+//! [`postgres::subscription::Persisted`].
+//!
+//! [`Projection` documentation]: ../trait.Projection.html
+//! [`EventSubscriber`]: trait.EventSubscriber.html
 //! [`EventStore`]: ../store/trait.EventStore.html
+//! [`EventStream`]: type.EventStream.html
+//! [`Subscription`]: trait.Subscription.html
+//! [`SubscriptionStream`]: type.SubscriptionStream.html
+//! [`checkpoint`]: trait.Subscription.html#tymethod.checkpoint
+//! [`resume`]: trait.Subscription.html#tymethod.resume
+//! [`Transient`]: struct.Transient.html
+//! [`postgres::subscription::Persisted`]:
+//! ../postgres/subscription/struct.Persisted.html
 
 use std::error::Error as StdError;
 use std::sync::atomic::{AtomicU32, Ordering};
