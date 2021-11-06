@@ -26,9 +26,9 @@ mod stream;
 mod subscriber;
 mod subscription;
 
-pub use store::*;
-pub use subscriber::*;
-pub use subscription::*;
+pub use store::EventStore;
+pub use subscriber::EventSubscriber;
+pub use subscription::PersistentSubscription;
 
 use redis::RedisResult;
 

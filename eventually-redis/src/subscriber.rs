@@ -11,11 +11,6 @@ use redis::RedisError;
 
 use serde::Deserialize;
 
-/// Result returning the crate [`SubscriberError`] type.
-///
-/// [`SubscriberError`]: enum.Error.html
-pub type SubscriberResult<T> = Result<T, SubscriberError>;
-
 /// Error types returned by the [`eventually::EventSubscriber`] implementation
 /// on the [`EventSubscriber`] type.
 ///
