@@ -171,9 +171,13 @@ where
         feature = "with-tracing",
         tracing::instrument(name = "Repository::add", skip(self))
     )]
-    async fn append_events(&mut self, id: T::Id, version: u32, events: Vec<T::Event>) -> Result<u32, T, Store> {
-        self
-            .store
+    async fn append_events(
+        &mut self,
+        id: T::Id,
+        version: u32,
+        events: Vec<T::Event>,
+    ) -> Result<u32, T, Store> {
+        self.store
             .append(id, Expected::Exact(version), events)
             .await
             .map_err(Error::Store)
