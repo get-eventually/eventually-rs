@@ -1,4 +1,3 @@
-use std::convert::TryFrom;
 use std::fmt::Debug;
 
 use eventually::store::Persisted;

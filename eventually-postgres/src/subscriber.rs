@@ -6,7 +6,6 @@
 //! ../../eventually/subscription/trait.EventSubscriber.html
 //! [`EventStream`]: ../../eventually/subscription/type.EventStream.html
 
-use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::sync::Arc;
 

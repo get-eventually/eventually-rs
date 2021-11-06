@@ -3,7 +3,6 @@
 //!
 //! [`Subscription`]: ../../eventually/subscription/trait.Subscription.html
 
-use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
