@@ -31,7 +31,6 @@
         src="https://img.shields.io/crates/v/eventually?style=flat-square">
     </a>
     <!-- Github pages docs -->
-    <a href="https://eventually-rs.github.io/eventually-rs/eventually/">
         <img alt="latest main docs"
         src="https://img.shields.io/badge/docs-main-important?style=flat-square" />
     </a>
