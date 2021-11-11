@@ -161,8 +161,8 @@ where
             .read()
             .get(&id)
             .and_then(|events| events.last())
-            .map(|event| event.version())
-            .unwrap_or(0);
+            .map(Versioned::version)
+            .unwrap_or_default();
 
         if let Expected::Exact(actual) = version {
             if expected != actual {
@@ -182,10 +182,7 @@ where
         // Copy of the events for broadcasting.
         let broadcast_copy = persisted_events.clone();
 
-        let last_version = persisted_events
-            .last()
-            .map(Persisted::version)
-            .unwrap_or(expected);
+        let last_version = persisted_events.last().map_or(expected, Persisted::version);
 
         self.backend
             .write()
@@ -201,9 +198,9 @@ where
         #[allow(unused_must_use)]
         {
             // Broadcast events into the store's Sender channel.
-            broadcast_copy.into_iter().for_each(|event| {
+            for event in broadcast_copy {
                 self.tx.send(event);
-            });
+            }
         }
 
         Ok(last_version)
