@@ -32,8 +32,8 @@
     </a>
     <!-- Github pages docs -->
     <a href="https://eventually-rs.github.io/eventually-rs/eventually/">
-        <img alt="latest master docs"
-        src="https://img.shields.io/badge/docs-master-important?style=flat-square" />
+        <img alt="latest main docs"
+        src="https://img.shields.io/badge/docs-main-important?style=flat-square" />
     </a>
     <!-- Docs.rs -->
     <a href="https://docs.rs/eventually">
@@ -41,7 +41,7 @@
         src="https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=docs.rs&query=%24.crate.newest_version&url=https%3A%2F%2Fcrates.io%2Fapi%2Fv1%2Fcrates%2Feventually" />
     </a>
     <!-- License -->
-    <a href="https://github.com/eventually-rs/eventually-rs/blob/master/LICENSE">
+    <a href="https://github.com/eventually-rs/eventually-rs/blob/main/LICENSE">
         <img alt="GitHub license"
         src="https://img.shields.io/github/license/eventually-rs/eventually-rs?style=flat-square">
     </a>
