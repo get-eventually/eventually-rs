@@ -11,11 +11,6 @@ use redis::RedisError;
 
 use serde::Deserialize;
 
-/// Result returning the crate [`SubscriberError`] type.
-///
-/// [`SubscriberError`]: enum.Error.html
-pub type SubscriberResult<T> = Result<T, SubscriberError>;
-
 /// Error types returned by the [`eventually::EventSubscriber`] implementation
 /// on the [`EventSubscriber`] type.
 ///
@@ -65,8 +60,7 @@ impl<Id, Event> eventually::subscription::EventSubscriber for EventSubscriber<Id
 where
     Id: TryFrom<String> + Eq + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
-    Event: Send + Sync,
-    for<'de> Event: Deserialize<'de>,
+    for<'de> Event: Deserialize<'de> + Send + Sync,
 {
     type SourceId = Id;
     type Event = Event;

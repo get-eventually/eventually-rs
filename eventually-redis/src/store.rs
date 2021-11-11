@@ -93,8 +93,7 @@ impl<Id, Event> eventually::EventStore for EventStore<Id, Event>
 where
     Id: TryFrom<String> + Display + Eq + Clone + Send + Sync,
     <Id as TryFrom<String>>::Error: std::error::Error + Send + Sync + 'static,
-    Event: Serialize + Send + Sync,
-    for<'de> Event: Deserialize<'de>,
+    for<'de> Event: Serialize + Send + Sync + Deserialize<'de>,
 {
     type SourceId = Id;
     type Event = Event;
@@ -118,7 +117,7 @@ where
                 .key(id.to_string())
                 .arg(match version {
                     Expected::Any => -1,
-                    Expected::Exact(v) => v as i64,
+                    Expected::Exact(v) => i64::from(v),
                 })
                 .arg(events)
                 .invoke_async(&mut self.conn)
@@ -135,7 +134,7 @@ where
         select: Select,
     ) -> BoxFuture<StoreResult<StoreEventStream<Self>>> {
         let fut = async move {
-            let stream_name = format!("{}.{}", self.stream_name, id.to_string());
+            let stream_name = format!("{}.{}", self.stream_name, id);
 
             let paginator = stream::into_xrange_stream(
                 self.conn.clone(),

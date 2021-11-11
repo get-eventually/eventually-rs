@@ -183,7 +183,7 @@ impl<Store, Subscriber> Transient<Store, Subscriber> {
         Self {
             store,
             subscriber,
-            last_sequence_number: Default::default(),
+            last_sequence_number: Arc::default(),
         }
     }
 

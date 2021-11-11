@@ -206,7 +206,7 @@ impl<SourceId, T> Persisted<SourceId, T> {
     /// provided Event value.
     #[inline]
     pub fn from(source_id: SourceId, event: T) -> persistent::EventBuilder<SourceId, T> {
-        persistent::EventBuilder { source_id, event }
+        persistent::EventBuilder { event, source_id }
     }
 
     /// Returns the event sequence number.
@@ -242,7 +242,7 @@ pub mod persistent {
         #[inline]
         fn from(value: (SourceId, T)) -> Self {
             let (source_id, event) = value;
-            Self { source_id, event }
+            Self { event, source_id }
         }
     }
 
