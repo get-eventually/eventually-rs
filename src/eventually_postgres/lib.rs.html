@@ -131,9 +131,9 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">subscriber</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">subscription</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">store</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">subscriber</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">subscription</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">store</span>::{<span class="ident">EventStore</span>, <span class="ident">EventStoreBuilder</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">subscriber::EventSubscriber</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">subscription::PersistentBuilder</span>;
 
 <span class="kw">use</span> <span class="ident">tokio_postgres::types::ToSql</span>;
 

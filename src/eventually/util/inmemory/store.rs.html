@@ -702,10 +702,6 @@
 <span id="702">702</span>
 <span id="703">703</span>
 <span id="704">704</span>
-<span id="705">705</span>
-<span id="706">706</span>
-<span id="707">707</span>
-<span id="708">708</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Contains supporting entities using an in-memory backend.</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
@@ -771,7 +767,7 @@
         <span class="ident">T::Id</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
         <span class="ident">T::Event</span>: <span class="ident">Clone</span>,
     {
-        <span class="ident">Default::default</span>()
+        <span class="ident">EventStore::default</span>()
     }
 }
 
@@ -793,7 +789,7 @@
     <span class="ident">Id</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">Event</span>: <span class="ident">Clone</span>,
 {
-    <span class="doccomment">/// Creates a new EventStore with a specified in-memory broadcast channel</span>
+    <span class="doccomment">/// Creates a new [`EventStore`] with a specified in-memory broadcast channel</span>
     <span class="doccomment">/// size, which will used by the</span>
     <span class="doccomment">/// [`subscribe_all`](EventSubscriber::subscribe_all) method to notify</span>
     <span class="doccomment">/// of newly [`EventStore::append`](crate::store::EventStore)</span>
@@ -875,8 +871,7 @@
                 .<span class="ident">read</span>()
                 .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
                 .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">events</span><span class="op">|</span> <span class="ident">events</span>.<span class="ident">last</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> <span class="ident">event</span>.<span class="ident">version</span>())
-                .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
+                .<span class="ident">map_or</span>(<span class="number">0</span>, <span class="ident">Versioned::version</span>);
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Expected::Exact</span>(<span class="ident">actual</span>) <span class="op">=</span> <span class="ident">version</span> {
                 <span class="kw">if</span> <span class="ident">expected</span> <span class="op">!</span><span class="op">=</span> <span class="ident">actual</span> {
@@ -896,10 +891,7 @@
             <span class="comment">// Copy of the events for broadcasting.</span>
             <span class="kw">let</span> <span class="ident">broadcast_copy</span> <span class="op">=</span> <span class="ident">persisted_events</span>.<span class="ident">clone</span>();
 
-            <span class="kw">let</span> <span class="ident">last_version</span> <span class="op">=</span> <span class="ident">persisted_events</span>
-                .<span class="ident">last</span>()
-                .<span class="ident">map</span>(<span class="ident">Persisted::version</span>)
-                .<span class="ident">unwrap_or</span>(<span class="ident">expected</span>);
+            <span class="kw">let</span> <span class="ident">last_version</span> <span class="op">=</span> <span class="ident">persisted_events</span>.<span class="ident">last</span>().<span class="ident">map_or</span>(<span class="ident">expected</span>, <span class="ident">Persisted::version</span>);
 
             <span class="self">self</span>.<span class="ident">backend</span>
                 .<span class="ident">write</span>()
@@ -915,9 +907,9 @@
             <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_must_use</span>)]</span>
             {
                 <span class="comment">// Broadcast events into the store&#39;s Sender channel.</span>
-                <span class="ident">broadcast_copy</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
+                <span class="kw">for</span> <span class="ident">event</span> <span class="kw">in</span> <span class="ident">broadcast_copy</span> {
                     <span class="self">self</span>.<span class="ident">tx</span>.<span class="ident">send</span>(<span class="ident">event</span>);
-                });
+                }
             }
 
             <span class="prelude-val">Ok</span>(<span class="ident">last_version</span>)
@@ -986,7 +978,7 @@
             .<span class="ident">collect</span>();
 
         <span class="comment">// Events must be sorted by the sequence number when using $all.</span>
-        <span class="ident">events</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">sequence_number</span>());
+        <span class="ident">events</span>.<span class="ident">sort_by_key</span>(<span class="ident">Persisted::sequence_number</span>);
 
         <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="ident">futures::future::ok</span>(<span class="ident">iter</span>(<span class="ident">events</span>).<span class="ident">map</span>(<span class="prelude-val">Ok</span>).<span class="ident">boxed</span>());
 

@@ -109,12 +109,6 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
 
@@ -127,11 +121,6 @@
 <span class="kw">use</span> <span class="ident">redis::RedisError</span>;
 
 <span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
-
-<span class="doccomment">/// Result returning the crate [`SubscriberError`] type.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`SubscriberError`]: enum.Error.html</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubscriberResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SubscriberError</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Error types returned by the [`eventually::EventSubscriber`] implementation</span>
 <span class="doccomment">/// on the [`EventSubscriber`] type.</span>
@@ -182,8 +171,7 @@
 <span class="kw">where</span>
     <span class="ident">Id</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="op">&lt;</span><span class="ident">Id</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">Event</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Event</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Event</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="kw">type</span> <span class="ident">SourceId</span> <span class="op">=</span> <span class="ident">Id</span>;
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;

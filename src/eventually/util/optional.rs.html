@@ -134,7 +134,6 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-<span id="137">137</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Contains a different flavour of the [`Aggregate`] trait,</span>
 <span class="doccomment">//! while still maintaining compatibility through [`IntoAggregate`] type.</span>
 <span class="doccomment">//!</span>
@@ -240,8 +239,7 @@
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::aggregate::Aggregate</span> <span class="kw">for</span> <span class="ident">IntoAggregate</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">A</span>: <span class="ident">Aggregate</span>,
-    <span class="ident">A</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">A</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="ident">A::Id</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="ident">A::Command</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="ident">A::State</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
