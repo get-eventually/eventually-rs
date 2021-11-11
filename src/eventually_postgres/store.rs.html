@@ -466,13 +466,11 @@
 <span id="466">466</span>
 <span id="467">467</span>
 <span id="468">468</span>
-<span id="469">469</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Contains an [`EventStore`] implementation using PostgreSQL</span>
 <span class="doccomment">//! as a backend data store.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`EventStore`]: ../../eventually/store/trait.EventStore.html</span>
 
-<span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Display</span>};
 
 <span class="kw">use</span> <span class="ident">eventually::aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateId</span>};

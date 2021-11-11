@@ -252,13 +252,11 @@
 <span id="252">252</span>
 <span id="253">253</span>
 <span id="254">254</span>
-<span id="255">255</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Contains a persisted implementation of the [`Subscription`] trait</span>
 <span class="doccomment">//! using Postgres as the backend data source for its state.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`Subscription`]: ../../eventually/subscription/trait.Subscription.html</span>
 
-<span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Display</span>};
 <span class="kw">use</span> <span class="ident">std::sync::atomic</span>::{<span class="ident">AtomicI64</span>, <span class="ident">Ordering</span>};
