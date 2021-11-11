@@ -3,7 +3,6 @@
 //!
 //! [`EventStore`]: ../../eventually/store/trait.EventStore.html
 
-use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 
 use eventually::aggregate::{Aggregate, AggregateId};
