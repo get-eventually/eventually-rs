@@ -122,3 +122,82 @@ where
         Ok(new_last_event_stream_version)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use futures::TryStreamExt;
+
+    use super::*;
+    use crate::{event, event::Store, version, version::Version};
+
+    #[tokio::test]
+    async fn it_works() {
+        let event_store = InMemoryEventStore::<&'static str, &'static str>::default();
+
+        let stream_id = "stream:test";
+        let events = vec![
+            event::Event::from("event-1"),
+            event::Event::from("event-2"),
+            event::Event::from("event-3"),
+        ];
+
+        let new_event_stream_version = event_store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::Exact(Version(0)),
+                events.clone(),
+            )
+            .await
+            .expect("append should not fail");
+
+        let expected_version = Version(events.len() as u64);
+        assert_eq!(expected_version, new_event_stream_version);
+
+        let expected_events = events
+            .into_iter()
+            .enumerate()
+            .map(|(i, evt)| event::Persisted {
+                stream_id,
+                version: Version((i as u64) + 1),
+                inner: evt,
+            })
+            .collect::<Vec<_>>();
+
+        let event_stream: Vec<_> = event_store
+            .stream(&stream_id, event::VersionSelect::All)
+            .try_collect()
+            .await
+            .expect("opening an event stream should not fail");
+
+        assert_eq!(expected_events, event_stream);
+    }
+
+    #[tokio::test]
+    async fn version_conflict_checks_work_as_expected() {
+        let event_store = InMemoryEventStore::<&'static str, &'static str>::default();
+
+        let stream_id = "stream:test";
+        let events = vec![
+            event::Event::from("event-1"),
+            event::Event::from("event-2"),
+            event::Event::from("event-3"),
+        ];
+
+        let append_error = event_store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::Exact(Version(3)),
+                events.clone(),
+            )
+            .await
+            .expect_err("the event stream version should be zero");
+
+        assert_eq!(
+            version::ConflictError {
+                expected: Version(3),
+                actual: Version(0),
+            },
+            append_error
+        );
+    }
+}

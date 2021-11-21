@@ -148,10 +148,3 @@ where
             .await
     }
 }
-
-macro_rules! event_store_test_suite {
-    ($expression:expr) => {
-        #[cfg(test)]
-        mod store_tests {}
-    };
-}

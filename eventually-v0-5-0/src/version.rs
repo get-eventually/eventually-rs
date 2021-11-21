@@ -4,7 +4,7 @@ use std::{
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Version(u64);
+pub struct Version(pub u64);
 
 impl Display for Version {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
@@ -29,7 +29,7 @@ impl Add for Version {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SequenceNumber(u64);
+pub struct SequenceNumber(pub u64);
 
 impl Display for SequenceNumber {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
