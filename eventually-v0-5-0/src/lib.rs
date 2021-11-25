@@ -2,17 +2,16 @@
 #[deny(clippy::all)]
 #[warn(clippy::pedantic)]
 pub mod event;
+pub mod metadata;
 pub mod test;
 pub mod version;
-
-use std::collections::HashMap;
 
 pub type Messages<T> = Vec<Message<T>>;
 
 #[derive(Debug, Clone)]
 pub struct Message<T> {
     pub payload: T,
-    pub metadata: HashMap<String, String>,
+    pub metadata: metadata::Metadata,
 }
 
 impl<T> Message<T> {
@@ -24,6 +23,14 @@ impl<T> Message<T> {
             payload: self.payload.into(),
             metadata: self.metadata,
         }
+    }
+
+    pub fn with_metadata<F>(mut self, f: F) -> Self
+    where
+        F: Fn(metadata::Metadata) -> metadata::Metadata,
+    {
+        self.metadata = f(self.metadata);
+        self
     }
 }
 
@@ -42,5 +49,30 @@ where
 {
     fn eq(&self, other: &Message<T>) -> bool {
         self.payload == other.payload
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn message_with_metadata_does_not_affect_equality() {
+        let message = Message {
+            payload: "hello",
+            metadata: Default::default(),
+        };
+
+        let new_message = message.clone().with_metadata(|metadata| {
+            metadata
+                .add_string("hello_world".to_owned(), "test".to_owned())
+                .add_integer("test_number".to_owned(), 1)
+        });
+
+        println!("Message: {:?}", message);
+        println!("New message: {:?}", new_message);
+
+        // Metadata does not affect equality of message.
+        assert_eq!(message, new_message);
     }
 }
