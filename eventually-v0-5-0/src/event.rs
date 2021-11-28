@@ -2,6 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     version::{ToConflictError, Version},
@@ -11,7 +12,7 @@ use crate::{
 pub type Event<T> = Message<T>;
 pub type Events<T> = Messages<T>;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Persisted<Id, Evt> {
     pub stream_id: Id,
     pub version: Version,

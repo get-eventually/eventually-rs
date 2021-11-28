@@ -3,7 +3,9 @@ use std::{
     ops::Add,
 };
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Version(pub u64);
 
 impl Display for Version {
@@ -25,15 +27,6 @@ impl Add for Version {
 
     fn add(self, other: Self) -> Self::Output {
         self + other.0
-    }
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SequenceNumber(pub u64);
-
-impl Display for SequenceNumber {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        Debug::fmt(self, f)
     }
 }
 

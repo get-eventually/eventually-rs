@@ -6,9 +6,11 @@ pub mod metadata;
 pub mod test;
 pub mod version;
 
+use serde::{Deserialize, Serialize};
+
 pub type Messages<T> = Vec<Message<T>>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message<T> {
     pub payload: T,
     pub metadata: metadata::Metadata,
