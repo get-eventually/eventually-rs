@@ -28,7 +28,7 @@
 <span class="doccomment">/// Data type that carries a version for Optimistic Concurrency Control.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Versioned</span> {
     <span class="doccomment">/// Current version of the data.</span>
-    <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span>;
+    <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Versioned</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -36,7 +36,7 @@
     <span class="ident">T</span>: <span class="ident">Versioned</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">Versioned::version</span>).<span class="ident">unwrap_or_default</span>()
     }
 }

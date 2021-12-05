@@ -230,7 +230,7 @@
 
 <span class="kw">impl</span> <span class="ident">Builder</span> {
     <span class="doccomment">/// Creates a new builder instance using the specified Redis client.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">client</span>: <span class="ident">redis::Client</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">client</span>: <span class="ident">redis::Client</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">client</span>,
             <span class="ident">stream_page_size</span>: <span class="prelude-val">None</span>,
@@ -243,7 +243,7 @@
     <span class="doccomment">/// [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html</span>
     <span class="doccomment">/// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream</span>
     <span class="doccomment">/// [`EventStore::stream_all`]: struct.EventStore.html#tymethod.stream_all</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stream_page_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stream_page_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">stream_page_size</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>);
         <span class="self">self</span>
     }
@@ -255,7 +255,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
     <span class="doccomment">/// [`EventSubscriber`]: struct.EventSubscriber.html</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">source_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BuilderWithSourceName</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">source_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="ident">BuilderWithSourceName</span> {
         <span class="ident">BuilderWithSourceName</span> {
             <span class="ident">client</span>: <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>(),
             <span class="ident">stream_page_size</span>: <span class="self">self</span>.<span class="ident">stream_page_size</span>,
@@ -286,7 +286,7 @@
     <span class="doccomment">/// [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html</span>
     <span class="doccomment">/// [`EventStore::stream`]: struct.EventStore.html#tymethod.stream</span>
     <span class="doccomment">/// [`EventStore::stream_all`]: struct.EventStore.html#tymethod.stream_all</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stream_page_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stream_page_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">stream_page_size</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>);
         <span class="self">self</span>
     }
@@ -297,7 +297,7 @@
     <span class="doccomment">/// connection with Redis is successfully established.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventStore`]: struct.EventStore.html</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">build_store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">build_store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">EventStore</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">EventStore</span> {
             <span class="ident">stream_name</span>: <span class="self">self</span>.<span class="ident">source_name</span>,
             <span class="ident">conn</span>: <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">get_multiplexed_async_connection</span>().<span class="kw">await</span><span class="question-mark">?</span>,
@@ -310,7 +310,7 @@
     <span class="doccomment">/// Builds a new [`EventSubscriber`] instance.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`EventSubscriber`]: struct.EventSubscriber.html</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_subscriber</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventSubscriber</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_subscriber</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">EventSubscriber</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span> {
         <span class="ident">EventSubscriber</span> {
             <span class="ident">stream_name</span>: <span class="self">self</span>.<span class="ident">source_name</span>,
             <span class="ident">client</span>: <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>(),
@@ -325,7 +325,7 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">build_persistent_subscription</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">subscription_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">PersistentSubscription</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">PersistentSubscription</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">subscription</span> <span class="op">=</span> <span class="ident">PersistentSubscription</span> {
             <span class="ident">stream</span>: <span class="self">self</span>.<span class="ident">source_name</span>,
             <span class="ident">group_name</span>: <span class="ident">subscription_name</span>,

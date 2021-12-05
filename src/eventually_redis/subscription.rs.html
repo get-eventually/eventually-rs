@@ -210,7 +210,7 @@
     <span class="doccomment">/// [`resume`] processing.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`resume`]: struct.PersistentSubscription.html#method.resume</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">create_consumer_group</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">create_consumer_group</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">RedisResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">RedisResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">conn</span>
             .<span class="ident">xgroup_create_mkstream</span>(<span class="self">self</span>.<span class="ident">stream</span>, <span class="self">self</span>.<span class="ident">group_name</span>, <span class="number">0</span>)
@@ -238,7 +238,7 @@
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SubscriptionError</span>;
 
-    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SubscriptionStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> <span class="ident">keys_stream</span> <span class="op">=</span> <span class="ident">stream::into_xread_stream</span>(
                 <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">clone</span>(),
@@ -262,7 +262,7 @@
         <span class="ident">fut</span>.<span class="ident">try_flatten_stream</span>().<span class="ident">boxed</span>()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">checkpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SubscriptionResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">checkpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">version</span>: <span class="ident">u32</span>) -&gt; <span class="ident">SubscriptionResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">stream_version</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}-1&quot;</span>, <span class="ident">version</span>);
 

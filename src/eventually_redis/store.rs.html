@@ -270,7 +270,7 @@
 
 <span class="kw">impl</span> <span class="ident">AppendError</span> <span class="kw">for</span> <span class="ident">StoreError</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_conflict_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_conflict_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="bool-val">false</span>
     }
 }
@@ -302,7 +302,7 @@
         <span class="ident">id</span>: <span class="ident"><span class="self">Self</span>::SourceId</span>,
         <span class="ident">version</span>: <span class="ident">Expected</span>,
         <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Event</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">events</span>
                 .<span class="ident">iter</span>()
@@ -314,8 +314,8 @@
                 .<span class="ident">key</span>(<span class="self">self</span>.<span class="ident">stream_name</span>)
                 .<span class="ident">key</span>(<span class="ident">id</span>.<span class="ident">to_string</span>())
                 .<span class="ident">arg</span>(<span class="kw">match</span> <span class="ident">version</span> {
-                    <span class="ident">Expected::Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">1</span>,
-                    <span class="ident">Expected::Exact</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64::from</span>(<span class="ident">v</span>),
+                    <span class="ident">Expected::Any</span> =&gt; <span class="op">-</span><span class="number">1</span>,
+                    <span class="ident">Expected::Exact</span>(<span class="ident">v</span>) =&gt; <span class="ident">i64::from</span>(<span class="ident">v</span>),
                 })
                 .<span class="ident">arg</span>(<span class="ident">events</span>)
                 .<span class="ident">invoke_async</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">conn</span>)
@@ -330,7 +330,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">id</span>: <span class="ident"><span class="self">Self</span>::SourceId</span>,
         <span class="ident">select</span>: <span class="ident">Select</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span><span class="ident">StoreEventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span><span class="ident">StoreEventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> <span class="ident">stream_name</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.{}&quot;</span>, <span class="self">self</span>.<span class="ident">stream_name</span>, <span class="ident">id</span>);
 
@@ -339,8 +339,8 @@
                 <span class="ident">stream_name</span>,
                 <span class="self">self</span>.<span class="ident">stream_page_size</span>,
                 <span class="kw">match</span> <span class="ident">select</span> {
-                    <span class="ident">Select::All</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-                    <span class="ident">Select::From</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span> <span class="kw">as</span> <span class="ident">usize</span>,
+                    <span class="ident">Select::All</span> =&gt; <span class="number">0</span>,
+                    <span class="ident">Select::From</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span> <span class="kw">as</span> <span class="ident">usize</span>,
                 },
             );
 
@@ -368,15 +368,15 @@
         <span class="ident">Box::pin</span>(<span class="ident">fut</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">stream_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">select</span>: <span class="ident">Select</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span><span class="ident">StoreEventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">stream_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">select</span>: <span class="ident">Select</span>) -&gt; <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span><span class="ident">StoreEventStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> <span class="ident">paginator</span> <span class="op">=</span> <span class="ident">stream::into_xrange_stream</span>(
                 <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">clone</span>(),
                 <span class="self">self</span>.<span class="ident">stream_name</span>.<span class="ident">to_owned</span>(),
                 <span class="self">self</span>.<span class="ident">stream_page_size</span>,
                 <span class="kw">match</span> <span class="ident">select</span> {
-                    <span class="ident">Select::All</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-                    <span class="ident">Select::From</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span> <span class="kw">as</span> <span class="ident">usize</span>,
+                    <span class="ident">Select::All</span> =&gt; <span class="number">0</span>,
+                    <span class="ident">Select::From</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span> <span class="kw">as</span> <span class="ident">usize</span>,
                 },
             );
 
@@ -392,7 +392,7 @@
         <span class="ident">Box::pin</span>(<span class="ident">fut</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_id</span>: <span class="ident"><span class="self">Self</span>::SourceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_id</span>: <span class="ident"><span class="self">Self</span>::SourceId</span>) -&gt; <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">StoreResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="macro">unimplemented!</span>()
     }
 }
