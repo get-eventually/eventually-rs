@@ -1,6 +1,7 @@
-#[deny(unsafe_code, unused_qualifications, trivial_casts)]
-#[deny(clippy::all)]
-#[warn(clippy::pedantic)]
+#![deny(unsafe_code, unused_qualifications, trivial_casts)]
+#![deny(clippy::all)]
+#![warn(clippy::pedantic)]
+
 pub mod event;
 pub mod metadata;
 pub mod test;
@@ -8,18 +9,20 @@ pub mod version;
 
 use serde::{Deserialize, Serialize};
 
+use crate::metadata::Metadata;
+
 pub type Messages<T> = Vec<Message<T>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message<T> {
     pub payload: T,
-    pub metadata: metadata::Metadata,
+    pub metadata: Metadata,
 }
 
 impl<T> Message<T> {
     pub fn with_metadata<F>(mut self, f: F) -> Self
     where
-        F: Fn(metadata::Metadata) -> metadata::Metadata,
+        F: Fn(Metadata) -> Metadata,
     {
         self.metadata = f(self.metadata);
         self
@@ -30,7 +33,7 @@ impl<T> From<T> for Message<T> {
     fn from(payload: T) -> Self {
         Message {
             payload,
-            metadata: Default::default(),
+            metadata: Metadata::default(),
         }
     }
 }
@@ -52,7 +55,7 @@ mod tests {
     fn message_with_metadata_does_not_affect_equality() {
         let message = Message {
             payload: "hello",
-            metadata: Default::default(),
+            metadata: Metadata::default(),
         };
 
         let new_message = message.clone().with_metadata(|metadata| {

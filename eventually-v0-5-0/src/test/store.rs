@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     convert::Infallible,
     hash::Hash,
-    sync::{atomic::AtomicU64, Arc, RwLock},
+    sync::{Arc, RwLock},
 };
 
 use async_trait::async_trait;
@@ -15,35 +15,33 @@ use crate::{
 };
 
 #[derive(Debug)]
-struct InMemoryEventStoreBackend<Id, Evt> {
+struct InMemoryBackend<Id, Evt> {
     event_streams: HashMap<Id, PersistedEvents<Id, Evt>>,
 }
 
-impl<Id, Evt> Default for InMemoryEventStoreBackend<Id, Evt> {
+impl<Id, Evt> Default for InMemoryBackend<Id, Evt> {
     fn default() -> Self {
         Self {
-            event_streams: Default::default(),
+            event_streams: HashMap::default(),
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct InMemoryEventStore<Id, Evt> {
-    global_offset: Arc<AtomicU64>,
-    backend: Arc<RwLock<InMemoryEventStoreBackend<Id, Evt>>>,
+pub struct InMemory<Id, Evt> {
+    backend: Arc<RwLock<InMemoryBackend<Id, Evt>>>,
 }
 
-impl<Id, Evt> Default for InMemoryEventStore<Id, Evt> {
+impl<Id, Evt> Default for InMemory<Id, Evt> {
     fn default() -> Self {
         Self {
-            global_offset: Default::default(),
-            backend: Default::default(),
+            backend: Arc::default(),
         }
     }
 }
 
 #[async_trait]
-impl<Id, Evt> event::Store for InMemoryEventStore<Id, Evt>
+impl<Id, Evt> event::Store for InMemory<Id, Evt>
 where
     Id: Clone + Eq + Hash + Send + Sync,
     Evt: Clone + Send + Sync,
@@ -65,9 +63,9 @@ where
 
         let events = backend
             .event_streams
-            .get(&id)
+            .get(id)
             .cloned()
-            .unwrap_or(Vec::new()) // NOTE: the new Vec is empty, so there will be no memory allocation!
+            .unwrap_or_default() // NOTE: the new Vec is empty, so there will be no memory allocation!
             .into_iter()
             .filter(move |evt| match select {
                 event::VersionSelect::All => true,
@@ -129,16 +127,17 @@ where
     }
 }
 
+#[allow(clippy::semicolon_if_nothing_returned)] // False positives :shrugs:
 #[cfg(test)]
 mod test {
     use futures::TryStreamExt;
 
     use super::*;
-    use crate::{event, event::Store, version, version::Version};
+    use crate::{event, event::Store, version::Version};
 
     #[tokio::test]
     async fn it_works() {
-        let event_store = InMemoryEventStore::<&'static str, &'static str>::default();
+        let event_store = InMemory::<&'static str, &'static str>::default();
 
         let stream_id = "stream:test";
         let events = vec![
@@ -180,7 +179,7 @@ mod test {
 
     #[tokio::test]
     async fn version_conflict_checks_work_as_expected() {
-        let event_store = InMemoryEventStore::<&'static str, &'static str>::default();
+        let event_store = InMemory::<&'static str, &'static str>::default();
 
         let stream_id = "stream:test";
         let events = vec![
@@ -199,7 +198,7 @@ mod test {
             .expect_err("the event stream version should be zero");
 
         assert_eq!(
-            version::ConflictError {
+            ConflictError {
                 expected: Version(3),
                 actual: Version(0),
             },
