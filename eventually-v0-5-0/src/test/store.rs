@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
-    fmt::Display,
+    hash::Hash,
     sync::{atomic::AtomicU64, Arc, RwLock},
 };
 
@@ -16,7 +16,7 @@ use crate::{
 
 #[derive(Debug)]
 struct InMemoryEventStoreBackend<Id, Evt> {
-    event_streams: HashMap<String, PersistedEvents<Id, Evt>>,
+    event_streams: HashMap<Id, PersistedEvents<Id, Evt>>,
 }
 
 impl<Id, Evt> Default for InMemoryEventStoreBackend<Id, Evt> {
@@ -27,16 +27,25 @@ impl<Id, Evt> Default for InMemoryEventStoreBackend<Id, Evt> {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct InMemoryEventStore<Id, Evt> {
     global_offset: Arc<AtomicU64>,
     backend: Arc<RwLock<InMemoryEventStoreBackend<Id, Evt>>>,
 }
 
+impl<Id, Evt> Default for InMemoryEventStore<Id, Evt> {
+    fn default() -> Self {
+        Self {
+            global_offset: Default::default(),
+            backend: Default::default(),
+        }
+    }
+}
+
 #[async_trait]
 impl<Id, Evt> event::Store for InMemoryEventStore<Id, Evt>
 where
-    Id: Clone + Display + Send + Sync,
+    Id: Clone + Eq + Hash + Send + Sync,
     Evt: Clone + Send + Sync,
 {
     type StreamId = Id;
@@ -56,7 +65,7 @@ where
 
         let events = backend
             .event_streams
-            .get(&id.to_string())
+            .get(&id)
             .cloned()
             .unwrap_or(Vec::new()) // NOTE: the new Vec is empty, so there will be no memory allocation!
             .into_iter()
@@ -79,19 +88,17 @@ where
             .write()
             .expect("acquire write lock on event store backend");
 
-        let event_stream_id_string = id.to_string();
-
         let last_event_stream_version = backend
             .event_streams
-            .get(&event_stream_id_string)
+            .get(&id)
             .and_then(|events| events.last())
             .map(|event| event.version)
             .unwrap_or_default();
 
-        if let event::StreamVersionExpected::Exact(expected_event_stream_version) = version_check {
-            if last_event_stream_version != expected_event_stream_version {
+        if let event::StreamVersionExpected::MustBe(expected) = version_check {
+            if last_event_stream_version != expected {
                 return Err(ConflictError {
-                    expected: expected_event_stream_version,
+                    expected,
                     actual: last_event_stream_version,
                 });
             }
@@ -100,11 +107,10 @@ where
         let mut persisted_events: PersistedEvents<Id, Evt> = events
             .into_iter()
             .enumerate()
-            // TODO: add sequence number
-            .map(|(i, evt)| event::Persisted {
+            .map(|(i, payload)| event::Persisted {
                 stream_id: id.clone(),
                 version: last_event_stream_version + (i as u64) + 1,
-                inner: evt,
+                payload,
             })
             .collect();
 
@@ -115,7 +121,7 @@ where
 
         backend
             .event_streams
-            .entry(event_stream_id_string)
+            .entry(id)
             .and_modify(|events| events.append(&mut persisted_events))
             .or_insert_with(|| persisted_events);
 
@@ -144,7 +150,7 @@ mod test {
         let new_event_stream_version = event_store
             .append(
                 stream_id,
-                event::StreamVersionExpected::Exact(Version(0)),
+                event::StreamVersionExpected::MustBe(Version(0)),
                 events.clone(),
             )
             .await
@@ -156,10 +162,10 @@ mod test {
         let expected_events = events
             .into_iter()
             .enumerate()
-            .map(|(i, evt)| event::Persisted {
+            .map(|(i, payload)| event::Persisted {
                 stream_id,
                 version: Version((i as u64) + 1),
-                inner: evt,
+                payload,
             })
             .collect::<Vec<_>>();
 
@@ -186,7 +192,7 @@ mod test {
         let append_error = event_store
             .append(
                 stream_id,
-                event::StreamVersionExpected::Exact(Version(3)),
+                event::StreamVersionExpected::MustBe(Version(3)),
                 events.clone(),
             )
             .await

@@ -17,16 +17,6 @@ pub struct Message<T> {
 }
 
 impl<T> Message<T> {
-    pub fn map_into<U>(self) -> Message<U>
-    where
-        T: Into<U>,
-    {
-        Message {
-            payload: self.payload.into(),
-            metadata: self.metadata,
-        }
-    }
-
     pub fn with_metadata<F>(mut self, f: F) -> Self
     where
         F: Fn(metadata::Metadata) -> metadata::Metadata,
