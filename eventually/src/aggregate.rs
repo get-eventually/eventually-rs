@@ -1,4 +1,4 @@
-//! Module containing support for the Aggergate pattern.
+//! Module containing support for the Aggregate pattern.
 //!
 //! ## What is an Aggregate?
 //!

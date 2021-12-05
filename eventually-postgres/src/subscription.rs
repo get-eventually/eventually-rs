@@ -3,7 +3,6 @@
 //!
 //! [`Subscription`]: ../../eventually/subscription/trait.Subscription.html
 
-use std::convert::{TryFrom, TryInto};
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -205,7 +204,7 @@ where
                 .map_err(Error::Store)
                 .chain(subscription.map_err(Error::Subscriber))
                 .try_filter_map(move |event| async move {
-                    let event_sequence_number = event.sequence_number() as i64;
+                    let event_sequence_number = i64::from(event.sequence_number());
                     let expected_sequence_number =
                         self.last_sequence_number.load(Ordering::Relaxed);
 
@@ -230,7 +229,7 @@ where
     }
 
     async fn checkpoint(&self, version: u32) -> Result<(), Self::Error> {
-        let params: Params = &[&self.name, &self.store.type_name, &(version as i64)];
+        let params: Params = &[&self.name, &self.store.type_name, &(i64::from(version))];
 
         #[cfg(feature = "with-tracing")]
         tracing::trace!(
@@ -248,7 +247,7 @@ where
             .map_err(Error::Checkpoint)?;
 
         self.last_sequence_number
-            .store(version as i64, Ordering::Relaxed);
+            .store(i64::from(version), Ordering::Relaxed);
 
         Ok(())
     }

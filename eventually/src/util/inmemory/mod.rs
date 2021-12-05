@@ -3,5 +3,5 @@
 mod projector;
 mod store;
 
-pub use projector::*;
-pub use store::*;
+pub use projector::Projector;
+pub use store::{ConflictError, EventStore, EventStoreBuilder, LaggedError};

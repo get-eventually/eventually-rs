@@ -55,12 +55,12 @@ In order to submit a PR, follow these steps:
     git remote add upstream git@github.com:eventually-rs/eventually-rs
     git fetch upstream
     ```
-4. Create a new branch starting from `upstream/master`:
+4. Create a new branch starting from `upstream/main`:
     ```bash
-    git checkout -b "<branch-name>" --track upstream/master
+    git checkout -b "<branch-name>" --track upstream/main
     ```
 5. Do your magic :tada:
-6. Once ready, open a PR pointing to `upstream/master` :+1:
+6. Once ready, open a PR pointing to `upstream/main` :+1:
 
 After the PR is created, wait for the CI pipeline to run and the test to pass. Whenever introducing new changes to the
 repository, make sure your changes are **covered** by **unit** or **integration tests**.
@@ -68,7 +68,7 @@ repository, make sure your changes are **covered** by **unit** or **integration 
 When all PR badges are green, the review process can start.
 Maintainer and collaborators will try to finish the PR review as fast as possible.
 
-Once the PR has been approved, the maintainer or collaborators will **squash-merge** the PR onto `master`.
+Once the PR has been approved, the maintainer or collaborators will **squash-merge** the PR onto `main`.
 
 ## How should my Pull Request look like?
 

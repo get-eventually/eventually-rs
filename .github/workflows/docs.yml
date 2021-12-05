@@ -1,8 +1,8 @@
-name: Generate docs (master)
+name: Generate docs (main)
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   docs:

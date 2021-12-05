@@ -3,9 +3,7 @@
 //!
 //! [`EventStore`]: ../../eventually/store/trait.EventStore.html
 
-use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
-use std::ops::DerefMut;
 
 use eventually::aggregate::{Aggregate, AggregateId};
 use eventually::store::{AppendError, EventStream, Expected, Persisted, Select};
@@ -129,7 +127,7 @@ impl EventStoreBuilder {
     {
         let mut connection = pool.get().await?;
         embedded::migrations::runner()
-            .run_async(connection.deref_mut())
+            .run_async(&mut *connection)
             .await?;
 
         Ok(Self { inner: () })
@@ -290,7 +288,7 @@ where
                 .map_err(Error::EncodeEvents)?;
 
             let (version, check) = match version {
-                Expected::Any => (0i32, false),
+                Expected::Any => (0_i32, false),
                 Expected::Exact(v) => (v as i32, true),
             };
 
@@ -325,7 +323,7 @@ where
 
         let fut = async move {
             let from = match select {
-                Select::All => 0i32,
+                Select::All => 0_i32,
                 Select::From(v) => v as i32,
             };
 
@@ -351,8 +349,8 @@ where
 
         let fut = async move {
             let from = match select {
-                Select::All => 0i64,
-                Select::From(v) => v as i64,
+                Select::All => 0_i64,
+                Select::From(v) => i64::from(v),
             };
 
             let params: Params = &[&self.type_name, &from];

@@ -13,7 +13,7 @@ jobs:
         build: [msrv, stable, nightly]
         include:
           - build: msrv
-            toolchain: 1.46
+            toolchain: 1.56
           - build: stable
             toolchain: stable
           - build: nightly
