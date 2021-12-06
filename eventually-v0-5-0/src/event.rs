@@ -8,7 +8,7 @@ use futures::stream::BoxStream;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    version::{ToConflictError, Version},
+    version::{ConflictError, Version},
     Message, Messages,
 };
 
@@ -90,8 +90,8 @@ pub trait Store: Send + Sync {
 
     /// The error type returned by the Store during an [`append`] call.
     /// It could be a [version::ConflictError], which is why the bound to
-    /// [ToConflictError] is required.
-    type AppendError: ToConflictError + Send + Sync;
+    /// `Into<Option<ConflictError>>` is required.
+    type AppendError: Into<Option<ConflictError>> + Send + Sync;
 
     /// Opens an Event Stream, effectively streaming all Domain Events
     /// of an Event Stream back in the application.

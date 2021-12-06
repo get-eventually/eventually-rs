@@ -149,13 +149,13 @@ mod test {
         let new_event_stream_version = event_store
             .append(
                 stream_id,
-                event::StreamVersionExpected::MustBe(Version(0)),
+                event::StreamVersionExpected::MustBe(0),
                 events.clone(),
             )
             .await
             .expect("append should not fail");
 
-        let expected_version = Version(events.len() as u64);
+        let expected_version = events.len() as Version;
         assert_eq!(expected_version, new_event_stream_version);
 
         let expected_events = events
@@ -163,7 +163,7 @@ mod test {
             .enumerate()
             .map(|(i, payload)| event::Persisted {
                 stream_id,
-                version: Version((i as u64) + 1),
+                version: (i as Version) + 1,
                 payload,
             })
             .collect::<Vec<_>>();
@@ -191,7 +191,7 @@ mod test {
         let append_error = event_store
             .append(
                 stream_id,
-                event::StreamVersionExpected::MustBe(Version(3)),
+                event::StreamVersionExpected::MustBe(3),
                 events.clone(),
             )
             .await
@@ -199,8 +199,8 @@ mod test {
 
         assert_eq!(
             ConflictError {
-                expected: Version(3),
-                actual: Version(0),
+                expected: 3,
+                actual: 0,
             },
             append_error
         );
