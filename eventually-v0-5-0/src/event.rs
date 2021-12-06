@@ -102,6 +102,9 @@ pub trait Store: Send + Sync {
     ) -> Stream<Self::StreamId, Self::Event, Self::StreamError>;
 
     /// Appens new Domain Events to the specified Event Stream.
+    ///
+    /// The result of this operation is the new [Version] of the Event Stream
+    /// with the specified Domain Events added to it.
     async fn append(
         &self,
         id: Self::StreamId,
