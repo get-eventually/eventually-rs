@@ -127,6 +127,102 @@ where
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Tracking<S>
+where
+    S: event::Store,
+{
+    store: S,
+
+    #[allow(clippy::type_complexity)] // It is a complex type but still readable.
+    events: Arc<RwLock<Vec<event::Persisted<S::StreamId, S::Event>>>>,
+}
+
+impl<S> Tracking<S>
+where
+    S: event::Store,
+    S::StreamId: Clone,
+    S::Event: Clone,
+{
+    pub fn recorded_events(&self) -> Vec<event::Persisted<S::StreamId, S::Event>> {
+        self.events
+            .read()
+            .expect("acquire lock on recorded events list")
+            .clone()
+    }
+
+    pub fn reset_recorded_events(&self) {
+        self.events
+            .write()
+            .expect("acquire lock on recorded events list")
+            .clear();
+    }
+}
+
+#[async_trait]
+impl<S> event::Store for Tracking<S>
+where
+    S: event::Store,
+    S::StreamId: Clone,
+    S::Event: Clone,
+{
+    type StreamId = S::StreamId;
+    type Event = S::Event;
+    type StreamError = S::StreamError;
+    type AppendError = S::AppendError;
+
+    fn stream(
+        &self,
+        id: &Self::StreamId,
+        select: event::VersionSelect,
+    ) -> event::Stream<Self::StreamId, Self::Event, Self::StreamError> {
+        self.store.stream(id, select)
+    }
+
+    async fn append(
+        &self,
+        id: Self::StreamId,
+        version_check: event::StreamVersionExpected,
+        events: Vec<Event<Self::Event>>,
+    ) -> Result<Version, Self::AppendError> {
+        let new_version = self
+            .store
+            .append(id.clone(), version_check, events.clone())
+            .await?;
+
+        let events_size = events.len();
+        let previous_version = new_version - (events_size as Version);
+
+        let mut persisted_events = events
+            .into_iter()
+            .enumerate()
+            .map(|(i, evt)| event::Persisted {
+                stream_id: id.clone(),
+                version: previous_version + (i as Version) + 1,
+                payload: evt,
+            })
+            .collect();
+
+        self.events
+            .write()
+            .expect("acquire lock on recorded events list")
+            .append(&mut persisted_events);
+
+        Ok(new_version)
+    }
+}
+
+pub trait EventStoreExt: event::Store + Sized {
+    fn with_recorded_events_tracking(self) -> Tracking<Self> {
+        Tracking {
+            store: self,
+            events: Arc::default(),
+        }
+    }
+}
+
+impl<T> EventStoreExt for T where T: event::Store {}
+
 #[allow(clippy::semicolon_if_nothing_returned)] // False positives :shrugs:
 #[cfg(test)]
 mod test {
@@ -175,6 +271,36 @@ mod test {
             .expect("opening an event stream should not fail");
 
         assert_eq!(expected_events, event_stream);
+    }
+
+    #[tokio::test]
+    async fn tracking_store_works() {
+        let event_store = InMemory::<&'static str, &'static str>::default();
+        let tracking_event_store = event_store.with_recorded_events_tracking();
+
+        let stream_id = "stream:test";
+        let events = vec![
+            event::Event::from("event-1"),
+            event::Event::from("event-2"),
+            event::Event::from("event-3"),
+        ];
+
+        tracking_event_store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::MustBe(0),
+                events.clone(),
+            )
+            .await
+            .expect("append should not fail");
+
+        let event_stream: Vec<_> = tracking_event_store
+            .stream(&stream_id, event::VersionSelect::All)
+            .try_collect()
+            .await
+            .expect("opening an event stream should not fail");
+
+        assert_eq!(event_stream, tracking_event_store.recorded_events());
     }
 
     #[tokio::test]
