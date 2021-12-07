@@ -9,16 +9,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     version::{ConflictError, Version},
-    Message, Messages,
+    Message,
 };
 
 /// An Event is a [Message] carring the information about a Domain Event,
 /// an occurrence in the system lifetime that is relevant for the Domain
 /// that is being implemented.
 pub type Event<T> = Message<T>;
-
-/// Shortcut type to represent multiple [Event]s.
-pub type Events<T> = Messages<T>;
 
 /// An [Event] that has been persisted to the Event [Store].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -109,6 +106,6 @@ pub trait Store: Send + Sync {
         &self,
         id: Self::StreamId,
         version_check: StreamVersionExpected,
-        events: Events<Self::Event>,
+        events: Vec<Event<Self::Event>>,
     ) -> Result<Version, Self::AppendError>;
 }

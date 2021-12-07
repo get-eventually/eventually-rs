@@ -10,7 +10,7 @@ use futures::stream::{iter, StreamExt};
 
 use crate::{
     event,
-    event::{Events, PersistedEvents},
+    event::{Event, PersistedEvents},
     version::{ConflictError, Version},
 };
 
@@ -79,7 +79,7 @@ where
         &self,
         id: Self::StreamId,
         version_check: event::StreamVersionExpected,
-        events: Events<Self::Event>,
+        events: Vec<Event<Self::Event>>,
     ) -> Result<Version, Self::AppendError> {
         let mut backend = self
             .backend

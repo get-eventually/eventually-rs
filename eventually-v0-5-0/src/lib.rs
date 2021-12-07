@@ -11,8 +11,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::metadata::Metadata;
 
-pub type Messages<T> = Vec<Message<T>>;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message<T> {
     pub payload: T,
