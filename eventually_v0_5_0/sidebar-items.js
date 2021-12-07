@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["event","Module `event` contains types and abstractions helpful for working with Domain Events."],["metadata",""],["test",""],["version",""]],"struct":[["Message",""]]});
