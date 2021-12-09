@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["event","Module `event` contains types and abstractions helpful for working with Domain Events."],["metadata",""],["test",""],["version",""]],"struct":[["Message",""]]});
+initSidebarItems({"mod":[["aggregate","Module containing support for the Aggregate pattern."],["event","Module `event` contains types and abstractions helpful for working with Domain Events."],["metadata",""],["test",""],["version",""]],"struct":[["Message",""]]});
