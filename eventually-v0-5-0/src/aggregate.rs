@@ -137,7 +137,7 @@ where
     ///
     /// This method should be used inside Aggregate [Root] methods
     /// to create new [Root] instances:
-    /// ```norun
+    /// ```text
     /// use eventually::{
     ///     event::Event,
     ///     aggregate::Root,
@@ -168,7 +168,7 @@ where
     ///
     /// This method should be used inside Aggregate [Root] methods
     /// to update the [Aggregate] state:
-    /// ```norun
+    /// ```text
     /// use eventually::{
     ///     event::Event,
     ///     aggregate::Root,
@@ -209,7 +209,7 @@ where
 /// and implement the `From<Context<AggregateType>>` trait. The Aggregate state
 /// and list of Domain Events recorded are handled by the Context object itself.
 ///
-/// ```norun
+/// ```text
 /// #[derive(Debug, Clone)]
 /// struct MyAggregateRoot(Context<MyAggregate>);
 ///
@@ -288,20 +288,20 @@ pub enum EventSourcedRepositoryError<E, SE, AE> {
     ///
     /// This usually implies the Event Stream for the Aggregate
     /// contains corrupted or unexpected data.
-    #[error("failed to rehydrate aggregate from event stream: {}", 0)]
+    #[error("failed to rehydrate aggregate from event stream: {0}")]
     RehydrateAggregate(#[source] E),
 
     /// This error is returned by [`EventSourcedRepository::get`] when the
     /// [Event Store][`event::Store`] used by the Repository returns
     /// an unexpected error while streaming back the Aggregate's Event Stream.
-    #[error("event store failed while streaming events: {}", 0)]
+    #[error("event store failed while streaming events: {0}")]
     StreamFromStore(#[source] SE),
 
     /// This error is returned by [`EventSourcedRepository::store`] when
     /// the [Event Store][`event::Store`] used by the Repository returns
     /// an error while saving the uncommitted Domain Events
     /// to the Aggregate's Event Stream.
-    #[error("event store failed while appending events: {}", 0)]
+    #[error("event store failed while appending events: {0}")]
     AppendToStore(#[source] AE),
 }
 
@@ -505,6 +505,8 @@ pub(crate) mod test_user_domain {
 #[allow(clippy::semicolon_if_nothing_returned)] // False positives :shrugs:
 #[cfg(test)]
 mod test {
+    use std::error::Error;
+
     use crate::{
         aggregate,
         aggregate::test_user_domain::{User, UserEvent, UserRoot},
@@ -513,6 +515,7 @@ mod test {
         event::Event,
         test,
         test::store::EventStoreExt,
+        version,
     };
 
     #[tokio::test]
@@ -589,5 +592,45 @@ mod test {
         }];
 
         assert_eq!(expected_events, tracking_event_store.recorded_events());
+    }
+
+    #[tokio::test]
+    async fn repository_returns_conflict_error_from_store_when_data_race_happens() {
+        let event_store = test::store::InMemory::<String, UserEvent>::default();
+        let user_repository =
+            aggregate::EventSourcedRepository::<User, UserRoot, _>::from(event_store.clone());
+
+        let email = "test@email.com".to_owned();
+        let password = "not-a-secret".to_owned();
+
+        let mut user = UserRoot::create(email.clone(), password.clone())
+            .expect("user should be created successfully");
+
+        // We need to clone the UserRoot instance to get the list
+        // of uncommitted events from the Context twice.
+        let mut cloned_user = user.clone();
+
+        // Saving the first User to the Repository.
+        user_repository
+            .store(&mut user)
+            .await
+            .expect("user should be stored successfully");
+
+        // Simulating data race by duplicating the call to the Repository
+        // with the same UserRoot instance that has already been committeed.
+        let error = user_repository
+            .store(&mut cloned_user)
+            .await
+            .expect_err("the repository should fail on the second store call with the cloned user");
+
+        let error: Box<dyn Error> = error.into();
+
+        // Have no idea how to fix this one...
+        #[allow(clippy::redundant_closure_for_method_calls)]
+        {
+            assert!(error
+                .source()
+                .map_or(false, |src| src.is::<version::ConflictError>()));
+        }
     }
 }
