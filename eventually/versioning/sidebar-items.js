@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Versioned","Data type that carries a version for Optimistic Concurrency Control."]]});

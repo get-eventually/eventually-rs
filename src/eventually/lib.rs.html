@@ -71,79 +71,79 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A library providing components to build event-sourced applications.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The `eventually` crate provides base abstractions to design your application</span>
-<span class="doccomment">//! domain using [Domain-driven Design], using the [`Aggregate`] trait,</span>
-<span class="doccomment">//! and provides a set of nice utilities around those core abstractions:</span>
-<span class="doccomment">//! [`EventStore`], [`Repository`], [`Subscription`] and [`Projection`].</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ## Event Sourcing Primer</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Event Sourcing is an architectural pattern which requires domain entities&#39;</span>
-<span class="doccomment">//! (in ES lingo, **_Aggregates_**) internal state to be mutated and persisted</span>
-<span class="doccomment">//! as a list of **_Domain Events_**, rather than serializing the whole state</span>
-<span class="doccomment">//! to the database (as you would do with a typical CRUD architecture).</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Events are persisted in an **_Event Store_**: an ordered, append-only log of</span>
-<span class="doccomment">//! all the events produced in your domain.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Events can be retrieved from an Event Store through **_Event Streams_**,</span>
-<span class="doccomment">//! stream of chronologically-ordered events.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The state of your Aggregates can thus be rebuilt by **streaming all the</span>
-<span class="doccomment">//! Events** back in the application, as they happened in time, to build the</span>
-<span class="doccomment">//! latest version of the state.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This architectural pattern brings in a lot of interesting goodies:</span>
-<span class="doccomment">//! * **Auditing**: never need to guess what happened in your system,</span>
-<span class="doccomment">//! thanks to the Event Store, you have a list of all the Events that have been</span>
-<span class="doccomment">//! committed during time.</span>
-<span class="doccomment">//! * **Time-machine**: _travel back in time_, by setting the state of your</span>
-<span class="doccomment">//!   service</span>
-<span class="doccomment">//! to a specific point in time, thanks to the Event Store; useful for debugging</span>
-<span class="doccomment">//! purposes.</span>
-<span class="doccomment">//! * **Projections**: create read-optimized models of your Aggregates as needed</span>
-<span class="doccomment">//! for you business operations, continuously, every time new Events are</span>
-<span class="doccomment">//! committed to the Event Store.</span>
-<span class="doccomment">//! * **Concurrency Handling**: Event-sourced application make extensive use</span>
-<span class="doccomment">//! of Optimistic Concurrency to handle concurrent-writes scenarios --</span>
-<span class="doccomment">//! concurrency conflicts and state reconciliation can become part of your</span>
-<span class="doccomment">//! Domain!</span>
-<span class="doccomment">//! * **High Performance, High Availability**: thanks to the append-only Event</span>
-<span class="doccomment">//!   Store</span>
-<span class="doccomment">//! and the use of Projections, you can write highly performant and highly</span>
-<span class="doccomment">//! available services that handle an intense amount of traffic.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [More information about this pattern can be found here.](https://eventstore.com/blog/what-is-event-sourcing/)</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [Domain-driven Design]: https://en.wikipedia.org/wiki/Domain-driven_design</span>
-<span class="doccomment">//! [`Aggregate`]: trait.Aggregate.html</span>
-<span class="doccomment">//! [`EventStore`]: trait.EventStore.html</span>
-<span class="doccomment">//! [`Repository`]: struct.Repository.html</span>
-<span class="doccomment">//! [`Subscription`]: trait.Subscription.html</span>
-<span class="doccomment">//! [`Projection`]: trait.Projection.html</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">deny</span>(<span class="ident">unsafe_code</span>, <span class="ident">unused_qualifications</span>, <span class="ident">trivial_casts</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::all</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::pedantic</span>)]</span>
 
-<span class="attribute">#[<span class="ident">deny</span>(
-    <span class="ident">clippy::all</span>,
-    <span class="ident">missing_docs</span>,
-    <span class="ident">unsafe_code</span>,
-    <span class="ident">unused_qualifications</span>,
-    <span class="ident">trivial_casts</span>
-)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">aggregate</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">aggregate</span>::{<span class="ident">Aggregate</span>, <span class="ident">AggregateExt</span>, <span class="ident">AggregateId</span>, <span class="ident">AggregateRoot</span>, <span class="ident">AggregateRootFactory</span>};
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">command</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">event</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">metadata</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">test</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">version</span>;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">repository</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">store</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">versioning</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">store::EventStore</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">projection</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">subscription</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">util</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">util::inmemory</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">util::optional</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">util::sync</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::metadata::Metadata</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="ident">T</span>,
+    <span class="kw">pub</span> <span class="ident">metadata</span>: <span class="ident">Metadata</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_metadata</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span>
+    <span class="kw">where</span>
+        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">Metadata</span>) -&gt; <span class="ident">Metadata</span>,
+    {
+        <span class="self">self</span>.<span class="ident">metadata</span> <span class="op">=</span> <span class="ident">f</span>(<span class="self">self</span>.<span class="ident">metadata</span>);
+        <span class="self">self</span>
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">payload</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">Message</span> {
+            <span class="ident">payload</span>,
+            <span class="ident">metadata</span>: <span class="ident">Metadata::default</span>(),
+        }
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">PartialEq</span>,
+{
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">payload</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">payload</span>
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">message_with_metadata_does_not_affect_equality</span>() {
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span> {
+            <span class="ident">payload</span>: <span class="string">&quot;hello&quot;</span>,
+            <span class="ident">metadata</span>: <span class="ident">Metadata::default</span>(),
+        };
+
+        <span class="kw">let</span> <span class="ident">new_message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>().<span class="ident">with_metadata</span>(<span class="op">|</span><span class="ident">metadata</span><span class="op">|</span> {
+            <span class="ident">metadata</span>
+                .<span class="ident">add_string</span>(<span class="string">&quot;hello_world&quot;</span>.<span class="ident">to_owned</span>(), <span class="string">&quot;test&quot;</span>.<span class="ident">to_owned</span>())
+                .<span class="ident">add_integer</span>(<span class="string">&quot;test_number&quot;</span>.<span class="ident">to_owned</span>(), <span class="number">1</span>)
+        });
+
+        <span class="macro">println!</span>(<span class="string">&quot;Message: {:?}&quot;</span>, <span class="ident">message</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;New message: {:?}&quot;</span>, <span class="ident">new_message</span>);
+
+        <span class="comment">// Metadata does not affect equality of message.</span>
+        <span class="macro">assert_eq!</span>(<span class="ident">message</span>, <span class="ident">new_message</span>);
+    }
+}
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>

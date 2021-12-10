@@ -1,11 +1,11 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Module containing support for the Aggregate pattern."><meta name="keywords" content="rust, rustlang, rust-lang, aggregate"><title>eventually::aggregate - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../eventually/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><h2 class="location">Module aggregate</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="aggregate" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../index.html">eventually</a>::<wbr><a class="mod" href="#">aggregate</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/eventually/aggregate.rs.html#1-437" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Module containing support for the Aggregate pattern.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Module containing support for the Aggregate pattern."><meta name="keywords" content="rust, rustlang, rust-lang, aggregate"><title>eventually::aggregate - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../eventually/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><h2 class="location">Module aggregate</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div><div id="sidebar-vars" data-name="aggregate" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../index.html">eventually</a>::<wbr><a class="mod" href="#">aggregate</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/eventually/aggregate.rs.html#1-637" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Module containing support for the Aggregate pattern.</p>
 <h3 id="what-is-an-aggregate" class="section-header"><a href="#what-is-an-aggregate">What is an Aggregate?</a></h3>
-<p>An <a href="https://martinfowler.com/bliki/DDD_Aggregate.html">Aggregate</a> is the most important concept in your domain.</p>
+<p>An <a href="trait.Aggregate.html" title="Aggregate">Aggregate</a> is the most important concept in your domain.</p>
 <p>It represents the entities your business domain is composed of,
 and the business logic your domain is exposing.</p>
 <p>For example: in an Order Management bounded-context (e.g. a
 microservice), the concepts of Order or Customer are two potential
-<a href="https://martinfowler.com/bliki/DDD_Aggregate.html">Aggregate</a>s.</p>
+<a href="trait.Aggregate.html" title="Aggregate">Aggregate</a>s.</p>
 <p>Aggregates expose mutations with the concept of <strong>commands</strong>:
 from the previous example, an Order might expose some commands such as
 <em>“Add Order Item”</em>, or <em>“Remove Order Item”</em>, or <em>“Place Order”</em>
@@ -16,142 +16,21 @@ in a certain logical meaning.</p>
 <p>As such, commands in Event Sourcing will <strong>produce</strong> Domain Events.</p>
 <p>Aggregates should provide a way to <strong>fold</strong> Domain Events on the
 current value of the state, to produce the next state.</p>
-<h3 id="aggregate-in-eventually" class="section-header"><a href="#aggregate-in-eventually">Aggregate in <code>eventually</code></a></h3>
-<p><code>eventually</code> supports the Aggregates through the <a href="trait.Aggregate.html"><code>Aggregate</code></a> trait.</p>
-<p>An <a href="trait.Aggregate.html"><code>Aggregate</code></a> allows to:</p>
-<ul>
-<li>specify the available commands through the <a href="trait.Aggregate.html#associatedType.Command"><code>Command</code></a> associated
-type,
-usually an <code>enum</code>,</li>
-<li>define how to handle commands through the <a href="trait.Aggregate.html#tymethod.handle"><code>handle</code></a> method,</li>
-<li>specify the Aggregate’s Domain Events through the <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>
-associated type, usually an <code>enum</code>,</li>
-<li>define the transition logic from one state to another by an <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>,
-through the <a href="trait.Aggregate.html#tymethod.apply"><code>apply</code></a> method.</li>
-</ul>
-<p>An <a href="trait.Aggregate.html"><code>Aggregate</code></a> is essentialy an <em>actor</em>, which means it should contain
-all the dependencies it needs to execute commands (e.g. repositories,
-external clients, validators, etc…)</p>
-<p>Let’s take the Orders Management example:</p>
-
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">eventually::Aggregate</span>;
-<span class="kw">use</span> <span class="ident">futures::future::BoxFuture</span>;
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-
-<span class="comment">// This is the state of our Order, which contains one or more items,</span>
-<span class="comment">// and whether it has been placed or not.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">OrderState</span> {
-    <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span>,
-    <span class="ident">placed</span>: <span class="ident">bool</span>,
-}
-
-<span class="comment">// This is a single order item, which contains the order SKU, the number</span>
-<span class="comment">// of quantities of the same item and the price.</span>
-<span class="kw">struct</span> <span class="ident">OrderItem</span> {
-    <span class="ident">sku</span>: <span class="ident">String</span>,
-    <span class="ident">quantity</span>: <span class="ident">u32</span>,
-    <span class="ident">price</span>: <span class="ident">f32</span>,
-}
-
-<span class="comment">// Let&#39;s say we have a catalog of available items in our system.</span>
-<span class="comment">//</span>
-<span class="comment">// We want to make sure that each item that has been added to the Order</span>
-<span class="comment">// is available in the catalog.</span>
-<span class="comment">//</span>
-<span class="comment">// We&#39;re going to use this trait in the Aggregate implementation,</span>
-<span class="comment">// when handling events to add OrderItems.</span>
-<span class="kw">trait</span> <span class="ident">OrderItemsCatalog</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="kw">fn</span> <span class="ident">get_item</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sku</span>: <span class="ident">String</span>) -&gt; <span class="ident">BoxFuture</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span>;
-}
-
-<span class="comment">// This is the list of all the commands that are available on our Aggregate.</span>
-<span class="kw">enum</span> <span class="ident">OrderCommand</span> {
-    <span class="comment">// Make the order final and place it to the production line.</span>
-    <span class="ident">PlaceOrder</span>,
-    <span class="comment">// Add an OrderItem to the Order, specifying a quantity.</span>
-    <span class="ident">AddOrderItem</span> { <span class="ident">sku</span>: <span class="ident">String</span>, <span class="ident">quantity</span>: <span class="ident">u32</span> },
-    <span class="comment">// Remove an OrderItem from the Order: the item is removed</span>
-    <span class="comment">// when the quantity in the Order is less or equal than</span>
-    <span class="comment">// the quantity asked to be removed by the command.</span>
-    <span class="ident">RemoveOrderItem</span> { <span class="ident">sku</span>: <span class="ident">String</span>, <span class="ident">quantity</span>: <span class="ident">u32</span> },
-}
-
-<span class="comment">// This is the list of all the domain events defined on the Order aggregate.</span>
-<span class="kw">enum</span> <span class="ident">OrderEvent</span> {
-    <span class="comment">// The list of OrderItems is updated with the specified value.</span>
-    <span class="ident">OrderItemsUpdated</span> { <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OrderItem</span><span class="op">&gt;</span> },
-    <span class="comment">// Marks the order as placed.</span>
-    <span class="ident">OrderPlaced</span>,
-}
-
-<span class="comment">// This is our Aggregate actor, which will contain all the necessary</span>
-<span class="comment">// dependencies for handling commands.</span>
-<span class="comment">//</span>
-<span class="comment">// In this case, it will only contain the OrderItemCatalog.</span>
-<span class="kw">struct</span> <span class="ident">OrderAggregate</span> {
-    <span class="ident">catalog</span>: <span class="ident">std::sync::Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">OrderItemsCatalog</span><span class="op">&gt;</span>,
-}
-
-<span class="comment">// Implementation for the Aggregate trait.</span>
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">Aggregate</span> <span class="kw">for</span> <span class="ident">OrderAggregate</span> {
-    <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">u64</span>;
-    <span class="kw">type</span> <span class="ident">State</span> <span class="op">=</span> <span class="ident">OrderState</span>;
-    <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">OrderEvent</span>;
-    <span class="kw">type</span> <span class="ident">Command</span> <span class="op">=</span> <span class="ident">OrderCommand</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::convert::Infallible</span>; <span class="comment">// This should be a meaningful error.</span>
-
-    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="ident"><span class="self">Self</span>::State</span>, <span class="ident">event</span>: <span class="ident"><span class="self">Self</span>::Event</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::State</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="macro">unimplemented!</span>()
-    }
-
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Id</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::State</span>,
-        <span class="ident">command</span>: <span class="ident"><span class="self">Self</span>::Command</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Event</span><span class="op">&gt;</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
-    {
-        <span class="macro">unimplemented!</span>()
-    }
-}</code></pre></div>
-<h4 id="note-on-state" class="section-header"><a href="#note-on-state">Note on <code>State</code></a></h4>
-<p>An <a href="trait.Aggregate.html"><code>Aggregate</code></a>’s <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> type needs to implement the <code>Default</code>
-trait, to always have an initial state representation.</p>
-<p>This is very important for functional <em>folding</em> of <a href="trait.Aggregate.html#associatedType.Event"><code>Event</code></a>s
-done by <a href="trait.Aggregate.html#tymethod.apply"><code>apply</code></a>.</p>
-<p>A common type used in <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> is <code>Option&lt;StateType&gt;</code>, where
-<code>StateType</code> doesn’t usually implement <code>Default</code>. This is to represent
-a nullable state before the first command is received.</p>
-<p>Given the common use-case, <code>eventually</code> has included support for
-the <a href="trait.Optional.html"><code>Optional</code></a> aggregate trait, where you can use <code>StateType</code>
-directly in the <code>State</code> associated type.</p>
-<p><a href="trait.Optional.html"><code>Optional</code></a> is compatible with the <a href="trait.Aggregate.html"><code>Aggregate</code></a> trait through
-the <a href="trait.Optional.html#method.as_aggregate"><code>as_aggregate</code></a> method, or the <a href="../optional/struct.AsAggregate.html"><code>optional::AsAggregate</code></a>
-newtype adapter.</p>
-<h4 id="interacting-with-aggregates-using-aggregateroot" class="section-header"><a href="#interacting-with-aggregates-using-aggregateroot">Interacting with Aggregates using <code>AggregateRoot</code></a></h4>
-<p>Interaction with Aggregates is doable through an <a href="struct.AggregateRoot.html"><code>AggregateRoot</code></a>.</p>
-<p>An <a href="struct.AggregateRoot.html"><code>AggregateRoot</code></a> represents a specific Aggregate instance,
-by managing its <a href="trait.Aggregate.html#associatedType.State"><code>State</code></a> and the access to submit commands.</p>
-<p>Access to an <a href="struct.AggregateRoot.html"><code>AggregateRoot</code></a> is obtainable in two ways:</p>
-<ol>
-<li>Through the <a href="struct.AggregateRootFactory.html"><code>AggregateRootFactory</code></a>, useful for testing</li>
-<li>Through a <a href="struct.Repository.html"><code>Repository</code></a> instance</li>
-</ol>
-<p>More on the <a href="struct.Repository.html"><code>Repository</code></a> in the <a href="../repository/index.html">module-level
-documentation</a>.</p>
-</div></details><h2 id="reexports" class="section-header"><a href="#reexports">Re-exports</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left import-item"><code>pub use crate::optional::<a class="trait" href="../util/optional/trait.Aggregate.html" title="trait eventually::util::optional::Aggregate">Aggregate</a> as Optional;</code></div><div class="item-right docblock-short"></div></div></div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.AggregateRoot.html" title="eventually::aggregate::AggregateRoot struct">AggregateRoot</a></div><div class="item-right docblock-short"><p>An <a href="struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> represents an handler to the <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> it’s
-managing, such as:</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.AggregateRootFactory.html" title="eventually::aggregate::AggregateRootFactory struct">AggregateRootFactory</a></div><div class="item-right docblock-short"><p>Factory type for new <a href="struct.AggregateRoot.html" title="AggregateRoot"><code>AggregateRoot</code></a> instances.</p>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Context.html" title="eventually::aggregate::Context struct">Context</a></div><div class="item-right docblock-short"><p>A context object that should be used by the Aggregate <a href="trait.Root.html" title="Root">Root</a> methods to
+access the <a href="trait.Aggregate.html" title="Aggregate">Aggregate</a> state and to record new Domain <a href="../event/type.Event.html" title="Event">Event</a>s.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.EventSourcedRepository.html" title="eventually::aggregate::EventSourcedRepository struct">EventSourcedRepository</a></div><div class="item-right docblock-short"><p>An Event-sourced implementation of the <a href="trait.Repository.html" title="Repository">Repository</a> interface.</p>
+</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.EventSourcedRepositoryError.html" title="eventually::aggregate::EventSourcedRepositoryError enum">EventSourcedRepositoryError</a></div><div class="item-right docblock-short"><p>List of possible errors that can be returned by an <a href="struct.EventSourcedRepository.html" title="EventSourcedRepository"><code>EventSourcedRepository</code></a> method.</p>
 </div></div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Aggregate.html" title="eventually::aggregate::Aggregate trait">Aggregate</a></div><div class="item-right docblock-short"><p>An <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> manages a domain entity <a href="trait.Aggregate.html#associatedtype.State"><code>State</code></a>, acting
-as a <em>transaction boundary</em>.</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AggregateExt.html" title="eventually::aggregate::AggregateExt trait">AggregateExt</a></div><div class="item-right docblock-short"><p>Extension trait with some handy methods to use with <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a>s.</p>
-</div></div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.AggregateId.html" title="eventually::aggregate::AggregateId type">AggregateId</a></div><div class="item-right docblock-short"><p>A short extractor type for the <a href="trait.Aggregate.html" title="Aggregate"><code>Aggregate</code></a> <a href="trait.Aggregate.html#associatedtype.Id"><code>Id</code></a>.</p>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Aggregate.html" title="eventually::aggregate::Aggregate trait">Aggregate</a></div><div class="item-right docblock-short"><p>An Aggregate represents a Domain Model that, through an Aggregate <a href="trait.Root.html" title="Root">Root</a>,
+acts as a <em>transactional boundary</em>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Repository.html" title="eventually::aggregate::Repository trait">Repository</a></div><div class="item-right docblock-short"><p>A Repository is an object that allows to load and save
+an <a href="trait.Root.html" title="Root">Aggregate Root</a> from and to a persistent data store.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Root.html" title="eventually::aggregate::Root trait">Root</a></div><div class="item-right docblock-short"><p>An Aggregate Root represents the Domain Entity object used to
+load and save an <a href="trait.Aggregate.html" title="Aggregate">Aggregate</a> from and to a <a href="trait.Repository.html" title="Repository">Repository</a>, and
+to perform actions that may result in new Domain <a href="../event/type.Event.html" title="Event">Event</a>s
+to change the state of the Aggregate.</p>
 </div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script>
 </body></html>
