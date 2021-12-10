@@ -10,6 +10,7 @@ async-trait = "0.1.51"
 futures = "0.3.17"
 serde = { version = "1.0.130", features = ["derive"] }
 thiserror = "1.0.30"
+anyhow = "1.0.51"
 
 [dev-dependencies]
 lazy_static = "1.4.0"

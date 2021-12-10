@@ -3,6 +3,7 @@
 #![warn(clippy::pedantic)]
 
 pub mod aggregate;
+pub mod command;
 pub mod event;
 pub mod metadata;
 pub mod test;
