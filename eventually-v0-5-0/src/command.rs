@@ -29,11 +29,16 @@ where
 }
 
 #[cfg(test)]
-mod test {
+mod test_user_domain {
     use async_trait::async_trait;
 
     use crate::{
-        aggregate, aggregate::test_user_domain::*, command, command::Command, event, event::Event,
+        aggregate,
+        aggregate::test_user_domain::{User, UserEvent, UserRoot},
+        command,
+        command::Command,
+        event,
+        event::Event,
         test,
     };
 
@@ -109,6 +114,28 @@ mod test {
                     password: "not-a-secret".to_owned(),
                 }),
             }])
+            .assert_on(|event_store| {
+                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn it_fails_to_create_an_user_if_it_still_exists() {
+        test::command_handler::Scenario
+            .given(vec![event::Persisted {
+                stream_id: "test@test.com".to_owned(),
+                version: 1,
+                payload: Event::from(UserEvent::WasCreated {
+                    email: "test@test.com".to_owned(),
+                    password: "not-a-secret".to_owned(),
+                }),
+            }])
+            .when(Command::from(CreateUser {
+                email: "test@test.com".to_owned(),
+                password: "not-a-secret".to_owned(),
+            }))
+            .then_fails()
             .assert_on(|event_store| {
                 CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
             })
