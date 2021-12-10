@@ -6,13 +6,13 @@ edition = "2021"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 readme = "../README.md"
-repository = "https://github.com/eventually-rs/eventually-rs"
+repository = "https://github.com/get-eventually/eventually-rs"
 
 categories = ["web-programming", "asynchronous"]
 keywords = ["redis", "eventually", "event-store", "ddd", "event-sourcing"]
 
 [dependencies]
-eventually = { version = "0.4.0", path = "../eventually", features = ["serde"] }
+eventually = { git = "https://github.com/get-eventually/eventually-rs", rev = "ab8c85d", features = ["serde"] }
 
 futures = "0.3"
 redis = { version = "0.21.2", features = ["r2d2", "tokio-comp"] }
