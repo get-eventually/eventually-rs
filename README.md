@@ -21,7 +21,7 @@
         src="https://img.shields.io/github/workflow/status/eventually-rs/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
     <!-- Codecov -->
-    <a href="https://codecov.io/gh/get-eventuallyeventually-rs">
+    <a href="https://codecov.io/gh/get-eventually/eventually-rs">
             <img alt="Codecov"
             src="https://img.shields.io/codecov/c/github/get-eventually/eventually-rs?style=flat-square">
     </a>
@@ -31,6 +31,7 @@
         src="https://img.shields.io/crates/v/eventually?style=flat-square">
     </a>
     <!-- Github pages docs -->
+    <a href="https://get-eventually.github.io/eventually-rs/eventually">
         <img alt="latest main docs"
         src="https://img.shields.io/badge/docs-main-important?style=flat-square" />
     </a>
