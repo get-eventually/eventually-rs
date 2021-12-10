@@ -5,11 +5,13 @@ use crate::{command, command::Command, event, event::Store, test, test::store::E
 pub struct Scenario;
 
 impl Scenario {
-    pub fn given<Id, Evt>(self, events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt> {
+    #[must_use]
+    pub fn given<Id, Evt>(events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt> {
         ScenarioGiven { given: events }
     }
 
-    pub fn when<Id, Evt, Cmd>(self, command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd> {
+    #[must_use]
+    pub fn when<Id, Evt, Cmd>(command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd> {
         ScenarioWhen {
             given: Vec::default(),
             when: command,
@@ -22,6 +24,7 @@ pub struct ScenarioGiven<Id, Evt> {
 }
 
 impl<Id, Evt> ScenarioGiven<Id, Evt> {
+    #[must_use]
     pub fn when<Cmd>(self, command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd> {
         ScenarioWhen {
             given: self.given,
@@ -36,6 +39,7 @@ pub struct ScenarioWhen<Id, Evt, Cmd> {
 }
 
 impl<Id, Evt, Cmd> ScenarioWhen<Id, Evt, Cmd> {
+    #[must_use]
     pub fn then(self, events: Vec<event::Persisted<Id, Evt>>) -> ScenarioThen<Id, Evt, Cmd> {
         ScenarioThen {
             given: self.given,
@@ -44,6 +48,7 @@ impl<Id, Evt, Cmd> ScenarioWhen<Id, Evt, Cmd> {
         }
     }
 
+    #[must_use]
     pub fn then_fails(self) -> ScenarioThen<Id, Evt, Cmd> {
         ScenarioThen {
             given: self.given,

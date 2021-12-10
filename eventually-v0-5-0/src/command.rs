@@ -101,86 +101,82 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_creates_a_new_user_successfully() {
-        test::command_handler::Scenario
-            .when(Command::from(CreateUser {
+        test::command_handler::Scenario::when(Command::from(CreateUser {
+            email: "test@test.com".to_owned(),
+            password: "not-a-secret".to_owned(),
+        }))
+        .then(vec![event::Persisted {
+            stream_id: "test@test.com".to_owned(),
+            version: 1,
+            payload: Event::from(UserEvent::WasCreated {
                 email: "test@test.com".to_owned(),
                 password: "not-a-secret".to_owned(),
-            }))
-            .then(vec![event::Persisted {
-                stream_id: "test@test.com".to_owned(),
-                version: 1,
-                payload: Event::from(UserEvent::WasCreated {
-                    email: "test@test.com".to_owned(),
-                    password: "not-a-secret".to_owned(),
-                }),
-            }])
-            .assert_on(|event_store| {
-                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
-            })
-            .await;
+            }),
+        }])
+        .assert_on(|event_store| {
+            CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn it_fails_to_create_an_user_if_it_still_exists() {
-        test::command_handler::Scenario
-            .given(vec![event::Persisted {
-                stream_id: "test@test.com".to_owned(),
-                version: 1,
-                payload: Event::from(UserEvent::WasCreated {
-                    email: "test@test.com".to_owned(),
-                    password: "not-a-secret".to_owned(),
-                }),
-            }])
-            .when(Command::from(CreateUser {
+        test::command_handler::Scenario::given(vec![event::Persisted {
+            stream_id: "test@test.com".to_owned(),
+            version: 1,
+            payload: Event::from(UserEvent::WasCreated {
                 email: "test@test.com".to_owned(),
                 password: "not-a-secret".to_owned(),
-            }))
-            .then_fails()
-            .assert_on(|event_store| {
-                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
-            })
-            .await;
+            }),
+        }])
+        .when(Command::from(CreateUser {
+            email: "test@test.com".to_owned(),
+            password: "not-a-secret".to_owned(),
+        }))
+        .then_fails()
+        .assert_on(|event_store| {
+            CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn it_updates_the_password_of_an_existing_user() {
-        test::command_handler::Scenario
-            .given(vec![event::Persisted {
-                stream_id: "test@test.com".to_owned(),
-                version: 1,
-                payload: Event::from(UserEvent::WasCreated {
-                    email: "test@test.com".to_owned(),
-                    password: "not-a-secret".to_owned(),
-                }),
-            }])
-            .when(Command::from(ChangeUserPassword {
+        test::command_handler::Scenario::given(vec![event::Persisted {
+            stream_id: "test@test.com".to_owned(),
+            version: 1,
+            payload: Event::from(UserEvent::WasCreated {
                 email: "test@test.com".to_owned(),
+                password: "not-a-secret".to_owned(),
+            }),
+        }])
+        .when(Command::from(ChangeUserPassword {
+            email: "test@test.com".to_owned(),
+            password: "new-password".to_owned(),
+        }))
+        .then(vec![event::Persisted {
+            stream_id: "test@test.com".to_owned(),
+            version: 2,
+            payload: Event::from(UserEvent::PasswordWasChanged {
                 password: "new-password".to_owned(),
-            }))
-            .then(vec![event::Persisted {
-                stream_id: "test@test.com".to_owned(),
-                version: 2,
-                payload: Event::from(UserEvent::PasswordWasChanged {
-                    password: "new-password".to_owned(),
-                }),
-            }])
-            .assert_on(|event_store| {
-                ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
-            })
-            .await;
+            }),
+        }])
+        .assert_on(|event_store| {
+            ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn it_fails_to_update_the_password_if_the_user_does_not_exist() {
-        test::command_handler::Scenario
-            .when(Command::from(ChangeUserPassword {
-                email: "test@test.com".to_owned(),
-                password: "new-password".to_owned(),
-            }))
-            .then_fails()
-            .assert_on(|event_store| {
-                ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
-            })
-            .await;
+        test::command_handler::Scenario::when(Command::from(ChangeUserPassword {
+            email: "test@test.com".to_owned(),
+            password: "new-password".to_owned(),
+        }))
+        .then_fails()
+        .assert_on(|event_store| {
+            ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
+        })
+        .await;
     }
 }
