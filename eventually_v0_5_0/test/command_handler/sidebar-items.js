@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Scenario","A test scenario that can be used to test a [Command] [Handler][command::Handler] using a given-then-when canvas approach."]]});

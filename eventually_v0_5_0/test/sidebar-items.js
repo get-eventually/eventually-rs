@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["store",""]]});
+initSidebarItems({"mod":[["command_handler","Module exposing a test [Scenario] type to write Domain [Command]s test cases using the given-then-when canvas."],["store",""]]});

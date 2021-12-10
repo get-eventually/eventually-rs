@@ -634,6 +634,7 @@
 <span id="634">634</span>
 <span id="635">635</span>
 <span id="636">636</span>
+<span id="637">637</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for the Aggregate pattern.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## What is an Aggregate?</span>
@@ -1035,6 +1036,7 @@
 <span class="comment">// The warnings are happening due to usage of the methods only inside #[cfg(test)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">test_user_domain</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">aggregate</span>, <span class="ident">aggregate::Root</span>, <span class="ident">event::Event</span>};
 
