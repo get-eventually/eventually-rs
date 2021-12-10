@@ -28,7 +28,7 @@ When submitting a PR involving one or more of these crates, please make sure to 
 ### I want to contribute, but I don't know what can I contribute to...
 
 If you want to contribute but you have no idea how, or what specific features are
-missing, please check the [_What next?_ tracking issue](https://github.com/eventually-rs/eventually-rs/issues/133).
+missing, please check the [_What next?_ tracking issue](https://github.com/get-eventually/eventually-rs/issues/133).
 
 Being an open-source project, we are always looking for new contributors, so no matter
 your level of Event Sourcing skills or language mastery, your PRs are always welcome :heart:
@@ -99,7 +99,7 @@ Make sure you run `rustfmt` **before committing any changes**, as failing to do 
 [workspace]: https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html
 [`eventually`]: ./eventually
 [`eventually-app-example`]: ./eventually-app-example
-[issues]: https://github.com/eventually-rs/eventually-rs/issues
-[new-issue]: https://github.com/eventually-rs/eventually-rs/issues/new
+[issues]: https://github.com/get-eventually/eventually-rs/issues
+[new-issue]: https://github.com/get-eventually/eventually-rs/issues/new
 [gitter]: https://gitter.im/eventually-rs/community
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/
