@@ -399,6 +399,7 @@ where
 // The warnings are happening due to usage of the methods only inside #[cfg(test)]
 #[allow(dead_code)]
 #[doc(hidden)]
+#[cfg(test)]
 pub(crate) mod test_user_domain {
     use crate::{aggregate, aggregate::Root, event::Event};
 
