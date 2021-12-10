@@ -8,8 +8,9 @@ use futures::stream::BoxStream;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    message,
+    message::Message,
     version::{ConflictError, Version},
-    Message,
 };
 
 /// An Event is a [Message] carring the information about a Domain Event,
@@ -19,7 +20,10 @@ pub type Event<T> = Message<T>;
 
 /// An [Event] that has been persisted to the Event [Store].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Persisted<Id, Evt> {
+pub struct Persisted<Id, Evt>
+where
+    Evt: message::Payload,
+{
     /// The id of the Event Stream the persisted Event belongs to.
     pub stream_id: Id,
 
@@ -34,9 +38,6 @@ pub struct Persisted<Id, Evt> {
     /// The actual Domain Event carried by this envelope.
     pub payload: Event<Evt>,
 }
-
-/// Shortcut type to represent multiple [Persisted] Events.
-pub type PersistedEvents<Id, Evt> = Vec<Persisted<Id, Evt>>;
 
 /// Specifies the slice of the Event Stream to select when calling [`Store::stream`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,7 +81,7 @@ pub trait Store: Send + Sync {
 
     /// The type containing all Domain Events recorded by the Event Store.
     /// Typically, this parameter should be an `enum`.
-    type Event: Send + Sync;
+    type Event: message::Payload + Send + Sync;
 
     /// The error type returned by the Store during a [`stream`] call.
     type StreamError: Send + Sync;

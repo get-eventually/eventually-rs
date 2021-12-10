@@ -10,16 +10,23 @@ use futures::stream::{iter, StreamExt};
 
 use crate::{
     event,
-    event::{Event, PersistedEvents},
+    event::Event,
+    message,
     version::{ConflictError, Version},
 };
 
 #[derive(Debug)]
-struct InMemoryBackend<Id, Evt> {
-    event_streams: HashMap<Id, PersistedEvents<Id, Evt>>,
+struct InMemoryBackend<Id, Evt>
+where
+    Evt: message::Payload,
+{
+    event_streams: HashMap<Id, Vec<event::Persisted<Id, Evt>>>,
 }
 
-impl<Id, Evt> Default for InMemoryBackend<Id, Evt> {
+impl<Id, Evt> Default for InMemoryBackend<Id, Evt>
+where
+    Evt: message::Payload,
+{
     fn default() -> Self {
         Self {
             event_streams: HashMap::default(),
@@ -28,11 +35,17 @@ impl<Id, Evt> Default for InMemoryBackend<Id, Evt> {
 }
 
 #[derive(Debug, Clone)]
-pub struct InMemory<Id, Evt> {
+pub struct InMemory<Id, Evt>
+where
+    Evt: message::Payload,
+{
     backend: Arc<RwLock<InMemoryBackend<Id, Evt>>>,
 }
 
-impl<Id, Evt> Default for InMemory<Id, Evt> {
+impl<Id, Evt> Default for InMemory<Id, Evt>
+where
+    Evt: message::Payload,
+{
     fn default() -> Self {
         Self {
             backend: Arc::default(),
@@ -44,7 +57,7 @@ impl<Id, Evt> Default for InMemory<Id, Evt> {
 impl<Id, Evt> event::Store for InMemory<Id, Evt>
 where
     Id: Clone + Eq + Hash + Send + Sync,
-    Evt: Clone + Send + Sync,
+    Evt: message::Payload + Clone + Send + Sync,
 {
     type StreamId = Id;
     type Event = Evt;
@@ -102,7 +115,7 @@ where
             }
         }
 
-        let mut persisted_events: PersistedEvents<Id, Evt> = events
+        let mut persisted_events: Vec<event::Persisted<Id, Evt>> = events
             .into_iter()
             .enumerate()
             .map(|(i, payload)| event::Persisted {
@@ -229,17 +242,17 @@ mod test {
     use futures::TryStreamExt;
 
     use super::*;
-    use crate::{event, event::Store, version::Version};
+    use crate::{event, event::Store, message::tests::StringPayload, version::Version};
 
     #[tokio::test]
     async fn it_works() {
-        let event_store = InMemory::<&'static str, &'static str>::default();
+        let event_store = InMemory::<&'static str, StringPayload>::default();
 
         let stream_id = "stream:test";
         let events = vec![
-            event::Event::from("event-1"),
-            event::Event::from("event-2"),
-            event::Event::from("event-3"),
+            event::Event::from(StringPayload("event-1")),
+            event::Event::from(StringPayload("event-2")),
+            event::Event::from(StringPayload("event-3")),
         ];
 
         let new_event_stream_version = event_store
@@ -275,14 +288,14 @@ mod test {
 
     #[tokio::test]
     async fn tracking_store_works() {
-        let event_store = InMemory::<&'static str, &'static str>::default();
+        let event_store = InMemory::<&'static str, StringPayload>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
 
         let stream_id = "stream:test";
         let events = vec![
-            event::Event::from("event-1"),
-            event::Event::from("event-2"),
-            event::Event::from("event-3"),
+            event::Event::from(StringPayload("event-1")),
+            event::Event::from(StringPayload("event-2")),
+            event::Event::from(StringPayload("event-3")),
         ];
 
         tracking_event_store
@@ -305,13 +318,13 @@ mod test {
 
     #[tokio::test]
     async fn version_conflict_checks_work_as_expected() {
-        let event_store = InMemory::<&'static str, &'static str>::default();
+        let event_store = InMemory::<&'static str, StringPayload>::default();
 
         let stream_id = "stream:test";
         let events = vec![
-            event::Event::from("event-1"),
-            event::Event::from("event-2"),
-            event::Event::from("event-3"),
+            event::Event::from(StringPayload("event-1")),
+            event::Event::from(StringPayload("event-2")),
+            event::Event::from(StringPayload("event-3")),
         ];
 
         let append_error = event_store

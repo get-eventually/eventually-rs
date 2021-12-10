@@ -30,7 +30,7 @@ use std::{fmt::Debug, marker::PhantomData};
 use async_trait::async_trait;
 use futures::TryStreamExt;
 
-use crate::{event, event::Event, version::Version};
+use crate::{event, event::Event, message, version::Version};
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -50,7 +50,7 @@ pub trait Aggregate: Sized + Send + Sync {
 
     /// The type of Domain Events that interest this Aggregate.
     /// Usually, this type should be an `enum`.
-    type Event: Send + Sync;
+    type Event: message::Payload + Send + Sync;
 
     /// The error type that can be returned by [`Aggregate::apply`] when
     /// mutating the Aggregate state.
@@ -401,7 +401,7 @@ where
 #[doc(hidden)]
 #[cfg(test)]
 pub(crate) mod test_user_domain {
-    use crate::{aggregate, aggregate::Root, event::Event};
+    use crate::{aggregate, aggregate::Root, event::Event, message};
 
     #[derive(Debug, Clone)]
     pub(crate) struct User {
@@ -413,6 +413,15 @@ pub(crate) mod test_user_domain {
     pub(crate) enum UserEvent {
         WasCreated { email: String, password: String },
         PasswordWasChanged { password: String },
+    }
+
+    impl message::Payload for UserEvent {
+        fn name(&self) -> &'static str {
+            match self {
+                UserEvent::WasCreated { .. } => "UserWasCreated",
+                UserEvent::PasswordWasChanged { .. } => "UserPasswordWasChanged",
+            }
+        }
     }
 
     #[derive(Debug, thiserror::Error)]
