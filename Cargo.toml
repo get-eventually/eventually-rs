@@ -3,5 +3,4 @@ members = [
     "eventually",
     "eventually-postgres",
     "eventually-redis",
-    "eventually-v0-5-0",
 ]

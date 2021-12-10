@@ -1,33 +1,24 @@
 [package]
 name = "eventually"
-description = "Crate for using Event Sourcing in Rust applications"
-version = "0.4.0"
+description = "Eventually is a minimalistic crate that exposes a few building blocks to build Event-sourced applications in Rust."
+version = "0.5.0-alpha.1"
 edition = "2021"
 authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
 license = "MIT"
 readme = "../README.md"
-repository = "https://github.com/eventually-rs/eventually-rs"
+repository = "https://github.com/get-eventually/eventually-rs"
 
 categories = ["rust-patterns", "web-programming", "asynchronous", "data-structures"]
 keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
-[features]
-default = []
-full = ["serde", "tracing"]
-
 [dependencies]
-anyhow = "1.0.44"
 async-trait = "0.1.51"
 futures = "0.3.17"
-parking_lot = "0.11.2"
-serde = { version = "1.0.130", optional = true, features = ["derive"] }
-thiserror = "1.0.29"
-tokio = { version = "1.3.0", features = ["rt", "sync"] }
-tokio-stream = { version = "0.1.4", features = ["sync"] }
-tracing = { version = "0.1.29", optional = true }
+serde = { version = "1.0.130", features = ["derive"] }
+thiserror = "1.0.30"
 
 [dev-dependencies]
-async-trait = "0.1.51"
-futures = { version = "0.3", features = ["async-await"] }
-tokio = { version = "1.3.0", features = ["macros"] }
-tokio-test = "0.4.2"
+anyhow = "1.0.51"  # NOTE: this is only used for test components and assertions.
+lazy_static = "1.4.0"
+serde_json = "1.0.69"
+tokio = { version = "1.13.0", features = ["macros", "rt-multi-thread"] }

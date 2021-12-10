@@ -16,12 +16,12 @@
 
 <div align="center">
     <!-- Testing pipeline -->
-    <a href="https://github.com/eventually-rs/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
+    <a href="https://github.com/get-eventually/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
         <img alt="GitHub Workflow Status"
         src="https://img.shields.io/github/workflow/status/eventually-rs/eventually-rs/Rust%20(stable)?style=flat-square">
     </a>
     <!-- Codecov -->
-    <a href="https://codecov.io/gh/get-eventuallyeventually-rs">
+    <a href="https://codecov.io/gh/get-eventually/eventually-rs">
             <img alt="Codecov"
             src="https://img.shields.io/codecov/c/github/get-eventually/eventually-rs?style=flat-square">
     </a>
@@ -31,6 +31,7 @@
         src="https://img.shields.io/crates/v/eventually?style=flat-square">
     </a>
     <!-- Github pages docs -->
+    <a href="https://get-eventually.github.io/eventually-rs/eventually">
         <img alt="latest main docs"
         src="https://img.shields.io/badge/docs-main-important?style=flat-square" />
     </a>
@@ -40,7 +41,7 @@
         src="https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=docs.rs&query=%24.crate.newest_version&url=https%3A%2F%2Fcrates.io%2Fapi%2Fv1%2Fcrates%2Feventually" />
     </a>
     <!-- License -->
-    <a href="https://github.com/eventually-rs/eventually-rs/blob/main/LICENSE">
+    <a href="https://github.com/get-eventually/eventually-rs/blob/main/LICENSE">
         <img alt="GitHub license"
         src="https://img.shields.io/github/license/eventually-rs/eventually-rs?style=flat-square">
     </a>
@@ -74,7 +75,7 @@ to save these Events using an _Event Store_ (the append-only event log).
 
 For more information, [check out the crate documentation](https://docs.rs/eventually).
 
-You can also take a look at [`eventually-app-example`](https://github.com/eventually-rs/eventually-app-example),
+You can also take a look at [`eventually-app-example`](https://github.com/get-eventually/eventually-app-example),
 showcasing an example event-sourced microservice using HTTP transport layer.
 
 All other questions are more than welcome on our [Gitter chat](https://gitter.im/eventually-rs/community).
