@@ -1,15 +1,44 @@
+//! Module containing support for Domain [Command]s.
+//!
+//! Following the Domain-driven Design definition, a [Command] expresses the
+//! intent of an Actor (e.g. a Customer, a User, a System, etc.) to modify
+//! the state of the system in some way.
+//!
+//! To modify the state of the system through a [Command], you must
+//! implement a Command [Handler] which, in an Event-sourced system,
+//! should make use of an [Aggregate] to evaluate the validity of the Command
+//! submitted, and emit Domain [Event]s as a result (through the Event [Store]).
+//!
+//! Check out the type documentation exported in this module.
+
 use std::future::Future;
 
 use async_trait::async_trait;
 
 use crate::Message;
 
+/// A Command represents an intent by an Actor (e.g. a User, or a System)
+/// to mutate the state of the system.
+///
+/// In an event-sourced system, a Command is represented as a [Message].
 pub type Command<T> = Message<T>;
 
+/// A software component that is able to handle [Command]s of a certain type,
+/// and mutate the state as a result of the command handling, or fail.
+///
+/// In an event-sourced system, the [Command] Handler
+/// should use an [Aggregate][crate::aggregate::Aggregate] to evaluate
+/// a [Command] to ensure business invariants are respected.
 #[async_trait]
 pub trait Handler<T>: Send + Sync {
+    /// The error type returned by the Handler while handling a [Command].
     type Error: Send + Sync;
 
+    /// Handles a [Command] and returns an error if the handling has failed.
+    ///
+    /// Since [Command]s are solely modifying the state of the system,
+    /// they do not return anything to the caller but the result of the operation
+    /// (expressed by a [Result] type).
     async fn handle(&self, command: Command<T>) -> Result<(), Self::Error>;
 }
 
