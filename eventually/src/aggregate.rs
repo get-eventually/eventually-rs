@@ -25,7 +25,11 @@
 //! Aggregates should provide a way to **fold** Domain Events on the
 //! current value of the state, to produce the next state.
 
-use std::{fmt::Debug, marker::PhantomData};
+use std::{
+    borrow::{Borrow, BorrowMut},
+    fmt::Debug,
+    marker::PhantomData,
+};
 
 use async_trait::async_trait;
 use futures::TryStreamExt;
@@ -234,15 +238,20 @@ where
 ///
 /// For more information on how to record Domain Events using an Aggregate Root,
 /// please check [`Context::record_that`] method documentation.
-pub trait Root<T>: From<Context<T>> + Send + Sync
+pub trait Root<T>:
+    From<Context<T>> + Borrow<Context<T>> + BorrowMut<Context<T>> + Send + Sync
 where
     T: Aggregate,
 {
     /// Provides read access to an [Aggregate] [Root] [Context].
-    fn ctx(&self) -> &Context<T>;
+    fn ctx(&self) -> &Context<T> {
+        self.borrow()
+    }
 
     /// Provides write access to an [Aggregate] [Root] [Context].
-    fn ctx_mut(&mut self) -> &mut Context<T>;
+    fn ctx_mut(&mut self) -> &mut Context<T> {
+        self.borrow_mut()
+    }
 
     /// Convenience method to resolve the [Aggregate] unique identifier
     /// from the Aggregate Root instance.
@@ -401,6 +410,8 @@ where
 #[doc(hidden)]
 #[cfg(test)]
 pub(crate) mod test_user_domain {
+    use std::borrow::{Borrow, BorrowMut};
+
     use crate::{aggregate, aggregate::Root, event::Event, message};
 
     #[derive(Debug, Clone)]
@@ -474,15 +485,19 @@ pub(crate) mod test_user_domain {
         }
     }
 
-    impl Root<User> for UserRoot {
-        fn ctx(&self) -> &aggregate::Context<User> {
+    impl Borrow<aggregate::Context<User>> for UserRoot {
+        fn borrow(&self) -> &aggregate::Context<User> {
             &self.0
         }
+    }
 
-        fn ctx_mut(&mut self) -> &mut aggregate::Context<User> {
+    impl BorrowMut<aggregate::Context<User>> for UserRoot {
+        fn borrow_mut(&mut self) -> &mut aggregate::Context<User> {
             &mut self.0
         }
     }
+
+    impl Root<User> for UserRoot {}
 
     impl UserRoot {
         pub(crate) fn create(email: String, password: String) -> Result<Self, UserError> {
