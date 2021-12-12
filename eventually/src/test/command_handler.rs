@@ -127,7 +127,7 @@ impl<Id, Evt, Cmd> ScenarioThen<Id, Evt, Cmd>
 where
     Id: Clone + Eq + Hash + Send + Sync + Debug,
     Evt: message::Payload + Clone + PartialEq + Send + Sync + Debug,
-    Cmd: message::Payload,
+    Cmd: message::Payload + Send + Sync,
 {
     /// Executes the whole [Scenario] by constructing a Command [Handler]
     /// with the provided closure function and running the specified assertions.

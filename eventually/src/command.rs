@@ -11,11 +11,11 @@
 //!
 //! Check out the type documentation exported in this module.
 
-use std::future::Future;
+use std::{future::Future, marker::PhantomData, sync::Arc};
 
 use async_trait::async_trait;
 
-use crate::{message, message::Message};
+use crate::{event, message, message::Message};
 
 /// A Command represents an intent by an Actor (e.g. a User, or a System)
 /// to mutate the state of the system.
@@ -32,7 +32,7 @@ pub type Command<T> = Message<T>;
 #[async_trait]
 pub trait Handler<T>: Send + Sync
 where
-    T: message::Payload,
+    T: message::Payload + Send + Sync,
 {
     /// The error type returned by the Handler while handling a [Command].
     type Error: Send + Sync;
@@ -60,6 +60,179 @@ where
     }
 }
 
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum ErrorRecorderError<Cmd, Err> {
+    #[error(transparent)]
+    CommandFailed(#[from] Cmd),
+
+    #[error("failed to append the error domain event to the event store: {0}")]
+    AppendErrorEvent(#[source] Err),
+}
+
+#[derive(Clone)]
+pub struct ErrorRecorder<T, H, Store, ToStreamIdFn, ToEventFn>
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+{
+    handler: H,
+    store: Store,
+    to_stream_id: ToStreamIdFn,
+    to_error_event: ToEventFn,
+    should_capture_when: Option<Arc<dyn Fn(&H::Error) -> bool + Send + Sync>>,
+}
+
+impl<T, H, Store, ToStreamIdFn, ToEventFn> ErrorRecorder<T, H, Store, ToStreamIdFn, ToEventFn>
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+{
+    pub fn should_capture_command_error_when<F>(mut self, f: F) -> Self
+    where
+        F: Fn(&H::Error) -> bool + Send + Sync + 'static,
+    {
+        self.should_capture_when = Some(Arc::new(f));
+        self
+    }
+}
+
+#[async_trait]
+impl<T, H, Store, ToStreamIdFn, ToEventFn> Handler<T>
+    for ErrorRecorder<T, H, Store, ToStreamIdFn, ToEventFn>
+where
+    T: message::Payload + Clone + Send + Sync + 'static,
+    H: Handler<T>,
+    H::Error: Clone,
+    Store: event::Store,
+    ToStreamIdFn: Fn(T) -> Store::StreamId + Send + Sync,
+    ToEventFn: Fn(T, H::Error) -> Store::Event + Send + Sync,
+{
+    type Error = ErrorRecorderError<H::Error, Store::AppendError>;
+
+    async fn handle(&self, command: Command<T>) -> Result<(), Self::Error> {
+        let result = self.handler.handle(command.clone()).await;
+
+        let error = match result {
+            Err(e) => e,
+            Ok(()) => return Ok(()), // Early return!
+        };
+
+        let should_capture_error = self
+            .should_capture_when
+            .as_ref()
+            .map_or(false, |f| f(&error));
+
+        let stream_id = (self.to_stream_id)(command.payload.clone());
+        let error_event = event::Event {
+            payload: (self.to_error_event)(command.payload, error.clone()),
+            metadata: command.metadata,
+        };
+
+        self.store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::Any,
+                vec![error_event],
+            )
+            .await
+            .map_err(ErrorRecorderError::AppendErrorEvent)?;
+
+        if should_capture_error {
+            return Ok(());
+        }
+
+        Err(ErrorRecorderError::CommandFailed(error))
+    }
+}
+
+pub struct ErrorRecorderBuilderInit<T, H>
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+{
+    handler: H,
+    command_marker: PhantomData<T>,
+}
+
+impl<T, H> ErrorRecorderBuilderInit<T, H>
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+{
+    #[must_use]
+    pub fn using_event_store<Store>(
+        self,
+        store: Store,
+    ) -> ErrorRecorderBuilderWithStore<T, H, Store>
+    where
+        T: message::Payload + Send + Sync,
+        H: Handler<T>,
+        Store: event::Store,
+    {
+        ErrorRecorderBuilderWithStore {
+            handler: self.handler,
+            command_marker: self.command_marker,
+            store,
+        }
+    }
+}
+
+pub struct ErrorRecorderBuilderWithStore<T, H, Store>
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+    Store: event::Store,
+{
+    handler: H,
+    command_marker: PhantomData<T>,
+    store: Store,
+}
+
+impl<T, H, Store> ErrorRecorderBuilderWithStore<T, H, Store>
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+    Store: event::Store,
+{
+    #[must_use]
+    pub fn and_mapping_to<ToStreamIdFn, ToEventFn>(
+        self,
+        to_stream_id: ToStreamIdFn,
+        to_error_event: ToEventFn,
+    ) -> ErrorRecorder<T, H, Store, ToStreamIdFn, ToEventFn>
+    where
+        ToStreamIdFn: Fn(T) -> Store::StreamId + Send + Sync,
+        ToEventFn: Fn(T, H::Error) -> Store::Event + Send + Sync,
+    {
+        ErrorRecorder {
+            handler: self.handler,
+            store: self.store,
+            to_stream_id,
+            to_error_event,
+            should_capture_when: None,
+        }
+    }
+}
+
+pub trait HandlerExt<T>: Handler<T> + Sized
+where
+    T: message::Payload + Send + Sync,
+{
+    fn with_error_recorder(self) -> ErrorRecorderBuilderInit<T, Self> {
+        ErrorRecorderBuilderInit {
+            handler: self,
+            command_marker: PhantomData,
+        }
+    }
+}
+
+impl<T, H> HandlerExt<T> for H
+where
+    T: message::Payload + Send + Sync,
+    H: Handler<T>,
+{
+}
+
 #[cfg(test)]
 mod test_user_domain {
     use async_trait::async_trait;
@@ -68,12 +241,14 @@ mod test_user_domain {
         aggregate,
         aggregate::test_user_domain::{User, UserEvent, UserRoot},
         command,
-        command::Command,
+        command::{Command, HandlerExt},
         event,
         event::Event,
         message, test,
+        test::store::EventStoreExt,
     };
 
+    #[derive(Debug, Clone, PartialEq, Eq)]
     struct CreateUser {
         email: String,
         password: String,
@@ -107,6 +282,7 @@ mod test_user_domain {
         }
     }
 
+    #[derive(Debug, Clone, PartialEq, Eq)]
     struct ChangeUserPassword {
         email: String,
         password: String,
@@ -220,6 +396,54 @@ mod test_user_domain {
         .then_fails()
         .assert_on(|event_store| {
             ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
+        })
+        .await;
+    }
+
+    // Error Recorder tests ----------------------------------------------------------------------------------------- //
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum UserCommandErrorEvent {
+        CreateUserFailed {
+            command: CreateUser,
+            message: String,
+        },
+        ChangeUserPasswordFailed {
+            command: ChangeUserPassword,
+            message: String,
+        },
+    }
+
+    impl message::Payload for UserCommandErrorEvent {
+        fn name(&self) -> &'static str {
+            match self {
+                Self::CreateUserFailed { .. } => "CreateUserFailed",
+                Self::ChangeUserPasswordFailed { .. } => "ChangeUserPasswordFailed",
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn it_records_failed_domain_events_successfully() {
+        let error_event_store = test::store::InMemory::<String, UserCommandErrorEvent>::default();
+        let tracking_event_store = error_event_store.with_recorded_events_tracking();
+
+        test::command_handler::Scenario::when(Command::from(ChangeUserPassword {
+            email: "test@test.com".to_owned(),
+            password: "new-password".to_owned(),
+        }))
+        .then_fails()
+        .assert_on(|event_store| {
+            ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
+                .with_error_recorder()
+                .using_event_store(tracking_event_store)
+                .and_mapping_to(
+                    |command| command.email,
+                    |command, error| UserCommandErrorEvent::ChangeUserPasswordFailed {
+                        command,
+                        message: error.to_string(),
+                    },
+                )
         })
         .await;
     }
