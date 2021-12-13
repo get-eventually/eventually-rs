@@ -15,7 +15,7 @@ use std::future::Future;
 
 use async_trait::async_trait;
 
-use crate::Message;
+use crate::{message, message::Message};
 
 /// A Command represents an intent by an Actor (e.g. a User, or a System)
 /// to mutate the state of the system.
@@ -30,7 +30,10 @@ pub type Command<T> = Message<T>;
 /// should use an [Aggregate][crate::aggregate::Aggregate] to evaluate
 /// a [Command] to ensure business invariants are respected.
 #[async_trait]
-pub trait Handler<T>: Send + Sync {
+pub trait Handler<T>: Send + Sync
+where
+    T: message::Payload,
+{
     /// The error type returned by the Handler while handling a [Command].
     type Error: Send + Sync;
 
@@ -45,7 +48,7 @@ pub trait Handler<T>: Send + Sync {
 #[async_trait]
 impl<T, Err, F, Fut> Handler<T> for F
 where
-    T: Send + Sync + 'static,
+    T: message::Payload + Send + Sync + 'static,
     Err: Send + Sync,
     F: Send + Sync + Fn(Command<T>) -> Fut,
     Fut: Send + Sync + Future<Output = Result<(), Err>>,
@@ -68,12 +71,18 @@ mod test_user_domain {
         command::Command,
         event,
         event::Event,
-        test,
+        message, test,
     };
 
     struct CreateUser {
         email: String,
         password: String,
+    }
+
+    impl message::Payload for CreateUser {
+        fn name(&self) -> &'static str {
+            "CreateUser"
+        }
     }
 
     struct CreateUserHandler<R>(R)
@@ -101,6 +110,12 @@ mod test_user_domain {
     struct ChangeUserPassword {
         email: String,
         password: String,
+    }
+
+    impl message::Payload for ChangeUserPassword {
+        fn name(&self) -> &'static str {
+            "ChangeUserPassword"
+        }
     }
 
     struct ChangeUserPasswordHandler<R>(R)

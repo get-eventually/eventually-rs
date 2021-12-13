@@ -3,7 +3,9 @@
 
 use std::{fmt::Debug, hash::Hash};
 
-use crate::{command, command::Command, event, event::Store, test, test::store::EventStoreExt};
+use crate::{
+    command, command::Command, event, event::Store, message, test, test::store::EventStoreExt,
+};
 
 /// A test scenario that can be used to test a [Command] [Handler][command::Handler]
 /// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.
@@ -13,7 +15,10 @@ impl Scenario {
     /// Sets the precondition state of the system for the [Scenario], which
     /// is expressed by a list of Domain [Event]s in an Event-sourced system.
     #[must_use]
-    pub fn given<Id, Evt>(events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt> {
+    pub fn given<Id, Evt>(events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt>
+    where
+        Evt: message::Payload,
+    {
         ScenarioGiven { given: events }
     }
 
@@ -25,7 +30,11 @@ impl Scenario {
     /// Scenario::given(vec![]).when(...)
     /// ```
     #[must_use]
-    pub fn when<Id, Evt, Cmd>(command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd> {
+    pub fn when<Id, Evt, Cmd>(command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd>
+    where
+        Evt: message::Payload,
+        Cmd: message::Payload,
+    {
         ScenarioWhen {
             given: Vec::default(),
             when: command,
@@ -34,14 +43,23 @@ impl Scenario {
 }
 
 #[doc(hidden)]
-pub struct ScenarioGiven<Id, Evt> {
+pub struct ScenarioGiven<Id, Evt>
+where
+    Evt: message::Payload,
+{
     given: Vec<event::Persisted<Id, Evt>>,
 }
 
-impl<Id, Evt> ScenarioGiven<Id, Evt> {
+impl<Id, Evt> ScenarioGiven<Id, Evt>
+where
+    Evt: message::Payload,
+{
     /// Specifies the [Command] to test in the [Scenario].
     #[must_use]
-    pub fn when<Cmd>(self, command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd> {
+    pub fn when<Cmd>(self, command: Command<Cmd>) -> ScenarioWhen<Id, Evt, Cmd>
+    where
+        Cmd: message::Payload,
+    {
         ScenarioWhen {
             given: self.given,
             when: command,
@@ -50,12 +68,20 @@ impl<Id, Evt> ScenarioGiven<Id, Evt> {
 }
 
 #[doc(hidden)]
-pub struct ScenarioWhen<Id, Evt, Cmd> {
+pub struct ScenarioWhen<Id, Evt, Cmd>
+where
+    Evt: message::Payload,
+    Cmd: message::Payload,
+{
     given: Vec<event::Persisted<Id, Evt>>,
     when: Command<Cmd>,
 }
 
-impl<Id, Evt, Cmd> ScenarioWhen<Id, Evt, Cmd> {
+impl<Id, Evt, Cmd> ScenarioWhen<Id, Evt, Cmd>
+where
+    Evt: message::Payload,
+    Cmd: message::Payload,
+{
     /// Sets the expectation on the result of the [Scenario] to be positive
     /// and produce a specified list of Domain [Event]s.
     #[must_use]
@@ -78,13 +104,20 @@ impl<Id, Evt, Cmd> ScenarioWhen<Id, Evt, Cmd> {
     }
 }
 
-enum ScenarioThenCase<Id, Evt> {
+enum ScenarioThenCase<Id, Evt>
+where
+    Evt: message::Payload,
+{
     Produces(Vec<event::Persisted<Id, Evt>>),
     Fails,
 }
 
 #[doc(hidden)]
-pub struct ScenarioThen<Id, Evt, Cmd> {
+pub struct ScenarioThen<Id, Evt, Cmd>
+where
+    Evt: message::Payload,
+    Cmd: message::Payload,
+{
     given: Vec<event::Persisted<Id, Evt>>,
     when: Command<Cmd>,
     case: ScenarioThenCase<Id, Evt>,
@@ -93,7 +126,8 @@ pub struct ScenarioThen<Id, Evt, Cmd> {
 impl<Id, Evt, Cmd> ScenarioThen<Id, Evt, Cmd>
 where
     Id: Clone + Eq + Hash + Send + Sync + Debug,
-    Evt: Clone + PartialEq + Send + Sync + Debug,
+    Evt: message::Payload + Clone + PartialEq + Send + Sync + Debug,
+    Cmd: message::Payload,
 {
     /// Executes the whole [Scenario] by constructing a Command [Handler]
     /// with the provided closure function and running the specified assertions.
