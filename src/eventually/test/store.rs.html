@@ -332,6 +332,19 @@
 <span id="332">332</span>
 <span id="333">333</span>
 <span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
     <span class="ident">convert::Infallible</span>,
@@ -344,16 +357,23 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">event</span>,
-    <span class="ident">event</span>::{<span class="ident">Event</span>, <span class="ident">PersistedEvents</span>},
+    <span class="ident">event::Event</span>,
+    <span class="ident">message</span>,
     <span class="ident">version</span>::{<span class="ident">ConflictError</span>, <span class="ident">Version</span>},
 };
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> {
-    <span class="ident">event_streams</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">PersistedEvents</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">struct</span> <span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Evt</span>: <span class="ident">message::Payload</span>,
+{
+    <span class="ident">event_streams</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Evt</span>: <span class="ident">message::Payload</span>,
+{
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">event_streams</span>: <span class="ident">HashMap::default</span>(),
@@ -362,11 +382,17 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Evt</span>: <span class="ident">message::Payload</span>,
+{
     <span class="ident">backend</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Evt</span>: <span class="ident">message::Payload</span>,
+{
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">backend</span>: <span class="ident">Arc::default</span>(),
@@ -378,7 +404,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">event::Store</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Id</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Evt</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Evt</span>: <span class="ident">message::Payload</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="kw">type</span> <span class="ident">StreamId</span> <span class="op">=</span> <span class="ident">Id</span>;
     <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Evt</span>;
@@ -436,7 +462,7 @@
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">persisted_events</span>: <span class="ident">PersistedEvents</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">events</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">persisted_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">events</span>
             .<span class="ident">into_iter</span>()
             .<span class="ident">enumerate</span>()
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">payload</span>)<span class="op">|</span> <span class="ident">event::Persisted</span> {
@@ -563,17 +589,17 @@
     <span class="kw">use</span> <span class="ident">futures::TryStreamExt</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">event::Store</span>, <span class="ident">version::Version</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">event::Store</span>, <span class="ident">message::tests::StringPayload</span>, <span class="ident">version::Version</span>};
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_works</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span><span class="ident">::default</span>();
+        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">StringPayload</span><span class="op">&gt;</span><span class="ident">::default</span>();
 
         <span class="kw">let</span> <span class="ident">stream_id</span> <span class="op">=</span> <span class="string">&quot;stream:test&quot;</span>;
         <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-1&quot;</span>),
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-2&quot;</span>),
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-3&quot;</span>),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-1&quot;</span>)),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-2&quot;</span>)),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-3&quot;</span>)),
         ];
 
         <span class="kw">let</span> <span class="ident">new_event_stream_version</span> <span class="op">=</span> <span class="ident">event_store</span>
@@ -609,14 +635,14 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">tracking_store_works</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span><span class="ident">::default</span>();
+        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">StringPayload</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="ident">tracking_event_store</span> <span class="op">=</span> <span class="ident">event_store</span>.<span class="ident">with_recorded_events_tracking</span>();
 
         <span class="kw">let</span> <span class="ident">stream_id</span> <span class="op">=</span> <span class="string">&quot;stream:test&quot;</span>;
         <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-1&quot;</span>),
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-2&quot;</span>),
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-3&quot;</span>),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-1&quot;</span>)),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-2&quot;</span>)),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-3&quot;</span>)),
         ];
 
         <span class="ident">tracking_event_store</span>
@@ -639,13 +665,13 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">version_conflict_checks_work_as_expected</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span><span class="ident">::default</span>();
+        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">StringPayload</span><span class="op">&gt;</span><span class="ident">::default</span>();
 
         <span class="kw">let</span> <span class="ident">stream_id</span> <span class="op">=</span> <span class="string">&quot;stream:test&quot;</span>;
         <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-1&quot;</span>),
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-2&quot;</span>),
-            <span class="ident">event::Event::from</span>(<span class="string">&quot;event-3&quot;</span>),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-1&quot;</span>)),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-2&quot;</span>)),
+            <span class="ident">event::Event::from</span>(<span class="ident">StringPayload</span>(<span class="string">&quot;event-3&quot;</span>)),
         ];
 
         <span class="kw">let</span> <span class="ident">append_error</span> <span class="op">=</span> <span class="ident">event_store</span>
