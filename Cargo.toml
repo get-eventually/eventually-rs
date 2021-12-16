@@ -3,4 +3,7 @@ members = [
     "eventually",
     "eventually-postgres",
     "eventually-redis",
+    # Crates as examples
+    "examples/saving-goals-accounting/grpc-api",
+    "examples/saving-goals-accounting/kafka-to-event-store-sinker",
 ]
