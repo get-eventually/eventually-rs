@@ -1,0 +1,16 @@
+[package]
+name = "bank-accounting"
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+publish = false
+
+[dependencies]
+anyhow = "1.0.51"
+async-trait = "0.1.52"
+eventually = { path = "../../eventually" }
+rust_decimal = "1.18.0"
+thiserror = "1.0.30"
+
+[dev-dependencies]
+tokio = { version = "1.13.0", features = ["macros", "rt-multi-thread"] }
