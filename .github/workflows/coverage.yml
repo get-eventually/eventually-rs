@@ -19,6 +19,7 @@ jobs:
           toolchain: nightly
           profile: minimal
           override: true
+          components: rustfmt
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1

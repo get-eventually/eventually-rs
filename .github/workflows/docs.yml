@@ -18,6 +18,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+          components: rustfmt
 
       - name: Run cargo doc --no-deps
         uses: actions-rs/cargo@v1
