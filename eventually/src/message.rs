@@ -19,6 +19,7 @@ impl<T> Message<T>
 where
     T: Payload,
 {
+    #[must_use]
     pub fn with_metadata<F>(mut self, f: F) -> Self
     where
         F: Fn(Metadata) -> Metadata,
