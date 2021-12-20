@@ -13,7 +13,18 @@ pub struct Service<R>
 where
     R: aggregate::Repository<BankAccount, BankAccountRoot>,
 {
-    pub bank_account_repository: R,
+    bank_account_repository: R,
+}
+
+impl<R> From<R> for Service<R>
+where
+    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+{
+    fn from(bank_account_repository: R) -> Self {
+        Self {
+            bank_account_repository,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
