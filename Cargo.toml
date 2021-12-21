@@ -5,6 +5,4 @@ members = [
     "eventually-redis",
     # Crates as examples
     "examples/bank-accounting",
-    "examples/saving-goals-accounting/grpc-api",
-    "examples/saving-goals-accounting/kafka-to-event-store-sinker",
 ]
