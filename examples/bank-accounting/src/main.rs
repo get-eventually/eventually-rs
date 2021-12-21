@@ -1,16 +1,12 @@
 use anyhow::anyhow;
-use eventually::{aggregate, test};
+use eventually::test;
 use tracing_subscriber::{
     filter::{EnvFilter, LevelFilter},
     layer::SubscriberExt,
     util::SubscriberInitExt,
 };
 
-use bank_accounting::{
-    application,
-    domain::{BankAccountEvent, BankAccountId, BankAccountRepository},
-    proto,
-};
+use bank_accounting::{application, domain::BankAccountRepository, grpc, proto};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -42,9 +38,14 @@ async fn main() -> anyhow::Result<()> {
         .build()
         .map_err(|e| anyhow!("failed to build grpc reflection service: {}", e))?;
 
+    let bank_accounting_svc = proto::bank_accounting_server::BankAccountingServer::new(
+        grpc::BankAccountingApi::from(application_service),
+    );
+
     tonic::transport::Server::builder()
         .add_service(health_svc)
         .add_service(reflection_svc)
+        .add_service(bank_accounting_svc)
         .serve(addr)
         .await
         .map_err(|e| anyhow!("tonic server exited with error: {}", e))?;

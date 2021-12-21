@@ -89,7 +89,6 @@ pub enum BankAccountError {
 #[derive(Debug, Clone)]
 pub struct BankAccount {
     id: BankAccountId,
-    account_holder_id: BankAccountHolderId,
     current_balance: Decimal,
     pending_transactions: HashMap<TransactionId, Transaction>,
     is_closed: bool,
@@ -109,11 +108,10 @@ impl aggregate::Aggregate for BankAccount {
             None => match event {
                 BankAccountEvent::WasOpened {
                     id,
-                    account_holder_id,
                     initial_balance,
+                    ..
                 } => Ok(BankAccount {
                     id,
-                    account_holder_id,
                     current_balance: initial_balance.unwrap_or_default(),
                     pending_transactions: HashMap::default(),
                     is_closed: false,
@@ -236,7 +234,7 @@ impl BankAccountRoot {
 
         // NOTE: transaction amounts should be positive, so they can be subtracted
         // when applied to a Bank Account.
-        if transaction.amount.is_negative() {
+        if transaction.amount.is_sign_negative() {
             transaction.amount.set_sign_positive(true);
         }
 
