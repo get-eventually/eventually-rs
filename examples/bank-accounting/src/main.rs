@@ -1,19 +1,15 @@
+use std::time::Duration;
+
 use anyhow::anyhow;
 use eventually::test;
-use tracing_subscriber::{
-    filter::{EnvFilter, LevelFilter},
-    layer::SubscriberExt,
-    util::SubscriberInitExt,
-};
 
 use bank_accounting::{application, domain::BankAccountRepository, grpc, proto};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialize stdout logger for the application.
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(EnvFilter::from_default_env().add_directive(LevelFilter::INFO.into()))
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
         .try_init()
         .map_err(|e| anyhow!("failed to initialize tracing logger: {}", e))?;
 
@@ -42,7 +38,12 @@ async fn main() -> anyhow::Result<()> {
         grpc::BankAccountingApi::from(application_service),
     );
 
+    let layer = tower::ServiceBuilder::new()
+        .timeout(Duration::from_secs(5))
+        .into_inner();
+
     tonic::transport::Server::builder()
+        .layer(layer)
         .add_service(health_svc)
         .add_service(reflection_svc)
         .add_service(bank_accounting_svc)
