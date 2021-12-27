@@ -67,7 +67,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-          components: clippy
+          components: clippy,rustfmt
 
       - name: Run cargo clippy
         uses: actions-rs/clippy-check@v1
