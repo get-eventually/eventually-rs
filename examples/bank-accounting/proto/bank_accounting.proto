@@ -4,6 +4,7 @@ package bankaccounting;
 
 service BankAccounting {
     rpc OpenBankAccount(OpenBankAccountRequest) returns (OpenBankAccountResponse) {}
+    rpc DepositInBankAccount(DepositInBankAccountRequest) returns (DepositInBankAccountResponse) {}
 }
 
 message OpenBankAccountRequest {
@@ -13,3 +14,10 @@ message OpenBankAccountRequest {
 }
 
 message OpenBankAccountResponse {}
+
+message DepositInBankAccountRequest {
+    string bank_account_id = 1;
+    float amount = 2;
+}
+
+message DepositInBankAccountResponse {}

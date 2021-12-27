@@ -276,6 +276,31 @@ mod test {
     }
 
     #[tokio::test]
+    async fn deposit_money_with_zero_amount_in_open_bank_account_fails() {
+        test::command_handler::Scenario::given(vec![event::Persisted {
+            stream_id: "account-test".to_owned(),
+            version: 1,
+            payload: Event::from(BankAccountEvent::WasOpened {
+                id: "account-test".to_owned(),
+                account_holder_id: "dani".to_owned(),
+                initial_balance: Some(Decimal::new(1000, 2)),
+            }),
+        }])
+        .when(
+            application::DepositInBankAccount {
+                bank_account_id: "account-test".to_owned(),
+                amount: Decimal::new(0, 0),
+            }
+            .into(),
+        )
+        .then_fails()
+        .assert_on(|event_store| application::Service {
+            bank_account_repository: BankAccountRepository::from(event_store),
+        })
+        .await;
+    }
+
+    #[tokio::test]
     async fn deposit_money_on_existing_bank_account_fails_when_account_is_closed() {
         test::command_handler::Scenario::given(vec![
             event::Persisted {

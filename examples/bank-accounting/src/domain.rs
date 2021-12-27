@@ -76,6 +76,8 @@ pub enum BankAccountError {
     EmptyAccountHolderId,
     #[error("a deposit was attempted with negative import")]
     NegativeDepositAttempted,
+    #[error("no money to deposit has been specified")]
+    NoMoneyDeposited,
     #[error("transfer could not be sent due to insufficient funds")]
     InsufficientFunds,
     #[error("transfer transaction was destined to a different recipient: {0}")]
@@ -215,6 +217,10 @@ impl BankAccountRoot {
 
         if money.is_sign_negative() {
             return Err(BankAccountError::NegativeDepositAttempted);
+        }
+
+        if money.is_zero() {
+            return Err(BankAccountError::NoMoneyDeposited);
         }
 
         self.ctx_mut()
