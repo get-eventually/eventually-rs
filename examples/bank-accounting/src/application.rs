@@ -1,7 +1,7 @@
 use std::error::Error as StdError;
 
 use async_trait::async_trait;
-use eventually::{aggregate, command, command::Command, message};
+use eventually::{aggregate, command, message};
 use rust_decimal::Decimal;
 
 use crate::domain::{
@@ -34,7 +34,7 @@ pub struct OpenBankAccount {
     pub opening_balance: Option<Decimal>,
 }
 
-impl message::Payload for OpenBankAccount {
+impl message::Message for OpenBankAccount {
     fn name(&self) -> &'static str {
         "OpenBankAccount"
     }
@@ -48,8 +48,8 @@ where
 {
     type Error = anyhow::Error;
 
-    async fn handle(&self, command: Command<OpenBankAccount>) -> Result<(), Self::Error> {
-        let command = command.payload;
+    async fn handle(&self, command: command::Envelope<OpenBankAccount>) -> Result<(), Self::Error> {
+        let command = command.message;
 
         let mut bank_account = BankAccountRoot::open(
             command.bank_account_id,
@@ -71,7 +71,7 @@ pub struct DepositInBankAccount {
     pub amount: Decimal,
 }
 
-impl message::Payload for DepositInBankAccount {
+impl message::Message for DepositInBankAccount {
     fn name(&self) -> &'static str {
         "DepositInBankAccount"
     }
@@ -85,8 +85,11 @@ where
 {
     type Error = anyhow::Error;
 
-    async fn handle(&self, command: Command<DepositInBankAccount>) -> Result<(), Self::Error> {
-        let command = command.payload;
+    async fn handle(
+        &self,
+        command: command::Envelope<DepositInBankAccount>,
+    ) -> Result<(), Self::Error> {
+        let command = command.message;
 
         let mut bank_account = self
             .bank_account_repository
@@ -110,7 +113,7 @@ pub struct SendTransferToBankAccount {
     pub message: Option<String>,
 }
 
-impl message::Payload for SendTransferToBankAccount {
+impl message::Message for SendTransferToBankAccount {
     fn name(&self) -> &'static str {
         "SendTransferToBankAccount"
     }
@@ -124,8 +127,11 @@ where
 {
     type Error = anyhow::Error;
 
-    async fn handle(&self, command: Command<SendTransferToBankAccount>) -> Result<(), Self::Error> {
-        let command = command.payload;
+    async fn handle(
+        &self,
+        command: command::Envelope<SendTransferToBankAccount>,
+    ) -> Result<(), Self::Error> {
+        let command = command.message;
 
         let mut bank_account = self
             .bank_account_repository
@@ -144,7 +150,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use eventually::{event, event::Event, test};
+    use eventually::{event, test};
     use rust_decimal::Decimal;
 
     use crate::{
@@ -165,7 +171,7 @@ mod test {
         .then(vec![event::Persisted {
             stream_id: "account-test".to_owned(),
             version: 1,
-            payload: Event::from(BankAccountEvent::WasOpened {
+            event: event::Envelope::from(BankAccountEvent::WasOpened {
                 id: "account-test".to_owned(),
                 account_holder_id: "dani".to_owned(),
                 initial_balance: Some(Decimal::new(1000, 2)),
@@ -182,7 +188,7 @@ mod test {
         test::command_handler::Scenario::given(vec![event::Persisted {
             stream_id: "account-test".to_owned(),
             version: 1,
-            payload: Event::from(BankAccountEvent::WasOpened {
+            event: event::Envelope::from(BankAccountEvent::WasOpened {
                 id: "account-test".to_owned(),
                 account_holder_id: "dani".to_owned(),
                 initial_balance: Some(Decimal::new(1000, 2)),
@@ -224,7 +230,7 @@ mod test {
         test::command_handler::Scenario::given(vec![event::Persisted {
             stream_id: "account-test".to_owned(),
             version: 1,
-            payload: Event::from(BankAccountEvent::WasOpened {
+            event: event::Envelope::from(BankAccountEvent::WasOpened {
                 id: "account-test".to_owned(),
                 account_holder_id: "dani".to_owned(),
                 initial_balance: Some(Decimal::new(1000, 2)),
@@ -240,7 +246,7 @@ mod test {
         .then(vec![event::Persisted {
             stream_id: "account-test".to_owned(),
             version: 2,
-            payload: Event::from(BankAccountEvent::DepositWasRecorded {
+            event: event::Envelope::from(BankAccountEvent::DepositWasRecorded {
                 amount: Decimal::new(2000, 2), // 20,00
             }),
         }])
@@ -255,7 +261,7 @@ mod test {
         test::command_handler::Scenario::given(vec![event::Persisted {
             stream_id: "account-test".to_owned(),
             version: 1,
-            payload: Event::from(BankAccountEvent::WasOpened {
+            event: event::Envelope::from(BankAccountEvent::WasOpened {
                 id: "account-test".to_owned(),
                 account_holder_id: "dani".to_owned(),
                 initial_balance: Some(Decimal::new(1000, 2)),
@@ -280,7 +286,7 @@ mod test {
         test::command_handler::Scenario::given(vec![event::Persisted {
             stream_id: "account-test".to_owned(),
             version: 1,
-            payload: Event::from(BankAccountEvent::WasOpened {
+            event: event::Envelope::from(BankAccountEvent::WasOpened {
                 id: "account-test".to_owned(),
                 account_holder_id: "dani".to_owned(),
                 initial_balance: Some(Decimal::new(1000, 2)),
@@ -306,7 +312,7 @@ mod test {
             event::Persisted {
                 stream_id: "account-test".to_owned(),
                 version: 1,
-                payload: Event::from(BankAccountEvent::WasOpened {
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
                     id: "account-test".to_owned(),
                     account_holder_id: "dani".to_owned(),
                     initial_balance: Some(Decimal::new(1000, 2)),
@@ -315,7 +321,7 @@ mod test {
             event::Persisted {
                 stream_id: "account-test".to_owned(),
                 version: 2,
-                payload: Event::from(BankAccountEvent::WasClosed),
+                event: event::Envelope::from(BankAccountEvent::WasClosed),
             },
         ])
         .when(
@@ -359,7 +365,7 @@ mod test {
             event::Persisted {
                 stream_id: "sender".to_owned(),
                 version: 1,
-                payload: Event::from(BankAccountEvent::WasOpened {
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
                     id: "sender".to_owned(),
                     account_holder_id: "sender-name".to_owned(),
                     initial_balance: Some(Decimal::new(1_000, 0)),
@@ -368,7 +374,7 @@ mod test {
             event::Persisted {
                 stream_id: "receiver".to_owned(),
                 version: 1,
-                payload: Event::from(BankAccountEvent::WasOpened {
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
                     id: "receiver".to_owned(),
                     account_holder_id: "receiver-name".to_owned(),
                     initial_balance: None,
@@ -400,7 +406,7 @@ mod test {
             event::Persisted {
                 stream_id: "sender".to_owned(),
                 version: 1,
-                payload: Event::from(BankAccountEvent::WasOpened {
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
                     id: "sender".to_owned(),
                     account_holder_id: "sender-name".to_owned(),
                     initial_balance: Some(Decimal::new(1_000, 0)),
@@ -409,7 +415,7 @@ mod test {
             event::Persisted {
                 stream_id: "receiver".to_owned(),
                 version: 1,
-                payload: Event::from(BankAccountEvent::WasOpened {
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
                     id: "receiver".to_owned(),
                     account_holder_id: "receiver-name".to_owned(),
                     initial_balance: None,
@@ -431,7 +437,7 @@ mod test {
         .then(vec![event::Persisted {
             stream_id: "sender".to_owned(),
             version: 2,
-            payload: Event::from(BankAccountEvent::TransferWasSent {
+            event: event::Envelope::from(BankAccountEvent::TransferWasSent {
                 transaction: Transaction {
                     id: "transaction".to_owned(),
                     beneficiary_account_id: "receiver".to_owned(),

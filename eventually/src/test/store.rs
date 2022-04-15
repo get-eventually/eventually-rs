@@ -9,23 +9,21 @@ use async_trait::async_trait;
 use futures::stream::{iter, StreamExt};
 
 use crate::{
-    event,
-    event::Event,
-    message,
+    event, message,
     version::{ConflictError, Version},
 };
 
 #[derive(Debug)]
 struct InMemoryBackend<Id, Evt>
 where
-    Evt: message::Payload,
+    Evt: message::Message,
 {
     event_streams: HashMap<Id, Vec<event::Persisted<Id, Evt>>>,
 }
 
 impl<Id, Evt> Default for InMemoryBackend<Id, Evt>
 where
-    Evt: message::Payload,
+    Evt: message::Message,
 {
     fn default() -> Self {
         Self {
@@ -37,14 +35,14 @@ where
 #[derive(Debug, Clone)]
 pub struct InMemory<Id, Evt>
 where
-    Evt: message::Payload,
+    Evt: message::Message,
 {
     backend: Arc<RwLock<InMemoryBackend<Id, Evt>>>,
 }
 
 impl<Id, Evt> Default for InMemory<Id, Evt>
 where
-    Evt: message::Payload,
+    Evt: message::Message,
 {
     fn default() -> Self {
         Self {
@@ -57,7 +55,7 @@ where
 impl<Id, Evt> event::Store for InMemory<Id, Evt>
 where
     Id: Clone + Eq + Hash + Send + Sync,
-    Evt: message::Payload + Clone + Send + Sync,
+    Evt: message::Message + Clone + Send + Sync,
 {
     type StreamId = Id;
     type Event = Evt;
@@ -92,7 +90,7 @@ where
         &self,
         id: Self::StreamId,
         version_check: event::StreamVersionExpected,
-        events: Vec<Event<Self::Event>>,
+        events: Vec<event::Envelope<Self::Event>>,
     ) -> Result<Version, Self::AppendError> {
         let mut backend = self
             .backend
@@ -118,10 +116,10 @@ where
         let mut persisted_events: Vec<event::Persisted<Id, Evt>> = events
             .into_iter()
             .enumerate()
-            .map(|(i, payload)| event::Persisted {
+            .map(|(i, event)| event::Persisted {
                 stream_id: id.clone(),
                 version: last_event_stream_version + (i as u64) + 1,
-                payload,
+                event,
             })
             .collect();
 
@@ -196,7 +194,7 @@ where
         &self,
         id: Self::StreamId,
         version_check: event::StreamVersionExpected,
-        events: Vec<Event<Self::Event>>,
+        events: Vec<event::Envelope<Self::Event>>,
     ) -> Result<Version, Self::AppendError> {
         let new_version = self
             .store
@@ -209,10 +207,10 @@ where
         let mut persisted_events = events
             .into_iter()
             .enumerate()
-            .map(|(i, evt)| event::Persisted {
+            .map(|(i, event)| event::Persisted {
                 stream_id: id.clone(),
                 version: previous_version + (i as Version) + 1,
-                payload: evt,
+                event,
             })
             .collect();
 
@@ -242,17 +240,17 @@ mod test {
     use futures::TryStreamExt;
 
     use super::*;
-    use crate::{event, event::Store, message::tests::StringPayload, version::Version};
+    use crate::{event, event::Store, message::tests::StringMessage, version::Version};
 
     #[tokio::test]
     async fn it_works() {
-        let event_store = InMemory::<&'static str, StringPayload>::default();
+        let event_store = InMemory::<&'static str, StringMessage>::default();
 
         let stream_id = "stream:test";
         let events = vec![
-            event::Event::from(StringPayload("event-1")),
-            event::Event::from(StringPayload("event-2")),
-            event::Event::from(StringPayload("event-3")),
+            event::Envelope::from(StringMessage("event-1")),
+            event::Envelope::from(StringMessage("event-2")),
+            event::Envelope::from(StringMessage("event-3")),
         ];
 
         let new_event_stream_version = event_store
@@ -270,10 +268,10 @@ mod test {
         let expected_events = events
             .into_iter()
             .enumerate()
-            .map(|(i, payload)| event::Persisted {
+            .map(|(i, event)| event::Persisted {
                 stream_id,
                 version: (i as Version) + 1,
-                payload,
+                event,
             })
             .collect::<Vec<_>>();
 
@@ -288,14 +286,14 @@ mod test {
 
     #[tokio::test]
     async fn tracking_store_works() {
-        let event_store = InMemory::<&'static str, StringPayload>::default();
+        let event_store = InMemory::<&'static str, StringMessage>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
 
         let stream_id = "stream:test";
         let events = vec![
-            event::Event::from(StringPayload("event-1")),
-            event::Event::from(StringPayload("event-2")),
-            event::Event::from(StringPayload("event-3")),
+            event::Envelope::from(StringMessage("event-1")),
+            event::Envelope::from(StringMessage("event-2")),
+            event::Envelope::from(StringMessage("event-3")),
         ];
 
         tracking_event_store
@@ -318,13 +316,13 @@ mod test {
 
     #[tokio::test]
     async fn version_conflict_checks_work_as_expected() {
-        let event_store = InMemory::<&'static str, StringPayload>::default();
+        let event_store = InMemory::<&'static str, StringMessage>::default();
 
         let stream_id = "stream:test";
         let events = vec![
-            event::Event::from(StringPayload("event-1")),
-            event::Event::from(StringPayload("event-2")),
-            event::Event::from(StringPayload("event-3")),
+            event::Envelope::from(StringMessage("event-1")),
+            event::Envelope::from(StringMessage("event-2")),
+            event::Envelope::from(StringMessage("event-3")),
         ];
 
         let append_error = event_store

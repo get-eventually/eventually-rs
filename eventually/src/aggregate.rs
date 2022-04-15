@@ -34,7 +34,7 @@ use std::{
 use async_trait::async_trait;
 use futures::TryStreamExt;
 
-use crate::{event, event::Event, message, version::Version};
+use crate::{event, message, version::Version};
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -54,7 +54,7 @@ pub trait Aggregate: Sized + Send + Sync {
 
     /// The type of Domain Events that interest this Aggregate.
     /// Usually, this type should be an `enum`.
-    type Event: message::Payload + Send + Sync;
+    type Event: message::Message + Send + Sync;
 
     /// The error type that can be returned by [`Aggregate::apply`] when
     /// mutating the Aggregate state.
@@ -82,7 +82,7 @@ where
 {
     aggregate: T,
     version: Version,
-    recorded_events: Vec<Event<T::Event>>,
+    recorded_events: Vec<event::Envelope<T::Event>>,
 }
 
 impl<T> Context<T>
@@ -96,7 +96,7 @@ where
 
     /// Returns the list of uncommitted, recorded Domain [Event]s from the [Context]
     /// and resets the internal list to its default value.
-    fn take_uncommitted_events(&mut self) -> Vec<Event<T::Event>> {
+    fn take_uncommitted_events(&mut self) -> Vec<event::Envelope<T::Event>> {
         std::mem::take(&mut self.recorded_events)
     }
 
@@ -107,10 +107,10 @@ where
     ///
     /// The method can return an error if the event to apply is unexpected
     /// given the current state of the Aggregate.
-    fn rehydrate_from(event: Event<T::Event>) -> Result<Context<T>, T::Error> {
+    fn rehydrate_from(event: event::Envelope<T::Event>) -> Result<Context<T>, T::Error> {
         Ok(Context {
             version: 1,
-            aggregate: T::apply(None, event.payload)?,
+            aggregate: T::apply(None, event.message)?,
             recorded_events: Vec::default(),
         })
     }
@@ -122,8 +122,11 @@ where
     ///
     /// The method can return an error if the event to apply is unexpected
     /// given the current state of the Aggregate.
-    fn apply_rehydrated_event(mut self, event: Event<T::Event>) -> Result<Context<T>, T::Error> {
-        self.aggregate = T::apply(Some(self.aggregate), event.payload)?;
+    fn apply_rehydrated_event(
+        mut self,
+        event: event::Envelope<T::Event>,
+    ) -> Result<Context<T>, T::Error> {
+        self.aggregate = T::apply(Some(self.aggregate), event.message)?;
         self.version += 1;
 
         Ok(self)
@@ -159,10 +162,10 @@ where
     ///
     /// The method can return an error if the event to apply is unexpected
     /// given the current state of the Aggregate.
-    pub fn record_new(event: Event<T::Event>) -> Result<Context<T>, T::Error> {
+    pub fn record_new(event: event::Envelope<T::Event>) -> Result<Context<T>, T::Error> {
         Ok(Context {
             version: 1,
-            aggregate: T::apply(None, event.payload.clone())?,
+            aggregate: T::apply(None, event.message.clone())?,
             recorded_events: vec![event],
         })
     }
@@ -195,8 +198,8 @@ where
     ///
     /// The method can return an error if the event to apply is unexpected
     /// given the current state of the Aggregate.
-    pub fn record_that(&mut self, event: Event<T::Event>) -> Result<(), T::Error> {
-        self.aggregate = T::apply(Some(self.aggregate.clone()), event.payload.clone())?;
+    pub fn record_that(&mut self, event: event::Envelope<T::Event>) -> Result<(), T::Error> {
+        self.aggregate = T::apply(Some(self.aggregate.clone()), event.message.clone())?;
         self.recorded_events.push(event);
         self.version += 1;
 
@@ -361,7 +364,7 @@ where
         let ctx = self
             .store
             .stream(id, event::VersionSelect::All)
-            .map_ok(|event| event.payload)
+            .map_ok(|persisted| persisted.event)
             .map_err(EventSourcedRepositoryError::StreamFromStore)
             .try_fold(None, |ctx: Option<Context<T>>, event| async {
                 let new_ctx_result = match ctx {
@@ -413,7 +416,7 @@ where
 pub(crate) mod test_user_domain {
     use std::borrow::{Borrow, BorrowMut};
 
-    use crate::{aggregate, aggregate::Root, event::Event, message};
+    use crate::{aggregate, aggregate::Root, event, message};
 
     #[derive(Debug, Clone)]
     pub(crate) struct User {
@@ -427,7 +430,7 @@ pub(crate) mod test_user_domain {
         PasswordWasChanged { password: String },
     }
 
-    impl message::Payload for UserEvent {
+    impl message::Message for UserEvent {
         fn name(&self) -> &'static str {
             match self {
                 UserEvent::WasCreated { .. } => "UserWasCreated",
@@ -511,7 +514,7 @@ pub(crate) mod test_user_domain {
             }
 
             Ok(UserRoot::from(aggregate::Context::record_new(
-                Event::from(UserEvent::WasCreated { email, password }),
+                event::Envelope::from(UserEvent::WasCreated { email, password }),
             )?))
         }
 
@@ -521,7 +524,9 @@ pub(crate) mod test_user_domain {
             }
 
             self.ctx_mut()
-                .record_that(Event::from(UserEvent::PasswordWasChanged { password }))?;
+                .record_that(event::Envelope::from(UserEvent::PasswordWasChanged {
+                    password,
+                }))?;
 
             Ok(())
         }
@@ -537,9 +542,7 @@ mod test {
         aggregate,
         aggregate::test_user_domain::{User, UserEvent, UserRoot},
         aggregate::Repository,
-        event,
-        event::Event,
-        test,
+        event, test,
         test::store::EventStoreExt,
         version,
     };
@@ -566,7 +569,7 @@ mod test {
         let expected_events = vec![event::Persisted {
             stream_id: email.clone(),
             version: 1,
-            payload: Event::from(UserEvent::WasCreated { email, password }),
+            event: event::Envelope::from(UserEvent::WasCreated { email, password }),
         }];
 
         assert_eq!(expected_events, tracking_event_store.recorded_events());
@@ -612,7 +615,7 @@ mod test {
         let expected_events = vec![event::Persisted {
             stream_id: email.clone(),
             version: 2,
-            payload: Event::from(UserEvent::PasswordWasChanged {
+            event: event::Envelope::from(UserEvent::PasswordWasChanged {
                 password: new_password,
             }),
         }];
