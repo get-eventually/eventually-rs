@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["eventually","eventually_postgres","eventually_redis"];
+window.ALL_CRATES = ["bank_accounting","eventually","eventually_postgres","eventually_redis"];
