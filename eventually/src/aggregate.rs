@@ -319,6 +319,7 @@ pub enum EventSourcedRepositoryError<E, SE, AE> {
 /// It uses an [Event Store][`event::Store`] instance to stream Domain Events
 /// for a particular Aggregate, and append uncommitted Domain Events
 /// recorded by an Aggregate Root.
+#[derive(Debug, Clone)]
 pub struct EventSourcedRepository<T, R, S>
 where
     T: Aggregate,

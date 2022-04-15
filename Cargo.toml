@@ -3,4 +3,6 @@ members = [
     "eventually",
     "eventually-postgres",
     "eventually-redis",
+    # Crates as examples
+    "examples/bank-accounting",
 ]

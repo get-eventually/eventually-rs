@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package bankaccounting;
+
+service BankAccounting {
+    rpc OpenBankAccount(OpenBankAccountRequest) returns (OpenBankAccountResponse) {}
+    rpc DepositInBankAccount(DepositInBankAccountRequest) returns (DepositInBankAccountResponse) {}
+}
+
+message OpenBankAccountRequest {
+    string bank_account_id = 1;
+    string bank_account_holder_id = 2;
+    float opening_balance = 3;
+}
+
+message OpenBankAccountResponse {}
+
+message DepositInBankAccountRequest {
+    string bank_account_id = 1;
+    float amount = 2;
+}
+
+message DepositInBankAccountResponse {}
