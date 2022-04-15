@@ -3,7 +3,7 @@ use std::{
     collections::HashMap,
 };
 
-use eventually::{aggregate, aggregate::Root, event::Event, message};
+use eventually::{aggregate, aggregate::Root, event, message};
 use rust_decimal::Decimal;
 
 pub type TransactionId = String;
@@ -49,7 +49,7 @@ pub enum BankAccountEvent {
     },
 }
 
-impl message::Payload for BankAccountEvent {
+impl message::Message for BankAccountEvent {
     fn name(&self) -> &'static str {
         match self {
             BankAccountEvent::WasOpened { .. } => "BankAccountWasOpened",
@@ -202,7 +202,7 @@ impl BankAccountRoot {
         }
 
         Ok(BankAccountRoot::from(aggregate::Context::record_new(
-            Event::from(BankAccountEvent::WasOpened {
+            event::Envelope::from(BankAccountEvent::WasOpened {
                 id,
                 account_holder_id,
                 initial_balance: opening_balance,
@@ -223,10 +223,9 @@ impl BankAccountRoot {
             return Err(BankAccountError::NoMoneyDeposited);
         }
 
-        self.ctx_mut()
-            .record_that(Event::from(BankAccountEvent::DepositWasRecorded {
-                amount: money,
-            }))
+        self.ctx_mut().record_that(event::Envelope::from(
+            BankAccountEvent::DepositWasRecorded { amount: money },
+        ))
     }
 
     pub fn send_transfer(
@@ -260,7 +259,7 @@ impl BankAccountRoot {
         }
 
         self.ctx_mut()
-            .record_that(Event::from(BankAccountEvent::TransferWasSent {
+            .record_that(event::Envelope::from(BankAccountEvent::TransferWasSent {
                 message,
                 transaction,
             }))
@@ -281,11 +280,12 @@ impl BankAccountRoot {
             ));
         }
 
-        self.ctx_mut()
-            .record_that(Event::from(BankAccountEvent::TransferWasReceived {
+        self.ctx_mut().record_that(event::Envelope::from(
+            BankAccountEvent::TransferWasReceived {
                 transaction,
                 message,
-            }))
+            },
+        ))
     }
 
     pub fn record_transfer_success(
@@ -303,10 +303,9 @@ impl BankAccountRoot {
             // TODO: return error
         }
 
-        self.ctx_mut()
-            .record_that(Event::from(BankAccountEvent::TransferWasConfirmed {
-                transaction_id,
-            }))
+        self.ctx_mut().record_that(event::Envelope::from(
+            BankAccountEvent::TransferWasConfirmed { transaction_id },
+        ))
     }
 
     pub fn close(&mut self) -> Result<(), BankAccountError> {
@@ -315,7 +314,7 @@ impl BankAccountRoot {
         }
 
         self.ctx_mut()
-            .record_that(Event::from(BankAccountEvent::WasClosed))
+            .record_that(event::Envelope::from(BankAccountEvent::WasClosed))
     }
 
     pub fn reopen(&mut self, reopening_balance: Option<Decimal>) -> Result<(), BankAccountError> {
@@ -324,7 +323,7 @@ impl BankAccountRoot {
         }
 
         self.ctx_mut()
-            .record_that(Event::from(BankAccountEvent::WasReopened {
+            .record_that(event::Envelope::from(BankAccountEvent::WasReopened {
                 reopening_balance,
             }))
     }

@@ -9,20 +9,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     message,
-    message::Message,
     version::{ConflictError, Version},
 };
 
 /// An Event is a [Message] carring the information about a Domain Event,
 /// an occurrence in the system lifetime that is relevant for the Domain
 /// that is being implemented.
-pub type Event<T> = Message<T>;
+pub type Envelope<T> = message::Envelope<T>;
 
 /// An [Event] that has been persisted to the Event [Store].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Persisted<Id, Evt>
 where
-    Evt: message::Payload,
+    Evt: message::Message,
 {
     /// The id of the Event Stream the persisted Event belongs to.
     pub stream_id: Id,
@@ -36,7 +35,7 @@ where
     pub version: Version,
 
     /// The actual Domain Event carried by this envelope.
-    pub payload: Event<Evt>,
+    pub event: Envelope<Evt>,
 }
 
 /// Specifies the slice of the Event Stream to select when calling [`Store::stream`].
@@ -81,7 +80,7 @@ pub trait Store: Send + Sync {
 
     /// The type containing all Domain Events recorded by the Event Store.
     /// Typically, this parameter should be an `enum`.
-    type Event: message::Payload + Send + Sync;
+    type Event: message::Message + Send + Sync;
 
     /// The error type returned by the Store during a [`stream`] call.
     type StreamError: Send + Sync;
@@ -107,6 +106,6 @@ pub trait Store: Send + Sync {
         &self,
         id: Self::StreamId,
         version_check: StreamVersionExpected,
-        events: Vec<Event<Self::Event>>,
+        events: Vec<Envelope<Self::Event>>,
     ) -> Result<Version, Self::AppendError>;
 }

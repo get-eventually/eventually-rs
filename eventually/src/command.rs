@@ -15,13 +15,13 @@ use std::future::Future;
 
 use async_trait::async_trait;
 
-use crate::{message, message::Message};
+use crate::message;
 
 /// A Command represents an intent by an Actor (e.g. a User, or a System)
 /// to mutate the state of the system.
 ///
 /// In an event-sourced system, a Command is represented as a [Message].
-pub type Command<T> = Message<T>;
+pub type Envelope<T> = message::Envelope<T>;
 
 /// A software component that is able to handle [Command]s of a certain type,
 /// and mutate the state as a result of the command handling, or fail.
@@ -32,7 +32,7 @@ pub type Command<T> = Message<T>;
 #[async_trait]
 pub trait Handler<T>: Send + Sync
 where
-    T: message::Payload,
+    T: message::Message,
 {
     /// The error type returned by the Handler while handling a [Command].
     type Error: Send + Sync;
@@ -42,20 +42,20 @@ where
     /// Since [Command]s are solely modifying the state of the system,
     /// they do not return anything to the caller but the result of the operation
     /// (expressed by a [Result] type).
-    async fn handle(&self, command: Command<T>) -> Result<(), Self::Error>;
+    async fn handle(&self, command: Envelope<T>) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
 impl<T, Err, F, Fut> Handler<T> for F
 where
-    T: message::Payload + Send + Sync + 'static,
+    T: message::Message + Send + Sync + 'static,
     Err: Send + Sync,
-    F: Send + Sync + Fn(Command<T>) -> Fut,
+    F: Send + Sync + Fn(Envelope<T>) -> Fut,
     Fut: Send + Sync + Future<Output = Result<(), Err>>,
 {
     type Error = Err;
 
-    async fn handle(&self, command: Command<T>) -> Result<(), Self::Error> {
+    async fn handle(&self, command: Envelope<T>) -> Result<(), Self::Error> {
         self(command).await
     }
 }
@@ -67,11 +67,7 @@ mod test_user_domain {
     use crate::{
         aggregate,
         aggregate::test_user_domain::{User, UserEvent, UserRoot},
-        command,
-        command::Command,
-        event,
-        event::Event,
-        message, test,
+        command, event, message, test,
     };
 
     struct CreateUser {
@@ -79,7 +75,7 @@ mod test_user_domain {
         password: String,
     }
 
-    impl message::Payload for CreateUser {
+    impl message::Message for CreateUser {
         fn name(&self) -> &'static str {
             "CreateUser"
         }
@@ -97,8 +93,8 @@ mod test_user_domain {
     {
         type Error = anyhow::Error;
 
-        async fn handle(&self, command: Command<CreateUser>) -> Result<(), Self::Error> {
-            let command = command.payload;
+        async fn handle(&self, command: command::Envelope<CreateUser>) -> Result<(), Self::Error> {
+            let command = command.message;
             let mut user = UserRoot::create(command.email, command.password)?;
 
             self.0.store(&mut user).await?;
@@ -112,7 +108,7 @@ mod test_user_domain {
         password: String,
     }
 
-    impl message::Payload for ChangeUserPassword {
+    impl message::Message for ChangeUserPassword {
         fn name(&self) -> &'static str {
             "ChangeUserPassword"
         }
@@ -130,8 +126,11 @@ mod test_user_domain {
     {
         type Error = anyhow::Error;
 
-        async fn handle(&self, command: Command<ChangeUserPassword>) -> Result<(), Self::Error> {
-            let command = command.payload;
+        async fn handle(
+            &self,
+            command: command::Envelope<ChangeUserPassword>,
+        ) -> Result<(), Self::Error> {
+            let command = command.message;
 
             let mut user = self.0.get(&command.email).await?;
 
@@ -145,14 +144,14 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_creates_a_new_user_successfully() {
-        test::command_handler::Scenario::when(Command::from(CreateUser {
+        test::command_handler::Scenario::when(command::Envelope::from(CreateUser {
             email: "test@test.com".to_owned(),
             password: "not-a-secret".to_owned(),
         }))
         .then(vec![event::Persisted {
             stream_id: "test@test.com".to_owned(),
             version: 1,
-            payload: Event::from(UserEvent::WasCreated {
+            event: event::Envelope::from(UserEvent::WasCreated {
                 email: "test@test.com".to_owned(),
                 password: "not-a-secret".to_owned(),
             }),
@@ -168,12 +167,12 @@ mod test_user_domain {
         test::command_handler::Scenario::given(vec![event::Persisted {
             stream_id: "test@test.com".to_owned(),
             version: 1,
-            payload: Event::from(UserEvent::WasCreated {
+            event: event::Envelope::from(UserEvent::WasCreated {
                 email: "test@test.com".to_owned(),
                 password: "not-a-secret".to_owned(),
             }),
         }])
-        .when(Command::from(CreateUser {
+        .when(command::Envelope::from(CreateUser {
             email: "test@test.com".to_owned(),
             password: "not-a-secret".to_owned(),
         }))
@@ -189,19 +188,19 @@ mod test_user_domain {
         test::command_handler::Scenario::given(vec![event::Persisted {
             stream_id: "test@test.com".to_owned(),
             version: 1,
-            payload: Event::from(UserEvent::WasCreated {
+            event: event::Envelope::from(UserEvent::WasCreated {
                 email: "test@test.com".to_owned(),
                 password: "not-a-secret".to_owned(),
             }),
         }])
-        .when(Command::from(ChangeUserPassword {
+        .when(command::Envelope::from(ChangeUserPassword {
             email: "test@test.com".to_owned(),
             password: "new-password".to_owned(),
         }))
         .then(vec![event::Persisted {
             stream_id: "test@test.com".to_owned(),
             version: 2,
-            payload: Event::from(UserEvent::PasswordWasChanged {
+            event: event::Envelope::from(UserEvent::PasswordWasChanged {
                 password: "new-password".to_owned(),
             }),
         }])
@@ -213,7 +212,7 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_fails_to_update_the_password_if_the_user_does_not_exist() {
-        test::command_handler::Scenario::when(Command::from(ChangeUserPassword {
+        test::command_handler::Scenario::when(command::Envelope::from(ChangeUserPassword {
             email: "test@test.com".to_owned(),
             password: "new-password".to_owned(),
         }))

@@ -2,22 +2,22 @@ use serde::{Deserialize, Serialize};
 
 use crate::metadata::Metadata;
 
-pub trait Payload {
+pub trait Message {
     fn name(&self) -> &'static str;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Message<T>
+pub struct Envelope<T>
 where
-    T: Payload,
+    T: Message,
 {
-    pub payload: T,
+    pub message: T,
     pub metadata: Metadata,
 }
 
-impl<T> Message<T>
+impl<T> Envelope<T>
 where
-    T: Payload,
+    T: Message,
 {
     #[must_use]
     pub fn with_metadata<F>(mut self, f: F) -> Self
@@ -29,24 +29,24 @@ where
     }
 }
 
-impl<T> From<T> for Message<T>
+impl<T> From<T> for Envelope<T>
 where
-    T: Payload,
+    T: Message,
 {
-    fn from(payload: T) -> Self {
-        Message {
-            payload,
+    fn from(message: T) -> Self {
+        Envelope {
+            message,
             metadata: Metadata::default(),
         }
     }
 }
 
-impl<T> PartialEq for Message<T>
+impl<T> PartialEq for Envelope<T>
 where
-    T: Payload + PartialEq,
+    T: Message + PartialEq,
 {
-    fn eq(&self, other: &Message<T>) -> bool {
-        self.payload == other.payload
+    fn eq(&self, other: &Envelope<T>) -> bool {
+        self.message == other.message
     }
 }
 
@@ -55,9 +55,9 @@ pub(crate) mod tests {
     use super::*;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub(crate) struct StringPayload(pub(crate) &'static str);
+    pub(crate) struct StringMessage(pub(crate) &'static str);
 
-    impl Payload for StringPayload {
+    impl Message for StringMessage {
         fn name(&self) -> &'static str {
             "string_payload"
         }
@@ -65,8 +65,8 @@ pub(crate) mod tests {
 
     #[test]
     fn message_with_metadata_does_not_affect_equality() {
-        let message = Message {
-            payload: StringPayload("hello"),
+        let message = Envelope {
+            message: StringMessage("hello"),
             metadata: Metadata::default(),
         };
 
