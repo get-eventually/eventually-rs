@@ -114,7 +114,6 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-<span id="112">112</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module `event` contains types and abstractions helpful for working</span>
 <span class="doccomment">//! with Domain Events.</span>
 
@@ -126,20 +125,19 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">message</span>,
-    <span class="ident">message::Message</span>,
     <span class="ident">version</span>::{<span class="ident">ConflictError</span>, <span class="ident">Version</span>},
 };
 
 <span class="doccomment">/// An Event is a [Message] carring the information about a Domain Event,</span>
 <span class="doccomment">/// an occurrence in the system lifetime that is relevant for the Domain</span>
 <span class="doccomment">/// that is being implemented.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">message::Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// An [Event] that has been persisted to the Event [Store].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Payload</span>,
+    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
 {
     <span class="doccomment">/// The id of the Event Stream the persisted Event belongs to.</span>
     <span class="kw">pub</span> <span class="ident">stream_id</span>: <span class="ident">Id</span>,
@@ -153,7 +151,7 @@
     <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">Version</span>,
 
     <span class="doccomment">/// The actual Domain Event carried by this envelope.</span>
-    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">event</span>: <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Specifies the slice of the Event Stream to select when calling [`Store::stream`].</span>
@@ -198,7 +196,7 @@
 
     <span class="doccomment">/// The type containing all Domain Events recorded by the Event Store.</span>
     <span class="doccomment">/// Typically, this parameter should be an `enum`.</span>
-    <span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">message::Payload</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+    <span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
 
     <span class="doccomment">/// The error type returned by the Store during a [`stream`] call.</span>
     <span class="kw">type</span> <span class="ident">StreamError</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
@@ -224,7 +222,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">id</span>: <span class="ident"><span class="self">Self</span>::StreamId</span>,
         <span class="ident">version_check</span>: <span class="ident">StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::AppendError</span><span class="op">&gt;</span>;
 }
 </code></pre></div>

@@ -665,6 +665,9 @@
 <span id="660">660</span>
 <span id="661">661</span>
 <span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for the Aggregate pattern.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## What is an Aggregate?</span>
@@ -701,7 +704,7 @@
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 <span class="kw">use</span> <span class="ident">futures::TryStreamExt</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">event::Event</span>, <span class="ident">message</span>, <span class="ident">version::Version</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">message</span>, <span class="ident">version::Version</span>};
 
 <span class="doccomment">/// An Aggregate represents a Domain Model that, through an Aggregate [Root],</span>
 <span class="doccomment">/// acts as a _transactional boundary_.</span>
@@ -721,7 +724,7 @@
 
     <span class="doccomment">/// The type of Domain Events that interest this Aggregate.</span>
     <span class="doccomment">/// Usually, this type should be an `enum`.</span>
-    <span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">message::Payload</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+    <span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
 
     <span class="doccomment">/// The error type that can be returned by [`Aggregate::apply`] when</span>
     <span class="doccomment">/// mutating the Aggregate state.</span>
@@ -749,7 +752,7 @@
 {
     <span class="ident">aggregate</span>: <span class="ident">T</span>,
     <span class="ident">version</span>: <span class="ident">Version</span>,
-    <span class="ident">recorded_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">recorded_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -763,7 +766,7 @@
 
     <span class="doccomment">/// Returns the list of uncommitted, recorded Domain [Event]s from the [Context]</span>
     <span class="doccomment">/// and resets the internal list to its default value.</span>
-    <span class="kw">fn</span> <span class="ident">take_uncommitted_events</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">take_uncommitted_events</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">recorded_events</span>)
     }
 
@@ -774,10 +777,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
     <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">fn</span> <span class="ident">rehydrate_from</span>(<span class="ident">event</span>: <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">rehydrate_from</span>(<span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">Context</span> {
             <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">aggregate</span>: <span class="ident">T::apply</span>(<span class="prelude-val">None</span>, <span class="ident">event</span>.<span class="ident">payload</span>)<span class="question-mark">?</span>,
+            <span class="ident">aggregate</span>: <span class="ident">T::apply</span>(<span class="prelude-val">None</span>, <span class="ident">event</span>.<span class="ident">message</span>)<span class="question-mark">?</span>,
             <span class="ident">recorded_events</span>: <span class="ident">Vec::default</span>(),
         })
     }
@@ -789,8 +792,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
     <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">fn</span> <span class="ident">apply_rehydrated_event</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">T::apply</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">aggregate</span>), <span class="ident">event</span>.<span class="ident">payload</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn</span> <span class="ident">apply_rehydrated_event</span>(
+        <span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">T::apply</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">aggregate</span>), <span class="ident">event</span>.<span class="ident">message</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">version</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
@@ -826,10 +832,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
     <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_new</span>(<span class="ident">event</span>: <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_new</span>(<span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">Context</span> {
             <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">aggregate</span>: <span class="ident">T::apply</span>(<span class="prelude-val">None</span>, <span class="ident">event</span>.<span class="ident">payload</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
+            <span class="ident">aggregate</span>: <span class="ident">T::apply</span>(<span class="prelude-val">None</span>, <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
             <span class="ident">recorded_events</span>: <span class="macro">vec!</span>[<span class="ident">event</span>],
         })
     }
@@ -862,8 +868,8 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
     <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_that</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">T::apply</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">clone</span>()), <span class="ident">event</span>.<span class="ident">payload</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_that</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">T::Error</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">T::apply</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">clone</span>()), <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">recorded_events</span>.<span class="ident">push</span>(<span class="ident">event</span>);
         <span class="self">self</span>.<span class="ident">version</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 
@@ -1028,7 +1034,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">store</span>
             .<span class="ident">stream</span>(<span class="ident">id</span>, <span class="ident">event::VersionSelect::All</span>)
-            .<span class="ident">map_ok</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> <span class="ident">event</span>.<span class="ident">payload</span>)
+            .<span class="ident">map_ok</span>(<span class="op">|</span><span class="ident">persisted</span><span class="op">|</span> <span class="ident">persisted</span>.<span class="ident">event</span>)
             .<span class="ident">map_err</span>(<span class="ident">EventSourcedRepositoryError::StreamFromStore</span>)
             .<span class="ident">try_fold</span>(<span class="prelude-val">None</span>, <span class="op">|</span><span class="ident">ctx</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">event</span><span class="op">|</span> <span class="kw">async</span> {
                 <span class="kw">let</span> <span class="ident">new_ctx_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ctx</span> {
@@ -1080,7 +1086,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">test_user_domain</span> {
     <span class="kw">use</span> <span class="ident">std::borrow</span>::{<span class="ident">Borrow</span>, <span class="ident">BorrowMut</span>};
 
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">aggregate</span>, <span class="ident">aggregate::Root</span>, <span class="ident">event::Event</span>, <span class="ident">message</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">aggregate</span>, <span class="ident">aggregate::Root</span>, <span class="ident">event</span>, <span class="ident">message</span>};
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">User</span> {
@@ -1094,7 +1100,7 @@
         <span class="ident">PasswordWasChanged</span> { <span class="ident">password</span>: <span class="ident">String</span> },
     }
 
-    <span class="kw">impl</span> <span class="ident">message::Payload</span> <span class="kw">for</span> <span class="ident">UserEvent</span> {
+    <span class="kw">impl</span> <span class="ident">message::Message</span> <span class="kw">for</span> <span class="ident">UserEvent</span> {
         <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
             <span class="kw">match</span> <span class="self">self</span> {
                 <span class="ident">UserEvent::WasCreated</span> { .. } =&gt; <span class="string">&quot;UserWasCreated&quot;</span>,
@@ -1178,7 +1184,7 @@
             }
 
             <span class="prelude-val">Ok</span>(<span class="ident">UserRoot::from</span>(<span class="ident">aggregate::Context::record_new</span>(
-                <span class="ident">Event::from</span>(<span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> }),
+                <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> }),
             )<span class="question-mark">?</span>))
         }
 
@@ -1188,7 +1194,9 @@
             }
 
             <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-                .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> { <span class="ident">password</span> }))<span class="question-mark">?</span>;
+                .<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
+                    <span class="ident">password</span>,
+                }))<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }
@@ -1204,9 +1212,7 @@
         <span class="ident">aggregate</span>,
         <span class="ident">aggregate::test_user_domain</span>::{<span class="ident">User</span>, <span class="ident">UserEvent</span>, <span class="ident">UserRoot</span>},
         <span class="ident">aggregate::Repository</span>,
-        <span class="ident">event</span>,
-        <span class="ident">event::Event</span>,
-        <span class="ident">test</span>,
+        <span class="ident">event</span>, <span class="ident">test</span>,
         <span class="ident">test::store::EventStoreExt</span>,
         <span class="ident">version</span>,
     };
@@ -1233,7 +1239,7 @@
         <span class="kw">let</span> <span class="ident">expected_events</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
             <span class="ident">stream_id</span>: <span class="ident">email</span>.<span class="ident">clone</span>(),
             <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">payload</span>: <span class="ident">Event::from</span>(<span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> }),
+            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> }),
         }];
 
         <span class="macro">assert_eq!</span>(<span class="ident">expected_events</span>, <span class="ident">tracking_event_store</span>.<span class="ident">recorded_events</span>());
@@ -1279,7 +1285,7 @@
         <span class="kw">let</span> <span class="ident">expected_events</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
             <span class="ident">stream_id</span>: <span class="ident">email</span>.<span class="ident">clone</span>(),
             <span class="ident">version</span>: <span class="number">2</span>,
-            <span class="ident">payload</span>: <span class="ident">Event::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
+            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
                 <span class="ident">password</span>: <span class="ident">new_password</span>,
             }),
         }];

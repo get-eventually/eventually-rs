@@ -336,13 +336,12 @@
 <span id="331">331</span>
 <span id="332">332</span>
 <span id="333">333</span>
-<span id="334">334</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">borrow</span>::{<span class="ident">Borrow</span>, <span class="ident">BorrowMut</span>},
     <span class="ident">collections::HashMap</span>,
 };
 
-<span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">aggregate</span>, <span class="ident">aggregate::Root</span>, <span class="ident">event::Event</span>, <span class="ident">message</span>};
+<span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">aggregate</span>, <span class="ident">aggregate::Root</span>, <span class="ident">event</span>, <span class="ident">message</span>};
 <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TransactionId</span> <span class="op">=</span> <span class="ident">String</span>;
@@ -388,7 +387,7 @@
     },
 }
 
-<span class="kw">impl</span> <span class="ident">message::Payload</span> <span class="kw">for</span> <span class="ident">BankAccountEvent</span> {
+<span class="kw">impl</span> <span class="ident">message::Message</span> <span class="kw">for</span> <span class="ident">BankAccountEvent</span> {
     <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">BankAccountEvent::WasOpened</span> { .. } =&gt; <span class="string">&quot;BankAccountWasOpened&quot;</span>,
@@ -541,7 +540,7 @@
         }
 
         <span class="prelude-val">Ok</span>(<span class="ident">BankAccountRoot::from</span>(<span class="ident">aggregate::Context::record_new</span>(
-            <span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+            <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
                 <span class="ident">id</span>,
                 <span class="ident">account_holder_id</span>,
                 <span class="ident">initial_balance</span>: <span class="ident">opening_balance</span>,
@@ -562,10 +561,9 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::NoMoneyDeposited</span>);
         }
 
-        <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-            .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::DepositWasRecorded</span> {
-                <span class="ident">amount</span>: <span class="ident">money</span>,
-            }))
+        <span class="self">self</span>.<span class="ident">ctx_mut</span>().<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(
+            <span class="ident">BankAccountEvent::DepositWasRecorded</span> { <span class="ident">amount</span>: <span class="ident">money</span> },
+        ))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_transfer</span>(
@@ -599,7 +597,7 @@
         }
 
         <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-            .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::TransferWasSent</span> {
+            .<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::TransferWasSent</span> {
                 <span class="ident">message</span>,
                 <span class="ident">transaction</span>,
             }))
@@ -620,11 +618,12 @@
             ));
         }
 
-        <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-            .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::TransferWasReceived</span> {
+        <span class="self">self</span>.<span class="ident">ctx_mut</span>().<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(
+            <span class="ident">BankAccountEvent::TransferWasReceived</span> {
                 <span class="ident">transaction</span>,
                 <span class="ident">message</span>,
-            }))
+            },
+        ))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_transfer_success</span>(
@@ -642,10 +641,9 @@
             <span class="comment">// TODO: return error</span>
         }
 
-        <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-            .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::TransferWasConfirmed</span> {
-                <span class="ident">transaction_id</span>,
-            }))
+        <span class="self">self</span>.<span class="ident">ctx_mut</span>().<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(
+            <span class="ident">BankAccountEvent::TransferWasConfirmed</span> { <span class="ident">transaction_id</span> },
+        ))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
@@ -654,7 +652,7 @@
         }
 
         <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-            .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::WasClosed</span>))
+            .<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasClosed</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reopen</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">reopening_balance</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
@@ -663,7 +661,7 @@
         }
 
         <span class="self">self</span>.<span class="ident">ctx_mut</span>()
-            .<span class="ident">record_that</span>(<span class="ident">Event::from</span>(<span class="ident">BankAccountEvent::WasReopened</span> {
+            .<span class="ident">record_that</span>(<span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasReopened</span> {
                 <span class="ident">reopening_balance</span>,
             }))
     }
