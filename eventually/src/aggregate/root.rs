@@ -90,7 +90,7 @@ where
 }
 
 /// An Aggregate Root represents the Domain Entity object used to
-/// load and save an [Aggregate] from and to an [aggregate::Repository], and
+/// load and save an [Aggregate] from and to an [`aggregate::Repository`], and
 /// to perform actions that may result in new Domain Events
 /// to change the state of the Aggregate.
 ///
@@ -153,12 +153,10 @@ where
         self.state().aggregate_id()
     }
 
-    /// Creates a new [Aggregate] instance by applying the specified
-    /// Domain [event::Envelope], and returns a [Context] reference with the Aggregate
-    /// instance in it.
+    /// Creates a new [Aggregate] [Root] instance by applying the specified
+    /// Domain Event.
     ///
-    /// This method should be used inside Aggregate [Root] methods
-    /// to create new [Root] instances:
+    /// Example of usage:
     /// ```text
     /// use eventually::{
     ///     event,
@@ -179,11 +177,10 @@ where
         Context::record_new(event).map(Self::from)
     }
 
-    /// Records a change to the [Aggregate], expressed by the specified
-    /// Domain [event::Envelope].
+    /// Records a change to the [Aggregate] [Root], expressed by the specified
+    /// Domain Event.
     ///
-    /// This method should be used inside Aggregate [Root] methods
-    /// to update the [Aggregate] state:
+    /// Example of usage:
     /// ```text
     /// use eventually::{
     ///     event,

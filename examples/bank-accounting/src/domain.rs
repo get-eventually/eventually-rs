@@ -3,8 +3,11 @@ use std::{
     collections::HashMap,
 };
 
-use eventually::{aggregate, aggregate::Root as AggregateRoot, event, message};
+use eventually::{aggregate, aggregate::Root as AggregateRoot, message};
 use rust_decimal::Decimal;
+
+pub type BankAccountRepository<S> =
+    aggregate::EventSourcedRepository<BankAccount, BankAccountRoot, S>;
 
 pub type TransactionId = String;
 
@@ -201,13 +204,14 @@ impl BankAccountRoot {
             return Err(BankAccountError::EmptyAccountHolderId);
         }
 
-        Ok(BankAccountRoot::record_new(event::Envelope::from(
+        BankAccountRoot::record_new(
             BankAccountEvent::WasOpened {
                 id,
                 account_holder_id,
                 initial_balance: opening_balance,
-            },
-        ))?)
+            }
+            .into(),
+        )
     }
 
     pub fn deposit(&mut self, money: Decimal) -> Result<(), BankAccountError> {
@@ -223,9 +227,7 @@ impl BankAccountRoot {
             return Err(BankAccountError::NoMoneyDeposited);
         }
 
-        self.record_that(event::Envelope::from(
-            BankAccountEvent::DepositWasRecorded { amount: money },
-        ))
+        self.record_that(BankAccountEvent::DepositWasRecorded { amount: money }.into())
     }
 
     pub fn send_transfer(
@@ -257,10 +259,13 @@ impl BankAccountRoot {
             return Ok(());
         }
 
-        self.record_that(event::Envelope::from(BankAccountEvent::TransferWasSent {
-            message,
-            transaction,
-        }))
+        self.record_that(
+            BankAccountEvent::TransferWasSent {
+                message,
+                transaction,
+            }
+            .into(),
+        )
     }
 
     pub fn receive_transfer(
@@ -278,12 +283,13 @@ impl BankAccountRoot {
             ));
         }
 
-        self.record_that(event::Envelope::from(
+        self.record_that(
             BankAccountEvent::TransferWasReceived {
                 transaction,
                 message,
-            },
-        ))
+            }
+            .into(),
+        )
     }
 
     pub fn record_transfer_success(
@@ -300,9 +306,7 @@ impl BankAccountRoot {
             // TODO: return error
         }
 
-        self.record_that(event::Envelope::from(
-            BankAccountEvent::TransferWasConfirmed { transaction_id },
-        ))
+        self.record_that(BankAccountEvent::TransferWasConfirmed { transaction_id }.into())
     }
 
     pub fn close(&mut self) -> Result<(), BankAccountError> {
@@ -310,7 +314,7 @@ impl BankAccountRoot {
             return Err(BankAccountError::AlreadyClosed);
         }
 
-        self.record_that(event::Envelope::from(BankAccountEvent::WasClosed))
+        self.record_that(BankAccountEvent::WasClosed.into())
     }
 
     pub fn reopen(&mut self, reopening_balance: Option<Decimal>) -> Result<(), BankAccountError> {
@@ -318,11 +322,6 @@ impl BankAccountRoot {
             return Err(BankAccountError::AlreadyOpened);
         }
 
-        self.record_that(event::Envelope::from(BankAccountEvent::WasReopened {
-            reopening_balance,
-        }))
+        self.record_that(BankAccountEvent::WasReopened { reopening_balance }.into())
     }
 }
-
-pub type BankAccountRepository<S> =
-    aggregate::EventSourcedRepository<BankAccount, BankAccountRoot, S>;

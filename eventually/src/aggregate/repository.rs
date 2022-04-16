@@ -29,15 +29,15 @@ where
     async fn store(&self, root: &mut R) -> Result<(), Self::Error>;
 }
 
-/// List of possible errors that can be returned by an [`EventSourcedRepository`] method.
+/// List of possible errors that can be returned by an [`EventSourced`] method.
 #[derive(Debug, thiserror::Error)]
-pub enum EventSourcedRepositoryError<E, SE, AE> {
-    /// This error is retured by [`EventSourcedRepository::get`] when the
+pub enum EventSourcedError<E, SE, AE> {
+    /// This error is retured by [`EventSourced::get`] when the
     /// desired Aggregate [Root] could not be found in the data store.
     #[error("aggregate root was not found")]
     AggregateRootNotFound,
 
-    /// This error is returned by [`EventSourcedRepository::get`] when
+    /// This error is returned by [`EventSourced::get`] when
     /// the desired [Aggregate] returns an error while applying a Domain Event
     /// from the Event [Store][`event::Store`] during the _rehydration_ phase.
     ///
@@ -46,13 +46,13 @@ pub enum EventSourcedRepositoryError<E, SE, AE> {
     #[error("failed to rehydrate aggregate from event stream: {0}")]
     RehydrateAggregate(#[source] E),
 
-    /// This error is returned by [`EventSourcedRepository::get`] when the
+    /// This error is returned by [`EventSourced::get`] when the
     /// [Event Store][`event::Store`] used by the Repository returns
     /// an unexpected error while streaming back the Aggregate's Event Stream.
     #[error("event store failed while streaming events: {0}")]
     StreamFromStore(#[source] SE),
 
-    /// This error is returned by [`EventSourcedRepository::store`] when
+    /// This error is returned by [`EventSourced::store`] when
     /// the [Event Store][`event::Store`] used by the Repository returns
     /// an error while saving the uncommitted Domain Events
     /// to the Aggregate's Event Stream.
@@ -66,7 +66,7 @@ pub enum EventSourcedRepositoryError<E, SE, AE> {
 /// for a particular Aggregate, and append uncommitted Domain Events
 /// recorded by an Aggregate Root.
 #[derive(Debug, Clone)]
-pub struct EventSourcedRepository<T, R, S>
+pub struct EventSourced<T, R, S>
 where
     T: Aggregate,
     R: Root<T>,
@@ -77,7 +77,7 @@ where
     aggregate_root: PhantomData<R>,
 }
 
-impl<T, R, S> From<S> for EventSourcedRepository<T, R, S>
+impl<T, R, S> From<S> for EventSourced<T, R, S>
 where
     T: Aggregate,
     R: Root<T>,
@@ -93,7 +93,7 @@ where
 }
 
 #[async_trait]
-impl<T, R, S> Repository<T, R> for EventSourcedRepository<T, R, S>
+impl<T, R, S> Repository<T, R> for EventSourced<T, R, S>
 where
     T: Aggregate,
     T::Id: Clone,
@@ -101,28 +101,27 @@ where
     R: Root<T>,
     S: event::Store<StreamId = T::Id, Event = T::Event>,
 {
-    type Error = EventSourcedRepositoryError<T::Error, S::StreamError, S::AppendError>;
+    type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
 
     async fn get(&self, id: &T::Id) -> Result<R, Self::Error> {
         let ctx = self
             .store
             .stream(id, event::VersionSelect::All)
             .map_ok(|persisted| persisted.event)
-            .map_err(EventSourcedRepositoryError::StreamFromStore)
+            .map_err(EventSourcedError::StreamFromStore)
             .try_fold(None, |ctx: Option<Context<T>>, event| async {
                 let new_ctx_result = match ctx {
                     None => Context::rehydrate_from(event),
                     Some(ctx) => ctx.apply_rehydrated_event(event),
                 };
 
-                let new_ctx =
-                    new_ctx_result.map_err(EventSourcedRepositoryError::RehydrateAggregate)?;
+                let new_ctx = new_ctx_result.map_err(EventSourcedError::RehydrateAggregate)?;
 
                 Ok(Some(new_ctx))
             })
             .await?;
 
-        ctx.ok_or(EventSourcedRepositoryError::AggregateRootNotFound)
+        ctx.ok_or(EventSourcedError::AggregateRootNotFound)
             .map(R::from)
     }
 
@@ -144,7 +143,7 @@ where
                 events_to_commit,
             )
             .await
-            .map_err(EventSourcedRepositoryError::AppendToStore)?;
+            .map_err(EventSourcedError::AppendToStore)?;
 
         Ok(())
     }
