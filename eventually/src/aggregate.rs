@@ -25,16 +25,13 @@
 //! Aggregates should provide a way to **fold** Domain Events on the
 //! current value of the state, to produce the next state.
 
-use std::{
-    borrow::{Borrow, BorrowMut},
-    fmt::Debug,
-    marker::PhantomData,
-};
+use crate::message;
 
-use async_trait::async_trait;
-use futures::TryStreamExt;
+mod repository;
+mod root;
 
-use crate::{event, message, version::Version};
+pub use repository::{EventSourced as EventSourcedRepository, *};
+pub use root::*;
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -48,20 +45,20 @@ use crate::{event, message, version::Version};
 /// using the [`Aggregate::apply`] method.
 ///
 /// More on Aggregates can be found here: `<https://www.dddcommunity.org/library/vernon_2011/>`
-pub trait Aggregate: Sized + Send + Sync {
+pub trait Aggregate: Sized + Send + Sync + Clone {
     /// The type used to uniquely identify the Aggregate.
     type Id: Send + Sync;
 
     /// The type of Domain Events that interest this Aggregate.
     /// Usually, this type should be an `enum`.
-    type Event: message::Message + Send + Sync;
+    type Event: message::Message + Send + Sync + Clone;
 
     /// The error type that can be returned by [`Aggregate::apply`] when
     /// mutating the Aggregate state.
     type Error: Send + Sync;
 
     /// Returns the unique identifier for the Aggregate instance.
-    fn id(&self) -> &Self::Id;
+    fn aggregate_id(&self) -> &Self::Id;
 
     /// Mutates the state of an Aggregate through a Domain Event.
     ///
@@ -70,343 +67,6 @@ pub trait Aggregate: Sized + Send + Sync {
     /// The method can return an error if the event to apply is unexpected
     /// given the current state of the Aggregate.
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error>;
-}
-
-/// A context object that should be used by the Aggregate [Root] methods to
-/// access the [Aggregate] state and to record new Domain [Event]s.
-#[derive(Debug, Clone)]
-#[must_use]
-pub struct Context<T>
-where
-    T: Aggregate,
-{
-    aggregate: T,
-    version: Version,
-    recorded_events: Vec<event::Envelope<T::Event>>,
-}
-
-impl<T> Context<T>
-where
-    T: Aggregate,
-{
-    /// Returns read access to the [Aggregate] state.
-    pub fn aggregate(&self) -> &T {
-        &self.aggregate
-    }
-
-    /// Returns the list of uncommitted, recorded Domain [Event]s from the [Context]
-    /// and resets the internal list to its default value.
-    fn take_uncommitted_events(&mut self) -> Vec<event::Envelope<T::Event>> {
-        std::mem::take(&mut self.recorded_events)
-    }
-
-    /// Creates a new [Context] instance from a Domain [Event]
-    /// while rehydrating an [Aggregate].
-    ///
-    /// # Errors
-    ///
-    /// The method can return an error if the event to apply is unexpected
-    /// given the current state of the Aggregate.
-    fn rehydrate_from(event: event::Envelope<T::Event>) -> Result<Context<T>, T::Error> {
-        Ok(Context {
-            version: 1,
-            aggregate: T::apply(None, event.message)?,
-            recorded_events: Vec::default(),
-        })
-    }
-
-    /// Applies a new Domain [Event] to the [Context] while rehydrating
-    /// an [Aggregate].
-    ///
-    /// # Errors
-    ///
-    /// The method can return an error if the event to apply is unexpected
-    /// given the current state of the Aggregate.
-    fn apply_rehydrated_event(
-        mut self,
-        event: event::Envelope<T::Event>,
-    ) -> Result<Context<T>, T::Error> {
-        self.aggregate = T::apply(Some(self.aggregate), event.message)?;
-        self.version += 1;
-
-        Ok(self)
-    }
-}
-
-impl<T> Context<T>
-where
-    T: Aggregate + Clone,
-    T::Event: Clone,
-{
-    /// Creates a new [Aggregate] instance by applying the specified
-    /// Domain [Event], and returns a [Context] reference with the Aggregate
-    /// instance in it.
-    ///
-    /// This method should be used inside Aggregate [Root] methods
-    /// to create new [Root] instances:
-    /// ```text
-    /// use eventually::{
-    ///     event::Event,
-    ///     aggregate::Root,
-    ///     aggregate,
-    /// };
-    ///
-    /// let my_aggregate_root = MyAggregateRoot::from(
-    ///     aggregate::Context::record_new(
-    ///         Event::from(MyDomainEvent { /* something */ })
-    ///     )?
-    /// );
-    /// ```
-    ///
-    /// # Errors
-    ///
-    /// The method can return an error if the event to apply is unexpected
-    /// given the current state of the Aggregate.
-    pub fn record_new(event: event::Envelope<T::Event>) -> Result<Context<T>, T::Error> {
-        Ok(Context {
-            version: 1,
-            aggregate: T::apply(None, event.message.clone())?,
-            recorded_events: vec![event],
-        })
-    }
-
-    /// Records a change to the [Aggregate], expressed by the specified
-    /// Domain [Event].
-    ///
-    /// This method should be used inside Aggregate [Root] methods
-    /// to update the [Aggregate] state:
-    /// ```text
-    /// use eventually::{
-    ///     event::Event,
-    ///     aggregate::Root,
-    /// };
-    ///
-    /// impl MyAggregateRoot {
-    ///     pub fn update_name(&mut self, name: String) -> Result<(), MyAggregateError> {
-    ///         if name.is_empty() {
-    ///             return Err(MyAggregateError::NameIsEmpty);
-    ///         }
-    ///
-    ///         self.ctx_mut().record_that(
-    ///             Event::from(MyAggergateEvent::NameWasChanged { name })
-    ///         )
-    ///     }
-    /// }
-    /// ```
-    ///
-    /// # Errors
-    ///
-    /// The method can return an error if the event to apply is unexpected
-    /// given the current state of the Aggregate.
-    pub fn record_that(&mut self, event: event::Envelope<T::Event>) -> Result<(), T::Error> {
-        self.aggregate = T::apply(Some(self.aggregate.clone()), event.message.clone())?;
-        self.recorded_events.push(event);
-        self.version += 1;
-
-        Ok(())
-    }
-}
-
-/// An Aggregate Root represents the Domain Entity object used to
-/// load and save an [Aggregate] from and to a [Repository], and
-/// to perform actions that may result in new Domain [Event]s
-/// to change the state of the Aggregate.
-///
-/// An Aggregate Root implementation should only depend on [Context],
-/// and implement the `From<Context<AggregateType>>` trait. The Aggregate state
-/// and list of Domain Events recorded are handled by the Context object itself.
-///
-/// ```text
-/// #[derive(Debug, Clone)]
-/// struct MyAggregateRoot(Context<MyAggregate>);
-///
-/// impl From<Context<MyAggregate>> for MyAggregateRoot {
-///     fn from(ctx: Context<MyAggregate>) -> Self {
-///         Self(ctx)
-///     }
-/// }
-///
-/// // Implement the Aggregate Root interface by providing
-/// // read/write access to the Context object.
-/// impl aggregate::Root<MyAggregate> for MyAggregateRoot {
-///     fn ctx(&self) -> &Context<MyAggregate> {
-///         &self.0
-///     }
-///
-///     fn ctx_mut(&mut self) -> &mut Context<MyAggregate> {
-///         &mut self.0
-///     }
-/// }
-/// ```
-///
-/// For more information on how to record Domain Events using an Aggregate Root,
-/// please check [`Context::record_that`] method documentation.
-pub trait Root<T>:
-    From<Context<T>> + Borrow<Context<T>> + BorrowMut<Context<T>> + Send + Sync
-where
-    T: Aggregate,
-{
-    /// Provides read access to an [Aggregate] [Root] [Context].
-    fn ctx(&self) -> &Context<T> {
-        self.borrow()
-    }
-
-    /// Provides write access to an [Aggregate] [Root] [Context].
-    fn ctx_mut(&mut self) -> &mut Context<T> {
-        self.borrow_mut()
-    }
-
-    /// Convenience method to resolve the [Aggregate] unique identifier
-    /// from the Aggregate Root instance.
-    fn aggregate_id<'a>(&'a self) -> &'a T::Id
-    where
-        T: 'a,
-    {
-        self.ctx().aggregate().id()
-    }
-}
-
-/// A Repository is an object that allows to load and save
-/// an [Aggregate Root][Root] from and to a persistent data store.
-#[async_trait]
-pub trait Repository<T, R>: Send + Sync
-where
-    T: Aggregate,
-    R: Root<T>,
-{
-    /// The error type that can be returned by the Repository implementation
-    /// during loading or storing of an Aggregate Root.
-    type Error;
-
-    /// Loads an Aggregate Root instance from the data store,
-    /// referenced by its unique identifier.
-    async fn get(&self, id: &T::Id) -> Result<R, Self::Error>;
-
-    /// Stores a new version of an Aggregate Root instance to the data store.
-    async fn store(&self, root: &mut R) -> Result<(), Self::Error>;
-}
-
-/// List of possible errors that can be returned by an [`EventSourcedRepository`] method.
-#[derive(Debug, thiserror::Error)]
-pub enum EventSourcedRepositoryError<E, SE, AE> {
-    /// This error is retured by [`EventSourcedRepository::get`] when the
-    /// desired Aggregate [Root] could not be found in the data store.
-    #[error("aggregate root was not found")]
-    AggregateRootNotFound,
-
-    /// This error is returned by [`EventSourcedRepository::get`] when
-    /// the desired [Aggregate] returns an error while applying a Domain Event
-    /// from the Event [Store][`event::Store`] during the _rehydration_ phase.
-    ///
-    /// This usually implies the Event Stream for the Aggregate
-    /// contains corrupted or unexpected data.
-    #[error("failed to rehydrate aggregate from event stream: {0}")]
-    RehydrateAggregate(#[source] E),
-
-    /// This error is returned by [`EventSourcedRepository::get`] when the
-    /// [Event Store][`event::Store`] used by the Repository returns
-    /// an unexpected error while streaming back the Aggregate's Event Stream.
-    #[error("event store failed while streaming events: {0}")]
-    StreamFromStore(#[source] SE),
-
-    /// This error is returned by [`EventSourcedRepository::store`] when
-    /// the [Event Store][`event::Store`] used by the Repository returns
-    /// an error while saving the uncommitted Domain Events
-    /// to the Aggregate's Event Stream.
-    #[error("event store failed while appending events: {0}")]
-    AppendToStore(#[source] AE),
-}
-
-/// An Event-sourced implementation of the [Repository] interface.
-///
-/// It uses an [Event Store][`event::Store`] instance to stream Domain Events
-/// for a particular Aggregate, and append uncommitted Domain Events
-/// recorded by an Aggregate Root.
-#[derive(Debug, Clone)]
-pub struct EventSourcedRepository<T, R, S>
-where
-    T: Aggregate,
-    R: Root<T>,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
-{
-    store: S,
-    aggregate: PhantomData<T>,
-    aggregate_root: PhantomData<R>,
-}
-
-impl<T, R, S> From<S> for EventSourcedRepository<T, R, S>
-where
-    T: Aggregate,
-    R: Root<T>,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
-{
-    fn from(store: S) -> Self {
-        Self {
-            store,
-            aggregate: PhantomData,
-            aggregate_root: PhantomData,
-        }
-    }
-}
-
-#[async_trait]
-impl<T, R, S> Repository<T, R> for EventSourcedRepository<T, R, S>
-where
-    T: Aggregate,
-    T::Id: Clone,
-    T::Error: Debug,
-    R: Root<T>,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
-{
-    type Error = EventSourcedRepositoryError<T::Error, S::StreamError, S::AppendError>;
-
-    async fn get(&self, id: &T::Id) -> Result<R, Self::Error> {
-        let ctx = self
-            .store
-            .stream(id, event::VersionSelect::All)
-            .map_ok(|persisted| persisted.event)
-            .map_err(EventSourcedRepositoryError::StreamFromStore)
-            .try_fold(None, |ctx: Option<Context<T>>, event| async {
-                let new_ctx_result = match ctx {
-                    None => Context::rehydrate_from(event),
-                    Some(ctx) => ctx.apply_rehydrated_event(event),
-                };
-
-                let new_ctx =
-                    new_ctx_result.map_err(EventSourcedRepositoryError::RehydrateAggregate)?;
-
-                Ok(Some(new_ctx))
-            })
-            .await?;
-
-        ctx.ok_or(EventSourcedRepositoryError::AggregateRootNotFound)
-            .map(R::from)
-    }
-
-    async fn store(&self, root: &mut R) -> Result<(), Self::Error> {
-        let events_to_commit = root.ctx_mut().take_uncommitted_events();
-        let aggregate_id = root.aggregate_id();
-
-        if events_to_commit.is_empty() {
-            return Ok(());
-        }
-
-        let current_event_stream_version = root.ctx().version - (events_to_commit.len() as Version);
-
-        let new_version = self
-            .store
-            .append(
-                aggregate_id.clone(),
-                event::StreamVersionExpected::MustBe(current_event_stream_version),
-                events_to_commit,
-            )
-            .await
-            .map_err(EventSourcedRepositoryError::AppendToStore)?;
-
-        root.ctx_mut().version = new_version;
-
-        Ok(())
-    }
 }
 
 // The warnings are happening due to usage of the methods only inside #[cfg(test)]
@@ -459,7 +119,7 @@ pub(crate) mod test_user_domain {
         type Event = UserEvent;
         type Error = UserError;
 
-        fn id(&self) -> &Self::Id {
+        fn aggregate_id(&self) -> &Self::Id {
             &self.email
         }
 
@@ -513,9 +173,9 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            Ok(UserRoot::from(aggregate::Context::record_new(
-                event::Envelope::from(UserEvent::WasCreated { email, password }),
-            )?))
+            Ok(UserRoot::record_new(event::Envelope::from(
+                UserEvent::WasCreated { email, password },
+            ))?)
         }
 
         pub(crate) fn change_password(&mut self, password: String) -> Result<(), UserError> {
@@ -523,10 +183,9 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            self.ctx_mut()
-                .record_that(event::Envelope::from(UserEvent::PasswordWasChanged {
-                    password,
-                }))?;
+            self.record_that(event::Envelope::from(UserEvent::PasswordWasChanged {
+                password,
+            }))?;
 
             Ok(())
         }
