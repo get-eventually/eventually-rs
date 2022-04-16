@@ -1,10 +1,12 @@
-use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-use crate::metadata::Metadata;
+use serde::{Deserialize, Serialize};
 
 pub trait Message {
     fn name(&self) -> &'static str;
 }
+
+pub type Metadata = HashMap<String, String>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Envelope<T>
@@ -20,11 +22,11 @@ where
     T: Message,
 {
     #[must_use]
-    pub fn with_metadata<F>(mut self, f: F) -> Self
+    pub fn and_metadata<F>(mut self, f: F) -> Self
     where
-        F: Fn(Metadata) -> Metadata,
+        F: Fn(&mut Metadata),
     {
-        self.metadata = f(self.metadata);
+        f(&mut self.metadata);
         self
     }
 }
@@ -70,10 +72,9 @@ pub(crate) mod tests {
             metadata: Metadata::default(),
         };
 
-        let new_message = message.clone().with_metadata(|metadata| {
-            metadata
-                .add_string("hello_world".to_owned(), "test".to_owned())
-                .add_integer("test_number".to_owned(), 1)
+        let new_message = message.clone().and_metadata(|m| {
+            m.insert("hello_world".to_owned(), "test".to_owned());
+            m.insert("test_number".to_owned(), 1.to_string());
         });
 
         println!("Message: {:?}", message);
