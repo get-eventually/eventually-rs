@@ -3,7 +3,7 @@ use std::{
     collections::HashMap,
 };
 
-use eventually::{aggregate, aggregate::Root, event, message};
+use eventually::{aggregate, aggregate::Root as AggregateRoot, event, message};
 use rust_decimal::Decimal;
 
 pub type TransactionId = String;
@@ -101,7 +101,7 @@ impl aggregate::Aggregate for BankAccount {
     type Event = BankAccountEvent;
     type Error = BankAccountError;
 
-    fn id(&self) -> &Self::Id {
+    fn aggregate_id(&self) -> &Self::Id {
         &self.id
     }
 
@@ -167,6 +167,8 @@ impl aggregate::Aggregate for BankAccount {
 #[derive(Debug, Clone)]
 pub struct BankAccountRoot(aggregate::Context<BankAccount>);
 
+impl AggregateRoot<BankAccount> for BankAccountRoot {}
+
 impl From<aggregate::Context<BankAccount>> for BankAccountRoot {
     fn from(context: aggregate::Context<BankAccount>) -> Self {
         Self(context)
@@ -185,8 +187,6 @@ impl BorrowMut<aggregate::Context<BankAccount>> for BankAccountRoot {
     }
 }
 
-impl Root<BankAccount> for BankAccountRoot {}
-
 impl BankAccountRoot {
     pub fn open(
         id: BankAccountId,
@@ -201,17 +201,17 @@ impl BankAccountRoot {
             return Err(BankAccountError::EmptyAccountHolderId);
         }
 
-        Ok(BankAccountRoot::from(aggregate::Context::record_new(
-            event::Envelope::from(BankAccountEvent::WasOpened {
+        Ok(BankAccountRoot::record_new(event::Envelope::from(
+            BankAccountEvent::WasOpened {
                 id,
                 account_holder_id,
                 initial_balance: opening_balance,
-            }),
-        )?))
+            },
+        ))?)
     }
 
     pub fn deposit(&mut self, money: Decimal) -> Result<(), BankAccountError> {
-        if self.ctx().aggregate().is_closed {
+        if self.state().is_closed {
             return Err(BankAccountError::Closed);
         }
 
@@ -223,7 +223,7 @@ impl BankAccountRoot {
             return Err(BankAccountError::NoMoneyDeposited);
         }
 
-        self.ctx_mut().record_that(event::Envelope::from(
+        self.record_that(event::Envelope::from(
             BankAccountEvent::DepositWasRecorded { amount: money },
         ))
     }
@@ -233,7 +233,7 @@ impl BankAccountRoot {
         mut transaction: Transaction,
         message: Option<String>,
     ) -> Result<(), BankAccountError> {
-        if self.ctx().aggregate().is_closed {
+        if self.state().is_closed {
             return Err(BankAccountError::Closed);
         }
 
@@ -243,13 +243,12 @@ impl BankAccountRoot {
             transaction.amount.set_sign_positive(true);
         }
 
-        if self.ctx().aggregate().current_balance < transaction.amount {
+        if self.state().current_balance < transaction.amount {
             return Err(BankAccountError::InsufficientFunds);
         }
 
         let transaction_already_pending = self
-            .ctx()
-            .aggregate()
+            .state()
             .pending_transactions
             .get(&transaction.id)
             .is_some();
@@ -258,11 +257,10 @@ impl BankAccountRoot {
             return Ok(());
         }
 
-        self.ctx_mut()
-            .record_that(event::Envelope::from(BankAccountEvent::TransferWasSent {
-                message,
-                transaction,
-            }))
+        self.record_that(event::Envelope::from(BankAccountEvent::TransferWasSent {
+            message,
+            transaction,
+        }))
     }
 
     pub fn receive_transfer(
@@ -270,17 +268,17 @@ impl BankAccountRoot {
         transaction: Transaction,
         message: Option<String>,
     ) -> Result<(), BankAccountError> {
-        if self.ctx().aggregate().is_closed {
+        if self.state().is_closed {
             return Err(BankAccountError::Closed);
         }
 
-        if self.ctx().aggregate().id != transaction.beneficiary_account_id {
+        if self.state().id != transaction.beneficiary_account_id {
             return Err(BankAccountError::WrongTransactionRecipient(
                 transaction.beneficiary_account_id,
             ));
         }
 
-        self.ctx_mut().record_that(event::Envelope::from(
+        self.record_that(event::Envelope::from(
             BankAccountEvent::TransferWasReceived {
                 transaction,
                 message,
@@ -293,8 +291,7 @@ impl BankAccountRoot {
         transaction_id: TransactionId,
     ) -> Result<(), BankAccountError> {
         let is_transaction_recorded = self
-            .ctx()
-            .aggregate()
+            .state()
             .pending_transactions
             .get(&transaction_id)
             .is_some();
@@ -303,29 +300,27 @@ impl BankAccountRoot {
             // TODO: return error
         }
 
-        self.ctx_mut().record_that(event::Envelope::from(
+        self.record_that(event::Envelope::from(
             BankAccountEvent::TransferWasConfirmed { transaction_id },
         ))
     }
 
     pub fn close(&mut self) -> Result<(), BankAccountError> {
-        if self.ctx().aggregate().is_closed {
+        if self.state().is_closed {
             return Err(BankAccountError::AlreadyClosed);
         }
 
-        self.ctx_mut()
-            .record_that(event::Envelope::from(BankAccountEvent::WasClosed))
+        self.record_that(event::Envelope::from(BankAccountEvent::WasClosed))
     }
 
     pub fn reopen(&mut self, reopening_balance: Option<Decimal>) -> Result<(), BankAccountError> {
-        if !self.ctx().aggregate().is_closed {
+        if !self.state().is_closed {
             return Err(BankAccountError::AlreadyOpened);
         }
 
-        self.ctx_mut()
-            .record_that(event::Envelope::from(BankAccountEvent::WasReopened {
-                reopening_balance,
-            }))
+        self.record_that(event::Envelope::from(BankAccountEvent::WasReopened {
+            reopening_balance,
+        }))
     }
 }
 
