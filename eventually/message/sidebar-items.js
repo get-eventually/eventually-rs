@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Envelope",""]],"trait":[["Message",""]]});
+initSidebarItems({"struct":[["Envelope",""]],"trait":[["Message",""]],"type":[["Metadata",""]]});

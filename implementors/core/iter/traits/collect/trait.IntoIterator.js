@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["eventually"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.60.0/core/iter/traits/collect/trait.IntoIterator.html\" title=\"trait core::iter::traits::collect::IntoIterator\">IntoIterator</a> for <a class=\"struct\" href=\"eventually/metadata/struct.Metadata.html\" title=\"struct eventually::metadata::Metadata\">Metadata</a>","synthetic":false,"types":["eventually::metadata::Metadata"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
