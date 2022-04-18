@@ -160,156 +160,16 @@ mod test {
 
     #[tokio::test]
     async fn open_bank_account_works_when_bank_account_has_just_been_opened_for_the_first_time() {
-        test::command_handler::Scenario::when(
-            application::OpenBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                bank_account_holder_id: "dani".to_owned(),
-                opening_balance: Some(Decimal::new(1000, 2)), // 10,00
-            }
-            .into(),
-        )
-        .then(vec![event::Persisted {
-            stream_id: "account-test".to_owned(),
-            version: 1,
-            event: event::Envelope::from(BankAccountEvent::WasOpened {
-                id: "account-test".to_owned(),
-                account_holder_id: "dani".to_owned(),
-                initial_balance: Some(Decimal::new(1000, 2)),
-            }),
-        }])
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn open_bank_account_fails_if_the_account_already_exists() {
-        test::command_handler::Scenario::given(vec![event::Persisted {
-            stream_id: "account-test".to_owned(),
-            version: 1,
-            event: event::Envelope::from(BankAccountEvent::WasOpened {
-                id: "account-test".to_owned(),
-                account_holder_id: "dani".to_owned(),
-                initial_balance: Some(Decimal::new(1000, 2)),
-            }),
-        }])
-        .when(
-            application::OpenBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                bank_account_holder_id: "dani".to_owned(),
-                opening_balance: Some(Decimal::new(1000, 2)), // 10,00
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn deposit_money_fails_on_unexisting_bank_account() {
-        test::command_handler::Scenario::when(
-            application::DepositInBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                amount: Decimal::new(2000, 2), // 20,00
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn deposit_money_on_existing_bank_account_works_when_amount_is_positive() {
-        test::command_handler::Scenario::given(vec![event::Persisted {
-            stream_id: "account-test".to_owned(),
-            version: 1,
-            event: event::Envelope::from(BankAccountEvent::WasOpened {
-                id: "account-test".to_owned(),
-                account_holder_id: "dani".to_owned(),
-                initial_balance: Some(Decimal::new(1000, 2)),
-            }),
-        }])
-        .when(
-            application::DepositInBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                amount: Decimal::new(2000, 2), // 20,00
-            }
-            .into(),
-        )
-        .then(vec![event::Persisted {
-            stream_id: "account-test".to_owned(),
-            version: 2,
-            event: event::Envelope::from(BankAccountEvent::DepositWasRecorded {
-                amount: Decimal::new(2000, 2), // 20,00
-            }),
-        }])
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn deposit_money_on_existing_bank_account_fails_when_amount_is_negative() {
-        test::command_handler::Scenario::given(vec![event::Persisted {
-            stream_id: "account-test".to_owned(),
-            version: 1,
-            event: event::Envelope::from(BankAccountEvent::WasOpened {
-                id: "account-test".to_owned(),
-                account_holder_id: "dani".to_owned(),
-                initial_balance: Some(Decimal::new(1000, 2)),
-            }),
-        }])
-        .when(
-            application::DepositInBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                amount: Decimal::new(-2000, 2), // -20,00
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn deposit_money_with_zero_amount_in_open_bank_account_fails() {
-        test::command_handler::Scenario::given(vec![event::Persisted {
-            stream_id: "account-test".to_owned(),
-            version: 1,
-            event: event::Envelope::from(BankAccountEvent::WasOpened {
-                id: "account-test".to_owned(),
-                account_holder_id: "dani".to_owned(),
-                initial_balance: Some(Decimal::new(1000, 2)),
-            }),
-        }])
-        .when(
-            application::DepositInBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                amount: Decimal::new(0, 0),
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn deposit_money_on_existing_bank_account_fails_when_account_is_closed() {
-        test::command_handler::Scenario::given(vec![
-            event::Persisted {
+        test::command_handler::Scenario
+            .when(
+                application::OpenBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    bank_account_holder_id: "dani".to_owned(),
+                    opening_balance: Some(Decimal::new(1000, 2)), // 10,00
+                }
+                .into(),
+            )
+            .then(vec![event::Persisted {
                 stream_id: "account-test".to_owned(),
                 version: 1,
                 event: event::Envelope::from(BankAccountEvent::WasOpened {
@@ -317,138 +177,288 @@ mod test {
                     account_holder_id: "dani".to_owned(),
                     initial_balance: Some(Decimal::new(1000, 2)),
                 }),
-            },
-            event::Persisted {
+            }])
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn open_bank_account_fails_if_the_account_already_exists() {
+        test::command_handler::Scenario
+            .given(vec![event::Persisted {
+                stream_id: "account-test".to_owned(),
+                version: 1,
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
+                    id: "account-test".to_owned(),
+                    account_holder_id: "dani".to_owned(),
+                    initial_balance: Some(Decimal::new(1000, 2)),
+                }),
+            }])
+            .when(
+                application::OpenBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    bank_account_holder_id: "dani".to_owned(),
+                    opening_balance: Some(Decimal::new(1000, 2)), // 10,00
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn deposit_money_fails_on_unexisting_bank_account() {
+        test::command_handler::Scenario
+            .when(
+                application::DepositInBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    amount: Decimal::new(2000, 2), // 20,00
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn deposit_money_on_existing_bank_account_works_when_amount_is_positive() {
+        test::command_handler::Scenario
+            .given(vec![event::Persisted {
+                stream_id: "account-test".to_owned(),
+                version: 1,
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
+                    id: "account-test".to_owned(),
+                    account_holder_id: "dani".to_owned(),
+                    initial_balance: Some(Decimal::new(1000, 2)),
+                }),
+            }])
+            .when(
+                application::DepositInBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    amount: Decimal::new(2000, 2), // 20,00
+                }
+                .into(),
+            )
+            .then(vec![event::Persisted {
                 stream_id: "account-test".to_owned(),
                 version: 2,
-                event: event::Envelope::from(BankAccountEvent::WasClosed),
-            },
-        ])
-        .when(
-            application::DepositInBankAccount {
-                bank_account_id: "account-test".to_owned(),
-                amount: Decimal::new(2000, 2), // 20,00
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
+                event: event::Envelope::from(BankAccountEvent::DepositWasRecorded {
+                    amount: Decimal::new(2000, 2), // 20,00
+                }),
+            }])
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn deposit_money_on_existing_bank_account_fails_when_amount_is_negative() {
+        test::command_handler::Scenario
+            .given(vec![event::Persisted {
+                stream_id: "account-test".to_owned(),
+                version: 1,
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
+                    id: "account-test".to_owned(),
+                    account_holder_id: "dani".to_owned(),
+                    initial_balance: Some(Decimal::new(1000, 2)),
+                }),
+            }])
+            .when(
+                application::DepositInBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    amount: Decimal::new(-2000, 2), // -20,00
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn deposit_money_with_zero_amount_in_open_bank_account_fails() {
+        test::command_handler::Scenario
+            .given(vec![event::Persisted {
+                stream_id: "account-test".to_owned(),
+                version: 1,
+                event: event::Envelope::from(BankAccountEvent::WasOpened {
+                    id: "account-test".to_owned(),
+                    account_holder_id: "dani".to_owned(),
+                    initial_balance: Some(Decimal::new(1000, 2)),
+                }),
+            }])
+            .when(
+                application::DepositInBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    amount: Decimal::new(0, 0),
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn deposit_money_on_existing_bank_account_fails_when_account_is_closed() {
+        test::command_handler::Scenario
+            .given(vec![
+                event::Persisted {
+                    stream_id: "account-test".to_owned(),
+                    version: 1,
+                    event: event::Envelope::from(BankAccountEvent::WasOpened {
+                        id: "account-test".to_owned(),
+                        account_holder_id: "dani".to_owned(),
+                        initial_balance: Some(Decimal::new(1000, 2)),
+                    }),
+                },
+                event::Persisted {
+                    stream_id: "account-test".to_owned(),
+                    version: 2,
+                    event: event::Envelope::from(BankAccountEvent::WasClosed),
+                },
+            ])
+            .when(
+                application::DepositInBankAccount {
+                    bank_account_id: "account-test".to_owned(),
+                    amount: Decimal::new(2000, 2), // 20,00
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
     }
 
     #[tokio::test]
     async fn send_transfer_fails_if_bank_account_does_not_exist() {
-        test::command_handler::Scenario::when(
-            application::SendTransferToBankAccount {
-                bank_account_id: "sender".to_owned(),
-                transaction: Transaction {
-                    id: "transaction".to_owned(),
-                    beneficiary_account_id: "receiver".to_owned(),
-                    amount: Decimal::new(2000, 2),
-                },
-                message: None,
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
+        test::command_handler::Scenario
+            .when(
+                application::SendTransferToBankAccount {
+                    bank_account_id: "sender".to_owned(),
+                    transaction: Transaction {
+                        id: "transaction".to_owned(),
+                        beneficiary_account_id: "receiver".to_owned(),
+                        amount: Decimal::new(2000, 2),
+                    },
+                    message: None,
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
     }
 
     #[tokio::test]
     async fn send_transfer_fails_if_bank_account_does_not_have_sufficient_funds() {
-        test::command_handler::Scenario::given(vec![
-            event::Persisted {
-                stream_id: "sender".to_owned(),
-                version: 1,
-                event: event::Envelope::from(BankAccountEvent::WasOpened {
-                    id: "sender".to_owned(),
-                    account_holder_id: "sender-name".to_owned(),
-                    initial_balance: Some(Decimal::new(1_000, 0)),
-                }),
-            },
-            event::Persisted {
-                stream_id: "receiver".to_owned(),
-                version: 1,
-                event: event::Envelope::from(BankAccountEvent::WasOpened {
-                    id: "receiver".to_owned(),
-                    account_holder_id: "receiver-name".to_owned(),
-                    initial_balance: None,
-                }),
-            },
-        ])
-        .when(
-            application::SendTransferToBankAccount {
-                bank_account_id: "sender".to_owned(),
-                transaction: Transaction {
-                    id: "transaction".to_owned(),
-                    beneficiary_account_id: "receiver".to_owned(),
-                    amount: Decimal::new(2_000, 0),
+        test::command_handler::Scenario
+            .given(vec![
+                event::Persisted {
+                    stream_id: "sender".to_owned(),
+                    version: 1,
+                    event: event::Envelope::from(BankAccountEvent::WasOpened {
+                        id: "sender".to_owned(),
+                        account_holder_id: "sender-name".to_owned(),
+                        initial_balance: Some(Decimal::new(1_000, 0)),
+                    }),
                 },
-                message: None,
-            }
-            .into(),
-        )
-        .then_fails()
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
+                event::Persisted {
+                    stream_id: "receiver".to_owned(),
+                    version: 1,
+                    event: event::Envelope::from(BankAccountEvent::WasOpened {
+                        id: "receiver".to_owned(),
+                        account_holder_id: "receiver-name".to_owned(),
+                        initial_balance: None,
+                    }),
+                },
+            ])
+            .when(
+                application::SendTransferToBankAccount {
+                    bank_account_id: "sender".to_owned(),
+                    transaction: Transaction {
+                        id: "transaction".to_owned(),
+                        beneficiary_account_id: "receiver".to_owned(),
+                        amount: Decimal::new(2_000, 0),
+                    },
+                    message: None,
+                }
+                .into(),
+            )
+            .then_fails()
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
     }
 
     #[tokio::test]
     async fn send_transfer_works_if_bank_account_has_sufficient_funds() {
-        test::command_handler::Scenario::given(vec![
-            event::Persisted {
+        test::command_handler::Scenario
+            .given(vec![
+                event::Persisted {
+                    stream_id: "sender".to_owned(),
+                    version: 1,
+                    event: event::Envelope::from(BankAccountEvent::WasOpened {
+                        id: "sender".to_owned(),
+                        account_holder_id: "sender-name".to_owned(),
+                        initial_balance: Some(Decimal::new(1_000, 0)),
+                    }),
+                },
+                event::Persisted {
+                    stream_id: "receiver".to_owned(),
+                    version: 1,
+                    event: event::Envelope::from(BankAccountEvent::WasOpened {
+                        id: "receiver".to_owned(),
+                        account_holder_id: "receiver-name".to_owned(),
+                        initial_balance: None,
+                    }),
+                },
+            ])
+            .when(
+                application::SendTransferToBankAccount {
+                    bank_account_id: "sender".to_owned(),
+                    transaction: Transaction {
+                        id: "transaction".to_owned(),
+                        beneficiary_account_id: "receiver".to_owned(),
+                        amount: Decimal::new(500, 0),
+                    },
+                    message: None,
+                }
+                .into(),
+            )
+            .then(vec![event::Persisted {
                 stream_id: "sender".to_owned(),
-                version: 1,
-                event: event::Envelope::from(BankAccountEvent::WasOpened {
-                    id: "sender".to_owned(),
-                    account_holder_id: "sender-name".to_owned(),
-                    initial_balance: Some(Decimal::new(1_000, 0)),
+                version: 2,
+                event: event::Envelope::from(BankAccountEvent::TransferWasSent {
+                    transaction: Transaction {
+                        id: "transaction".to_owned(),
+                        beneficiary_account_id: "receiver".to_owned(),
+                        amount: Decimal::new(500, 0),
+                    },
+                    message: None,
                 }),
-            },
-            event::Persisted {
-                stream_id: "receiver".to_owned(),
-                version: 1,
-                event: event::Envelope::from(BankAccountEvent::WasOpened {
-                    id: "receiver".to_owned(),
-                    account_holder_id: "receiver-name".to_owned(),
-                    initial_balance: None,
-                }),
-            },
-        ])
-        .when(
-            application::SendTransferToBankAccount {
-                bank_account_id: "sender".to_owned(),
-                transaction: Transaction {
-                    id: "transaction".to_owned(),
-                    beneficiary_account_id: "receiver".to_owned(),
-                    amount: Decimal::new(500, 0),
-                },
-                message: None,
-            }
-            .into(),
-        )
-        .then(vec![event::Persisted {
-            stream_id: "sender".to_owned(),
-            version: 2,
-            event: event::Envelope::from(BankAccountEvent::TransferWasSent {
-                transaction: Transaction {
-                    id: "transaction".to_owned(),
-                    beneficiary_account_id: "receiver".to_owned(),
-                    amount: Decimal::new(500, 0),
-                },
-                message: None,
-            }),
-        }])
-        .assert_on(|event_store| application::Service {
-            bank_account_repository: BankAccountRepository::from(event_store),
-        })
-        .await;
+            }])
+            .assert_on(|event_store| application::Service {
+                bank_account_repository: BankAccountRepository::from(event_store),
+            })
+            .await;
     }
 }

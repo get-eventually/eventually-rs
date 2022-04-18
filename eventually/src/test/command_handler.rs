@@ -13,7 +13,7 @@ impl Scenario {
     /// Sets the precondition state of the system for the [Scenario], which
     /// is expressed by a list of Domain [Event]s in an Event-sourced system.
     #[must_use]
-    pub fn given<Id, Evt>(events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt>
+    pub fn given<Id, Evt>(self, events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt>
     where
         Evt: message::Message,
     {
@@ -28,7 +28,7 @@ impl Scenario {
     /// Scenario::given(vec![]).when(...)
     /// ```
     #[must_use]
-    pub fn when<Id, Evt, Cmd>(command: command::Envelope<Cmd>) -> ScenarioWhen<Id, Evt, Cmd>
+    pub fn when<Id, Evt, Cmd>(self, command: command::Envelope<Cmd>) -> ScenarioWhen<Id, Evt, Cmd>
     where
         Evt: message::Message,
         Cmd: message::Message,
