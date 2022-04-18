@@ -228,6 +228,10 @@
 <span id="223">223</span>
 <span id="224">224</span>
 <span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for Domain [Command]s.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Following the Domain-driven Design definition, a [Command] expresses the</span>
@@ -374,83 +378,87 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_creates_a_new_user_successfully</span>() {
-        <span class="ident">test::command_handler::Scenario::when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">CreateUser</span> {
-            <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
-        }))
-        .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">CreateUser</span> {
                 <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
-            }),
-        }])
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-            <span class="ident">CreateUserHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
-        })
-        .<span class="kw">await</span>;
+            }))
+            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
+                    <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+                }),
+            }])
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
+                <span class="ident">CreateUserHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            })
+            .<span class="kw">await</span>;
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_fails_to_create_an_user_if_it_still_exists</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
+                    <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+                }),
+            }])
+            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">CreateUser</span> {
                 <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
-            }),
-        }])
-        .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">CreateUser</span> {
-            <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
-        }))
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-            <span class="ident">CreateUserHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
-        })
-        .<span class="kw">await</span>;
+            }))
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
+                <span class="ident">CreateUserHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            })
+            .<span class="kw">await</span>;
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_updates_the_password_of_an_existing_user</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
+                    <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+                }),
+            }])
+            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">ChangeUserPassword</span> {
                 <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
-            }),
-        }])
-        .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">ChangeUserPassword</span> {
-            <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
-        }))
-        .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">2</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
                 <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
-            }),
-        }])
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-            <span class="ident">ChangeUserPasswordHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
-        })
-        .<span class="kw">await</span>;
+            }))
+            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">2</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
+                    <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
+                }),
+            }])
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
+                <span class="ident">ChangeUserPasswordHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            })
+            .<span class="kw">await</span>;
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_fails_to_update_the_password_if_the_user_does_not_exist</span>() {
-        <span class="ident">test::command_handler::Scenario::when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">ChangeUserPassword</span> {
-            <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
-        }))
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-            <span class="ident">ChangeUserPasswordHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
-        })
-        .<span class="kw">await</span>;
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">ChangeUserPassword</span> {
+                <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
+            }))
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
+                <span class="ident">ChangeUserPasswordHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            })
+            .<span class="kw">await</span>;
     }
 }
 </code></pre></div>

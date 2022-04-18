@@ -184,7 +184,7 @@
     <span class="doccomment">/// Sets the precondition state of the system for the [Scenario], which</span>
     <span class="doccomment">/// is expressed by a list of Domain [Event]s in an Event-sourced system.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">given</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>(<span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioGiven</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">given</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioGiven</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
     {
@@ -199,7 +199,7 @@
     <span class="doccomment">/// Scenario::given(vec![]).when(...)</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">when</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>(<span class="ident">command</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioWhen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">when</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">command</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioWhen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
         <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,

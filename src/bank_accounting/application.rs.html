@@ -457,6 +457,16 @@
 <span id="452">452</span>
 <span id="453">453</span>
 <span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>;
 
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
@@ -619,156 +629,16 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account_works_when_bank_account_has_just_been_opened_for_the_first_time</span>() {
-        <span class="ident">test::command_handler::Scenario::when</span>(
-            <span class="ident">application::OpenBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">bank_account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">opening_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)), <span class="comment">// 10,00</span>
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-            }),
-        }])
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account_fails_if_the_account_already_exists</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-            }),
-        }])
-        .<span class="ident">when</span>(
-            <span class="ident">application::OpenBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">bank_account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">opening_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)), <span class="comment">// 10,00</span>
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_fails_on_unexisting_bank_account</span>() {
-        <span class="ident">test::command_handler::Scenario::when</span>(
-            <span class="ident">application::DepositInBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_works_when_amount_is_positive</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-            }),
-        }])
-        .<span class="ident">when</span>(
-            <span class="ident">application::DepositInBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">2</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::DepositWasRecorded</span> {
-                <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
-            }),
-        }])
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_fails_when_amount_is_negative</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-            }),
-        }])
-        .<span class="ident">when</span>(
-            <span class="ident">application::DepositInBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="op">-</span><span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// -20,00</span>
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_with_zero_amount_in_open_bank_account_fails</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-            }),
-        }])
-        .<span class="ident">when</span>(
-            <span class="ident">application::DepositInBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">0</span>, <span class="number">0</span>),
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
-    }
-
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_fails_when_account_is_closed</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[
-            <span class="ident">event::Persisted</span> {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">when</span>(
+                <span class="ident">application::OpenBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">bank_account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">opening_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)), <span class="comment">// 10,00</span>
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">1</span>,
                 <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
@@ -776,139 +646,289 @@
                     <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
                 }),
-            },
-            <span class="ident">event::Persisted</span> {
+            }])
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account_fails_if_the_account_already_exists</span>() {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
+                }),
+            }])
+            .<span class="ident">when</span>(
+                <span class="ident">application::OpenBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">bank_account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">opening_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)), <span class="comment">// 10,00</span>
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_fails_on_unexisting_bank_account</span>() {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">when</span>(
+                <span class="ident">application::DepositInBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_works_when_amount_is_positive</span>() {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
+                }),
+            }])
+            .<span class="ident">when</span>(
+                <span class="ident">application::DepositInBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">2</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasClosed</span>),
-            },
-        ])
-        .<span class="ident">when</span>(
-            <span class="ident">application::DepositInBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::DepositWasRecorded</span> {
+                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
+                }),
+            }])
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_fails_when_amount_is_negative</span>() {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
+                }),
+            }])
+            .<span class="ident">when</span>(
+                <span class="ident">application::DepositInBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="op">-</span><span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// -20,00</span>
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_with_zero_amount_in_open_bank_account_fails</span>() {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
+                <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">version</span>: <span class="number">1</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
+                }),
+            }])
+            .<span class="ident">when</span>(
+                <span class="ident">application::DepositInBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">0</span>, <span class="number">0</span>),
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_fails_when_account_is_closed</span>() {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[
+                <span class="ident">event::Persisted</span> {
+                    <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">version</span>: <span class="number">1</span>,
+                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
+                    }),
+                },
+                <span class="ident">event::Persisted</span> {
+                    <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">version</span>: <span class="number">2</span>,
+                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasClosed</span>),
+                },
+            ])
+            .<span class="ident">when</span>(
+                <span class="ident">application::DepositInBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer_fails_if_bank_account_does_not_exist</span>() {
-        <span class="ident">test::command_handler::Scenario::when</span>(
-            <span class="ident">application::SendTransferToBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>),
-                },
-                <span class="ident">message</span>: <span class="prelude-val">None</span>,
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">when</span>(
+                <span class="ident">application::SendTransferToBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>),
+                    },
+                    <span class="ident">message</span>: <span class="prelude-val">None</span>,
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer_fails_if_bank_account_does_not_have_sufficient_funds</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[
-            <span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">account_holder_id</span>: <span class="string">&quot;sender-name&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1_000</span>, <span class="number">0</span>)),
-                }),
-            },
-            <span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">account_holder_id</span>: <span class="string">&quot;receiver-name&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">initial_balance</span>: <span class="prelude-val">None</span>,
-                }),
-            },
-        ])
-        .<span class="ident">when</span>(
-            <span class="ident">application::SendTransferToBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2_000</span>, <span class="number">0</span>),
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[
+                <span class="ident">event::Persisted</span> {
+                    <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">version</span>: <span class="number">1</span>,
+                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">account_holder_id</span>: <span class="string">&quot;sender-name&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1_000</span>, <span class="number">0</span>)),
+                    }),
                 },
-                <span class="ident">message</span>: <span class="prelude-val">None</span>,
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then_fails</span>()
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
+                <span class="ident">event::Persisted</span> {
+                    <span class="ident">stream_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">version</span>: <span class="number">1</span>,
+                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">account_holder_id</span>: <span class="string">&quot;receiver-name&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">initial_balance</span>: <span class="prelude-val">None</span>,
+                    }),
+                },
+            ])
+            .<span class="ident">when</span>(
+                <span class="ident">application::SendTransferToBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2_000</span>, <span class="number">0</span>),
+                    },
+                    <span class="ident">message</span>: <span class="prelude-val">None</span>,
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then_fails</span>()
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer_works_if_bank_account_has_sufficient_funds</span>() {
-        <span class="ident">test::command_handler::Scenario::given</span>(<span class="macro">vec!</span>[
-            <span class="ident">event::Persisted</span> {
+        <span class="ident">test::command_handler::Scenario</span>
+            .<span class="ident">given</span>(<span class="macro">vec!</span>[
+                <span class="ident">event::Persisted</span> {
+                    <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">version</span>: <span class="number">1</span>,
+                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">account_holder_id</span>: <span class="string">&quot;sender-name&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1_000</span>, <span class="number">0</span>)),
+                    }),
+                },
+                <span class="ident">event::Persisted</span> {
+                    <span class="ident">stream_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">version</span>: <span class="number">1</span>,
+                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">account_holder_id</span>: <span class="string">&quot;receiver-name&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">initial_balance</span>: <span class="prelude-val">None</span>,
+                    }),
+                },
+            ])
+            .<span class="ident">when</span>(
+                <span class="ident">application::SendTransferToBankAccount</span> {
+                    <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
+                    <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">500</span>, <span class="number">0</span>),
+                    },
+                    <span class="ident">message</span>: <span class="prelude-val">None</span>,
+                }
+                .<span class="ident">into</span>(),
+            )
+            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">account_holder_id</span>: <span class="string">&quot;sender-name&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1_000</span>, <span class="number">0</span>)),
+                <span class="ident">version</span>: <span class="number">2</span>,
+                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::TransferWasSent</span> {
+                    <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
+                        <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
+                        <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">500</span>, <span class="number">0</span>),
+                    },
+                    <span class="ident">message</span>: <span class="prelude-val">None</span>,
                 }),
-            },
-            <span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">account_holder_id</span>: <span class="string">&quot;receiver-name&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">initial_balance</span>: <span class="prelude-val">None</span>,
-                }),
-            },
-        ])
-        .<span class="ident">when</span>(
-            <span class="ident">application::SendTransferToBankAccount</span> {
-                <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">500</span>, <span class="number">0</span>),
-                },
-                <span class="ident">message</span>: <span class="prelude-val">None</span>,
-            }
-            .<span class="ident">into</span>(),
-        )
-        .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">version</span>: <span class="number">2</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::TransferWasSent</span> {
-                <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
-                    <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">500</span>, <span class="number">0</span>),
-                },
-                <span class="ident">message</span>: <span class="prelude-val">None</span>,
-            }),
-        }])
-        .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
-            <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
-        })
-        .<span class="kw">await</span>;
+            }])
+            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
+                <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
+            })
+            .<span class="kw">await</span>;
     }
 }
 </code></pre></div>
