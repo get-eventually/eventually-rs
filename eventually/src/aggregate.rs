@@ -47,7 +47,7 @@ pub use root::*;
 /// More on Aggregates can be found here: `<https://www.dddcommunity.org/library/vernon_2011/>`
 pub trait Aggregate: Sized + Send + Sync + Clone {
     /// The type used to uniquely identify the Aggregate.
-    type Id: Send + Sync;
+    type Id: ToString + Send + Sync;
 
     /// The type of Domain Events that interest this Aggregate.
     /// Usually, this type should be an `enum`.

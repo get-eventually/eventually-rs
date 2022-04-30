@@ -9,6 +9,19 @@ use crate::{
     version::Version,
 };
 
+#[derive(Debug, thiserror::Error)]
+pub enum RepositoryGetError<T> {
+    /// This error is retured by [`Repository::get`] when the
+    /// desired Aggregate [Root] could not be found in the data store.
+    #[error("aggregate root was not found")]
+    AggregateRootNotFound,
+
+    /// This error variant is returned for any other errors returned by a
+    /// [`Repository::get`].
+    #[error(transparent)]
+    Other(#[from] T),
+}
+
 /// A Repository is an object that allows to load and save
 /// an [Aggregate Root][Root] from and to a persistent data store.
 #[async_trait]
@@ -23,7 +36,7 @@ where
 
     /// Loads an Aggregate Root instance from the data store,
     /// referenced by its unique identifier.
-    async fn get(&self, id: &T::Id) -> Result<R, Self::Error>;
+    async fn get(&self, id: &T::Id) -> Result<R, RepositoryGetError<Self::Error>>;
 
     /// Stores a new version of an Aggregate Root instance to the data store.
     async fn store(&self, root: &mut R) -> Result<(), Self::Error>;
@@ -32,11 +45,6 @@ where
 /// List of possible errors that can be returned by an [`EventSourced`] method.
 #[derive(Debug, thiserror::Error)]
 pub enum EventSourcedError<E, SE, AE> {
-    /// This error is retured by [`EventSourced::get`] when the
-    /// desired Aggregate [Root] could not be found in the data store.
-    #[error("aggregate root was not found")]
-    AggregateRootNotFound,
-
     /// This error is returned by [`EventSourced::get`] when
     /// the desired [Aggregate] returns an error while applying a Domain Event
     /// from the Event [Store][`event::Store`] during the _rehydration_ phase.
@@ -103,7 +111,7 @@ where
 {
     type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
 
-    async fn get(&self, id: &T::Id) -> Result<R, Self::Error> {
+    async fn get(&self, id: &T::Id) -> Result<R, RepositoryGetError<Self::Error>> {
         let ctx = self
             .store
             .stream(id, event::VersionSelect::All)
@@ -121,7 +129,7 @@ where
             })
             .await?;
 
-        ctx.ok_or(EventSourcedError::AggregateRootNotFound)
+        ctx.ok_or(RepositoryGetError::AggregateRootNotFound)
             .map(R::from)
     }
 
