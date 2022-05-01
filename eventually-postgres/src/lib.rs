@@ -46,29 +46,23 @@
 //! [`eventually`]: https://docs.rs/eventually
 //! [`EventStore`]: struct.EventStore.html
 
-#[deny(
-    clippy::all,
-    missing_docs,
-    unsafe_code,
-    unused_qualifications,
-    trivial_casts
-)]
-pub mod store;
-pub mod subscriber;
-pub mod subscription;
+#![deny(unsafe_code, unused_qualifications, trivial_casts)]
+#![deny(clippy::all)]
+#![warn(clippy::pedantic)]
 
-pub use store::{EventStore, EventStoreBuilder};
-pub use subscriber::EventSubscriber;
-pub use subscription::PersistentBuilder;
+use sqlx::migrate::Migrator;
 
-use tokio_postgres::types::ToSql;
+pub mod repository;
+// pub mod store;
 
-/// Adapter type for parameters compatible with `tokio_postgres::Client`
-/// methods.
-pub(crate) type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
+pub static MIGRATIONS: Migrator = sqlx::migrate!("./migrations");
 
-#[inline]
-#[allow(trivial_casts)]
-pub(crate) fn slice_iter(s: Params) -> impl ExactSizeIterator<Item = &dyn ToSql> {
-    s.iter().map(|s| *s as _)
-}
+// /// Adapter type for parameters compatible with `tokio_postgres::Client`
+// /// methods.
+// pub(crate) type Params<'a> = &'a [&'a (dyn ToSql + Sync)];
+
+// #[inline]
+// #[allow(trivial_casts)]
+// pub(crate) fn slice_iter(s: Params) -> impl ExactSizeIterator<Item = &dyn ToSql> {
+//     s.iter().map(|s| *s as _)
+// }
