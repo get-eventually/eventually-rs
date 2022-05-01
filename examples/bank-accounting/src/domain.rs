@@ -170,7 +170,11 @@ impl aggregate::Aggregate for BankAccount {
 #[derive(Debug, Clone)]
 pub struct BankAccountRoot(aggregate::Context<BankAccount>);
 
-impl AggregateRoot<BankAccount> for BankAccountRoot {}
+impl AggregateRoot<BankAccount> for BankAccountRoot {
+    fn type_name() -> &'static str {
+        "BankAccount"
+    }
+}
 
 impl From<aggregate::Context<BankAccount>> for BankAccountRoot {
     fn from(context: aggregate::Context<BankAccount>) -> Self {

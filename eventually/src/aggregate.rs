@@ -161,7 +161,11 @@ pub(crate) mod test_user_domain {
         }
     }
 
-    impl Root<User> for UserRoot {}
+    impl Root<User> for UserRoot {
+        fn type_name() -> &'static str {
+            "User"
+        }
+    }
 
     impl UserRoot {
         pub(crate) fn create(email: String, password: String) -> Result<Self, UserError> {

@@ -128,6 +128,13 @@ pub trait Root<T>:
 where
     T: Aggregate,
 {
+    /// Specifies a human-readable name for the Aggregate Root type.
+    /// It usually follows the same name as the root Aggregate (e.g. "User", or "Order").
+    ///
+    /// The type name can be used by other components, such as Repositories,
+    /// to reference to resources related to this particular Aggregate Root type.
+    fn type_name() -> &'static str;
+
     /// Provides read access to an [Aggregate] [Root] [Context].
     #[doc(hidden)]
     fn ctx(&self) -> &Context<T> {
