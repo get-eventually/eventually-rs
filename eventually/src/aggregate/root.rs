@@ -23,6 +23,20 @@ impl<T> Context<T>
 where
     T: Aggregate,
 {
+    /// Returns a new [`Context`] instance from an [`Aggregate`] state
+    /// and a specific version.
+    ///
+    /// Useful for Repository implementations that work with the state of the
+    /// Aggregate Root directly, instead of being event-sourced.
+    #[doc(hidden)]
+    pub fn from_state(version: Version, state: T) -> Self {
+        Self {
+            aggregate: state,
+            version,
+            recorded_events: Vec::default(),
+        }
+    }
+
     /// Returns the current version for the [Aggregate].
     pub fn version(&self) -> Version {
         self.version
