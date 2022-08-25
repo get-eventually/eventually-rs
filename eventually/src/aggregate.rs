@@ -76,7 +76,7 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
 pub(crate) mod test_user_domain {
     use std::borrow::{Borrow, BorrowMut};
 
-    use crate::{aggregate, aggregate::Root, event, message};
+    use crate::{aggregate, aggregate::Root, message};
 
     #[derive(Debug, Clone)]
     pub(crate) struct User {
@@ -173,9 +173,9 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            Ok(UserRoot::record_new(event::Envelope::from(
-                UserEvent::WasCreated { email, password },
-            ))?)
+            Ok(UserRoot::record_new(
+                UserEvent::WasCreated { email, password }.into(),
+            )?)
         }
 
         pub(crate) fn change_password(&mut self, password: String) -> Result<(), UserError> {
@@ -183,9 +183,7 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            self.record_that(event::Envelope::from(UserEvent::PasswordWasChanged {
-                password,
-            }))?;
+            self.record_that(UserEvent::PasswordWasChanged { password }.into())?;
 
             Ok(())
         }
