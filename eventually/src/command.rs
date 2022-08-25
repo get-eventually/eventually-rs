@@ -11,6 +11,8 @@
 //!
 //! Check out the type documentation exported in this module.
 
+pub mod test;
+
 use std::future::Future;
 
 use async_trait::async_trait;
@@ -67,7 +69,7 @@ mod test_user_domain {
     use crate::{
         aggregate,
         aggregate::test_user_domain::{User, UserEvent, UserRoot},
-        command, event, message, test,
+        command, event, message,
     };
 
     struct CreateUser {
@@ -144,7 +146,7 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_creates_a_new_user_successfully() {
-        test::command_handler::Scenario
+        command::test::Scenario
             .when(command::Envelope::from(CreateUser {
                 email: "test@test.com".to_owned(),
                 password: "not-a-secret".to_owned(),
@@ -165,7 +167,7 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_fails_to_create_an_user_if_it_still_exists() {
-        test::command_handler::Scenario
+        command::test::Scenario
             .given(vec![event::Persisted {
                 stream_id: "test@test.com".to_owned(),
                 version: 1,
@@ -187,7 +189,7 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_updates_the_password_of_an_existing_user() {
-        test::command_handler::Scenario
+        command::test::Scenario
             .given(vec![event::Persisted {
                 stream_id: "test@test.com".to_owned(),
                 version: 1,
@@ -215,7 +217,7 @@ mod test_user_domain {
 
     #[tokio::test]
     async fn it_fails_to_update_the_password_if_the_user_does_not_exist() {
-        test::command_handler::Scenario
+        command::test::Scenario
             .when(command::Envelope::from(ChangeUserPassword {
                 email: "test@test.com".to_owned(),
                 password: "new-password".to_owned(),
