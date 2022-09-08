@@ -45,11 +45,6 @@
         <img alt="GitHub license"
         src="https://img.shields.io/github/license/eventually-rs/eventually-rs?style=flat-square">
     </a>
-    <!-- Discord -->
-    <a href="https://discord.gg/yww3mXHbRF">
-        <img alt="Discord"
-        src="https://img.shields.io/discord/803263157803417652?color=magenta&label=discord&style=flat-square">
-    </a>
 </div>
 
 <br />
