@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["DepositInBankAccount",""],["OpenBankAccount",""],["SendTransferToBankAccount",""],["Service",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["DepositInBankAccount",""],["OpenBankAccount",""],["SendTransferToBankAccount",""],["Service",""]]};

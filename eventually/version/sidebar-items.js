@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ConflictError",""]],"type":[["Version",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ConflictError",""]],"type":[["Version",""]]};

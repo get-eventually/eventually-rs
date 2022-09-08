@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Envelope",""]],"trait":[["Message",""]],"type":[["Metadata",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["Envelope",""]],"trait":[["Message",""]],"type":[["Metadata",""]]};

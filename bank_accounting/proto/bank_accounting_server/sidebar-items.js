@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["BankAccountingServer",""]],"trait":[["BankAccounting","Generated trait containing gRPC methods that should be implemented for use with BankAccountingServer."]]});
+window.SIDEBAR_ITEMS = {"struct":[["BankAccountingServer",""]],"trait":[["BankAccounting","Generated trait containing gRPC methods that should be implemented for use with BankAccountingServer."]]};

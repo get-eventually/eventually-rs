@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["InMemory",""],["Tracking",""]],"trait":[["EventStoreExt",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["InMemory",""],["Tracking",""]],"trait":[["EventStoreExt",""]]};
