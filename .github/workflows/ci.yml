@@ -10,10 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [msrv, stable, nightly]
+        build: [stable, nightly]
         include:
-          - build: msrv
-            toolchain: 1.56
           - build: stable
             toolchain: stable
           - build: nightly
