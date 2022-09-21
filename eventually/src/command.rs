@@ -68,7 +68,7 @@ mod test_user_domain {
 
     use crate::{
         aggregate,
-        aggregate::test_user_domain::{User, UserEvent, UserRoot},
+        aggregate::test_user_domain::{User, UserEvent},
         command, event, message,
     };
 
@@ -85,19 +85,19 @@ mod test_user_domain {
 
     struct CreateUserHandler<R>(R)
     where
-        R: aggregate::Repository<User, UserRoot>;
+        R: aggregate::Repository<User>;
 
     #[async_trait]
     impl<R> command::Handler<CreateUser> for CreateUserHandler<R>
     where
-        R: aggregate::Repository<User, UserRoot>,
+        R: aggregate::Repository<User>,
         R::Error: std::error::Error + Send + Sync + 'static,
     {
         type Error = anyhow::Error;
 
         async fn handle(&self, command: command::Envelope<CreateUser>) -> Result<(), Self::Error> {
             let command = command.message;
-            let mut user = UserRoot::create(command.email, command.password)?;
+            let mut user = aggregate::Root::<User>::create(command.email, command.password)?;
 
             self.0.store(&mut user).await?;
 
@@ -118,12 +118,12 @@ mod test_user_domain {
 
     struct ChangeUserPasswordHandler<R>(R)
     where
-        R: aggregate::Repository<User, UserRoot>;
+        R: aggregate::Repository<User>;
 
     #[async_trait]
     impl<R> command::Handler<ChangeUserPassword> for ChangeUserPasswordHandler<R>
     where
-        R: aggregate::Repository<User, UserRoot>,
+        R: aggregate::Repository<User>,
         R::Error: std::error::Error + Send + Sync + 'static,
     {
         type Error = anyhow::Error;

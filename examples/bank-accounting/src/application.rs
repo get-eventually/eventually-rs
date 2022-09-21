@@ -11,14 +11,14 @@ use crate::domain::{
 #[derive(Clone)]
 pub struct Service<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
 {
     bank_account_repository: R,
 }
 
 impl<R> From<R> for Service<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
 {
     fn from(bank_account_repository: R) -> Self {
         Self {
@@ -43,7 +43,7 @@ impl message::Message for OpenBankAccount {
 #[async_trait]
 impl<R> command::Handler<OpenBankAccount> for Service<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
     R::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
@@ -58,7 +58,7 @@ where
         )?;
 
         self.bank_account_repository
-            .store(&mut bank_account)
+            .store(&mut bank_account.0)
             .await?;
 
         Ok(())
@@ -80,7 +80,7 @@ impl message::Message for DepositInBankAccount {
 #[async_trait]
 impl<R> command::Handler<DepositInBankAccount> for Service<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
     R::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
@@ -94,12 +94,13 @@ where
         let mut bank_account = self
             .bank_account_repository
             .get(&command.bank_account_id)
-            .await?;
+            .await
+            .map(BankAccountRoot)?;
 
         bank_account.deposit(command.amount)?;
 
         self.bank_account_repository
-            .store(&mut bank_account)
+            .store(&mut bank_account.0)
             .await?;
 
         Ok(())
@@ -122,7 +123,7 @@ impl message::Message for SendTransferToBankAccount {
 #[async_trait]
 impl<R> command::Handler<SendTransferToBankAccount> for Service<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
     R::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
@@ -136,12 +137,13 @@ where
         let mut bank_account = self
             .bank_account_repository
             .get(&command.bank_account_id)
-            .await?;
+            .await
+            .map(BankAccountRoot)?;
 
         bank_account.send_transfer(command.transaction, command.message)?;
 
         self.bank_account_repository
-            .store(&mut bank_account)
+            .store(&mut bank_account.0)
             .await?;
 
         Ok(())

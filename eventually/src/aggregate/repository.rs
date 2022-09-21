@@ -3,19 +3,14 @@ use std::{fmt::Debug, marker::PhantomData};
 use async_trait::async_trait;
 use futures::TryStreamExt;
 
-use crate::{
-    aggregate::{Aggregate, Context, Root},
-    event,
-    version::Version,
-};
+use crate::{aggregate, aggregate::Aggregate, event, version::Version};
 
 /// A Repository is an object that allows to load and save
 /// an [Aggregate Root][Root] from and to a persistent data store.
 #[async_trait]
-pub trait Repository<T, R>: Send + Sync
+pub trait Repository<T>: Send + Sync
 where
     T: Aggregate,
-    R: Root<T>,
 {
     /// The error type that can be returned by the Repository implementation
     /// during loading or storing of an Aggregate Root.
@@ -23,10 +18,10 @@ where
 
     /// Loads an Aggregate Root instance from the data store,
     /// referenced by its unique identifier.
-    async fn get(&self, id: &T::Id) -> Result<R, Self::Error>;
+    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, Self::Error>;
 
     /// Stores a new version of an Aggregate Root instance to the data store.
-    async fn store(&self, root: &mut R) -> Result<(), Self::Error>;
+    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error>;
 }
 
 /// List of possible errors that can be returned by an [`EventSourced`] method.
@@ -66,52 +61,47 @@ pub enum EventSourcedError<E, SE, AE> {
 /// for a particular Aggregate, and append uncommitted Domain Events
 /// recorded by an Aggregate Root.
 #[derive(Debug, Clone)]
-pub struct EventSourced<T, R, S>
+pub struct EventSourced<T, S>
 where
     T: Aggregate,
-    R: Root<T>,
     S: event::Store<StreamId = T::Id, Event = T::Event>,
 {
     store: S,
     aggregate: PhantomData<T>,
-    aggregate_root: PhantomData<R>,
 }
 
-impl<T, R, S> From<S> for EventSourced<T, R, S>
+impl<T, S> From<S> for EventSourced<T, S>
 where
     T: Aggregate,
-    R: Root<T>,
     S: event::Store<StreamId = T::Id, Event = T::Event>,
 {
     fn from(store: S) -> Self {
         Self {
             store,
             aggregate: PhantomData,
-            aggregate_root: PhantomData,
         }
     }
 }
 
 #[async_trait]
-impl<T, R, S> Repository<T, R> for EventSourced<T, R, S>
+impl<T, S> Repository<T> for EventSourced<T, S>
 where
     T: Aggregate,
     T::Id: Clone,
     T::Error: Debug,
-    R: Root<T>,
     S: event::Store<StreamId = T::Id, Event = T::Event>,
 {
     type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
 
-    async fn get(&self, id: &T::Id) -> Result<R, Self::Error> {
+    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, Self::Error> {
         let ctx = self
             .store
             .stream(id, event::VersionSelect::All)
             .map_ok(|persisted| persisted.event)
             .map_err(EventSourcedError::StreamFromStore)
-            .try_fold(None, |ctx: Option<Context<T>>, event| async {
+            .try_fold(None, |ctx: Option<aggregate::Root<T>>, event| async {
                 let new_ctx_result = match ctx {
-                    None => Context::rehydrate_from(event),
+                    None => aggregate::Root::<T>::rehydrate_from(event),
                     Some(ctx) => ctx.apply_rehydrated_event(event),
                 };
 
@@ -122,19 +112,17 @@ where
             .await?;
 
         ctx.ok_or(EventSourcedError::AggregateRootNotFound)
-            .map(R::from)
     }
 
-    async fn store(&self, root: &mut R) -> Result<(), Self::Error> {
-        let events_to_commit = root.ctx_mut().take_uncommitted_events();
+    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+        let events_to_commit = root.take_uncommitted_events();
         let aggregate_id = root.aggregate_id();
 
         if events_to_commit.is_empty() {
             return Ok(());
         }
 
-        let current_event_stream_version =
-            root.ctx().version() - (events_to_commit.len() as Version);
+        let current_event_stream_version = root.version() - (events_to_commit.len() as Version);
 
         self.store
             .append(

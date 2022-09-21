@@ -1,13 +1,9 @@
-use std::{
-    borrow::{Borrow, BorrowMut},
-    collections::HashMap,
-};
+use std::collections::HashMap;
 
-use eventually::{aggregate, aggregate::Root as AggregateRoot, message};
+use eventually::{aggregate, message};
 use rust_decimal::Decimal;
 
-pub type BankAccountRepository<S> =
-    aggregate::EventSourcedRepository<BankAccount, BankAccountRoot, S>;
+pub type BankAccountRepository<S> = aggregate::EventSourcedRepository<BankAccount, S>;
 
 pub type TransactionId = String;
 
@@ -168,27 +164,8 @@ impl aggregate::Aggregate for BankAccount {
 }
 
 #[derive(Debug, Clone)]
-pub struct BankAccountRoot(aggregate::Context<BankAccount>);
-
-impl AggregateRoot<BankAccount> for BankAccountRoot {}
-
-impl From<aggregate::Context<BankAccount>> for BankAccountRoot {
-    fn from(context: aggregate::Context<BankAccount>) -> Self {
-        Self(context)
-    }
-}
-
-impl Borrow<aggregate::Context<BankAccount>> for BankAccountRoot {
-    fn borrow(&self) -> &aggregate::Context<BankAccount> {
-        &self.0
-    }
-}
-
-impl BorrowMut<aggregate::Context<BankAccount>> for BankAccountRoot {
-    fn borrow_mut(&mut self) -> &mut aggregate::Context<BankAccount> {
-        &mut self.0
-    }
-}
+// TODO: maybe provide this type through a macro?
+pub struct BankAccountRoot(pub(crate) aggregate::Root<BankAccount>);
 
 impl BankAccountRoot {
     pub fn open(
@@ -204,7 +181,7 @@ impl BankAccountRoot {
             return Err(BankAccountError::EmptyAccountHolderId);
         }
 
-        BankAccountRoot::record_new(
+        aggregate::Root::<BankAccount>::record_new(
             BankAccountEvent::WasOpened {
                 id,
                 account_holder_id,
@@ -212,10 +189,11 @@ impl BankAccountRoot {
             }
             .into(),
         )
+        .map(Self)
     }
 
     pub fn deposit(&mut self, money: Decimal) -> Result<(), BankAccountError> {
-        if self.state().is_closed {
+        if self.0.is_closed {
             return Err(BankAccountError::Closed);
         }
 
@@ -227,7 +205,8 @@ impl BankAccountRoot {
             return Err(BankAccountError::NoMoneyDeposited);
         }
 
-        self.record_that(BankAccountEvent::DepositWasRecorded { amount: money }.into())
+        self.0
+            .record_that(BankAccountEvent::DepositWasRecorded { amount: money }.into())
     }
 
     pub fn send_transfer(
@@ -235,7 +214,7 @@ impl BankAccountRoot {
         mut transaction: Transaction,
         message: Option<String>,
     ) -> Result<(), BankAccountError> {
-        if self.state().is_closed {
+        if self.0.is_closed {
             return Err(BankAccountError::Closed);
         }
 
@@ -245,21 +224,18 @@ impl BankAccountRoot {
             transaction.amount.set_sign_positive(true);
         }
 
-        if self.state().current_balance < transaction.amount {
+        if self.0.current_balance < transaction.amount {
             return Err(BankAccountError::InsufficientFunds);
         }
 
-        let transaction_already_pending = self
-            .state()
-            .pending_transactions
-            .get(&transaction.id)
-            .is_some();
+        let transaction_already_pending =
+            self.0.pending_transactions.get(&transaction.id).is_some();
 
         if transaction_already_pending {
             return Ok(());
         }
 
-        self.record_that(
+        self.0.record_that(
             BankAccountEvent::TransferWasSent {
                 message,
                 transaction,
@@ -273,17 +249,17 @@ impl BankAccountRoot {
         transaction: Transaction,
         message: Option<String>,
     ) -> Result<(), BankAccountError> {
-        if self.state().is_closed {
+        if self.0.is_closed {
             return Err(BankAccountError::Closed);
         }
 
-        if self.state().id != transaction.beneficiary_account_id {
+        if self.0.id != transaction.beneficiary_account_id {
             return Err(BankAccountError::WrongTransactionRecipient(
                 transaction.beneficiary_account_id,
             ));
         }
 
-        self.record_that(
+        self.0.record_that(
             BankAccountEvent::TransferWasReceived {
                 transaction,
                 message,
@@ -296,32 +272,29 @@ impl BankAccountRoot {
         &mut self,
         transaction_id: TransactionId,
     ) -> Result<(), BankAccountError> {
-        let is_transaction_recorded = self
-            .state()
-            .pending_transactions
-            .get(&transaction_id)
-            .is_some();
-
+        let is_transaction_recorded = self.0.pending_transactions.get(&transaction_id).is_some();
         if !is_transaction_recorded {
             // TODO: return error
         }
 
-        self.record_that(BankAccountEvent::TransferWasConfirmed { transaction_id }.into())
+        self.0
+            .record_that(BankAccountEvent::TransferWasConfirmed { transaction_id }.into())
     }
 
     pub fn close(&mut self) -> Result<(), BankAccountError> {
-        if self.state().is_closed {
+        if self.0.is_closed {
             return Err(BankAccountError::AlreadyClosed);
         }
 
-        self.record_that(BankAccountEvent::WasClosed.into())
+        self.0.record_that(BankAccountEvent::WasClosed.into())
     }
 
     pub fn reopen(&mut self, reopening_balance: Option<Decimal>) -> Result<(), BankAccountError> {
-        if !self.state().is_closed {
+        if !self.0.is_closed {
             return Err(BankAccountError::AlreadyOpened);
         }
 
-        self.record_that(BankAccountEvent::WasReopened { reopening_balance }.into())
+        self.0
+            .record_that(BankAccountEvent::WasReopened { reopening_balance }.into())
     }
 }

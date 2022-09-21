@@ -25,13 +25,10 @@
 //! Aggregates should provide a way to **fold** Domain Events on the
 //! current value of the state, to produce the next state.
 
-use crate::message;
+use crate::{event, message, version::Version};
 
 mod repository;
-mod root;
-
 pub use repository::{EventSourced as EventSourcedRepository, *};
-pub use root::*;
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -69,14 +66,203 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error>;
 }
 
+/// An Aggregate Root represents the Domain Entity object used to
+/// load and save an [Aggregate] from and to a [Repository], and
+/// to perform actions that may result in new Domain Events
+/// to change the state of the Aggregate.
+///
+/// The Aggregate state and list of Domain Events recorded
+/// are handled by the [Root] object itself.
+///
+/// ```text
+/// #[derive(Debug, Clone)]
+/// struct MyAggregate {
+///     // Here goes the state of the Aggregate.
+/// };
+///
+/// #[derive(Debug, Clone, PartialEq, Eq)]
+/// enum MyAggregateEvent {
+///     // Here we list the Domain Events for the Aggregate.
+///     EventHasHappened,
+/// }
+///
+/// impl Aggregate for MyAggregate {
+///     type Id = i64; // Just for the sake of the example.
+///     type Event = MyAggregateEvent;
+///     type Error = (); // Just for the sake of the example. Use a proper error here.
+///
+///     fn aggregate_id(&self) -> &Self::Id {
+///         todo!()
+///     }
+///
+///     fn apply(this: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
+///         todo!()
+///     }
+/// }
+///
+/// // This type is necessary in order to create a new vtable
+/// // for the method implementations in the block below.
+/// #[derive(Debug, Clone)]
+/// struct MyAggregateRoot(Root<MyAggregate>)
+///
+/// impl MyAggregateRoot {
+///     pub fn do_something() -> Result<MyAggregate, ()> {
+///         // Here, we record a new Domain Event through the Root<MyAggregate> object.
+///         //
+///         // This will record the new Domain Event in a list of events to commit,
+///         // and call the `MyAggregate::apply` method to create the Aggregate state.
+///         Root::<MyAggregate>::record_new(MyAggregateEvent::EventHasHappened)
+///             .map(MyAggregateRoot)
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+#[must_use]
+pub struct Root<T>
+where
+    T: Aggregate,
+{
+    aggregate: T,
+    version: Version,
+    recorded_events: Vec<event::Envelope<T::Event>>,
+}
+
+impl<T> std::ops::Deref for Root<T>
+where
+    T: Aggregate,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.aggregate
+    }
+}
+
+impl<T> Root<T>
+where
+    T: Aggregate,
+{
+    /// Returns the current version for the [Aggregate].
+    pub fn version(&self) -> Version {
+        self.version
+    }
+
+    /// Returns the unique identifier of the [Aggregate].
+    pub fn aggregate_id(&self) -> &T::Id {
+        self.aggregate.aggregate_id()
+    }
+
+    /// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]
+    /// and resets the internal list to its default value.
+    #[doc(hidden)]
+    pub fn take_uncommitted_events(&mut self) -> Vec<event::Envelope<T::Event>> {
+        std::mem::take(&mut self.recorded_events)
+    }
+
+    /// Creates a new [Root] instance from a Domain [Event]
+    /// while rehydrating an [Aggregate].
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    #[doc(hidden)]
+    pub(crate) fn rehydrate_from(event: event::Envelope<T::Event>) -> Result<Root<T>, T::Error> {
+        Ok(Root {
+            version: 1,
+            aggregate: T::apply(None, event.message)?,
+            recorded_events: Vec::default(),
+        })
+    }
+
+    /// Applies a new Domain [Event] to the [Root] while rehydrating
+    /// an [Aggregate].
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    #[doc(hidden)]
+    pub(crate) fn apply_rehydrated_event(
+        mut self,
+        event: event::Envelope<T::Event>,
+    ) -> Result<Root<T>, T::Error> {
+        self.aggregate = T::apply(Some(self.aggregate), event.message)?;
+        self.version += 1;
+
+        Ok(self)
+    }
+
+    /// Creates a new [Aggregate] [Root] instance by applying the specified
+    /// Domain Event.
+    ///
+    /// Example of usage:
+    /// ```text
+    /// use eventually::{
+    ///     event,
+    ///     aggregate::Root,
+    ///     aggregate,
+    /// };
+    ///
+    /// let my_aggregate_root = MyAggregateRoot::record_new(
+    ///     event::Envelope::from(MyDomainEvent { /* something */ })
+    ///  )?;
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    pub fn record_new(event: event::Envelope<T::Event>) -> Result<Self, T::Error> {
+        Ok(Root {
+            version: 1,
+            aggregate: T::apply(None, event.message.clone())?,
+            recorded_events: vec![event],
+        })
+    }
+
+    /// Records a change to the [Aggregate] [Root], expressed by the specified
+    /// Domain Event.
+    ///
+    /// Example of usage:
+    /// ```text
+    /// use eventually::{
+    ///     event,
+    ///     aggregate::Root,
+    /// };
+    ///
+    /// impl MyAggregateRoot {
+    ///     pub fn update_name(&mut self, name: String) -> Result<(), MyAggregateError> {
+    ///         if name.is_empty() {
+    ///             return Err(MyAggregateError::NameIsEmpty);
+    ///         }
+    ///
+    ///         self.record_that(
+    ///             event::Envelope::from(MyAggergateEvent::NameWasChanged { name })
+    ///         )
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    pub fn record_that(&mut self, event: event::Envelope<T::Event>) -> Result<(), T::Error> {
+        self.aggregate = T::apply(Some(self.aggregate.clone()), event.message.clone())?;
+        self.recorded_events.push(event);
+        self.version += 1;
+
+        Ok(())
+    }
+}
+
 // The warnings are happening due to usage of the methods only inside #[cfg(test)]
 #[allow(dead_code)]
 #[doc(hidden)]
 #[cfg(test)]
 pub(crate) mod test_user_domain {
-    use std::borrow::{Borrow, BorrowMut};
-
-    use crate::{aggregate, aggregate::Root, message};
+    use crate::{aggregate, message};
 
     #[derive(Debug, Clone)]
     pub(crate) struct User {
@@ -140,30 +326,7 @@ pub(crate) mod test_user_domain {
         }
     }
 
-    #[derive(Debug, Clone)]
-    pub(crate) struct UserRoot(aggregate::Context<User>);
-
-    impl From<aggregate::Context<User>> for UserRoot {
-        fn from(ctx: aggregate::Context<User>) -> Self {
-            Self(ctx)
-        }
-    }
-
-    impl Borrow<aggregate::Context<User>> for UserRoot {
-        fn borrow(&self) -> &aggregate::Context<User> {
-            &self.0
-        }
-    }
-
-    impl BorrowMut<aggregate::Context<User>> for UserRoot {
-        fn borrow_mut(&mut self) -> &mut aggregate::Context<User> {
-            &mut self.0
-        }
-    }
-
-    impl Root<User> for UserRoot {}
-
-    impl UserRoot {
+    impl aggregate::Root<User> {
         pub(crate) fn create(email: String, password: String) -> Result<Self, UserError> {
             if email.is_empty() {
                 return Err(UserError::EmptyEmail);
@@ -173,7 +336,7 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            Ok(UserRoot::record_new(
+            Ok(Self::record_new(
                 UserEvent::WasCreated { email, password }.into(),
             )?)
         }
@@ -197,7 +360,7 @@ mod test {
 
     use crate::{
         aggregate,
-        aggregate::test_user_domain::{User, UserEvent, UserRoot},
+        aggregate::test_user_domain::{User, UserEvent},
         aggregate::Repository,
         event, test,
         test::store::EventStoreExt,
@@ -208,14 +371,13 @@ mod test {
     async fn repository_persists_new_aggregate_root() {
         let event_store = test::store::InMemory::<String, UserEvent>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
-        let user_repository = aggregate::EventSourcedRepository::<User, UserRoot, _>::from(
-            tracking_event_store.clone(),
-        );
+        let user_repository =
+            aggregate::EventSourcedRepository::<User, _>::from(tracking_event_store.clone());
 
         let email = "test@email.com".to_owned();
         let password = "not-a-secret".to_owned();
 
-        let mut user = UserRoot::create(email.clone(), password.clone())
+        let mut user = aggregate::Root::<User>::create(email.clone(), password.clone())
             .expect("user should be created successfully");
 
         user_repository
@@ -236,14 +398,13 @@ mod test {
     async fn repository_retrieves_the_aggregate_root_and_stores_new_events() {
         let event_store = test::store::InMemory::<String, UserEvent>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
-        let user_repository = aggregate::EventSourcedRepository::<User, UserRoot, _>::from(
-            tracking_event_store.clone(),
-        );
+        let user_repository =
+            aggregate::EventSourcedRepository::<User, _>::from(tracking_event_store.clone());
 
         let email = "test@email.com".to_owned();
         let password = "not-a-secret".to_owned();
 
-        let mut user = UserRoot::create(email.clone(), password.clone())
+        let mut user = aggregate::Root::<User>::create(email.clone(), password.clone())
             .expect("user should be created successfully");
 
         user_repository
@@ -284,16 +445,16 @@ mod test {
     async fn repository_returns_conflict_error_from_store_when_data_race_happens() {
         let event_store = test::store::InMemory::<String, UserEvent>::default();
         let user_repository =
-            aggregate::EventSourcedRepository::<User, UserRoot, _>::from(event_store.clone());
+            aggregate::EventSourcedRepository::<User, _>::from(event_store.clone());
 
         let email = "test@email.com".to_owned();
         let password = "not-a-secret".to_owned();
 
-        let mut user = UserRoot::create(email.clone(), password.clone())
+        let mut user = aggregate::Root::<User>::create(email.clone(), password.clone())
             .expect("user should be created successfully");
 
-        // We need to clone the UserRoot instance to get the list
-        // of uncommitted events from the Context twice.
+        // We need to clone the User Aggregate Root instance to get the list
+        // of uncommitted events from the Root context twice.
         let mut cloned_user = user.clone();
 
         // Saving the first User to the Repository.
