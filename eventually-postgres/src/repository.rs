@@ -1,7 +1,11 @@
 use std::{marker::PhantomData, sync::Arc};
 
 use async_trait::async_trait;
-use eventually::{aggregate, aggregate::Aggregate, version};
+use eventually::{
+    aggregate,
+    aggregate::{repository, Aggregate},
+    version,
+};
 use sqlx::{PgPool, Row};
 
 #[derive(Debug, Clone)]
@@ -49,7 +53,7 @@ where
 {
     type Error = sqlx::Error;
 
-    async fn get(&self, id: &T::Id) -> Result<R, aggregate::RepositoryGetError<Self::Error>> {
+    async fn get(&self, id: &T::Id) -> Result<R, repository::GetError<Self::Error>> {
         let query = sqlx::query(
             r#"SELECT version, state
 		    FROM aggregates
@@ -63,7 +67,7 @@ where
             .await;
 
         if let Err(sqlx::Error::RowNotFound) = result {
-            return Err(aggregate::RepositoryGetError::AggregateRootNotFound);
+            return Err(repository::GetError::AggregateRootNotFound);
         }
 
         let row = result?;
@@ -79,7 +83,7 @@ where
         )))
     }
 
-    async fn store(&self, root: &mut R) -> Result<(), Self::Error> {
+    async fn store(&self, _root: &mut R) -> Result<(), Self::Error> {
         todo!()
     }
 }

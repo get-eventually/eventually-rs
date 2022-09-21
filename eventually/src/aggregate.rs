@@ -27,10 +27,10 @@
 
 use crate::message;
 
-mod repository;
+pub mod repository;
 mod root;
 
-pub use repository::{EventSourced as EventSourcedRepository, *};
+pub use repository::{EventSourced as EventSourcedRepository, Repository};
 pub use root::*;
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],

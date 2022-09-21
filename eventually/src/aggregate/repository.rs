@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[derive(Debug, thiserror::Error)]
-pub enum RepositoryGetError<T> {
+pub enum GetError<T> {
     /// This error is retured by [`Repository::get`] when the
     /// desired Aggregate [Root] could not be found in the data store.
     #[error("aggregate root was not found")]
@@ -36,7 +36,7 @@ where
 
     /// Loads an Aggregate Root instance from the data store,
     /// referenced by its unique identifier.
-    async fn get(&self, id: &T::Id) -> Result<R, RepositoryGetError<Self::Error>>;
+    async fn get(&self, id: &T::Id) -> Result<R, GetError<Self::Error>>;
 
     /// Stores a new version of an Aggregate Root instance to the data store.
     async fn store(&self, root: &mut R) -> Result<(), Self::Error>;
@@ -111,7 +111,7 @@ where
 {
     type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
 
-    async fn get(&self, id: &T::Id) -> Result<R, RepositoryGetError<Self::Error>> {
+    async fn get(&self, id: &T::Id) -> Result<R, GetError<Self::Error>> {
         let ctx = self
             .store
             .stream(id, event::VersionSelect::All)
@@ -129,8 +129,7 @@ where
             })
             .await?;
 
-        ctx.ok_or(RepositoryGetError::AggregateRootNotFound)
-            .map(R::from)
+        ctx.ok_or(GetError::AggregateRootNotFound).map(R::from)
     }
 
     async fn store(&self, root: &mut R) -> Result<(), Self::Error> {
