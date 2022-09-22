@@ -58,7 +58,7 @@ where
         )?;
 
         self.bank_account_repository
-            .store(&mut bank_account.0)
+            .store(&mut bank_account)
             .await?;
 
         Ok(())
@@ -91,16 +91,16 @@ where
     ) -> Result<(), Self::Error> {
         let command = command.message;
 
-        let mut bank_account = self
+        let mut bank_account: BankAccountRoot = self
             .bank_account_repository
             .get(&command.bank_account_id)
-            .await
-            .map(BankAccountRoot)?;
+            .await?
+            .into();
 
         bank_account.deposit(command.amount)?;
 
         self.bank_account_repository
-            .store(&mut bank_account.0)
+            .store(&mut bank_account)
             .await?;
 
         Ok(())
@@ -134,16 +134,16 @@ where
     ) -> Result<(), Self::Error> {
         let command = command.message;
 
-        let mut bank_account = self
+        let mut bank_account: BankAccountRoot = self
             .bank_account_repository
             .get(&command.bank_account_id)
-            .await
-            .map(BankAccountRoot)?;
+            .await?
+            .into();
 
         bank_account.send_transfer(command.transaction, command.message)?;
 
         self.bank_account_repository
-            .store(&mut bank_account.0)
+            .store(&mut bank_account)
             .await?;
 
         Ok(())

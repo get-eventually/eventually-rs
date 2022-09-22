@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "eventually",
+    "eventually-macros",
     # Crates as examples
     "examples/bank-accounting",
 ]
