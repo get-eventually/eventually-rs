@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/application.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>application.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/application.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>application.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -468,6 +462,20 @@
 <span id="462">462</span>
 <span id="463">463</span>
 <span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>;
 
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
@@ -481,14 +489,14 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span>, <span class="ident">BankAccountRoot</span><span class="op">&gt;</span>,
+    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
 {
     <span class="ident">bank_account_repository</span>: <span class="ident">R</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span>, <span class="ident">BankAccountRoot</span><span class="op">&gt;</span>,
+    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
 {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">bank_account_repository</span>: <span class="ident">R</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
@@ -513,7 +521,7 @@
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">OpenBankAccount</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span>, <span class="ident">BankAccountRoot</span><span class="op">&gt;</span>,
+    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
     <span class="ident">R::Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
@@ -550,7 +558,7 @@
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">DepositInBankAccount</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span>, <span class="ident">BankAccountRoot</span><span class="op">&gt;</span>,
+    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
     <span class="ident">R::Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
@@ -561,10 +569,11 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">command</span> <span class="op">=</span> <span class="ident">command</span>.<span class="ident">message</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bank_account</span> <span class="op">=</span> <span class="self">self</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bank_account</span>: <span class="ident">BankAccountRoot</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">bank_account_repository</span>
             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">command</span>.<span class="ident">bank_account_id</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+            .<span class="kw">await</span><span class="question-mark">?</span>
+            .<span class="ident">into</span>();
 
         <span class="ident">bank_account</span>.<span class="ident">deposit</span>(<span class="ident">command</span>.<span class="ident">amount</span>)<span class="question-mark">?</span>;
 
@@ -592,7 +601,7 @@
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">SendTransferToBankAccount</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span>, <span class="ident">BankAccountRoot</span><span class="op">&gt;</span>,
+    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
     <span class="ident">R::Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
@@ -603,10 +612,11 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">command</span> <span class="op">=</span> <span class="ident">command</span>.<span class="ident">message</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bank_account</span> <span class="op">=</span> <span class="self">self</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bank_account</span>: <span class="ident">BankAccountRoot</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">bank_account_repository</span>
             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">command</span>.<span class="ident">bank_account_id</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+            .<span class="kw">await</span><span class="question-mark">?</span>
+            .<span class="ident">into</span>();
 
         <span class="ident">bank_account</span>.<span class="ident">send_transfer</span>(<span class="ident">command</span>.<span class="ident">transaction</span>, <span class="ident">command</span>.<span class="ident">message</span>)<span class="question-mark">?</span>;
 
@@ -620,7 +630,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">event</span>, <span class="ident">test</span>};
+    <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">command</span>, <span class="ident">event</span>};
     <span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
 
     <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -630,7 +640,7 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account_works_when_bank_account_has_just_been_opened_for_the_first_time</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">when</span>(
                 <span class="ident">application::OpenBankAccount</span> {
                     <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
@@ -642,11 +652,12 @@
             .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                     <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
                 <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
@@ -656,15 +667,16 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account_fails_if_the_account_already_exists</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                     <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">when</span>(
                 <span class="ident">application::OpenBankAccount</span> {
@@ -683,7 +695,7 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_fails_on_unexisting_bank_account</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">when</span>(
                 <span class="ident">application::DepositInBankAccount</span> {
                     <span class="ident">bank_account_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
@@ -700,15 +712,16 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_works_when_amount_is_positive</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                     <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">when</span>(
                 <span class="ident">application::DepositInBankAccount</span> {
@@ -720,9 +733,10 @@
             .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">2</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::DepositWasRecorded</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::DepositWasRecorded</span> {
                     <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">2000</span>, <span class="number">2</span>), <span class="comment">// 20,00</span>
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
                 <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
@@ -732,15 +746,16 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_fails_when_amount_is_negative</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                     <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">when</span>(
                 <span class="ident">application::DepositInBankAccount</span> {
@@ -758,15 +773,16 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_with_zero_amount_in_open_bank_account_fails</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                     <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">when</span>(
                 <span class="ident">application::DepositInBankAccount</span> {
@@ -784,21 +800,22 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_money_on_existing_bank_account_fails_when_account_is_closed</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[
                 <span class="ident">event::Persisted</span> {
                     <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">version</span>: <span class="number">1</span>,
-                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                         <span class="ident">id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">account_holder_id</span>: <span class="string">&quot;dani&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1000</span>, <span class="number">2</span>)),
-                    }),
+                    }
+                    .<span class="ident">into</span>(),
                 },
                 <span class="ident">event::Persisted</span> {
                     <span class="ident">stream_id</span>: <span class="string">&quot;account-test&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">version</span>: <span class="number">2</span>,
-                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasClosed</span>),
+                    <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasClosed</span>.<span class="ident">into</span>(),
                 },
             ])
             .<span class="ident">when</span>(
@@ -817,7 +834,7 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer_fails_if_bank_account_does_not_exist</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">when</span>(
                 <span class="ident">application::SendTransferToBankAccount</span> {
                     <span class="ident">bank_account_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
@@ -839,25 +856,27 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer_fails_if_bank_account_does_not_have_sufficient_funds</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[
                 <span class="ident">event::Persisted</span> {
                     <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">version</span>: <span class="number">1</span>,
-                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                         <span class="ident">id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">account_holder_id</span>: <span class="string">&quot;sender-name&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1_000</span>, <span class="number">0</span>)),
-                    }),
+                    }
+                    .<span class="ident">into</span>(),
                 },
                 <span class="ident">event::Persisted</span> {
                     <span class="ident">stream_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">version</span>: <span class="number">1</span>,
-                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                         <span class="ident">id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">account_holder_id</span>: <span class="string">&quot;receiver-name&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">initial_balance</span>: <span class="prelude-val">None</span>,
-                    }),
+                    }
+                    .<span class="ident">into</span>(),
                 },
             ])
             .<span class="ident">when</span>(
@@ -881,25 +900,27 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer_works_if_bank_account_has_sufficient_funds</span>() {
-        <span class="ident">test::command_handler::Scenario</span>
+        <span class="ident">command::test::Scenario</span>
             .<span class="ident">given</span>(<span class="macro">vec!</span>[
                 <span class="ident">event::Persisted</span> {
                     <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">version</span>: <span class="number">1</span>,
-                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                         <span class="ident">id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">account_holder_id</span>: <span class="string">&quot;sender-name&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">initial_balance</span>: <span class="prelude-val">Some</span>(<span class="ident">Decimal::new</span>(<span class="number">1_000</span>, <span class="number">0</span>)),
-                    }),
+                    }
+                    .<span class="ident">into</span>(),
                 },
                 <span class="ident">event::Persisted</span> {
                     <span class="ident">stream_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
                     <span class="ident">version</span>: <span class="number">1</span>,
-                    <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::WasOpened</span> {
+                    <span class="ident">event</span>: <span class="ident">BankAccountEvent::WasOpened</span> {
                         <span class="ident">id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">account_holder_id</span>: <span class="string">&quot;receiver-name&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">initial_balance</span>: <span class="prelude-val">None</span>,
-                    }),
+                    }
+                    .<span class="ident">into</span>(),
                 },
             ])
             .<span class="ident">when</span>(
@@ -917,14 +938,15 @@
             .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
                 <span class="ident">stream_id</span>: <span class="string">&quot;sender&quot;</span>.<span class="ident">to_owned</span>(),
                 <span class="ident">version</span>: <span class="number">2</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">BankAccountEvent::TransferWasSent</span> {
+                <span class="ident">event</span>: <span class="ident">BankAccountEvent::TransferWasSent</span> {
                     <span class="ident">transaction</span>: <span class="ident">Transaction</span> {
                         <span class="ident">id</span>: <span class="string">&quot;transaction&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">beneficiary_account_id</span>: <span class="string">&quot;receiver&quot;</span>.<span class="ident">to_owned</span>(),
                         <span class="ident">amount</span>: <span class="ident">Decimal::new</span>(<span class="number">500</span>, <span class="number">0</span>),
                     },
                     <span class="ident">message</span>: <span class="prelude-val">None</span>,
-                }),
+                }
+                .<span class="ident">into</span>(),
             }])
             .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> <span class="ident">application::Service</span> {
                 <span class="ident">bank_account_repository</span>: <span class="ident">BankAccountRepository::from</span>(<span class="ident">event_store</span>),
@@ -933,5 +955,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bank_accounting" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bank_accounting" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

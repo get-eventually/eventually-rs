@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["SubscriberError","Error returned by the `TryStream` on `subscribe_all`"]],"struct":[["EventSubscriber","Subscriber for listening to new events committed to an `EventStore`, using Postgres’ `LISTEN` functionality."]],"type":[["Result","Alias type for a `Result` having `SubscriberError` as error type.alloc"]]};

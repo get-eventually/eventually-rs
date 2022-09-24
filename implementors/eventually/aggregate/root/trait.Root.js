@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["bank_accounting"] = [{"text":"impl <a class=\"trait\" href=\"eventually/aggregate/root/trait.Root.html\" title=\"trait eventually::aggregate::root::Root\">Root</a>&lt;<a class=\"struct\" href=\"bank_accounting/domain/struct.BankAccount.html\" title=\"struct bank_accounting::domain::BankAccount\">BankAccount</a>&gt; for <a class=\"struct\" href=\"bank_accounting/domain/struct.BankAccountRoot.html\" title=\"struct bank_accounting::domain::BankAccountRoot\">BankAccountRoot</a>","synthetic":false,"types":["bank_accounting::domain::BankAccountRoot"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
