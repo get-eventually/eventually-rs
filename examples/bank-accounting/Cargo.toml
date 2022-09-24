@@ -24,4 +24,4 @@ tracing-subscriber = { version = "0.3.3", features = ["fmt", "std", "env-filter"
 [dev-dependencies]
 
 [build-dependencies]
-tonic-build = { version = "0.6.2", features = ["transport", "prost", "compression"] }
+tonic-build = { version = "0.8.0", features = ["transport", "prost", "compression"] }
