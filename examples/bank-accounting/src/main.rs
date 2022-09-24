@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use anyhow::anyhow;
-use eventually::test;
+use eventually::event;
 
 use bank_accounting::{application, domain::BankAccountRepository, grpc, proto};
 
@@ -13,7 +13,7 @@ async fn main() -> anyhow::Result<()> {
         .try_init()
         .map_err(|e| anyhow!("failed to initialize tracing logger: {}", e))?;
 
-    let bank_account_event_store = test::store::InMemory::default();
+    let bank_account_event_store = event::store::InMemory::default();
     let bank_account_repository = BankAccountRepository::from(bank_account_event_store.clone());
 
     let application_service = application::Service::from(bank_account_repository);
