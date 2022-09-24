@@ -7,7 +7,40 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta, Path};
+use syn::{parse_macro_input, AttributeArgs, Fields, ItemEnum, ItemStruct, Meta, NestedMeta, Path};
+
+#[proc_macro_derive(Message)]
+pub fn derive_message(input: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(input as ItemEnum);
+    let item_name = item.ident;
+    let event_prefix = item_name
+        .to_string()
+        .strip_suffix("Event")
+        .unwrap()
+        .to_owned();
+
+    let match_cases = item.variants.iter().fold(quote! {}, |acc, variant| {
+        let event_type = &variant.ident;
+        let event_name = format!("{}{}", event_prefix, event_type);
+
+        quote! {
+            #acc
+            #item_name::#event_type { .. } => #event_name,
+        }
+    });
+
+    let result = quote! {
+        impl eventually::message::Message for #item_name {
+            fn name(&self) -> &'static str {
+                match self {
+                    #match_cases
+                }
+            }
+        }
+    };
+
+    result.into()
+}
 
 /// Implements a newtype to use the [eventually::aggregate::Root] instance with
 /// user-defined [eventually::aggregate::Aggregate] types.

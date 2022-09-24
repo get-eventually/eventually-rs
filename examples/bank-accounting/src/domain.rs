@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use eventually::{aggregate, message};
-use eventually_macros::aggregate_root;
+use eventually::aggregate;
+use eventually_macros::{aggregate_root, Message};
 use rust_decimal::Decimal;
 
 pub type BankAccountRepository<S> = aggregate::EventSourcedRepository<BankAccount, S>;
@@ -18,7 +18,7 @@ pub struct Transaction {
 pub type BankAccountHolderId = String;
 pub type BankAccountId = String;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Message)]
 pub enum BankAccountEvent {
     WasOpened {
         id: BankAccountId,
@@ -38,7 +38,7 @@ pub enum BankAccountEvent {
     },
     TransferWasDeclined {
         transaction_id: TransactionId,
-        reason: Option<String>, // TODO: maybe turn into an enum?
+        reason: Option<String>,
     },
     TransferWasConfirmed {
         transaction_id: TransactionId,
@@ -47,21 +47,6 @@ pub enum BankAccountEvent {
     WasReopened {
         reopening_balance: Option<Decimal>,
     },
-}
-
-impl message::Message for BankAccountEvent {
-    fn name(&self) -> &'static str {
-        match self {
-            BankAccountEvent::WasOpened { .. } => "BankAccountWasOpened",
-            BankAccountEvent::DepositWasRecorded { .. } => "BankAccountDepositWasRecorded",
-            BankAccountEvent::TransferWasReceived { .. } => "BankAccountTransferWasReceived",
-            BankAccountEvent::TransferWasSent { .. } => "BankAccountTransferWasSent",
-            BankAccountEvent::TransferWasDeclined { .. } => "BankAccountTransferWasDeclined",
-            BankAccountEvent::TransferWasConfirmed { .. } => "BankAccountTransferWasConfirmed",
-            BankAccountEvent::WasClosed => "BankAccountWasClosed",
-            BankAccountEvent::WasReopened { .. } => "BankAccountWasReopened",
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
