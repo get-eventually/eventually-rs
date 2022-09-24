@@ -1,7 +1,31 @@
+//! Module containing useful macros for the [eventually] crate.
+
+#![deny(unsafe_code, unused_qualifications, trivial_casts)]
+#![warn(missing_docs)]
+#![deny(clippy::all)]
+#![warn(clippy::pedantic)]
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta, Path};
 
+/// Implements a newtype to use the [eventually::aggregate::Root] instance with
+/// user-defined [eventually::aggregate::Aggregate] types.
+///
+/// # Context
+///
+/// The eventually API uses `aggregate::Root<T>` to manage the versioning and
+/// list of events to commit for an `Aggregate` instance. Domain commands
+/// are to be implemented on the `aggregate::Root<T>` instance, as it gives
+/// access to use `Root<T>.record_that` or `Root<T>.record_new` to record Domain Events.
+///
+/// However, it's not possible to use `impl aggregate::Root<MyAggregateType>` (`MyAggregateType`
+/// being an example of user-defined `Aggregate` type) outside the `eventually` crate (E0116).
+/// Therefore, a newtype that uses `aggregate::Root<T>` is required.
+///
+/// This attribute macro makes the implementation of a newtype easy, as it Implements
+/// conversion traits from and to `aggregate::Root<T>` and implements automatic deref
+/// through [std::ops::Deref] and [std::ops::DerefMut].
 #[proc_macro_attribute]
 pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as AttributeArgs);
