@@ -3,7 +3,7 @@
 
 use std::{fmt::Debug, hash::Hash};
 
-use crate::{command, event, event::Store, message, test, test::store::EventStoreExt};
+use crate::{command, event, event::store::EventStoreExt, event::Store, message};
 
 /// A test scenario that can be used to test a [Command] [Handler][command::Handler]
 /// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.
@@ -135,10 +135,10 @@ where
     /// The method panics if the assertion fails.
     pub async fn assert_on<F, H>(self, handler_factory: F)
     where
-        F: Fn(test::store::Tracking<test::store::InMemory<Id, Evt>>) -> H,
+        F: Fn(event::store::Tracking<event::store::InMemory<Id, Evt>>) -> H,
         H: command::Handler<Cmd>,
     {
-        let event_store = test::store::InMemory::<Id, Evt>::default();
+        let event_store = event::store::InMemory::<Id, Evt>::default();
         let tracking_event_store = event_store.clone().with_recorded_events_tracking();
 
         for event in self.given {

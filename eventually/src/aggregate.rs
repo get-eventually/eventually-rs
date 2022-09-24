@@ -362,14 +362,14 @@ mod test {
         aggregate,
         aggregate::test_user_domain::{User, UserEvent},
         aggregate::Repository,
-        event, test,
-        test::store::EventStoreExt,
+        event,
+        event::store::EventStoreExt,
         version,
     };
 
     #[tokio::test]
     async fn repository_persists_new_aggregate_root() {
-        let event_store = test::store::InMemory::<String, UserEvent>::default();
+        let event_store = event::store::InMemory::<String, UserEvent>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
         let user_repository =
             aggregate::EventSourcedRepository::<User, _>::from(tracking_event_store.clone());
@@ -396,7 +396,7 @@ mod test {
 
     #[tokio::test]
     async fn repository_retrieves_the_aggregate_root_and_stores_new_events() {
-        let event_store = test::store::InMemory::<String, UserEvent>::default();
+        let event_store = event::store::InMemory::<String, UserEvent>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
         let user_repository =
             aggregate::EventSourcedRepository::<User, _>::from(tracking_event_store.clone());
@@ -443,7 +443,7 @@ mod test {
 
     #[tokio::test]
     async fn repository_returns_conflict_error_from_store_when_data_race_happens() {
-        let event_store = test::store::InMemory::<String, UserEvent>::default();
+        let event_store = event::store::InMemory::<String, UserEvent>::default();
         let user_repository =
             aggregate::EventSourcedRepository::<User, _>::from(event_store.clone());
 

@@ -7,5 +7,4 @@ pub mod aggregate;
 pub mod command;
 pub mod event;
 pub mod message;
-pub mod test;
 pub mod version;
