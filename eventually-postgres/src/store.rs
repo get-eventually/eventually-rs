@@ -8,7 +8,7 @@ use eventually::{
     version::Version,
 };
 use futures::{future::ready, StreamExt, TryStreamExt};
-use sqlx::{postgres::PgRow, PgPool, Postgres, Row};
+use sqlx::{postgres::PgRow, PgPool, Postgres, Row, Transaction};
 
 use crate::serde::{ByteArray, Deserializer, Serde};
 
@@ -26,6 +26,27 @@ pub enum StreamError {
     },
     #[error("db returned an error: {0}")]
     Database(#[source] sqlx::Error),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AppendError {
+    #[error("conflict error detected: {0})")]
+    Conflict(#[source] version::ConflictError),
+    #[error("failed to begin transaction: {0}")]
+    BeginTransaction(#[source] sqlx::Error),
+    #[error("failed to commit transaction: {0}")]
+    CommitTransaction(#[source] sqlx::Error),
+    #[error("db returned an error: {0}")]
+    Database(#[from] sqlx::Error),
+}
+
+impl From<AppendError> for Option<version::ConflictError> {
+    fn from(err: AppendError) -> Self {
+        match err {
+            AppendError::Conflict(v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -86,6 +107,34 @@ where
             },
         })
     }
+
+    async fn append_domain_event(
+        &self,
+        tx: &mut Transaction<'_, Postgres>,
+        event_version: i64,
+        new_event_stream_version: i64,
+        event: event::Envelope<Evt>,
+    ) -> Result<(), AppendError> {
+        todo!()
+    }
+
+    async fn append_domain_events(
+        &self,
+        tx: &mut Transaction<'_, Postgres>,
+        new_version: i64,
+        events: Vec<event::Envelope<Evt>>,
+    ) -> Result<(), AppendError> {
+        let current_event_stream_version = new_version - (events.len() as i64);
+
+        for (i, event) in events.into_iter().enumerate() {
+            let event_version = current_event_stream_version + (i as i64) + 1;
+
+            self.append_domain_event(tx, event_version, new_version, event)
+                .await?;
+        }
+
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -101,7 +150,7 @@ where
     type StreamId = Id;
     type Event = Evt;
     type StreamError = StreamError;
-    type AppendError = Option<version::ConflictError>;
+    type AppendError = AppendError;
 
     fn stream(
         &self,
@@ -137,6 +186,43 @@ where
         version_check: event::StreamVersionExpected,
         events: Vec<event::Envelope<Self::Event>>,
     ) -> Result<Version, Self::AppendError> {
-        todo!()
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(AppendError::BeginTransaction)?;
+
+        let string_id = id.to_string();
+
+        let new_version: i64 = match version_check {
+            event::StreamVersionExpected::Any => {
+                let events_len = events.len() as i64;
+
+                sqlx::query("SELECT * FROM upsert_event_stream_with_no_version_check($1::TEXT, $2::INTEGER)")
+                    .bind(&string_id)
+                    .bind(events_len)
+                    .fetch_one(&mut tx)
+                    .await
+                    .and_then(|row| row.try_get(0))?
+            }
+            event::StreamVersionExpected::MustBe(v) => {
+                let new_version = v + (events.len() as Version);
+
+                sqlx::query("CALL upsert_event_stream($1::TEXT, $2::INTEGER, $3::INTEGER)")
+                    .bind(&string_id)
+                    .bind(v as i64)
+                    .bind(new_version as i64)
+                    .execute(&mut tx)
+                    .await
+                    .map(|_| new_version as i64)?
+            }
+        };
+
+        self.append_domain_events(&mut tx, new_version, events)
+            .await?;
+
+        tx.commit().await.map_err(AppendError::CommitTransaction)?;
+
+        Ok(new_version as Version)
     }
 }
