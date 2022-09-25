@@ -2,3 +2,5 @@
 #![deny(clippy::all)]
 #![warn(clippy::pedantic)]
 #![warn(missing_docs)]
+
+pub mod store;
