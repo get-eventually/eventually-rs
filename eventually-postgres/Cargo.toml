@@ -1,8 +1,16 @@
 [package]
 name = "eventually-postgres"
-version = "0.1.0"
+description = "PostgreSQL-specific trait implementations and utilities for the eventually crate"
+version = "0.5.0"
 edition = "2021"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/get-eventually/eventually-rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+categories = ["web-programming", "asynchronous"]
+keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]
 
 [dependencies]
+
+[dev-dependencies]
