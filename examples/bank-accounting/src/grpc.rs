@@ -6,21 +6,21 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 
 use crate::{
     application,
-    domain::{BankAccount, BankAccountError, BankAccountRoot},
+    domain::{BankAccount, BankAccountError},
     proto,
 };
 
 #[derive(Clone)]
 pub struct BankAccountingApi<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
 {
     application_service: application::Service<R>,
 }
 
 impl<R> From<application::Service<R>> for BankAccountingApi<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot>,
+    R: aggregate::Repository<BankAccount>,
 {
     fn from(application_service: application::Service<R>) -> Self {
         Self {
@@ -32,7 +32,7 @@ where
 #[async_trait]
 impl<R> proto::bank_accounting_server::BankAccounting for BankAccountingApi<R>
 where
-    R: aggregate::Repository<BankAccount, BankAccountRoot> + 'static,
+    R: aggregate::Repository<BankAccount> + 'static,
     R::Error: StdError + Send + Sync + 'static,
 {
     async fn open_bank_account(

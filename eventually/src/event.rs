@@ -12,6 +12,8 @@ use crate::{
     version::{ConflictError, Version},
 };
 
+pub mod store;
+
 /// An Event is a [Message] carring the information about a Domain Event,
 /// an occurrence in the system lifetime that is relevant for the Domain
 /// that is being implemented.
