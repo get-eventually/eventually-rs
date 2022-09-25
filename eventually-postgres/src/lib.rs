@@ -3,6 +3,7 @@
 #![warn(clippy::pedantic)]
 #![warn(missing_docs)]
 
+pub mod serde;
 pub mod store;
 
 pub static MIGRATIONS: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
