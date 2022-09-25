@@ -14,5 +14,6 @@ keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]
 [dependencies]
 async-trait = "0.1.57"
 eventually = { path = "../eventually", version = "0.5.0" }
+sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls" , "postgres", "migrate" ] }
 
 [dev-dependencies]

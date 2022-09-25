@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, string::ToString};
 
 use async_trait::async_trait;
 use eventually::{event, message::Message, version, version::Version};
@@ -12,7 +12,7 @@ pub struct EventStore<Id, Evt> {
 #[async_trait]
 impl<Id, Evt> event::Store for EventStore<Id, Evt>
 where
-    Id: Send + Sync,
+    Id: ToString + Send + Sync,
     Evt: Message + Send + Sync,
 {
     type StreamId = Id;
