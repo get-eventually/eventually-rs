@@ -52,6 +52,67 @@ impl From<AppendError> for Option<version::ConflictError> {
     }
 }
 
+#[derive(Debug)]
+pub struct EventStoreBuilder<Id, Evt, OutEvt, S> {
+    pool: PgPool,
+    serde: S,
+    id_type: PhantomData<Id>,
+    evt_type: PhantomData<Evt>,
+    out_evt_type: PhantomData<OutEvt>,
+}
+
+impl<Id, Evt, S> EventStoreBuilder<Id, Evt, Evt, S>
+where
+    Id: ToString + Clone,
+    S: Serde<Evt>,
+{
+    pub fn new(pool: PgPool, serde: S) -> Self {
+        Self {
+            pool,
+            serde,
+            id_type: PhantomData,
+            evt_type: PhantomData,
+            out_evt_type: PhantomData,
+        }
+    }
+
+    pub fn with_out_event_type<OutS, OutEvt>(
+        self,
+        serde: OutS,
+    ) -> EventStoreBuilder<Id, Evt, OutEvt, OutS>
+    where
+        Evt: TryFrom<OutEvt>,
+        OutEvt: From<Evt>,
+        OutS: Serde<OutEvt>,
+    {
+        EventStoreBuilder {
+            serde,
+            pool: self.pool,
+            id_type: PhantomData,
+            evt_type: PhantomData,
+            out_evt_type: PhantomData,
+        }
+    }
+}
+
+impl<Id, Evt, OutEvt, S> EventStoreBuilder<Id, Evt, OutEvt, S>
+where
+    Id: ToString + Clone,
+    Evt: TryFrom<OutEvt>,
+    OutEvt: From<Evt>,
+    S: Serde<OutEvt>,
+{
+    pub fn build(self) -> EventStore<Id, Evt, OutEvt, S> {
+        EventStore {
+            pool: self.pool,
+            serde: self.serde,
+            id_type: self.id_type,
+            evt_type: self.evt_type,
+            out_evt_type: self.out_evt_type,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Evt, OutEvt, S>
 where
