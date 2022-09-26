@@ -1,6 +1,7 @@
 use std::{marker::PhantomData, string::ToString};
 
 use async_trait::async_trait;
+use chrono::Utc;
 use eventually::{
     event,
     message::{Message, Metadata},
@@ -34,6 +35,8 @@ pub enum AppendError {
     Conflict(#[source] version::ConflictError),
     #[error("failed to begin transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
+    #[error("failed to append a new domain event: {0}")]
+    AppendEvent(#[source] sqlx::Error),
     #[error("failed to commit transaction: {0}")]
     CommitTransaction(#[source] sqlx::Error),
     #[error("db returned an error: {0}")]
@@ -115,7 +118,30 @@ where
         new_event_stream_version: i64,
         event: event::Envelope<Evt>,
     ) -> Result<(), AppendError> {
-        todo!()
+        let event_type = event.message.name();
+        let out_event = OutEvt::from(event.message);
+        let serialized_event = self.serde.serialize(out_event);
+        let mut metadata = event.metadata;
+
+        metadata.insert("Recorded-At".to_owned(), Utc::now().to_string());
+        metadata.insert(
+            "Recorded-With-New-Version".to_owned(),
+            new_event_stream_version.to_string(),
+        );
+
+        sqlx::query(
+            r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#,
+        )
+            .bind("id")
+            .bind(event_type)
+            .bind(event_version)
+            .bind(serialized_event)
+            .bind(sqlx::types::Json(metadata))
+            .execute(tx)
+            .await
+            .map_err(AppendError::AppendEvent)?;
+
+        Ok(())
     }
 
     async fn append_domain_events(
