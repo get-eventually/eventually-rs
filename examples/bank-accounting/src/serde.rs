@@ -1,6 +1,9 @@
 use eventually_postgres::serde::{ByteArray, Deserializer, Serializer};
 use prost::{bytes::Bytes, Message};
-use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::{
+    prelude::{FromPrimitive, ToPrimitive},
+    Decimal,
+};
 
 use crate::{domain, domain::BankAccountEvent, proto, proto::Event as ProtoBankAccountEvent};
 
@@ -92,6 +95,28 @@ impl From<BankAccountEvent> for ProtoBankAccountEvent {
 
 impl From<ProtoBankAccountEvent> for BankAccountEvent {
     fn from(proto: ProtoBankAccountEvent) -> Self {
-        todo!()
+        match proto.event.expect("event is a required field") {
+            proto::event::Event::WasOpened(proto::event::WasOpened {
+                id,
+                account_holder_id,
+                initial_balance,
+            }) => BankAccountEvent::WasOpened {
+                id,
+                account_holder_id,
+                initial_balance: Some(Decimal::from_f32(initial_balance).unwrap()),
+            },
+            proto::event::Event::DepositWasRecorded(proto::event::DepositWasRecorded {
+                amount,
+            }) => BankAccountEvent::DepositWasRecorded {
+                amount: Decimal::from_f32(amount).unwrap(),
+            },
+            // TODO: fill these as more implementations are added to the service.
+            proto::event::Event::TransferWasSent(_) => todo!(),
+            proto::event::Event::TransferWasReceived(_) => todo!(),
+            proto::event::Event::TransferWasConfimed(_) => todo!(),
+            proto::event::Event::TransferWasDeclined(_) => todo!(),
+            proto::event::Event::WasClosed(_) => todo!(),
+            proto::event::Event::WasReopened(_) => todo!(),
+        }
     }
 }
