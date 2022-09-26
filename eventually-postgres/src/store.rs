@@ -137,6 +137,7 @@ where
     async fn append_domain_event(
         &self,
         tx: &mut Transaction<'_, Postgres>,
+        event_stream_id: &str,
         event_version: i32,
         new_event_stream_version: i32,
         event: event::Envelope<Evt>,
@@ -146,7 +147,7 @@ where
         let serialized_event = self.serde.serialize(out_event);
         let mut metadata = event.metadata;
 
-        metadata.insert("Recorded-At".to_owned(), Utc::now().to_string());
+        metadata.insert("Recorded-At".to_owned(), Utc::now().to_rfc3339());
         metadata.insert(
             "Recorded-With-New-Version".to_owned(),
             new_event_stream_version.to_string(),
@@ -155,7 +156,7 @@ where
         sqlx::query(
             r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#,
         )
-            .bind("id")
+            .bind(event_stream_id)
             .bind(event_type)
             .bind(event_version)
             .bind(serialized_event)
@@ -170,6 +171,7 @@ where
     async fn append_domain_events(
         &self,
         tx: &mut Transaction<'_, Postgres>,
+        event_stream_id: &str,
         new_version: i32,
         events: Vec<event::Envelope<Evt>>,
     ) -> Result<(), AppendError> {
@@ -178,7 +180,7 @@ where
         for (i, event) in events.into_iter().enumerate() {
             let event_version = current_event_stream_version + (i as i32) + 1;
 
-            self.append_domain_event(tx, event_version, new_version, event)
+            self.append_domain_event(tx, event_stream_id, event_version, new_version, event)
                 .await?;
         }
 
@@ -241,7 +243,7 @@ where
             .await
             .map_err(AppendError::BeginTransaction)?;
 
-        sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE READ WRITE DEFERRABLE")
+        sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE")
             .execute(&mut tx)
             .await?;
 
@@ -269,32 +271,10 @@ where
                     .await
                     .map_err(AppendError::Database)
                     .map(|_| new_version as i32)?
-                // .and_then(|res| {
-                //     if res.rows_affected() != 1 {
-                //         Err(AppendError::UpsertEventStream)
-                //     } else {
-                //         Ok(new_version as i32)
-                //     }
-                // })?
             }
         };
 
-        let result = sqlx::query("SELECT * FROM event_streams WHERE event_stream_id = $1")
-            .bind(&string_id)
-            .fetch_one(&mut tx)
-            .await?;
-
-        let event_stream_id: String = result.get("event_stream_id");
-        let version: i32 = result.get("version");
-
-        println!("received: {}, {}", event_stream_id, version);
-
-        println!(
-            "append new events: \n\tnew version: {},\n\tevents: {:?}",
-            new_version, events
-        );
-
-        self.append_domain_events(&mut tx, new_version, events)
+        self.append_domain_events(&mut tx, &string_id, new_version, events)
             .await?;
 
         tx.commit().await.map_err(AppendError::CommitTransaction)?;
