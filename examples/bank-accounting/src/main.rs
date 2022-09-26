@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use anyhow::anyhow;
-use eventually::event;
+use eventually_postgres::store::EventStore;
 
-use bank_accounting::{application, domain::BankAccountRepository, grpc, proto};
+use bank_accounting::{application, domain::BankAccountRepository, grpc, proto, serde};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -13,7 +13,10 @@ async fn main() -> anyhow::Result<()> {
         .try_init()
         .map_err(|e| anyhow!("failed to initialize tracing logger: {}", e))?;
 
-    let bank_account_event_store = event::store::InMemory::default();
+    let database_url = std::env::var("DATABASE_URL").expect("env var DATABASE_URL is required");
+    let pool = sqlx::PgPool::connect(&database_url).await?;
+
+    let bank_account_event_store = EventStore::new(pool, serde::BankAccountEventSerde).await?;
     let bank_account_repository = BankAccountRepository::from(bank_account_event_store.clone());
 
     let application_service = application::Service::from(bank_account_repository);

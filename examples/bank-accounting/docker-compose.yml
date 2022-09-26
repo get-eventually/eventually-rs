@@ -1,0 +1,11 @@
+version: "3"
+services:
+  event-store:
+    image: postgres:13
+    restart: on-failure
+    command:
+      ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password

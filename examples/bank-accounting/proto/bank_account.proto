@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package bankaccount;
+
+message Transaction {
+    string id = 1;
+    string beneficiary_account_id = 2;
+    float amount = 3;
+};
+
+message Event {
+    message WasOpened {
+        string id = 1;
+        string account_holder_id = 2;
+        float initial_balance = 3;
+    };
+
+    message DepositWasRecorded {
+        float amount = 1;
+    };
+
+    message TransferWasSent {
+        Transaction transaction = 1;
+        optional string msg = 2;
+    };
+
+    message TransferWasReceived {
+        Transaction transaction = 1;
+        optional string msg = 2;
+    };
+
+    message TransferWasDeclined {
+        string transaction_id = 1;
+        optional string reason = 2;
+    };
+
+    message TransferWasConfirmed {
+        string transaction_id = 1;
+    };
+
+    message WasClosed {};
+
+    message WasReopened {
+        float reopening_balance = 1;
+    };
+
+    oneof event {
+        WasOpened was_opened = 1;
+        DepositWasRecorded deposit_was_recorded = 2;
+        TransferWasSent transfer_was_sent = 3;
+        TransferWasReceived transfer_was_received = 4;
+        TransferWasConfirmed transfer_was_confimed = 5;
+        TransferWasDeclined transfer_was_declined = 6;
+        WasClosed was_closed = 7;
+        WasReopened was_reopened = 8;
+    };
+};
