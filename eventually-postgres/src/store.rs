@@ -35,6 +35,8 @@ pub enum AppendError {
     Conflict(#[source] version::ConflictError),
     #[error("failed to begin transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
+    #[error("failed to upsert new event stream version")]
+    UpsertEventStream,
     #[error("failed to append a new domain event: {0}")]
     AppendEvent(#[source] sqlx::Error),
     #[error("failed to commit transaction: {0}")]
@@ -52,67 +54,6 @@ impl From<AppendError> for Option<version::ConflictError> {
     }
 }
 
-#[derive(Debug)]
-pub struct EventStoreBuilder<Id, Evt, OutEvt, S> {
-    pool: PgPool,
-    serde: S,
-    id_type: PhantomData<Id>,
-    evt_type: PhantomData<Evt>,
-    out_evt_type: PhantomData<OutEvt>,
-}
-
-impl<Id, Evt, S> EventStoreBuilder<Id, Evt, Evt, S>
-where
-    Id: ToString + Clone,
-    S: Serde<Evt>,
-{
-    pub fn new(pool: PgPool, serde: S) -> Self {
-        Self {
-            pool,
-            serde,
-            id_type: PhantomData,
-            evt_type: PhantomData,
-            out_evt_type: PhantomData,
-        }
-    }
-
-    pub fn with_out_event_type<OutS, OutEvt>(
-        self,
-        serde: OutS,
-    ) -> EventStoreBuilder<Id, Evt, OutEvt, OutS>
-    where
-        Evt: TryFrom<OutEvt>,
-        OutEvt: From<Evt>,
-        OutS: Serde<OutEvt>,
-    {
-        EventStoreBuilder {
-            serde,
-            pool: self.pool,
-            id_type: PhantomData,
-            evt_type: PhantomData,
-            out_evt_type: PhantomData,
-        }
-    }
-}
-
-impl<Id, Evt, OutEvt, S> EventStoreBuilder<Id, Evt, OutEvt, S>
-where
-    Id: ToString + Clone,
-    Evt: TryFrom<OutEvt>,
-    OutEvt: From<Evt>,
-    S: Serde<OutEvt>,
-{
-    pub fn build(self) -> EventStore<Id, Evt, OutEvt, S> {
-        EventStore {
-            pool: self.pool,
-            serde: self.serde,
-            id_type: self.id_type,
-            evt_type: self.evt_type,
-            out_evt_type: self.out_evt_type,
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct EventStore<Id, Evt, OutEvt, S>
 where
@@ -126,6 +67,27 @@ where
     id_type: PhantomData<Id>,
     evt_type: PhantomData<Evt>,
     out_evt_type: PhantomData<OutEvt>,
+}
+
+impl<Id, Evt, OutEvt, S> EventStore<Id, Evt, OutEvt, S>
+where
+    Id: ToString + Clone,
+    Evt: TryFrom<OutEvt>,
+    OutEvt: From<Evt>,
+    S: Serde<OutEvt>,
+{
+    pub async fn new(pool: PgPool, serde: S) -> Result<Self, sqlx::migrate::MigrateError> {
+        // Make sure the latest migrations are used before using the EventStore instance.
+        crate::MIGRATIONS.run(&pool).await?;
+
+        Ok(Self {
+            pool,
+            serde,
+            id_type: PhantomData,
+            evt_type: PhantomData,
+            out_evt_type: PhantomData,
+        })
+    }
 }
 
 fn try_get_column<T>(row: &PgRow, name: &'static str) -> Result<T, StreamError>
@@ -150,7 +112,7 @@ where
         stream_id: Id,
         row: PgRow,
     ) -> Result<event::Persisted<Id, Evt>, StreamError> {
-        let version_column: i64 = try_get_column(&row, "version")?;
+        let version_column: i32 = try_get_column(&row, "version")?;
         let event_column: ByteArray = try_get_column(&row, "event")?;
         let metadata_column: sqlx::types::Json<Metadata> = try_get_column(&row, "metadata")?;
 
@@ -175,8 +137,8 @@ where
     async fn append_domain_event(
         &self,
         tx: &mut Transaction<'_, Postgres>,
-        event_version: i64,
-        new_event_stream_version: i64,
+        event_version: i32,
+        new_event_stream_version: i32,
         event: event::Envelope<Evt>,
     ) -> Result<(), AppendError> {
         let event_type = event.message.name();
@@ -208,13 +170,13 @@ where
     async fn append_domain_events(
         &self,
         tx: &mut Transaction<'_, Postgres>,
-        new_version: i64,
+        new_version: i32,
         events: Vec<event::Envelope<Evt>>,
     ) -> Result<(), AppendError> {
-        let current_event_stream_version = new_version - (events.len() as i64);
+        let current_event_stream_version = new_version - (events.len() as i32);
 
         for (i, event) in events.into_iter().enumerate() {
-            let event_version = current_event_stream_version + (i as i64) + 1;
+            let event_version = current_event_stream_version + (i as i32) + 1;
 
             self.append_domain_event(tx, event_version, new_version, event)
                 .await?;
@@ -228,7 +190,7 @@ where
 impl<Id, Evt, OutEvt, S> event::Store for EventStore<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom<OutEvt> + Message + Send + Sync,
+    Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
     <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
     OutEvt: From<Evt> + Send + Sync,
     S: Serde<OutEvt> + Send + Sync,
@@ -244,9 +206,9 @@ where
         id: &Self::StreamId,
         select: event::VersionSelect,
     ) -> event::Stream<Self::StreamId, Self::Event, Self::StreamError> {
-        let from_version: i64 = match select {
+        let from_version: i32 = match select {
             event::VersionSelect::All => 0,
-            event::VersionSelect::From(v) => v as i64,
+            event::VersionSelect::From(v) => v as i32,
         };
 
         let query = sqlx::query(
@@ -279,13 +241,17 @@ where
             .await
             .map_err(AppendError::BeginTransaction)?;
 
+        sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE READ WRITE DEFERRABLE")
+            .execute(&mut tx)
+            .await?;
+
         let string_id = id.to_string();
 
-        let new_version: i64 = match version_check {
+        let new_version: i32 = match version_check {
             event::StreamVersionExpected::Any => {
-                let events_len = events.len() as i64;
+                let events_len = events.len() as i32;
 
-                sqlx::query("SELECT * FROM upsert_event_stream_with_no_version_check($1::TEXT, $2::INTEGER)")
+                sqlx::query("SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)")
                     .bind(&string_id)
                     .bind(events_len)
                     .fetch_one(&mut tx)
@@ -295,15 +261,38 @@ where
             event::StreamVersionExpected::MustBe(v) => {
                 let new_version = v + (events.len() as Version);
 
-                sqlx::query("CALL upsert_event_stream($1::TEXT, $2::INTEGER, $3::INTEGER)")
+                sqlx::query("CALL upsert_event_stream($1, $2, $3)")
                     .bind(&string_id)
-                    .bind(v as i64)
-                    .bind(new_version as i64)
+                    .bind(v as i32)
+                    .bind(new_version as i32)
                     .execute(&mut tx)
                     .await
-                    .map(|_| new_version as i64)?
+                    .map_err(AppendError::Database)
+                    .map(|_| new_version as i32)?
+                // .and_then(|res| {
+                //     if res.rows_affected() != 1 {
+                //         Err(AppendError::UpsertEventStream)
+                //     } else {
+                //         Ok(new_version as i32)
+                //     }
+                // })?
             }
         };
+
+        let result = sqlx::query("SELECT * FROM event_streams WHERE event_stream_id = $1")
+            .bind(&string_id)
+            .fetch_one(&mut tx)
+            .await?;
+
+        let event_stream_id: String = result.get("event_stream_id");
+        let version: i32 = result.get("version");
+
+        println!("received: {}, {}", event_stream_id, version);
+
+        println!(
+            "append new events: \n\tnew version: {},\n\tevents: {:?}",
+            new_version, events
+        );
 
         self.append_domain_events(&mut tx, new_version, events)
             .await?;

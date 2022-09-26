@@ -33,3 +33,5 @@ where
 }
 
 pub trait Serde<T>: Serializer<T> + Deserializer<T> {}
+
+impl<K, T> Serde<T> for K where K: Serializer<T> + Deserializer<T> {}
