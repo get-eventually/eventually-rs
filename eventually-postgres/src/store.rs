@@ -5,13 +5,12 @@ use chrono::Utc;
 use eventually::{
     event,
     message::{Message, Metadata},
+    serde::{Deserializer, Serde},
     version,
     version::Version,
 };
 use futures::{future::ready, StreamExt, TryStreamExt};
 use sqlx::{postgres::PgRow, PgPool, Postgres, Row, Transaction};
-
-use crate::serde::{ByteArray, Deserializer, Serde};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StreamError {
@@ -113,7 +112,7 @@ where
         row: PgRow,
     ) -> Result<event::Persisted<Id, Evt>, StreamError> {
         let version_column: i32 = try_get_column(&row, "version")?;
-        let event_column: ByteArray = try_get_column(&row, "event")?;
+        let event_column: Vec<u8> = try_get_column(&row, "event")?;
         let metadata_column: sqlx::types::Json<Metadata> = try_get_column(&row, "metadata")?;
 
         let deserialized_event = self

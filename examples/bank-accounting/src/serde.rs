@@ -1,30 +1,9 @@
-use eventually_postgres::serde::{ByteArray, Deserializer, Serializer};
-use prost::{bytes::Bytes, Message};
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
     Decimal,
 };
 
 use crate::{domain, domain::BankAccountEvent, proto, proto::Event as ProtoBankAccountEvent};
-
-#[derive(Debug, Clone, Copy)]
-pub struct BankAccountEventSerde;
-
-impl Serializer<ProtoBankAccountEvent> for BankAccountEventSerde {
-    fn serialize(&self, value: ProtoBankAccountEvent) -> ByteArray {
-        value.encode_to_vec()
-    }
-}
-
-impl Deserializer<ProtoBankAccountEvent> for BankAccountEventSerde {
-    type Error = prost::DecodeError;
-
-    fn deserialize(&self, value: ByteArray) -> Result<ProtoBankAccountEvent, Self::Error> {
-        let buf = Bytes::from(value);
-        let event = ProtoBankAccountEvent::decode(buf)?;
-        Ok(event)
-    }
-}
 
 impl From<domain::Transaction> for proto::Transaction {
     fn from(tx: domain::Transaction) -> Self {

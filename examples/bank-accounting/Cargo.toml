@@ -8,7 +8,7 @@ publish = false
 [dependencies]
 anyhow = "1.0.51"
 async-trait = "0.1.52"
-eventually = { path = "../../eventually" }
+eventually = { path = "../../eventually", features = ["serde-prost"] }
 eventually-macros = { path = "../../eventually-macros" }
 eventually-postgres = { path = "../../eventually-postgres" }
 prost = "0.11.0"
