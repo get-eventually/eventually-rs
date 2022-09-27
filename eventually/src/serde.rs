@@ -1,4 +1,6 @@
-// #[cfg(features = "serde-prost")]
+#[cfg(feature = "serde-json")]
+pub mod json;
+#[cfg(feature = "serde-prost")]
 pub mod prost;
 
 pub trait Serializer<T> {
