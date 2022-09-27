@@ -46,6 +46,9 @@ jobs:
           override: true
           components: rustfmt
 
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -87,6 +90,9 @@ jobs:
           profile: minimal
           override: true
           components: rustfmt
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
@@ -146,6 +152,9 @@ jobs:
           toolchain: nightly
           override: true
           components: clippy,rustfmt
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Run cargo clippy
         uses: actions-rs/clippy-check@v1
