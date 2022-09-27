@@ -54,7 +54,7 @@ impl From<AppendError> for Option<version::ConflictError> {
 }
 
 #[derive(Debug, Clone)]
-pub struct EventStore<Id, Evt, OutEvt, S>
+pub struct Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone,
     Evt: TryFrom<OutEvt>,
@@ -68,7 +68,7 @@ where
     out_evt_type: PhantomData<OutEvt>,
 }
 
-impl<Id, Evt, OutEvt, S> EventStore<Id, Evt, OutEvt, S>
+impl<Id, Evt, OutEvt, S> Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone,
     Evt: TryFrom<OutEvt>,
@@ -76,7 +76,7 @@ where
     S: Serde<OutEvt>,
 {
     pub async fn new(pool: PgPool, serde: S) -> Result<Self, sqlx::migrate::MigrateError> {
-        // Make sure the latest migrations are used before using the EventStore instance.
+        // Make sure the latest migrations are used before using the Store instance.
         crate::MIGRATIONS.run(&pool).await?;
 
         Ok(Self {
@@ -97,7 +97,7 @@ where
         .map_err(|err| StreamError::ReadColumn { name, error: err })
 }
 
-impl<Id, Evt, OutEvt, S> EventStore<Id, Evt, OutEvt, S>
+impl<Id, Evt, OutEvt, S> Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone + Send + Sync,
     Evt: TryFrom<OutEvt> + Message + Send + Sync,
@@ -188,7 +188,7 @@ where
 }
 
 #[async_trait]
-impl<Id, Evt, OutEvt, S> event::Store for EventStore<Id, Evt, OutEvt, S>
+impl<Id, Evt, OutEvt, S> event::Store for Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone + Send + Sync,
     Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,

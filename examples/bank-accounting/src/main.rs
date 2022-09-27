@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::anyhow;
 use eventually::serde::prost::MessageSerde;
-use eventually_postgres::store::EventStore;
+use eventually_postgres::event;
 
 use bank_accounting::{application, domain::BankAccountRepository, grpc, proto};
 
@@ -18,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
     let pool = sqlx::PgPool::connect(&database_url).await?;
 
     let bank_account_event_serde = MessageSerde::<proto::Event>::default();
-    let bank_account_event_store = EventStore::new(pool, bank_account_event_serde).await?;
+    let bank_account_event_store = event::Store::new(pool, bank_account_event_serde).await?;
     let bank_account_repository = BankAccountRepository::from(bank_account_event_store.clone());
 
     let application_service = application::Service::from(bank_account_repository);
