@@ -16,6 +16,21 @@ jobs:
             toolchain: stable
           - build: nightly
             toolchain: nightly
+
+    services:
+      postgres:
+        env:
+          POSTGRES_USER: eventually
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: eventually
+        image: postgres:latest
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -31,10 +46,71 @@ jobs:
           override: true
           components: rustfmt
 
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
       - uses: actions-rs/cargo@v1
         with:
           command: test
           args: --workspace --all-features
+        env:
+          DATABASE_URL: postgres://eventually:password@localhost:5432/eventually?sslmode=disable
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        env:
+          POSTGRES_USER: eventually
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: eventually
+        image: postgres:latest
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: checkout source
+        uses: actions/checkout@v3
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          components: rustfmt
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo-tarpaulin
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          args: --workspace --all-features
+        env:
+          DATABASE_URL: postgres://eventually:password@localhost:5432/eventually?sslmode=disable
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
 
   formatting:
     name: Rustfmt Check
@@ -76,6 +152,9 @@ jobs:
           toolchain: nightly
           override: true
           components: clippy,rustfmt
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Run cargo clippy
         uses: actions-rs/clippy-check@v1

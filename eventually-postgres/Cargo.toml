@@ -1,0 +1,28 @@
+[package]
+name = "eventually-postgres"
+description = "PostgreSQL-specific trait implementations and utilities for the eventually crate"
+version = "0.5.0"
+edition = "2021"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/get-eventually/eventually-rs"
+
+categories = ["web-programming", "asynchronous"]
+keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]
+
+[dependencies]
+async-trait = "0.1.57"
+chrono = "0.4.22"
+eventually = { path = "../eventually", version = "0.5.0", features = ["serde-json"] }
+futures = "0.3.24"
+lazy_static = "1.4.0"
+regex = "1.6.0"
+sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls" , "postgres", "migrate" ] }
+thiserror = "1.0.36"
+
+[dev-dependencies]
+tokio = { version = "1.21.1", features = ["macros", "rt"] }
+eventually = { path = "../eventually", version = "0.5.0", features = ["serde-json"] }
+serde = { version = "1.0.130", features = ["derive"] }
+rand = "0.8.5"

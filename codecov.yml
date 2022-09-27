@@ -1,0 +1,4 @@
+ignore:
+  # Example projects are ignored for the calculation of coverage,
+  # as they don't impact the functionality of the crate.
+  - examples/**/*

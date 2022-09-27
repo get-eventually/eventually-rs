@@ -8,10 +8,12 @@ publish = false
 [dependencies]
 anyhow = "1.0.51"
 async-trait = "0.1.52"
-eventually = { path = "../../eventually" }
+eventually = { path = "../../eventually", features = ["serde-prost"] }
 eventually-macros = { path = "../../eventually-macros" }
+eventually-postgres = { path = "../../eventually-postgres" }
 prost = "0.11.0"
 rust_decimal = "1.18.0"
+sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls" , "postgres" ] }
 thiserror = "1.0.30"
 tokio = { version = "1.13.0", features = ["macros", "rt-multi-thread"] }
 tonic = { version = "0.8.1", features = ["gzip", "transport"] }
