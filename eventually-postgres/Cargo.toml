@@ -16,6 +16,8 @@ async-trait = "0.1.57"
 chrono = "0.4.22"
 eventually = { path = "../eventually", version = "0.5.0", features = ["serde-json"] }
 futures = "0.3.24"
+lazy_static = "1.4.0"
+regex = "1.6.0"
 sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls" , "postgres", "migrate" ] }
 thiserror = "1.0.36"
 
