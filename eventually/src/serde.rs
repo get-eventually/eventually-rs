@@ -2,6 +2,8 @@
 pub mod json;
 #[cfg(feature = "serde-prost")]
 pub mod prost;
+#[cfg(feature = "serde-protobuf")]
+pub mod protobuf;
 
 pub trait Serializer<T> {
     fn serialize(&self, value: T) -> Vec<u8>;
