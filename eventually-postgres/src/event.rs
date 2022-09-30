@@ -39,8 +39,8 @@ pub enum AppendError {
     Conflict(#[source] version::ConflictError),
     #[error("failed to begin transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
-    #[error("failed to upsert new event stream version")]
-    UpsertEventStream,
+    #[error("failed to upsert new event stream version: {0}")]
+    UpsertEventStream(#[source] sqlx::Error),
     #[error("failed to append a new domain event: {0}")]
     AppendEvent(#[source] sqlx::Error),
     #[error("failed to commit transaction: {0}")]
@@ -91,39 +91,6 @@ where
             evt_type: PhantomData,
             out_evt_type: PhantomData,
         })
-    }
-}
-
-lazy_static! {
-    static ref CONFLICT_ERROR_REGEX: Regex = Regex::new(
-        r#"event stream version check failed, expected: (?P<expected>\d), got: (?P<got>\d)"#
-    )
-    .expect("regex compiles successfully");
-}
-
-fn check_for_conflict_error(err: sqlx::Error) -> AppendError {
-    fn capture_to_version(captures: &regex::Captures, name: &'static str) -> Version {
-        let v: i32 = captures
-            .name(name)
-            .expect("field is captured")
-            .as_str()
-            .parse::<i32>()
-            .expect("field should be a valid integer");
-
-        v as Version
-    }
-
-    match err {
-        sqlx::Error::Database(ref pg_err) => {
-            match CONFLICT_ERROR_REGEX.captures(pg_err.message()) {
-                None => AppendError::Database(err),
-                Some(captures) => AppendError::Conflict(version::ConflictError {
-                    actual: capture_to_version(&captures, "got"),
-                    expected: capture_to_version(&captures, "expected"),
-                }),
-            }
-        }
-        _ => AppendError::Database(err),
     }
 }
 
@@ -306,7 +273,10 @@ where
                     .bind(new_version as i32)
                     .execute(&mut tx)
                     .await
-                    .map_err(check_for_conflict_error)
+                    .map_err(|err| match crate::check_for_conflict_error(&err) {
+                        Some(err) => AppendError::Conflict(err),
+                        None => AppendError::UpsertEventStream(err),
+                    })
                     .map(|_| new_version as i32)?
             }
         };
