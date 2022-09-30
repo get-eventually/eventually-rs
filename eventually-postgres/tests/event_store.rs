@@ -22,9 +22,11 @@ async fn append_with_no_version_check_works() {
         .await
         .unwrap();
 
-    let event_stream_id = format!("test-event-stream-{}", rand::thread_rng().gen::<u64>());
+    let id = rand::thread_rng().gen::<i64>();
+    let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {
+        id: setup::TestAggregateId(id),
         name: "test something".to_owned(),
         at: SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -76,9 +78,11 @@ async fn append_with_version_check_works() {
         .await
         .unwrap();
 
-    let event_stream_id = format!("test-event-stream-{}", rand::thread_rng().gen::<u64>());
+    let id = rand::thread_rng().gen::<i64>();
+    let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {
+        id: setup::TestAggregateId(id),
         name: "test something".to_owned(),
         at: SystemTime::now()
             .duration_since(UNIX_EPOCH)

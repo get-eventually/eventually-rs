@@ -14,7 +14,7 @@ use regex::Regex;
 
 lazy_static! {
     static ref CONFLICT_ERROR_REGEX: Regex =
-        Regex::new(r#"* version check failed, expected: (?P<expected>\d), got: (?P<got>\d)"#)
+        Regex::new(r#"version check failed, expected: (?P<expected>\d), got: (?P<got>\d)"#)
             .expect("regex compiles successfully");
 }
 
