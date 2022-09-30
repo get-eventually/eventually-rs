@@ -152,6 +152,13 @@ where
         self.aggregate.aggregate_id()
     }
 
+    pub fn to_aggregate_type<'a, K>(&'a self) -> K
+    where
+        K: From<&'a T>,
+    {
+        K::from(&self.aggregate)
+    }
+
     /// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]
     /// and resets the internal list to its default value.
     #[doc(hidden)]
