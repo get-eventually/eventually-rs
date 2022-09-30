@@ -5,7 +5,7 @@ use chrono::Utc;
 use eventually::{
     event,
     message::{Message, Metadata},
-    serde::{Deserializer, Serde},
+    serde::{Deserializer, Serde, Serializer},
     version,
     version::Version,
 };
@@ -56,6 +56,73 @@ impl From<AppendError> for Option<version::ConflictError> {
             _ => None,
         }
     }
+}
+
+pub(crate) async fn append_domain_event<Evt, OutEvt>(
+    tx: &mut Transaction<'_, Postgres>,
+    serde: &impl Serializer<OutEvt>,
+    event_stream_id: &str,
+    event_version: i32,
+    new_event_stream_version: i32,
+    event: event::Envelope<Evt>,
+) -> Result<(), sqlx::Error>
+where
+    Evt: Message,
+    OutEvt: From<Evt>,
+{
+    let event_type = event.message.name();
+    let out_event = OutEvt::from(event.message);
+    let serialized_event = serde.serialize(out_event);
+    let mut metadata = event.metadata;
+
+    metadata.insert("Recorded-At".to_owned(), Utc::now().to_rfc3339());
+    metadata.insert(
+        "Recorded-With-New-Version".to_owned(),
+        new_event_stream_version.to_string(),
+    );
+
+    sqlx::query(
+            r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#,
+        )
+            .bind(event_stream_id)
+            .bind(event_type)
+            .bind(event_version)
+            .bind(serialized_event)
+            .bind(sqlx::types::Json(metadata))
+            .execute(tx)
+            .await?;
+
+    Ok(())
+}
+
+pub(crate) async fn append_domain_events<Evt, OutEvt>(
+    tx: &mut Transaction<'_, Postgres>,
+    serde: &impl Serializer<OutEvt>,
+    event_stream_id: &str,
+    new_version: i32,
+    events: Vec<event::Envelope<Evt>>,
+) -> Result<(), sqlx::Error>
+where
+    Evt: Message,
+    OutEvt: From<Evt>,
+{
+    let current_event_stream_version = new_version - (events.len() as i32);
+
+    for (i, event) in events.into_iter().enumerate() {
+        let event_version = current_event_stream_version + (i as i32) + 1;
+
+        append_domain_event(
+            tx,
+            serde,
+            event_stream_id,
+            event_version,
+            new_version,
+            event,
+        )
+        .await?;
+    }
+
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
@@ -136,59 +203,6 @@ where
                 metadata: metadata_column.0,
             },
         })
-    }
-
-    async fn append_domain_event(
-        &self,
-        tx: &mut Transaction<'_, Postgres>,
-        event_stream_id: &str,
-        event_version: i32,
-        new_event_stream_version: i32,
-        event: event::Envelope<Evt>,
-    ) -> Result<(), AppendError> {
-        let event_type = event.message.name();
-        let out_event = OutEvt::from(event.message);
-        let serialized_event = self.serde.serialize(out_event);
-        let mut metadata = event.metadata;
-
-        metadata.insert("Recorded-At".to_owned(), Utc::now().to_rfc3339());
-        metadata.insert(
-            "Recorded-With-New-Version".to_owned(),
-            new_event_stream_version.to_string(),
-        );
-
-        sqlx::query(
-            r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#,
-        )
-            .bind(event_stream_id)
-            .bind(event_type)
-            .bind(event_version)
-            .bind(serialized_event)
-            .bind(sqlx::types::Json(metadata))
-            .execute(tx)
-            .await
-            .map_err(AppendError::AppendEvent)?;
-
-        Ok(())
-    }
-
-    async fn append_domain_events(
-        &self,
-        tx: &mut Transaction<'_, Postgres>,
-        event_stream_id: &str,
-        new_version: i32,
-        events: Vec<event::Envelope<Evt>>,
-    ) -> Result<(), AppendError> {
-        let current_event_stream_version = new_version - (events.len() as i32);
-
-        for (i, event) in events.into_iter().enumerate() {
-            let event_version = current_event_stream_version + (i as i32) + 1;
-
-            self.append_domain_event(tx, event_stream_id, event_version, new_version, event)
-                .await?;
-        }
-
-        Ok(())
     }
 }
 
@@ -281,8 +295,9 @@ where
             }
         };
 
-        self.append_domain_events(&mut tx, &string_id, new_version, events)
-            .await?;
+        append_domain_events(&mut tx, &self.serde, &string_id, new_version, events)
+            .await
+            .map_err(AppendError::AppendEvent)?;
 
         tx.commit().await.map_err(AppendError::CommitTransaction)?;
 

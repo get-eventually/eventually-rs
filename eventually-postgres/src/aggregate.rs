@@ -63,6 +63,8 @@ pub enum RepositoryError {
     Conflict(#[source] ConflictError),
     #[error("failed to save the new aggregate state: {0}")]
     SaveAggregateState(#[source] sqlx::Error),
+    #[error("failed to append a new domain event: {0}")]
+    AppendEvent(#[source] sqlx::Error),
     #[error("failed to commit transaction: {0}")]
     CommitTransaction(#[source] sqlx::Error),
     #[error("database returned an error: {0}")]
@@ -153,6 +155,16 @@ where
 
         self.save_aggregate_state(&mut tx, &aggregate_id, expected_root_version, root)
             .await?;
+
+        crate::event::append_domain_events(
+            &mut tx,
+            &self.event_serde,
+            &aggregate_id,
+            root.version() as i32,
+            events_to_commit,
+        )
+        .await
+        .map_err(RepositoryError::AppendEvent)?;
 
         tx.commit()
             .await
