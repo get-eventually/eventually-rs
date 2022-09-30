@@ -5,19 +5,59 @@ use eventually::{aggregate, aggregate::Aggregate, serde::Serde, version::Version
 use sqlx::{PgPool, Postgres};
 
 #[derive(Debug, Clone)]
-pub struct Repository<T, OutT, OutEvt, TSerde, EvtSerde> {
+pub struct Repository<T, OutT, OutEvt, TSerde, EvtSerde>
+where
+    T: Aggregate,
+    <T as Aggregate>::Id: ToString,
+    for<'a> OutT: From<&'a T>,
+    OutEvt: From<T::Event>,
+    TSerde: Serde<OutT>,
+    EvtSerde: Serde<OutEvt>,
+{
     pool: PgPool,
     aggregate_serde: TSerde,
+    event_serde: EvtSerde,
     t: PhantomData<T>,
     out_t: PhantomData<OutT>,
     out_evt: PhantomData<OutEvt>,
-    evt_serde: PhantomData<EvtSerde>,
+}
+
+impl<T, OutT, OutEvt, TSerde, EvtSerde> Repository<T, OutT, OutEvt, TSerde, EvtSerde>
+where
+    T: Aggregate,
+    <T as Aggregate>::Id: ToString,
+    for<'a> OutT: From<&'a T>,
+    OutEvt: From<T::Event>,
+    TSerde: Serde<OutT>,
+    EvtSerde: Serde<OutEvt>,
+{
+    pub async fn new(
+        pool: PgPool,
+        aggregate_serde: TSerde,
+        event_serde: EvtSerde,
+    ) -> Result<Self, sqlx::migrate::MigrateError> {
+        // Make sure the latest migrations are used before using the Repository instance.
+        crate::MIGRATIONS.run(&pool).await?;
+
+        Ok(Self {
+            pool,
+            aggregate_serde,
+            event_serde,
+            t: PhantomData,
+            out_t: PhantomData,
+            out_evt: PhantomData,
+        })
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum RepositoryError {
     #[error("failed to begin a new transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
+    #[error("failed to save the new aggregate state: {0}")]
+    SaveAggregateState(#[source] sqlx::Error),
+    #[error("failed to commit transaction: {0}")]
+    CommitTransaction(#[source] sqlx::Error),
     #[error("database returned an error: {0}")]
     Database(#[from] sqlx::Error),
 }
@@ -25,19 +65,34 @@ pub enum RepositoryError {
 impl<T, OutT, OutEvt, TSerde, EvtSerde> Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + Send + Sync,
+    <T as Aggregate>::Id: ToString,
     for<'a> OutT: From<&'a T> + Send + Sync,
+    OutEvt: From<T::Event>,
     TSerde: Serde<OutT> + Send + Sync,
+    EvtSerde: Serde<OutEvt>,
 {
     async fn save_aggregate_state(
         &self,
         tx: &mut sqlx::Transaction<'_, Postgres>,
         expected_version: Version,
-        root: aggregate::Root<T>,
+        root: &mut aggregate::Root<T>,
     ) -> Result<(), RepositoryError> {
+        let event_stream_id = root.aggregate_id().to_string();
+
         let out_state = root.to_aggregate_type::<OutT>();
         let bytes_state = self.aggregate_serde.serialize(out_state);
 
-        todo!()
+        sqlx::query("CALL upsert_aggregate($1, $2, $3, $4, $5)")
+            .bind(&event_stream_id)
+            .bind("test-type-please-change")
+            .bind(expected_version as i32)
+            .bind(root.version() as i32)
+            .bind(bytes_state)
+            .execute(tx)
+            .await
+            .map_err(RepositoryError::SaveAggregateState)?;
+
+        Ok(())
     }
 }
 
@@ -46,7 +101,8 @@ impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Repository<T>
     for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
-    OutT: From<T> + Send + Sync,
+    <T as Aggregate>::Id: ToString,
+    for<'a> OutT: From<&'a T> + Send + Sync,
     OutEvt: From<T::Event> + Send + Sync,
     TSerde: Serde<OutT> + Send + Sync,
     EvtSerde: Serde<OutEvt> + Send + Sync,
@@ -76,6 +132,13 @@ where
 
         let expected_root_version = root.version() - (events_to_commit.len() as Version);
 
-        todo!()
+        self.save_aggregate_state(&mut tx, expected_root_version, root)
+            .await?;
+
+        tx.commit()
+            .await
+            .map_err(RepositoryError::CommitTransaction)?;
+
+        Ok(())
     }
 }
