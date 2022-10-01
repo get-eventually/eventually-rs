@@ -64,6 +64,10 @@ impl Aggregate for TestAggregate {
     type Event = TestDomainEvent;
     type Error = TestAggregateError;
 
+    fn type_name() -> &'static str {
+        "TestAggregate"
+    }
+
     fn aggregate_id(&self) -> &Self::Id {
         &self.id
     }

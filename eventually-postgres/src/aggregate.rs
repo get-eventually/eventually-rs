@@ -107,7 +107,7 @@ where
 
         sqlx::query("CALL upsert_aggregate($1, $2, $3, $4, $5)")
             .bind(aggregate_id)
-            .bind("test-type-please-change")
+            .bind(T::type_name())
             .bind(expected_version as i32)
             .bind(root.version() as i32)
             .bind(bytes_state)
@@ -142,7 +142,6 @@ where
         id: &T::Id,
     ) -> Result<aggregate::Root<T>, aggregate::RepositoryGetError<Self::Error>> {
         let aggregate_id = id.to_string();
-        let aggregate_type = "test-type-please-change";
 
         let row = sqlx::query(
             r#"SELECT version, state
@@ -150,7 +149,7 @@ where
                        WHERE aggregate_id = $1 AND "type" = $2"#,
         )
         .bind(&aggregate_id)
-        .bind(aggregate_type)
+        .bind(T::type_name())
         .fetch_one(&self.pool)
         .await
         .map_err(|err| match err {

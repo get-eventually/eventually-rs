@@ -56,6 +56,9 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
     /// mutating the Aggregate state.
     type Error: Send + Sync;
 
+    /// A unique name identifier for this Aggregate type.
+    fn type_name() -> &'static str;
+
     /// Returns the unique identifier for the Aggregate instance.
     fn aggregate_id(&self) -> &Self::Id;
 
@@ -329,6 +332,10 @@ pub(crate) mod test_user_domain {
         type Id = String;
         type Event = UserEvent;
         type Error = UserError;
+
+        fn type_name() -> &'static str {
+            "User"
+        }
 
         fn aggregate_id(&self) -> &Self::Id {
             &self.email
