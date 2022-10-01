@@ -152,11 +152,16 @@ where
         self.aggregate.aggregate_id()
     }
 
-    pub fn to_aggregate_type<'a, K>(&'a self) -> K
+    /// Maps the [Aggregate] value contained within [Root]
+    /// to a different type, that can be converted through [From] trait.
+    ///
+    /// Useful to convert an [Aggregate] type to a data transfer object to use
+    /// for database storage.
+    pub fn to_aggregate_type<K>(&self) -> K
     where
-        K: From<&'a T>,
+        K: From<T>,
     {
-        K::from(&self.aggregate)
+        K::from(self.aggregate.clone())
     }
 
     /// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]

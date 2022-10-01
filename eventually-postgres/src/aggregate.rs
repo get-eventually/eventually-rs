@@ -14,7 +14,7 @@ pub struct Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate,
     <T as Aggregate>::Id: ToString,
-    for<'a> OutT: From<&'a T>,
+    OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
     EvtSerde: Serde<OutEvt>,
@@ -31,7 +31,7 @@ impl<T, OutT, OutEvt, TSerde, EvtSerde> Repository<T, OutT, OutEvt, TSerde, EvtS
 where
     T: Aggregate,
     <T as Aggregate>::Id: ToString,
-    for<'a> OutT: From<&'a T>,
+    OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
     EvtSerde: Serde<OutEvt>,
@@ -84,7 +84,7 @@ impl<T, OutT, OutEvt, TSerde, EvtSerde> Repository<T, OutT, OutEvt, TSerde, EvtS
 where
     T: Aggregate + Send + Sync,
     <T as Aggregate>::Id: ToString,
-    for<'a> OutT: From<&'a T> + Send + Sync,
+    OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT> + Send + Sync,
     EvtSerde: Serde<OutEvt>,
@@ -122,7 +122,7 @@ impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Repository<T>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
     <T as Aggregate>::Id: ToString,
-    for<'a> OutT: From<&'a T> + Send + Sync,
+    OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event> + Send + Sync,
     TSerde: Serde<OutT> + Send + Sync,
     EvtSerde: Serde<OutEvt> + Send + Sync,

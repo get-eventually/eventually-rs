@@ -51,17 +51,6 @@ pub struct TestAggregate {
     is_deleted: bool,
 }
 
-// NOTE: necessary for using the type as out-type for the Aggregate serialization.
-impl<'a> From<&'a TestAggregate> for TestAggregate {
-    fn from(value: &'a TestAggregate) -> Self {
-        Self {
-            id: value.id,
-            name: value.name.to_owned(),
-            is_deleted: value.is_deleted,
-        }
-    }
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum TestAggregateError {
     #[error("already exists")]
