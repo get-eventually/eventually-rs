@@ -44,14 +44,14 @@ impl Message for TestDomainEvent {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TestAggregate {
     id: TestAggregateId,
     name: String,
     is_deleted: bool,
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum TestAggregateError {
     #[error("already exists")]
     AlreadyExists,
@@ -86,7 +86,7 @@ impl Aggregate for TestAggregate {
 }
 
 #[aggregate_root(TestAggregate)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TestAggregateRoot;
 
 impl TestAggregateRoot {

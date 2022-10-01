@@ -5,6 +5,19 @@ use futures::TryStreamExt;
 
 use crate::{aggregate, aggregate::Aggregate, event, version::Version};
 
+/// Error returned by a call to [`Repository::get`].
+/// This type is used to check whether an Aggregate Root has been found or not.
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+pub enum GetError<I> {
+    /// This error is retured by [`Repository::get`] when the
+    /// desired Aggregate [Root] could not be found in the data store.
+    #[error("aggregate root was not found")]
+    AggregateRootNotFound,
+
+    #[error(transparent)]
+    Inner(#[from] I),
+}
+
 /// A Repository is an object that allows to load and save
 /// an [Aggregate Root][Root] from and to a persistent data store.
 #[async_trait]
@@ -18,7 +31,7 @@ where
 
     /// Loads an Aggregate Root instance from the data store,
     /// referenced by its unique identifier.
-    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, Self::Error>;
+    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError<Self::Error>>;
 
     /// Stores a new version of an Aggregate Root instance to the data store.
     async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error>;
@@ -27,11 +40,6 @@ where
 /// List of possible errors that can be returned by an [`EventSourced`] method.
 #[derive(Debug, thiserror::Error)]
 pub enum EventSourcedError<E, SE, AE> {
-    /// This error is retured by [`EventSourced::get`] when the
-    /// desired Aggregate [Root] could not be found in the data store.
-    #[error("aggregate root was not found")]
-    AggregateRootNotFound,
-
     /// This error is returned by [`EventSourced::get`] when
     /// the desired [Aggregate] returns an error while applying a Domain Event
     /// from the Event [Store][`event::Store`] during the _rehydration_ phase.
@@ -93,7 +101,7 @@ where
 {
     type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
 
-    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, Self::Error> {
+    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError<Self::Error>> {
         let ctx = self
             .store
             .stream(id, event::VersionSelect::All)
@@ -111,7 +119,7 @@ where
             })
             .await?;
 
-        ctx.ok_or(EventSourcedError::AggregateRootNotFound)
+        ctx.ok_or(GetError::AggregateRootNotFound)
     }
 
     async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {

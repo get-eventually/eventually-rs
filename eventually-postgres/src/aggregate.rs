@@ -129,7 +129,10 @@ where
 {
     type Error = RepositoryError;
 
-    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, Self::Error> {
+    async fn get(
+        &self,
+        id: &T::Id,
+    ) -> Result<aggregate::Root<T>, aggregate::RepositoryGetError<Self::Error>> {
         todo!()
     }
 

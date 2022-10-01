@@ -28,7 +28,9 @@
 use crate::{event, message, version::Version};
 
 mod repository;
-pub use repository::{EventSourced as EventSourcedRepository, *};
+pub use repository::{
+    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Repository,
+};
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -116,7 +118,7 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
 ///     }
 /// }
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[must_use]
 pub struct Root<T>
 where

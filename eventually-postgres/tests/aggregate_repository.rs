@@ -1,4 +1,7 @@
-use eventually::{aggregate::Repository, serde::json::Json};
+use eventually::{
+    aggregate::{Repository, RepositoryGetError},
+    serde::json::Json,
+};
 use eventually_postgres::aggregate;
 use rand::Rng;
 
@@ -20,7 +23,18 @@ async fn add_new_unexisting_aggregate_root() {
 
     let aggregate_id = setup::TestAggregateId(rand::thread_rng().gen::<i64>());
 
-    // let result = aggregate_repository.get(&aggregate_id).await;
+    let result = aggregate_repository
+        .get(&aggregate_id)
+        .await
+        .expect_err("should fail");
+
+    match result {
+        RepositoryGetError::AggregateRootNotFound => (),
+        _ => panic!(
+            "unexpected error received, should be 'not found': {:?}",
+            result
+        ),
+    };
 
     let mut root = setup::TestAggregateRoot::create(aggregate_id, "John Dee".to_owned())
         .expect("aggregate root should be created");
@@ -36,8 +50,8 @@ async fn add_new_unexisting_aggregate_root() {
     let found_root = aggregate_repository
         .get(&aggregate_id)
         .await
+        .map(setup::TestAggregateRoot::from)
         .expect("the aggregate root should be found successfully");
 
-    assert_eq!(found_root.aggregate_id(), root.aggregate_id());
-    assert_eq!(found_root.version(), root.version());
+    assert_eq!(found_root, root);
 }
