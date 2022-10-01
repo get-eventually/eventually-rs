@@ -4,10 +4,10 @@ use async_trait::async_trait;
 use eventually::{
     aggregate,
     aggregate::Aggregate,
-    serde::Serde,
+    serde::{Deserializer, Serde, Serializer},
     version::{ConflictError, Version},
 };
-use sqlx::{PgPool, Postgres};
+use sqlx::{PgPool, Postgres, Row};
 
 #[derive(Debug, Clone)]
 pub struct Repository<T, OutT, OutEvt, TSerde, EvtSerde>
@@ -17,7 +17,7 @@ where
     OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
-    EvtSerde: Serde<OutEvt>,
+    EvtSerde: Serializer<OutEvt>,
 {
     pool: PgPool,
     aggregate_serde: TSerde,
@@ -34,7 +34,7 @@ where
     OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
-    EvtSerde: Serde<OutEvt>,
+    EvtSerde: Serializer<OutEvt>,
 {
     pub async fn new(
         pool: PgPool,
@@ -57,6 +57,12 @@ where
 
 #[derive(Debug, thiserror::Error)]
 pub enum RepositoryError {
+    #[error("failed to fetch the aggregate state row: {0}")]
+    FetchAggregateRow(#[source] sqlx::Error),
+    #[error("failed to deserialize the aggregate state from the database row: {0}")]
+    DeserializeAggregate(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
+    #[error("failed to convert the aggregate state into its domain type: {0}")]
+    ConvertAggregate(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
     #[error("failed to begin a new transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
     #[error("conflict error detected: {0})")]
@@ -87,7 +93,7 @@ where
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT> + Send + Sync,
-    EvtSerde: Serde<OutEvt>,
+    EvtSerde: Serializer<OutEvt>,
 {
     async fn save_aggregate_state(
         &self,
@@ -122,10 +128,12 @@ impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Repository<T>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
     <T as Aggregate>::Id: ToString,
+    <T as TryFrom<OutT>>::Error: std::error::Error + Send + Sync + 'static,
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event> + Send + Sync,
     TSerde: Serde<OutT> + Send + Sync,
-    EvtSerde: Serde<OutEvt> + Send + Sync,
+    <TSerde as Deserializer<OutT>>::Error: std::error::Error + Send + Sync + 'static,
+    EvtSerde: Serializer<OutEvt> + Send + Sync,
 {
     type Error = RepositoryError;
 
@@ -133,7 +141,38 @@ where
         &self,
         id: &T::Id,
     ) -> Result<aggregate::Root<T>, aggregate::RepositoryGetError<Self::Error>> {
-        todo!()
+        let aggregate_id = id.to_string();
+        let aggregate_type = "test-type-please-change";
+
+        let row = sqlx::query(
+            r#"SELECT version, state
+                       FROM aggregates
+                       WHERE aggregate_id = $1 AND "type" = $2"#,
+        )
+        .bind(&aggregate_id)
+        .bind(aggregate_type)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| match err {
+            sqlx::Error::RowNotFound => aggregate::RepositoryGetError::AggregateRootNotFound,
+            _ => aggregate::RepositoryGetError::Inner(RepositoryError::FetchAggregateRow(err)),
+        })?;
+
+        let version: i32 = row.try_get("version").map_err(RepositoryError::Database)?;
+        let bytes_state: Vec<u8> = row.try_get("state").map_err(RepositoryError::Database)?;
+
+        let aggregate: T = self
+            .aggregate_serde
+            .deserialize(bytes_state)
+            .map_err(|err| RepositoryError::DeserializeAggregate(Box::new(err)))
+            .and_then(|out_t| {
+                T::try_from(out_t).map_err(|err| RepositoryError::ConvertAggregate(Box::new(err)))
+            })?;
+
+        Ok(aggregate::Root::rehydrate_from_state(
+            version as Version,
+            aggregate,
+        ))
     }
 
     async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {

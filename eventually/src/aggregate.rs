@@ -173,6 +173,17 @@ where
         std::mem::take(&mut self.recorded_events)
     }
 
+    /// Rehydrates an [Aggregate] Root from its state and version.
+    /// Useful for [Repository] implementations outside the [EventSourcedRepository] one.
+    #[doc(hidden)]
+    pub fn rehydrate_from_state(version: Version, aggregate: T) -> Root<T> {
+        Root {
+            version,
+            aggregate,
+            recorded_events: Vec::default(),
+        }
+    }
+
     /// Creates a new [Root] instance from a Domain [Event]
     /// while rehydrating an [Aggregate].
     ///
