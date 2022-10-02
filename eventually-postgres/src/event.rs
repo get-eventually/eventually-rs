@@ -5,7 +5,7 @@ use chrono::Utc;
 use eventually::{
     event,
     message::{Message, Metadata},
-    serde::{Deserializer, Serde},
+    serde::{Deserializer, Serde, Serializer},
     version,
     version::Version,
 };
@@ -37,10 +37,12 @@ pub enum StreamError {
 pub enum AppendError {
     #[error("conflict error detected: {0})")]
     Conflict(#[source] version::ConflictError),
+    #[error("concurrent update detected, represented as a conflict error: {0})")]
+    Concurrency(#[source] version::ConflictError),
     #[error("failed to begin transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
-    #[error("failed to upsert new event stream version")]
-    UpsertEventStream,
+    #[error("failed to upsert new event stream version: {0}")]
+    UpsertEventStream(#[source] sqlx::Error),
     #[error("failed to append a new domain event: {0}")]
     AppendEvent(#[source] sqlx::Error),
     #[error("failed to commit transaction: {0}")]
@@ -53,9 +55,77 @@ impl From<AppendError> for Option<version::ConflictError> {
     fn from(err: AppendError) -> Self {
         match err {
             AppendError::Conflict(v) => Some(v),
+            AppendError::Concurrency(v) => Some(v),
             _ => None,
         }
     }
+}
+
+pub(crate) async fn append_domain_event<Evt, OutEvt>(
+    tx: &mut Transaction<'_, Postgres>,
+    serde: &impl Serializer<OutEvt>,
+    event_stream_id: &str,
+    event_version: i32,
+    new_event_stream_version: i32,
+    event: event::Envelope<Evt>,
+) -> Result<(), sqlx::Error>
+where
+    Evt: Message,
+    OutEvt: From<Evt>,
+{
+    let event_type = event.message.name();
+    let out_event = OutEvt::from(event.message);
+    let serialized_event = serde.serialize(out_event);
+    let mut metadata = event.metadata;
+
+    metadata.insert("Recorded-At".to_owned(), Utc::now().to_rfc3339());
+    metadata.insert(
+        "Recorded-With-New-Version".to_owned(),
+        new_event_stream_version.to_string(),
+    );
+
+    sqlx::query(
+            r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#,
+        )
+            .bind(event_stream_id)
+            .bind(event_type)
+            .bind(event_version)
+            .bind(serialized_event)
+            .bind(sqlx::types::Json(metadata))
+            .execute(tx)
+            .await?;
+
+    Ok(())
+}
+
+pub(crate) async fn append_domain_events<Evt, OutEvt>(
+    tx: &mut Transaction<'_, Postgres>,
+    serde: &impl Serializer<OutEvt>,
+    event_stream_id: &str,
+    new_version: i32,
+    events: Vec<event::Envelope<Evt>>,
+) -> Result<(), sqlx::Error>
+where
+    Evt: Message,
+    OutEvt: From<Evt>,
+{
+    let current_event_stream_version = new_version - (events.len() as i32);
+
+    for (i, event) in events.into_iter().enumerate() {
+        let event_version = current_event_stream_version + (i as i32) + 1;
+
+        append_domain_event(
+            tx,
+            serde,
+            event_stream_id,
+            event_version,
+            new_version,
+            event,
+        )
+        .await?;
+    }
+
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
@@ -91,39 +161,6 @@ where
             evt_type: PhantomData,
             out_evt_type: PhantomData,
         })
-    }
-}
-
-lazy_static! {
-    static ref CONFLICT_ERROR_REGEX: Regex = Regex::new(
-        r#"event stream version check failed, expected: (?P<expected>\d), got: (?P<got>\d)"#
-    )
-    .expect("regex compiles successfully");
-}
-
-fn check_for_conflict_error(err: sqlx::Error) -> AppendError {
-    fn capture_to_version(captures: &regex::Captures, name: &'static str) -> Version {
-        let v: i32 = captures
-            .name(name)
-            .expect("field is captured")
-            .as_str()
-            .parse::<i32>()
-            .expect("field should be a valid integer");
-
-        v as Version
-    }
-
-    match err {
-        sqlx::Error::Database(ref pg_err) => {
-            match CONFLICT_ERROR_REGEX.captures(pg_err.message()) {
-                None => AppendError::Database(err),
-                Some(captures) => AppendError::Conflict(version::ConflictError {
-                    actual: capture_to_version(&captures, "got"),
-                    expected: capture_to_version(&captures, "expected"),
-                }),
-            }
-        }
-        _ => AppendError::Database(err),
     }
 }
 
@@ -169,59 +206,6 @@ where
                 metadata: metadata_column.0,
             },
         })
-    }
-
-    async fn append_domain_event(
-        &self,
-        tx: &mut Transaction<'_, Postgres>,
-        event_stream_id: &str,
-        event_version: i32,
-        new_event_stream_version: i32,
-        event: event::Envelope<Evt>,
-    ) -> Result<(), AppendError> {
-        let event_type = event.message.name();
-        let out_event = OutEvt::from(event.message);
-        let serialized_event = self.serde.serialize(out_event);
-        let mut metadata = event.metadata;
-
-        metadata.insert("Recorded-At".to_owned(), Utc::now().to_rfc3339());
-        metadata.insert(
-            "Recorded-With-New-Version".to_owned(),
-            new_event_stream_version.to_string(),
-        );
-
-        sqlx::query(
-            r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#,
-        )
-            .bind(event_stream_id)
-            .bind(event_type)
-            .bind(event_version)
-            .bind(serialized_event)
-            .bind(sqlx::types::Json(metadata))
-            .execute(tx)
-            .await
-            .map_err(AppendError::AppendEvent)?;
-
-        Ok(())
-    }
-
-    async fn append_domain_events(
-        &self,
-        tx: &mut Transaction<'_, Postgres>,
-        event_stream_id: &str,
-        new_version: i32,
-        events: Vec<event::Envelope<Evt>>,
-    ) -> Result<(), AppendError> {
-        let current_event_stream_version = new_version - (events.len() as i32);
-
-        for (i, event) in events.into_iter().enumerate() {
-            let event_version = current_event_stream_version + (i as i32) + 1;
-
-            self.append_domain_event(tx, event_stream_id, event_version, new_version, event)
-                .await?;
-        }
-
-        Ok(())
     }
 }
 
@@ -306,13 +290,25 @@ where
                     .bind(new_version as i32)
                     .execute(&mut tx)
                     .await
-                    .map_err(check_for_conflict_error)
+                    .map_err(|err| match crate::check_for_conflict_error(&err) {
+                        Some(err) => AppendError::Conflict(err),
+                        None => match err.as_database_error().and_then(|err| err.code()) {
+                            Some(code) if code == "40001" => {
+                                AppendError::Concurrency(version::ConflictError {
+                                    expected: v,
+                                    actual: new_version,
+                                })
+                            }
+                            _ => AppendError::UpsertEventStream(err),
+                        },
+                    })
                     .map(|_| new_version as i32)?
             }
         };
 
-        self.append_domain_events(&mut tx, &string_id, new_version, events)
-            .await?;
+        append_domain_events(&mut tx, &self.serde, &string_id, new_version, events)
+            .await
+            .map_err(AppendError::AppendEvent)?;
 
         tx.commit().await.map_err(AppendError::CommitTransaction)?;
 

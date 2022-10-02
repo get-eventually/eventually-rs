@@ -28,7 +28,9 @@
 use crate::{event, message, version::Version};
 
 mod repository;
-pub use repository::{EventSourced as EventSourcedRepository, *};
+pub use repository::{
+    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Repository,
+};
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -53,6 +55,9 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
     /// The error type that can be returned by [`Aggregate::apply`] when
     /// mutating the Aggregate state.
     type Error: Send + Sync;
+
+    /// A unique name identifier for this Aggregate type.
+    fn type_name() -> &'static str;
 
     /// Returns the unique identifier for the Aggregate instance.
     fn aggregate_id(&self) -> &Self::Id;
@@ -116,7 +121,7 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
 ///     }
 /// }
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[must_use]
 pub struct Root<T>
 where
@@ -152,11 +157,34 @@ where
         self.aggregate.aggregate_id()
     }
 
+    /// Maps the [Aggregate] value contained within [Root]
+    /// to a different type, that can be converted through [From] trait.
+    ///
+    /// Useful to convert an [Aggregate] type to a data transfer object to use
+    /// for database storage.
+    pub fn to_aggregate_type<K>(&self) -> K
+    where
+        K: From<T>,
+    {
+        K::from(self.aggregate.clone())
+    }
+
     /// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]
     /// and resets the internal list to its default value.
     #[doc(hidden)]
     pub fn take_uncommitted_events(&mut self) -> Vec<event::Envelope<T::Event>> {
         std::mem::take(&mut self.recorded_events)
+    }
+
+    /// Rehydrates an [Aggregate] Root from its state and version.
+    /// Useful for [Repository] implementations outside the [EventSourcedRepository] one.
+    #[doc(hidden)]
+    pub fn rehydrate_from_state(version: Version, aggregate: T) -> Root<T> {
+        Root {
+            version,
+            aggregate,
+            recorded_events: Vec::default(),
+        }
     }
 
     /// Creates a new [Root] instance from a Domain [Event]
@@ -289,13 +317,10 @@ pub(crate) mod test_user_domain {
     pub(crate) enum UserError {
         #[error("provided email was empty")]
         EmptyEmail,
-
         #[error("provided password was empty")]
         EmptyPassword,
-
         #[error("user was not yet created")]
         NotYetCreated,
-
         #[error("user was already created")]
         AlreadyCreated,
     }
@@ -304,6 +329,10 @@ pub(crate) mod test_user_domain {
         type Id = String;
         type Event = UserEvent;
         type Error = UserError;
+
+        fn type_name() -> &'static str {
+            "User"
+        }
 
         fn aggregate_id(&self) -> &Self::Id {
             &self.email

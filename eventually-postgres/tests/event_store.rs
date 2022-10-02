@@ -7,7 +7,7 @@ use eventually::{
     version::Version,
 };
 use eventually_postgres::event;
-use futures::stream::TryStreamExt;
+use futures::{TryFutureExt, TryStreamExt};
 use rand::Rng;
 
 mod setup;
@@ -22,9 +22,11 @@ async fn append_with_no_version_check_works() {
         .await
         .unwrap();
 
-    let event_stream_id = format!("test-event-stream-{}", rand::thread_rng().gen::<u64>());
+    let id = rand::thread_rng().gen::<i64>();
+    let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {
+        id: setup::TestAggregateId(id),
         name: "test something".to_owned(),
         at: SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -67,7 +69,7 @@ async fn append_with_no_version_check_works() {
 }
 
 #[tokio::test]
-async fn append_with_version_check_works() {
+async fn it_works_with_version_check_for_conflict() {
     let pool = setup::connect_to_database()
         .await
         .expect("connection to the database should work");
@@ -76,9 +78,11 @@ async fn append_with_version_check_works() {
         .await
         .unwrap();
 
-    let event_stream_id = format!("test-event-stream-{}", rand::thread_rng().gen::<u64>());
+    let id = rand::thread_rng().gen::<i64>();
+    let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {
+        id: setup::TestAggregateId(id),
         name: "test something".to_owned(),
         at: SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -138,4 +142,54 @@ async fn append_with_version_check_works() {
             actual: new_event_stream_version,
         })
     );
+}
+
+#[tokio::test]
+async fn it_handles_concurrent_writes_to_the_same_stream() {
+    let pool = setup::connect_to_database()
+        .await
+        .expect("connection to the database should work");
+
+    let event_store = event::Store::new(pool, Json::<setup::TestDomainEvent>::default())
+        .await
+        .unwrap();
+
+    let id = rand::thread_rng().gen::<i64>();
+    let event_stream_id = format!("test-event-stream-{}", id);
+
+    let expected_events = vec![setup::TestDomainEvent::WasCreated {
+        id: setup::TestAggregateId(id),
+        name: "test something".to_owned(),
+        at: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis(),
+    }
+    .into()];
+
+    let result = futures::join!(
+        event_store
+            .append(
+                event_stream_id.clone(),
+                StreamVersionExpected::MustBe(0),
+                expected_events.clone(),
+            )
+            .map_err(Option::<version::ConflictError>::from),
+        event_store
+            .append(
+                event_stream_id.clone(),
+                StreamVersionExpected::MustBe(0),
+                expected_events,
+            )
+            .map_err(Option::<version::ConflictError>::from)
+    );
+
+    match result {
+        (Ok(_), Err(Some(_))) => (),
+        (Err(Some(_)), Ok(_)) => (),
+        (first, second) => panic!(
+            "invalid state detected, first: {:?}, second: {:?}",
+            first, second
+        ),
+    };
 }

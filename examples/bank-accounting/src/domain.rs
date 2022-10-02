@@ -86,6 +86,10 @@ impl aggregate::Aggregate for BankAccount {
     type Event = BankAccountEvent;
     type Error = BankAccountError;
 
+    fn type_name() -> &'static str {
+        "BankAccount"
+    }
+
     fn aggregate_id(&self) -> &Self::Id {
         &self.id
     }
