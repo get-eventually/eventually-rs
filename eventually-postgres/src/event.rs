@@ -37,6 +37,8 @@ pub enum StreamError {
 pub enum AppendError {
     #[error("conflict error detected: {0})")]
     Conflict(#[source] version::ConflictError),
+    #[error("concurrent update detected, represented as a conflict error: {0})")]
+    Concurrency(#[source] version::ConflictError),
     #[error("failed to begin transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
     #[error("failed to upsert new event stream version: {0}")]
@@ -53,6 +55,7 @@ impl From<AppendError> for Option<version::ConflictError> {
     fn from(err: AppendError) -> Self {
         match err {
             AppendError::Conflict(v) => Some(v),
+            AppendError::Concurrency(v) => Some(v),
             _ => None,
         }
     }
@@ -289,7 +292,15 @@ where
                     .await
                     .map_err(|err| match crate::check_for_conflict_error(&err) {
                         Some(err) => AppendError::Conflict(err),
-                        None => AppendError::UpsertEventStream(err),
+                        None => match err.as_database_error().and_then(|err| err.code()) {
+                            Some(code) if code == "40001" => {
+                                AppendError::Concurrency(version::ConflictError {
+                                    expected: v,
+                                    actual: new_version,
+                                })
+                            }
+                            _ => AppendError::UpsertEventStream(err),
+                        },
                     })
                     .map(|_| new_version as i32)?
             }

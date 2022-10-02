@@ -1,14 +1,16 @@
 use eventually::{
     aggregate::{Repository, RepositoryGetError},
     serde::json::Json,
+    version,
 };
 use eventually_postgres::aggregate;
+use futures::TryFutureExt;
 use rand::Rng;
 
 mod setup;
 
 #[tokio::test]
-async fn add_new_unexisting_aggregate_root() {
+async fn it_works() {
     let pool = setup::connect_to_database()
         .await
         .expect("connection to the database should work");
@@ -54,4 +56,49 @@ async fn add_new_unexisting_aggregate_root() {
         .expect("the aggregate root should be found successfully");
 
     assert_eq!(found_root, root);
+}
+
+#[tokio::test]
+async fn it_detects_data_races_and_returns_conflict_error() {
+    let pool = setup::connect_to_database()
+        .await
+        .expect("connection to the database should work");
+
+    let aggregate_repository = aggregate::Repository::new(
+        pool,
+        Json::<setup::TestAggregate>::default(),
+        Json::<setup::TestDomainEvent>::default(),
+    )
+    .await
+    .unwrap();
+
+    let aggregate_id = setup::TestAggregateId(rand::thread_rng().gen::<i64>());
+
+    let mut root = setup::TestAggregateRoot::create(aggregate_id, "John Dee".to_owned())
+        .expect("aggregate root should be created");
+
+    // We also delete it just to cause more Domain Events in its Event Stream.
+    root.delete().unwrap();
+
+    // We clone the Aggregate Root instance so that we have the same
+    // uncommitted events list as the original instance.
+    let mut cloned_root = root.clone();
+
+    let result = futures::join!(
+        aggregate_repository
+            .store(&mut root)
+            .map_err(Option::<version::ConflictError>::from),
+        aggregate_repository
+            .store(&mut cloned_root)
+            .map_err(Option::<version::ConflictError>::from),
+    );
+
+    match result {
+        (Ok(()), Err(Some(_))) => (),
+        (Err(Some(_)), Ok(())) => (),
+        (first, second) => panic!(
+            "invalid state detected, first: {:?}, second: {:?}",
+            first, second
+        ),
+    };
 }

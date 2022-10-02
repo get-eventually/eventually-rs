@@ -13,7 +13,6 @@ pub enum GetError<I> {
     /// desired Aggregate [Root] could not be found in the data store.
     #[error("aggregate root was not found")]
     AggregateRootNotFound,
-
     #[error(transparent)]
     Inner(#[from] I),
 }

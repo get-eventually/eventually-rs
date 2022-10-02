@@ -67,6 +67,8 @@ pub enum RepositoryError {
     BeginTransaction(#[source] sqlx::Error),
     #[error("conflict error detected: {0})")]
     Conflict(#[source] ConflictError),
+    #[error("concurrent update detected, represented as a conflict error: {0})")]
+    Concurrency(#[source] ConflictError),
     #[error("failed to save the new aggregate state: {0}")]
     SaveAggregateState(#[source] sqlx::Error),
     #[error("failed to append a new domain event: {0}")]
@@ -81,6 +83,7 @@ impl From<RepositoryError> for Option<ConflictError> {
     fn from(err: RepositoryError) -> Self {
         match err {
             RepositoryError::Conflict(v) => Some(v),
+            RepositoryError::Concurrency(v) => Some(v),
             _ => None,
         }
     }
@@ -115,7 +118,13 @@ where
             .await
             .map_err(|err| match crate::check_for_conflict_error(&err) {
                 Some(err) => RepositoryError::Conflict(err),
-                None => RepositoryError::SaveAggregateState(err),
+                None => match err.as_database_error().and_then(|err| err.code()) {
+                    Some(code) if code == "40001" => RepositoryError::Concurrency(ConflictError {
+                        expected: expected_version,
+                        actual: root.version(),
+                    }),
+                    _ => RepositoryError::SaveAggregateState(err),
+                },
             })?;
 
         Ok(())

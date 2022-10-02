@@ -317,13 +317,10 @@ pub(crate) mod test_user_domain {
     pub(crate) enum UserError {
         #[error("provided email was empty")]
         EmptyEmail,
-
         #[error("provided password was empty")]
         EmptyPassword,
-
         #[error("user was not yet created")]
         NotYetCreated,
-
         #[error("user was already created")]
         AlreadyCreated,
     }
