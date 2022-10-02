@@ -481,6 +481,35 @@
 <span id="481">481</span>
 <span id="482">482</span>
 <span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for the Aggregate pattern.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## What is an Aggregate?</span>
@@ -511,7 +540,9 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">message</span>, <span class="ident">version::Version</span>};
 
 <span class="kw">mod</span> <span class="ident">repository</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">repository</span>::{<span class="ident">EventSourced</span> <span class="kw">as</span> <span class="ident">EventSourcedRepository</span>, <span class="kw-2">*</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">repository</span>::{
+    <span class="ident">EventSourced</span> <span class="kw">as</span> <span class="ident">EventSourcedRepository</span>, <span class="ident">GetError</span> <span class="kw">as</span> <span class="ident">RepositoryGetError</span>, <span class="ident">Repository</span>,
+};
 
 <span class="doccomment">/// An Aggregate represents a Domain Model that, through an Aggregate [Root],</span>
 <span class="doccomment">/// acts as a _transactional boundary_.</span>
@@ -536,6 +567,9 @@
     <span class="doccomment">/// The error type that can be returned by [`Aggregate::apply`] when</span>
     <span class="doccomment">/// mutating the Aggregate state.</span>
     <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+
+    <span class="doccomment">/// A unique name identifier for this Aggregate type.</span>
+    <span class="kw">fn</span> <span class="ident">type_name</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
 
     <span class="doccomment">/// Returns the unique identifier for the Aggregate instance.</span>
     <span class="kw">fn</span> <span class="ident">aggregate_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Id</span>;
@@ -599,7 +633,7 @@
 <span class="doccomment">///     }</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -635,11 +669,34 @@
         <span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">aggregate_id</span>()
     }
 
+    <span class="doccomment">/// Maps the [Aggregate] value contained within [Root]</span>
+    <span class="doccomment">/// to a different type, that can be converted through [From] trait.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Useful to convert an [Aggregate] type to a data transfer object to use</span>
+    <span class="doccomment">/// for database storage.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_aggregate_type</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">K</span>
+    <span class="kw">where</span>
+        <span class="ident">K</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    {
+        <span class="ident">K::from</span>(<span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">clone</span>())
+    }
+
     <span class="doccomment">/// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]</span>
     <span class="doccomment">/// and resets the internal list to its default value.</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_uncommitted_events</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">recorded_events</span>)
+    }
+
+    <span class="doccomment">/// Rehydrates an [Aggregate] Root from its state and version.</span>
+    <span class="doccomment">/// Useful for [Repository] implementations outside the [EventSourcedRepository] one.</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rehydrate_from_state</span>(<span class="ident">version</span>: <span class="ident">Version</span>, <span class="ident">aggregate</span>: <span class="ident">T</span>) -&gt; <span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="ident">Root</span> {
+            <span class="ident">version</span>,
+            <span class="ident">aggregate</span>,
+            <span class="ident">recorded_events</span>: <span class="ident">Vec::default</span>(),
+        }
     }
 
     <span class="doccomment">/// Creates a new [Root] instance from a Domain [Event]</span>
@@ -772,13 +829,10 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">UserError</span> {
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided email was empty&quot;</span>)]</span>
         <span class="ident">EmptyEmail</span>,
-
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided password was empty&quot;</span>)]</span>
         <span class="ident">EmptyPassword</span>,
-
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;user was not yet created&quot;</span>)]</span>
         <span class="ident">NotYetCreated</span>,
-
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;user was already created&quot;</span>)]</span>
         <span class="ident">AlreadyCreated</span>,
     }
@@ -787,6 +841,10 @@
         <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">String</span>;
         <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">UserEvent</span>;
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UserError</span>;
+
+        <span class="kw">fn</span> <span class="ident">type_name</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+            <span class="string">&quot;User&quot;</span>
+        }
 
         <span class="kw">fn</span> <span class="ident">aggregate_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Id</span> {
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">email</span>

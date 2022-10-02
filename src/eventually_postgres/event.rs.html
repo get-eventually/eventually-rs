@@ -315,10 +315,6 @@
 <span id="315">315</span>
 <span id="316">316</span>
 <span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">string::ToString</span>};
 
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
@@ -326,7 +322,7 @@
 <span class="kw">use</span> <span class="ident">eventually</span>::{
     <span class="ident">event</span>,
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">Metadata</span>},
-    <span class="ident">serde</span>::{<span class="ident">Deserializer</span>, <span class="ident">Serde</span>},
+    <span class="ident">serde</span>::{<span class="ident">Deserializer</span>, <span class="ident">Serde</span>, <span class="ident">Serializer</span>},
     <span class="ident">version</span>,
     <span class="ident">version::Version</span>,
 };
@@ -358,10 +354,12 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AppendError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;conflict error detected: {0})&quot;</span>)]</span>
     <span class="ident">Conflict</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">version::ConflictError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0})&quot;</span>)]</span>
+    <span class="ident">Concurrency</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">version::ConflictError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to begin transaction: {0}&quot;</span>)]</span>
     <span class="ident">BeginTransaction</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to upsert new event stream version&quot;</span>)]</span>
-    <span class="ident">UpsertEventStream</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to upsert new event stream version: {0}&quot;</span>)]</span>
+    <span class="ident">UpsertEventStream</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to append a new domain event: {0}&quot;</span>)]</span>
     <span class="ident">AppendEvent</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to commit transaction: {0}&quot;</span>)]</span>
@@ -374,9 +372,77 @@
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">AppendError</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">err</span> {
             <span class="ident">AppendError::Conflict</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
+            <span class="ident">AppendError::Concurrency</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
             <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         }
     }
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append_domain_event</span><span class="op">&lt;</span><span class="ident">Evt</span>, <span class="ident">OutEvt</span><span class="op">&gt;</span>(
+    <span class="ident">tx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Transaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
+    <span class="ident">serde</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">Serializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
+    <span class="ident">event_stream_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">event_version</span>: <span class="ident">i32</span>,
+    <span class="ident">new_event_stream_version</span>: <span class="ident">i32</span>,
+    <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">sqlx::Error</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Evt</span>: <span class="ident">Message</span>,
+    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+{
+    <span class="kw">let</span> <span class="ident">event_type</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">name</span>();
+    <span class="kw">let</span> <span class="ident">out_event</span> <span class="op">=</span> <span class="ident">OutEvt::from</span>(<span class="ident">event</span>.<span class="ident">message</span>);
+    <span class="kw">let</span> <span class="ident">serialized_event</span> <span class="op">=</span> <span class="ident">serde</span>.<span class="ident">serialize</span>(<span class="ident">out_event</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">metadata</span>;
+
+    <span class="ident">metadata</span>.<span class="ident">insert</span>(<span class="string">&quot;Recorded-At&quot;</span>.<span class="ident">to_owned</span>(), <span class="ident">Utc::now</span>().<span class="ident">to_rfc3339</span>());
+    <span class="ident">metadata</span>.<span class="ident">insert</span>(
+        <span class="string">&quot;Recorded-With-New-Version&quot;</span>.<span class="ident">to_owned</span>(),
+        <span class="ident">new_event_stream_version</span>.<span class="ident">to_string</span>(),
+    );
+
+    <span class="ident">sqlx::query</span>(
+            <span class="string">r#&quot;INSERT INTO events (event_stream_id, &quot;type&quot;, &quot;version&quot;, event, metadata) VALUES ($1, $2, $3, $4, $5)&quot;#</span>,
+        )
+            .<span class="ident">bind</span>(<span class="ident">event_stream_id</span>)
+            .<span class="ident">bind</span>(<span class="ident">event_type</span>)
+            .<span class="ident">bind</span>(<span class="ident">event_version</span>)
+            .<span class="ident">bind</span>(<span class="ident">serialized_event</span>)
+            .<span class="ident">bind</span>(<span class="ident">sqlx::types::Json</span>(<span class="ident">metadata</span>))
+            .<span class="ident">execute</span>(<span class="ident">tx</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append_domain_events</span><span class="op">&lt;</span><span class="ident">Evt</span>, <span class="ident">OutEvt</span><span class="op">&gt;</span>(
+    <span class="ident">tx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Transaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
+    <span class="ident">serde</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">Serializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
+    <span class="ident">event_stream_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">new_version</span>: <span class="ident">i32</span>,
+    <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">sqlx::Error</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Evt</span>: <span class="ident">Message</span>,
+    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+{
+    <span class="kw">let</span> <span class="ident">current_event_stream_version</span> <span class="op">=</span> <span class="ident">new_version</span> <span class="op">-</span> (<span class="ident">events</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>);
+
+    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">event</span>) <span class="kw">in</span> <span class="ident">events</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
+        <span class="kw">let</span> <span class="ident">event_version</span> <span class="op">=</span> <span class="ident">current_event_stream_version</span> <span class="op">+</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="number">1</span>;
+
+        <span class="ident">append_domain_event</span>(
+            <span class="ident">tx</span>,
+            <span class="ident">serde</span>,
+            <span class="ident">event_stream_id</span>,
+            <span class="ident">event_version</span>,
+            <span class="ident">new_version</span>,
+            <span class="ident">event</span>,
+        )
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+    }
+
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
@@ -412,39 +478,6 @@
             <span class="ident">evt_type</span>: <span class="ident">PhantomData</span>,
             <span class="ident">out_evt_type</span>: <span class="ident">PhantomData</span>,
         })
-    }
-}
-
-<span class="macro">lazy_static!</span> {
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">CONFLICT_ERROR_REGEX</span>: <span class="ident">Regex</span> <span class="op">=</span> <span class="ident">Regex::new</span>(
-        <span class="string">r#&quot;event stream version check failed, expected: (?P&lt;expected&gt;\d), got: (?P&lt;got&gt;\d)&quot;#</span>
-    )
-    .<span class="ident">expect</span>(<span class="string">&quot;regex compiles successfully&quot;</span>);
-}
-
-<span class="kw">fn</span> <span class="ident">check_for_conflict_error</span>(<span class="ident">err</span>: <span class="ident">sqlx::Error</span>) -&gt; <span class="ident">AppendError</span> {
-    <span class="kw">fn</span> <span class="ident">capture_to_version</span>(<span class="ident">captures</span>: <span class="kw-2">&amp;</span><span class="ident">regex::Captures</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="ident">Version</span> {
-        <span class="kw">let</span> <span class="ident">v</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">captures</span>
-            .<span class="ident">name</span>(<span class="ident">name</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;field is captured&quot;</span>)
-            .<span class="ident">as_str</span>()
-            .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;field should be a valid integer&quot;</span>);
-
-        <span class="ident">v</span> <span class="kw">as</span> <span class="ident">Version</span>
-    }
-
-    <span class="kw">match</span> <span class="ident">err</span> {
-        <span class="ident">sqlx::Error::Database</span>(<span class="kw-2">ref</span> <span class="ident">pg_err</span>) =&gt; {
-            <span class="kw">match</span> <span class="ident">CONFLICT_ERROR_REGEX</span>.<span class="ident">captures</span>(<span class="ident">pg_err</span>.<span class="ident">message</span>()) {
-                <span class="prelude-val">None</span> =&gt; <span class="ident">AppendError::Database</span>(<span class="ident">err</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">captures</span>) =&gt; <span class="ident">AppendError::Conflict</span>(<span class="ident">version::ConflictError</span> {
-                    <span class="ident">actual</span>: <span class="ident">capture_to_version</span>(<span class="kw-2">&amp;</span><span class="ident">captures</span>, <span class="string">&quot;got&quot;</span>),
-                    <span class="ident">expected</span>: <span class="ident">capture_to_version</span>(<span class="kw-2">&amp;</span><span class="ident">captures</span>, <span class="string">&quot;expected&quot;</span>),
-                }),
-            }
-        }
-        <span class="kw">_</span> =&gt; <span class="ident">AppendError::Database</span>(<span class="ident">err</span>),
     }
 }
 
@@ -490,59 +523,6 @@
                 <span class="ident">metadata</span>: <span class="ident">metadata_column</span>.<span class="number">0</span>,
             },
         })
-    }
-
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append_domain_event</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">tx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Transaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
-        <span class="ident">event_stream_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">event_version</span>: <span class="ident">i32</span>,
-        <span class="ident">new_event_stream_version</span>: <span class="ident">i32</span>,
-        <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">AppendError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">event_type</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">name</span>();
-        <span class="kw">let</span> <span class="ident">out_event</span> <span class="op">=</span> <span class="ident">OutEvt::from</span>(<span class="ident">event</span>.<span class="ident">message</span>);
-        <span class="kw">let</span> <span class="ident">serialized_event</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">serde</span>.<span class="ident">serialize</span>(<span class="ident">out_event</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">metadata</span>;
-
-        <span class="ident">metadata</span>.<span class="ident">insert</span>(<span class="string">&quot;Recorded-At&quot;</span>.<span class="ident">to_owned</span>(), <span class="ident">Utc::now</span>().<span class="ident">to_rfc3339</span>());
-        <span class="ident">metadata</span>.<span class="ident">insert</span>(
-            <span class="string">&quot;Recorded-With-New-Version&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">new_event_stream_version</span>.<span class="ident">to_string</span>(),
-        );
-
-        <span class="ident">sqlx::query</span>(
-            <span class="string">r#&quot;INSERT INTO events (event_stream_id, &quot;type&quot;, &quot;version&quot;, event, metadata) VALUES ($1, $2, $3, $4, $5)&quot;#</span>,
-        )
-            .<span class="ident">bind</span>(<span class="ident">event_stream_id</span>)
-            .<span class="ident">bind</span>(<span class="ident">event_type</span>)
-            .<span class="ident">bind</span>(<span class="ident">event_version</span>)
-            .<span class="ident">bind</span>(<span class="ident">serialized_event</span>)
-            .<span class="ident">bind</span>(<span class="ident">sqlx::types::Json</span>(<span class="ident">metadata</span>))
-            .<span class="ident">execute</span>(<span class="ident">tx</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">AppendError::AppendEvent</span>)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append_domain_events</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">tx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Transaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
-        <span class="ident">event_stream_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">new_version</span>: <span class="ident">i32</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">AppendError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">current_event_stream_version</span> <span class="op">=</span> <span class="ident">new_version</span> <span class="op">-</span> (<span class="ident">events</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>);
-
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">event</span>) <span class="kw">in</span> <span class="ident">events</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">let</span> <span class="ident">event_version</span> <span class="op">=</span> <span class="ident">current_event_stream_version</span> <span class="op">+</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="number">1</span>;
-
-            <span class="self">self</span>.<span class="ident">append_domain_event</span>(<span class="ident">tx</span>, <span class="ident">event_stream_id</span>, <span class="ident">event_version</span>, <span class="ident">new_version</span>, <span class="ident">event</span>)
-                .<span class="kw">await</span><span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -627,13 +607,25 @@
                     .<span class="ident">bind</span>(<span class="ident">new_version</span> <span class="kw">as</span> <span class="ident">i32</span>)
                     .<span class="ident">execute</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>)
                     .<span class="kw">await</span>
-                    .<span class="ident">map_err</span>(<span class="ident">check_for_conflict_error</span>)
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident"><span class="kw">crate</span>::check_for_conflict_error</span>(<span class="kw-2">&amp;</span><span class="ident">err</span>) {
+                        <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="ident">AppendError::Conflict</span>(<span class="ident">err</span>),
+                        <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">as_database_error</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">code</span>()) {
+                            <span class="prelude-val">Some</span>(<span class="ident">code</span>) <span class="kw">if</span> <span class="ident">code</span> <span class="op">==</span> <span class="string">&quot;40001&quot;</span> =&gt; {
+                                <span class="ident">AppendError::Concurrency</span>(<span class="ident">version::ConflictError</span> {
+                                    <span class="ident">expected</span>: <span class="ident">v</span>,
+                                    <span class="ident">actual</span>: <span class="ident">new_version</span>,
+                                })
+                            }
+                            <span class="kw">_</span> =&gt; <span class="ident">AppendError::UpsertEventStream</span>(<span class="ident">err</span>),
+                        },
+                    })
                     .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">new_version</span> <span class="kw">as</span> <span class="ident">i32</span>)<span class="question-mark">?</span>
             }
         };
 
-        <span class="self">self</span>.<span class="ident">append_domain_events</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">string_id</span>, <span class="ident">new_version</span>, <span class="ident">events</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="ident">append_domain_events</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">serde</span>, <span class="kw-2">&amp;</span><span class="ident">string_id</span>, <span class="ident">new_version</span>, <span class="ident">events</span>)
+            .<span class="kw">await</span>
+            .<span class="ident">map_err</span>(<span class="ident">AppendError::AppendEvent</span>)<span class="question-mark">?</span>;
 
         <span class="ident">tx</span>.<span class="ident">commit</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">AppendError::CommitTransaction</span>)<span class="question-mark">?</span>;
 
