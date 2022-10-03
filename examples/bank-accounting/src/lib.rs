@@ -5,7 +5,9 @@
 pub mod application;
 pub mod domain;
 pub mod grpc;
+pub mod postgres;
 pub mod serde;
+pub mod tracing;
 
 #[allow(unused_qualifications)]
 #[allow(clippy::all)] // Cannot really check the sanity of generated code :shrugs:

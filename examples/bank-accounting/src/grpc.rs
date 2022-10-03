@@ -3,6 +3,7 @@ use std::error::Error as StdError;
 use async_trait::async_trait;
 use eventually::{aggregate, command::Handler, version};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
+use tracing::instrument;
 
 use crate::{
     application,
@@ -35,6 +36,7 @@ where
     R: aggregate::Repository<BankAccount> + 'static,
     R::Error: StdError + Send + Sync + 'static,
 {
+    #[instrument(skip(self))]
     async fn open_bank_account(
         &self,
         request: tonic::Request<proto::OpenBankAccountRequest>,
@@ -73,6 +75,7 @@ where
             })
     }
 
+    #[instrument(skip(self))]
     async fn deposit_in_bank_account(
         &self,
         request: tonic::Request<proto::DepositInBankAccountRequest>,
