@@ -16,8 +16,6 @@
 <span id="16">16</span>
 <span id="17">17</span>
 <span id="18">18</span>
-<span id="19">19</span>
-<span id="20">20</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">deny</span>(<span class="ident">unsafe_code</span>, <span class="ident">unused_qualifications</span>, <span class="ident">trivial_casts</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::all</span>)]</span>
 <span class="comment">// #![warn(clippy::pedantic)]</span>
@@ -25,9 +23,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">application</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">domain</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">grpc</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">postgres</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tracing</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_qualifications</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::all</span>)]</span> <span class="comment">// Cannot really check the sanity of generated code :shrugs:</span>

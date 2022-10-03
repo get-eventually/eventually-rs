@@ -114,15 +114,11 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>;
 
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 <span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">aggregate</span>, <span class="ident">command::Handler</span>, <span class="ident">version</span>};
 <span class="kw">use</span> <span class="ident">rust_decimal</span>::{<span class="ident">prelude::FromPrimitive</span>, <span class="ident">Decimal</span>};
-<span class="kw">use</span> <span class="ident">tracing::instrument</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">application</span>,
@@ -155,7 +151,6 @@
     <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">R::Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>))]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">tonic::Request</span><span class="op">&lt;</span><span class="ident">proto::OpenBankAccountRequest</span><span class="op">&gt;</span>,
@@ -194,7 +189,6 @@
             })
     }
 
-    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>))]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_in_bank_account</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">tonic::Request</span><span class="op">&lt;</span><span class="ident">proto::DepositInBankAccountRequest</span><span class="op">&gt;</span>,
