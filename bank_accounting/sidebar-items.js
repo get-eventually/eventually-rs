@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["application",""],["domain",""],["grpc",""],["proto",""],["serde",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["application",""],["domain",""],["grpc",""],["postgres",""],["proto",""],["serde",""],["tracing",""]]};
