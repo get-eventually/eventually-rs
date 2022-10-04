@@ -8,4 +8,6 @@ pub mod command;
 pub mod event;
 pub mod message;
 pub mod serde;
+#[cfg(feature = "tracing")]
+pub mod tracing;
 pub mod version;
