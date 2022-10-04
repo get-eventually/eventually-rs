@@ -1,7 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use eventually::{
-    event::{Persisted, Store, StreamVersionExpected, VersionSelect},
+    event::{Appender, Persisted, StreamVersionExpected, Streamer, VersionSelect},
     serde::json::Json,
     version,
     version::Version,

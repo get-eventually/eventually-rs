@@ -51,22 +51,14 @@ where
     }
 }
 
-#[async_trait]
-impl<Id, Evt> event::Store for InMemory<Id, Evt>
+impl<Id, Evt> event::Streamer<Id, Evt> for InMemory<Id, Evt>
 where
     Id: Clone + Eq + Hash + Send + Sync,
     Evt: message::Message + Clone + Send + Sync,
 {
-    type StreamId = Id;
-    type Event = Evt;
-    type StreamError = Infallible;
-    type AppendError = ConflictError;
+    type Error = Infallible;
 
-    fn stream(
-        &self,
-        id: &Self::StreamId,
-        select: event::VersionSelect,
-    ) -> event::Stream<Self::StreamId, Self::Event, Self::StreamError> {
+    fn stream(&self, id: &Id, select: event::VersionSelect) -> event::Stream<Id, Evt, Self::Error> {
         let backend = self
             .backend
             .read()
@@ -85,13 +77,22 @@ where
 
         iter(events).map(Ok).boxed()
     }
+}
+
+#[async_trait]
+impl<Id, Evt> event::Appender<Id, Evt> for InMemory<Id, Evt>
+where
+    Id: Clone + Eq + Hash + Send + Sync,
+    Evt: message::Message + Clone + Send + Sync,
+{
+    type Error = ConflictError;
 
     async fn append(
         &self,
-        id: Self::StreamId,
+        id: Id,
         version_check: event::StreamVersionExpected,
-        events: Vec<event::Envelope<Self::Event>>,
-    ) -> Result<Version, Self::AppendError> {
+        events: Vec<event::Envelope<Evt>>,
+    ) -> Result<Version, Self::Error> {
         let mut backend = self
             .backend
             .write()
@@ -139,23 +140,25 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct Tracking<S>
+pub struct Tracking<T, StreamId, Event>
 where
-    S: event::Store,
+    T: event::Store<StreamId, Event> + Send + Sync,
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
 {
-    store: S,
+    store: T,
 
     #[allow(clippy::type_complexity)] // It is a complex type but still readable.
-    events: Arc<RwLock<Vec<event::Persisted<S::StreamId, S::Event>>>>,
+    events: Arc<RwLock<Vec<event::Persisted<StreamId, Event>>>>,
 }
 
-impl<S> Tracking<S>
+impl<T, StreamId, Event> Tracking<T, StreamId, Event>
 where
-    S: event::Store,
-    S::StreamId: Clone,
-    S::Event: Clone,
+    T: event::Store<StreamId, Event> + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
-    pub fn recorded_events(&self) -> Vec<event::Persisted<S::StreamId, S::Event>> {
+    pub fn recorded_events(&self) -> Vec<event::Persisted<StreamId, Event>> {
         self.events
             .read()
             .expect("acquire lock on recorded events list")
@@ -170,32 +173,38 @@ where
     }
 }
 
-#[async_trait]
-impl<S> event::Store for Tracking<S>
+impl<T, StreamId, Event> event::Streamer<StreamId, Event> for Tracking<T, StreamId, Event>
 where
-    S: event::Store,
-    S::StreamId: Clone,
-    S::Event: Clone,
+    T: event::Store<StreamId, Event> + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
-    type StreamId = S::StreamId;
-    type Event = S::Event;
-    type StreamError = S::StreamError;
-    type AppendError = S::AppendError;
+    type Error = <T as event::Streamer<StreamId, Event>>::Error;
 
     fn stream(
         &self,
-        id: &Self::StreamId,
+        id: &StreamId,
         select: event::VersionSelect,
-    ) -> event::Stream<Self::StreamId, Self::Event, Self::StreamError> {
+    ) -> event::Stream<StreamId, Event, Self::Error> {
         self.store.stream(id, select)
     }
+}
+
+#[async_trait]
+impl<T, StreamId, Event> event::Appender<StreamId, Event> for Tracking<T, StreamId, Event>
+where
+    T: event::Store<StreamId, Event> + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
+{
+    type Error = <T as event::Appender<StreamId, Event>>::Error;
 
     async fn append(
         &self,
-        id: Self::StreamId,
+        id: StreamId,
         version_check: event::StreamVersionExpected,
-        events: Vec<event::Envelope<Self::Event>>,
-    ) -> Result<Version, Self::AppendError> {
+        events: Vec<event::Envelope<Event>>,
+    ) -> Result<Version, Self::Error> {
         let new_version = self
             .store
             .append(id.clone(), version_check, events.clone())
@@ -223,8 +232,13 @@ where
     }
 }
 
-pub trait EventStoreExt: event::Store + Sized {
-    fn with_recorded_events_tracking(self) -> Tracking<Self> {
+pub trait EventStoreExt<StreamId, Event>:
+    event::Store<StreamId, Event> + Send + Sync + Sized
+where
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
+{
+    fn with_recorded_events_tracking(self) -> Tracking<Self, StreamId, Event> {
         Tracking {
             store: self,
             events: Arc::default(),
@@ -232,7 +246,13 @@ pub trait EventStoreExt: event::Store + Sized {
     }
 }
 
-impl<T> EventStoreExt for T where T: event::Store {}
+impl<T, StreamId, Event> EventStoreExt<StreamId, Event> for T
+where
+    T: event::Store<StreamId, Event> + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
+{
+}
 
 #[allow(clippy::semicolon_if_nothing_returned)] // False positives :shrugs:
 #[cfg(test)]
@@ -240,7 +260,12 @@ mod test {
     use futures::TryStreamExt;
 
     use super::*;
-    use crate::{event, event::Store, message::tests::StringMessage, version::Version};
+    use crate::{
+        event,
+        event::{Appender, Streamer},
+        message::tests::StringMessage,
+        version::Version,
+    };
 
     #[tokio::test]
     async fn it_works() {

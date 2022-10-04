@@ -71,7 +71,7 @@ pub enum EventSourcedError<E, SE, AE> {
 pub struct EventSourced<T, S>
 where
     T: Aggregate,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
+    S: event::Store<T::Id, T::Event>,
 {
     store: S,
     aggregate: PhantomData<T>,
@@ -80,7 +80,7 @@ where
 impl<T, S> From<S> for EventSourced<T, S>
 where
     T: Aggregate,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
+    S: event::Store<T::Id, T::Event>,
 {
     fn from(store: S) -> Self {
         Self {
@@ -96,9 +96,13 @@ where
     T: Aggregate,
     T::Id: Clone,
     T::Error: Debug,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
+    S: event::Store<T::Id, T::Event>,
 {
-    type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
+    type Error = EventSourcedError<
+        T::Error,
+        <S as event::Streamer<T::Id, T::Event>>::Error,
+        <S as event::Appender<T::Id, T::Event>>::Error,
+    >;
 
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError<Self::Error>> {
         let ctx = self

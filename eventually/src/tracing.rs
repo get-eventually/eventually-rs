@@ -9,7 +9,7 @@ use std::{
 use async_trait::async_trait;
 use tracing::instrument;
 
-use crate::{aggregate, aggregate::Aggregate, event, version::Version};
+use crate::{aggregate, aggregate::Aggregate, event, message, version::Version};
 
 /// [aggregate::Repository] type wrapper that provides instrumentation
 /// features through the `tracing` crate.
@@ -82,65 +82,83 @@ where
 /// [event::Store] type wrapper that provides instrumentation
 /// features through the `tracing` crate.
 #[derive(Debug, Clone)]
-pub struct InstrumentedEventStore<Inner>(Inner)
+pub struct InstrumentedEventStore<T, StreamId, Event>
 where
-    Inner: event::Store,
-    <Inner as event::Store>::StreamId: Debug,
-    <Inner as event::Store>::Event: Debug,
-    <Inner as event::Store>::AppendError: Display;
-
-#[async_trait]
-impl<Inner> event::Store for InstrumentedEventStore<Inner>
-where
-    Inner: event::Store,
-    <Inner as event::Store>::StreamId: Debug,
-    <Inner as event::Store>::Event: Debug,
-    <Inner as event::Store>::AppendError: Display,
+    T: event::Store<StreamId, Event> + Send + Sync,
+    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
+    StreamId: Debug + Send + Sync,
+    Event: message::Message + Debug + Send + Sync,
 {
-    type StreamId = Inner::StreamId;
-    type Event = Inner::Event;
-    type StreamError = Inner::StreamError;
-    type AppendError = Inner::AppendError;
+    store: T,
+    stream_id: PhantomData<StreamId>,
+    event: PhantomData<Event>,
+}
+
+impl<T, StreamId, Event> event::Streamer<StreamId, Event>
+    for InstrumentedEventStore<T, StreamId, Event>
+where
+    T: event::Store<StreamId, Event> + Send + Sync,
+    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
+    StreamId: Debug + Send + Sync,
+    Event: message::Message + Debug + Send + Sync,
+{
+    type Error = <T as event::Streamer<StreamId, Event>>::Error;
 
     #[instrument(name = "event::Store.stream", skip(self))]
     fn stream(
         &self,
-        id: &Self::StreamId,
+        id: &StreamId,
         select: event::VersionSelect,
-    ) -> event::Stream<Self::StreamId, Self::Event, Self::StreamError> {
-        self.0.stream(id, select)
+    ) -> event::Stream<StreamId, Event, Self::Error> {
+        self.store.stream(id, select)
     }
+}
+
+#[async_trait]
+impl<T, StreamId, Event> event::Appender<StreamId, Event>
+    for InstrumentedEventStore<T, StreamId, Event>
+where
+    T: event::Store<StreamId, Event> + Send + Sync,
+    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
+    StreamId: Debug + Send + Sync,
+    Event: message::Message + Debug + Send + Sync,
+{
+    type Error = <T as event::Appender<StreamId, Event>>::Error;
 
     #[instrument(name = "event::Store.append", ret, err, skip(self))]
     async fn append(
         &self,
-        id: Self::StreamId,
+        id: StreamId,
         version_check: event::StreamVersionExpected,
-        events: Vec<event::Envelope<Self::Event>>,
-    ) -> Result<Version, Self::AppendError> {
-        self.0.append(id, version_check, events).await
+        events: Vec<event::Envelope<Event>>,
+    ) -> Result<Version, Self::Error> {
+        self.store.append(id, version_check, events).await
     }
 }
 
 /// Extension trait for any [event::Store] type to provide
 /// instrumentation features through the `tracing` crate.
-pub trait EventStoreExt: event::Store + Sized
+pub trait EventStoreExt<StreamId, Event>: event::Store<StreamId, Event> + Sized
 where
-    <Self as event::Store>::StreamId: Debug,
-    <Self as event::Store>::Event: Debug,
-    <Self as event::Store>::AppendError: Display,
+    <Self as event::Appender<StreamId, Event>>::Error: Display,
+    StreamId: Debug + Send + Sync,
+    Event: message::Message + Debug + Send + Sync,
 {
     /// Returns an instrumented version of the [event::Store] instance.
-    fn with_tracing(self) -> InstrumentedEventStore<Self> {
-        InstrumentedEventStore(self)
+    fn with_tracing(self) -> InstrumentedEventStore<Self, StreamId, Event> {
+        InstrumentedEventStore {
+            store: self,
+            stream_id: PhantomData,
+            event: PhantomData,
+        }
     }
 }
 
-impl<T> EventStoreExt for T
+impl<T, StreamId, Event> EventStoreExt<StreamId, Event> for T
 where
-    T: event::Store,
-    <T as event::Store>::StreamId: Debug,
-    <T as event::Store>::Event: Debug,
-    <T as event::Store>::AppendError: Display,
+    T: event::Store<StreamId, Event> + Send + Sync,
+    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
+    StreamId: Debug + Send + Sync,
+    Event: message::Message + Debug + Send + Sync,
 {
 }

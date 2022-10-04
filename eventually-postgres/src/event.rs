@@ -209,8 +209,7 @@ where
     }
 }
 
-#[async_trait]
-impl<Id, Evt, OutEvt, S> event::Store for Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, OutEvt, S> event::Streamer<Id, Evt> for Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone + Send + Sync,
     Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
@@ -219,16 +218,9 @@ where
     S: Serde<OutEvt> + Send + Sync,
     <S as Deserializer<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
 {
-    type StreamId = Id;
-    type Event = Evt;
-    type StreamError = StreamError;
-    type AppendError = AppendError;
+    type Error = StreamError;
 
-    fn stream(
-        &self,
-        id: &Self::StreamId,
-        select: event::VersionSelect,
-    ) -> event::Stream<Self::StreamId, Self::Event, Self::StreamError> {
+    fn stream(&self, id: &Id, select: event::VersionSelect) -> event::Stream<Id, Evt, Self::Error> {
         let from_version: i32 = match select {
             event::VersionSelect::All => 0,
             event::VersionSelect::From(v) => v as i32,
@@ -251,13 +243,26 @@ where
             .and_then(move |row| ready(self.event_row_to_persisted_event(id.clone(), row)))
             .boxed()
     }
+}
+
+#[async_trait]
+impl<Id, Evt, OutEvt, S> event::Appender<Id, Evt> for Store<Id, Evt, OutEvt, S>
+where
+    Id: ToString + Clone + Send + Sync,
+    Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
+    <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    OutEvt: From<Evt> + Send + Sync,
+    S: Serde<OutEvt> + Send + Sync,
+    <S as Deserializer<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+{
+    type Error = AppendError;
 
     async fn append(
         &self,
-        id: Self::StreamId,
+        id: Id,
         version_check: event::StreamVersionExpected,
-        events: Vec<event::Envelope<Self::Event>>,
-    ) -> Result<Version, Self::AppendError> {
+        events: Vec<event::Envelope<Evt>>,
+    ) -> Result<Version, Self::Error> {
         let mut tx = self
             .pool
             .begin()
