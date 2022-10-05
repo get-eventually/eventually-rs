@@ -229,6 +229,7 @@
 <span id="229">229</span>
 <span id="230">230</span>
 <span id="231">231</span>
+<span id="232">232</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for Domain [Command]s.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Following the Domain-driven Design definition, a [Command] expresses the</span>
@@ -316,12 +317,12 @@
 
     <span class="kw">struct</span> <span class="ident">CreateUserHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">R</span>)
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>;
+        <span class="ident">R</span>: <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">async_trait</span>]</span>
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">CreateUser</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CreateUserHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>,
+        <span class="ident">R</span>: <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>,
         <span class="ident">R::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
@@ -355,7 +356,8 @@
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">ChangeUserPassword</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ChangeUserPasswordHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>,
-        <span class="ident">R::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">aggregate::Getter</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
 

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["RepositoryError",""]],"struct":[["Repository",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["GetError",""],["SaveError",""]],"struct":[["Repository",""]]};

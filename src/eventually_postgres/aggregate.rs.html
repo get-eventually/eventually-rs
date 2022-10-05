@@ -223,6 +223,29 @@
 <span id="223">223</span>
 <span id="224">224</span>
 <span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
@@ -230,7 +253,8 @@
     <span class="ident">aggregate</span>,
     <span class="ident">aggregate::Aggregate</span>,
     <span class="ident">serde</span>::{<span class="ident">Deserializer</span>, <span class="ident">Serde</span>, <span class="ident">Serializer</span>},
-    <span class="ident">version</span>::{<span class="ident">ConflictError</span>, <span class="ident">Version</span>},
+    <span class="ident">version</span>,
+    <span class="ident">version::Version</span>,
 };
 <span class="kw">use</span> <span class="ident">sqlx</span>::{<span class="ident">PgPool</span>, <span class="ident">Postgres</span>, <span class="ident">Row</span>};
 
@@ -281,19 +305,25 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RepositoryError</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">GetError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to fetch the aggregate state row: {0}&quot;</span>)]</span>
     <span class="ident">FetchAggregateRow</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to deserialize the aggregate state from the database row: {0}&quot;</span>)]</span>
     <span class="ident">DeserializeAggregate</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to convert the aggregate state into its domain type: {0}&quot;</span>)]</span>
     <span class="ident">ConvertAggregate</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;database returned an error: {0}&quot;</span>)]</span>
+    <span class="ident">Database</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">sqlx::Error</span>),
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SaveError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to begin a new transaction: {0}&quot;</span>)]</span>
     <span class="ident">BeginTransaction</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;conflict error detected: {0})&quot;</span>)]</span>
-    <span class="ident">Conflict</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">ConflictError</span>),
+    <span class="ident">Conflict</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">version::ConflictError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0})&quot;</span>)]</span>
-    <span class="ident">Concurrency</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">ConflictError</span>),
+    <span class="ident">Concurrency</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">version::ConflictError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to save the new aggregate state: {0}&quot;</span>)]</span>
     <span class="ident">SaveAggregateState</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to append a new domain event: {0}&quot;</span>)]</span>
@@ -304,11 +334,11 @@
     <span class="ident">Database</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">sqlx::Error</span>),
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">RepositoryError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConflictError</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">RepositoryError</span>) -&gt; <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SaveError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">version::ConflictError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">SaveError</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">err</span> {
-            <span class="ident">RepositoryError::Conflict</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
-            <span class="ident">RepositoryError::Concurrency</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
+            <span class="ident">SaveError::Conflict</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
+            <span class="ident">SaveError::Concurrency</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
             <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         }
     }
@@ -329,7 +359,7 @@
         <span class="ident">aggregate_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">expected_version</span>: <span class="ident">Version</span>,
         <span class="ident">root</span>: <span class="kw-2">&amp;mut</span> <span class="ident">aggregate::Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">RepositoryError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SaveError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">out_state</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">to_aggregate_type</span>::<span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">bytes_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">aggregate_serde</span>.<span class="ident">serialize</span>(<span class="ident">out_state</span>);
 
@@ -342,13 +372,15 @@
             .<span class="ident">execute</span>(<span class="ident">tx</span>)
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident"><span class="kw">crate</span>::check_for_conflict_error</span>(<span class="kw-2">&amp;</span><span class="ident">err</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="ident">RepositoryError::Conflict</span>(<span class="ident">err</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="ident">SaveError::Conflict</span>(<span class="ident">err</span>),
                 <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">as_database_error</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">code</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">code</span>) <span class="kw">if</span> <span class="ident">code</span> <span class="op">==</span> <span class="string">&quot;40001&quot;</span> =&gt; <span class="ident">RepositoryError::Concurrency</span>(<span class="ident">ConflictError</span> {
-                        <span class="ident">expected</span>: <span class="ident">expected_version</span>,
-                        <span class="ident">actual</span>: <span class="ident">root</span>.<span class="ident">version</span>(),
-                    }),
-                    <span class="kw">_</span> =&gt; <span class="ident">RepositoryError::SaveAggregateState</span>(<span class="ident">err</span>),
+                    <span class="prelude-val">Some</span>(<span class="ident">code</span>) <span class="kw">if</span> <span class="ident">code</span> <span class="op">==</span> <span class="string">&quot;40001&quot;</span> =&gt; {
+                        <span class="ident">SaveError::Concurrency</span>(<span class="ident">version::ConflictError</span> {
+                            <span class="ident">expected</span>: <span class="ident">expected_version</span>,
+                            <span class="ident">actual</span>: <span class="ident">root</span>.<span class="ident">version</span>(),
+                        })
+                    }
+                    <span class="kw">_</span> =&gt; <span class="ident">SaveError::SaveAggregateState</span>(<span class="ident">err</span>),
                 },
             })<span class="question-mark">?</span>;
 
@@ -357,7 +389,7 @@
 }
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">OutT</span>, <span class="ident">OutEvt</span>, <span class="ident">TSerde</span>, <span class="ident">EvtSerde</span><span class="op">&gt;</span> <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">OutT</span>, <span class="ident">OutEvt</span>, <span class="ident">TSerde</span>, <span class="ident">EvtSerde</span><span class="op">&gt;</span> <span class="ident">aggregate::Getter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     <span class="kw">for</span> <span class="ident">Repository</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">OutT</span>, <span class="ident">OutEvt</span>, <span class="ident">TSerde</span>, <span class="ident">EvtSerde</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
@@ -369,7 +401,7 @@
     <span class="op">&lt;</span><span class="ident">TSerde</span> <span class="kw">as</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">EvtSerde</span>: <span class="ident">Serializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">RepositoryError</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">GetError</span>;
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -388,18 +420,18 @@
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">err</span> {
             <span class="ident">sqlx::Error::RowNotFound</span> =&gt; <span class="ident">aggregate::RepositoryGetError::AggregateRootNotFound</span>,
-            <span class="kw">_</span> =&gt; <span class="ident">aggregate::RepositoryGetError::Inner</span>(<span class="ident">RepositoryError::FetchAggregateRow</span>(<span class="ident">err</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">aggregate::RepositoryGetError::Inner</span>(<span class="ident">GetError::FetchAggregateRow</span>(<span class="ident">err</span>)),
         })<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">version</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;version&quot;</span>).<span class="ident">map_err</span>(<span class="ident">RepositoryError::Database</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">bytes_state</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;state&quot;</span>).<span class="ident">map_err</span>(<span class="ident">RepositoryError::Database</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">version</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;version&quot;</span>).<span class="ident">map_err</span>(<span class="ident">GetError::Database</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">bytes_state</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="string">&quot;state&quot;</span>).<span class="ident">map_err</span>(<span class="ident">GetError::Database</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">aggregate</span>: <span class="ident">T</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">aggregate_serde</span>
             .<span class="ident">deserialize</span>(<span class="ident">bytes_state</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">RepositoryError::DeserializeAggregate</span>(<span class="ident">Box::new</span>(<span class="ident">err</span>)))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">GetError::DeserializeAggregate</span>(<span class="ident">Box::new</span>(<span class="ident">err</span>)))
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">out_t</span><span class="op">|</span> {
-                <span class="ident">T::try_from</span>(<span class="ident">out_t</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">RepositoryError::ConvertAggregate</span>(<span class="ident">Box::new</span>(<span class="ident">err</span>)))
+                <span class="ident">T::try_from</span>(<span class="ident">out_t</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">GetError::ConvertAggregate</span>(<span class="ident">Box::new</span>(<span class="ident">err</span>)))
             })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">aggregate::Root::rehydrate_from_state</span>(
@@ -407,6 +439,22 @@
             <span class="ident">aggregate</span>,
         ))
     }
+}
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">OutT</span>, <span class="ident">OutEvt</span>, <span class="ident">TSerde</span>, <span class="ident">EvtSerde</span><span class="op">&gt;</span> <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+    <span class="kw">for</span> <span class="ident">Repository</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">OutT</span>, <span class="ident">OutEvt</span>, <span class="ident">TSerde</span>, <span class="ident">EvtSerde</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Aggregate</span> <span class="op">+</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Aggregate</span><span class="op">&gt;</span><span class="ident">::Id</span>: <span class="ident">ToString</span>,
+    <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">OutT</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">TSerde</span>: <span class="ident">Serde</span><span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="op">&lt;</span><span class="ident">TSerde</span> <span class="kw">as</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="ident">OutT</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">EvtSerde</span>: <span class="ident">Serializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+{
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SaveError</span>;
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">root</span>: <span class="kw-2">&amp;mut</span> <span class="ident">aggregate::Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">events_to_commit</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">take_uncommitted_events</span>();
@@ -419,7 +467,7 @@
             .<span class="ident">pool</span>
             .<span class="ident">begin</span>()
             .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">RepositoryError::BeginTransaction</span>)<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="ident">SaveError::BeginTransaction</span>)<span class="question-mark">?</span>;
 
         <span class="ident">sqlx::query</span>(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
             .<span class="ident">execute</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>)
@@ -439,11 +487,9 @@
             <span class="ident">events_to_commit</span>,
         )
         .<span class="kw">await</span>
-        .<span class="ident">map_err</span>(<span class="ident">RepositoryError::AppendEvent</span>)<span class="question-mark">?</span>;
+        .<span class="ident">map_err</span>(<span class="ident">SaveError::AppendEvent</span>)<span class="question-mark">?</span>;
 
-        <span class="ident">tx</span>.<span class="ident">commit</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">RepositoryError::CommitTransaction</span>)<span class="question-mark">?</span>;
+        <span class="ident">tx</span>.<span class="ident">commit</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">SaveError::CommitTransaction</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

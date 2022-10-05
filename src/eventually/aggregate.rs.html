@@ -510,6 +510,7 @@
 <span id="510">510</span>
 <span id="511">511</span>
 <span id="512">512</span>
+<span id="513">513</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for the Aggregate pattern.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## What is an Aggregate?</span>
@@ -541,7 +542,8 @@
 
 <span class="kw">mod</span> <span class="ident">repository</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">repository</span>::{
-    <span class="ident">EventSourced</span> <span class="kw">as</span> <span class="ident">EventSourcedRepository</span>, <span class="ident">GetError</span> <span class="kw">as</span> <span class="ident">RepositoryGetError</span>, <span class="ident">Repository</span>,
+    <span class="ident">EventSourced</span> <span class="kw">as</span> <span class="ident">EventSourcedRepository</span>, <span class="ident">GetError</span> <span class="kw">as</span> <span class="ident">RepositoryGetError</span>, <span class="ident">Getter</span>, <span class="ident">Repository</span>,
+    <span class="ident">Saver</span>,
 };
 
 <span class="doccomment">/// An Aggregate represents a Domain Model that, through an Aggregate [Root],</span>
@@ -902,7 +904,7 @@
     <span class="kw">use</span> <span class="kw">crate</span>::{
         <span class="ident">aggregate</span>,
         <span class="ident">aggregate::test_user_domain</span>::{<span class="ident">User</span>, <span class="ident">UserEvent</span>},
-        <span class="ident">aggregate::Repository</span>,
+        <span class="ident">aggregate</span>::{<span class="ident">Getter</span>, <span class="ident">Saver</span>},
         <span class="ident">event</span>,
         <span class="ident">event::store::EventStoreExt</span>,
         <span class="ident">version</span>,

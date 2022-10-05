@@ -343,6 +343,31 @@
 <span id="343">343</span>
 <span id="344">344</span>
 <span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
     <span class="ident">convert::Infallible</span>,
@@ -396,22 +421,14 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">event::Store</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Id</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="ident">Evt</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="kw">type</span> <span class="ident">StreamId</span> <span class="op">=</span> <span class="ident">Id</span>;
-    <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Evt</span>;
-    <span class="kw">type</span> <span class="ident">StreamError</span> <span class="op">=</span> <span class="ident">Infallible</span>;
-    <span class="kw">type</span> <span class="ident">AppendError</span> <span class="op">=</span> <span class="ident">ConflictError</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Infallible</span>;
 
-    <span class="kw">fn</span> <span class="ident">stream</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::StreamId</span>,
-        <span class="ident">select</span>: <span class="ident">event::VersionSelect</span>,
-    ) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::StreamId</span>, <span class="ident"><span class="self">Self</span>::Event</span>, <span class="ident"><span class="self">Self</span>::StreamError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">stream</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">Id</span>, <span class="ident">select</span>: <span class="ident">event::VersionSelect</span>) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">backend</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">backend</span>
             .<span class="ident">read</span>()
@@ -430,13 +447,22 @@
 
         <span class="ident">iter</span>(<span class="ident">events</span>).<span class="ident">map</span>(<span class="prelude-val">Ok</span>).<span class="ident">boxed</span>()
     }
+}
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Id</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Evt</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+{
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConflictError</span>;
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident"><span class="self">Self</span>::StreamId</span>,
+        <span class="ident">id</span>: <span class="ident">Id</span>,
         <span class="ident">version_check</span>: <span class="ident">event::StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::AppendError</span><span class="op">&gt;</span> {
+        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">backend</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">backend</span>
             .<span class="ident">write</span>()
@@ -484,23 +510,25 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">event::Store</span>,
+    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">StreamId</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="ident">store</span>: <span class="ident">S</span>,
+    <span class="ident">store</span>: <span class="ident">T</span>,
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span> <span class="comment">// It is a complex type but still readable.</span>
-    <span class="ident">events</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">S::StreamId</span>, <span class="ident">S::Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">events</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">event::Store</span>,
-    <span class="ident">S::StreamId</span>: <span class="ident">Clone</span>,
-    <span class="ident">S::Event</span>: <span class="ident">Clone</span>,
+    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recorded_events</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">S::StreamId</span>, <span class="ident">S::Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recorded_events</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">events</span>
             .<span class="ident">read</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
@@ -515,32 +543,38 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">event::Store</span> <span class="kw">for</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">event::Store</span>,
-    <span class="ident">S::StreamId</span>: <span class="ident">Clone</span>,
-    <span class="ident">S::Event</span>: <span class="ident">Clone</span>,
+    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
-    <span class="kw">type</span> <span class="ident">StreamId</span> <span class="op">=</span> <span class="ident">S::StreamId</span>;
-    <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">S::Event</span>;
-    <span class="kw">type</span> <span class="ident">StreamError</span> <span class="op">=</span> <span class="ident">S::StreamError</span>;
-    <span class="kw">type</span> <span class="ident">AppendError</span> <span class="op">=</span> <span class="ident">S::AppendError</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>;
 
     <span class="kw">fn</span> <span class="ident">stream</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::StreamId</span>,
+        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">StreamId</span>,
         <span class="ident">select</span>: <span class="ident">event::VersionSelect</span>,
-    ) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::StreamId</span>, <span class="ident"><span class="self">Self</span>::Event</span>, <span class="ident"><span class="self">Self</span>::StreamError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">stream</span>(<span class="ident">id</span>, <span class="ident">select</span>)
     }
+}
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+{
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>;
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident"><span class="self">Self</span>::StreamId</span>,
+        <span class="ident">id</span>: <span class="ident">StreamId</span>,
         <span class="ident">version_check</span>: <span class="ident">event::StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::AppendError</span><span class="op">&gt;</span> {
+        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">new_version</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">store</span>
             .<span class="ident">append</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">version_check</span>, <span class="ident">events</span>.<span class="ident">clone</span>())
@@ -568,8 +602,13 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventStoreExt</span>: <span class="ident">event::Store</span> <span class="op">+</span> <span class="ident">Sized</span> {
-    <span class="kw">fn</span> <span class="ident">with_recorded_events_tracking</span>(<span class="self">self</span>) -&gt; <span class="ident">Tracking</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventStoreExt</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>:
+    <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Sized</span>
+<span class="kw">where</span>
+    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+{
+    <span class="kw">fn</span> <span class="ident">with_recorded_events_tracking</span>(<span class="self">self</span>) -&gt; <span class="ident">Tracking</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> {
         <span class="ident">Tracking</span> {
             <span class="ident">store</span>: <span class="self">self</span>,
             <span class="ident">events</span>: <span class="ident">Arc::default</span>(),
@@ -577,7 +616,13 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">EventStoreExt</span> <span class="kw">for</span> <span class="ident">T</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">event::Store</span> {}
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">EventStoreExt</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">T</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+{
+}
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::semicolon_if_nothing_returned</span>)]</span> <span class="comment">// False positives :shrugs:</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
@@ -585,7 +630,12 @@
     <span class="kw">use</span> <span class="ident">futures::TryStreamExt</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">event::Store</span>, <span class="ident">message::tests::StringMessage</span>, <span class="ident">version::Version</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{
+        <span class="ident">event</span>,
+        <span class="ident">event</span>::{<span class="ident">Appender</span>, <span class="ident">Streamer</span>},
+        <span class="ident">message::tests::StringMessage</span>,
+        <span class="ident">version::Version</span>,
+    };
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_works</span>() {
