@@ -17,23 +17,42 @@ pub enum GetError<I> {
     Inner(#[from] I),
 }
 
-/// A Repository is an object that allows to load and save
-/// an [Aggregate Root][Root] from and to a persistent data store.
 #[async_trait]
-pub trait Repository<T>: Send + Sync
+pub trait Getter<T>: Send + Sync
 where
     T: Aggregate,
 {
-    /// The error type that can be returned by the Repository implementation
-    /// during loading or storing of an Aggregate Root.
-    type Error;
+    type Error: Send + Sync;
 
     /// Loads an Aggregate Root instance from the data store,
     /// referenced by its unique identifier.
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError<Self::Error>>;
+}
+
+#[async_trait]
+pub trait Saver<T>: Send + Sync
+where
+    T: Aggregate,
+{
+    type Error: Send + Sync;
 
     /// Stores a new version of an Aggregate Root instance to the data store.
     async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error>;
+}
+
+/// A Repository is an object that allows to load and save
+/// an [Aggregate Root][Root] from and to a persistent data store.
+pub trait Repository<T>: Getter<T> + Saver<T> + Send + Sync
+where
+    T: Aggregate,
+{
+}
+
+impl<T, R> Repository<T> for R
+where
+    T: Aggregate,
+    R: Getter<T> + Saver<T> + Send + Sync,
+{
 }
 
 /// List of possible errors that can be returned by an [`EventSourced`] method.
@@ -71,7 +90,7 @@ pub enum EventSourcedError<E, SE, AE> {
 pub struct EventSourced<T, S>
 where
     T: Aggregate,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
+    S: event::Store<T::Id, T::Event>,
 {
     store: S,
     aggregate: PhantomData<T>,
@@ -80,7 +99,7 @@ where
 impl<T, S> From<S> for EventSourced<T, S>
 where
     T: Aggregate,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
+    S: event::Store<T::Id, T::Event>,
 {
     fn from(store: S) -> Self {
         Self {
@@ -91,14 +110,18 @@ where
 }
 
 #[async_trait]
-impl<T, S> Repository<T> for EventSourced<T, S>
+impl<T, S> Getter<T> for EventSourced<T, S>
 where
     T: Aggregate,
     T::Id: Clone,
     T::Error: Debug,
-    S: event::Store<StreamId = T::Id, Event = T::Event>,
+    S: event::Store<T::Id, T::Event>,
 {
-    type Error = EventSourcedError<T::Error, S::StreamError, S::AppendError>;
+    type Error = EventSourcedError<
+        T::Error,
+        <S as event::Streamer<T::Id, T::Event>>::Error,
+        <S as event::Appender<T::Id, T::Event>>::Error,
+    >;
 
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError<Self::Error>> {
         let ctx = self
@@ -120,6 +143,21 @@ where
 
         ctx.ok_or(GetError::AggregateRootNotFound)
     }
+}
+
+#[async_trait]
+impl<T, S> Saver<T> for EventSourced<T, S>
+where
+    T: Aggregate,
+    T::Id: Clone,
+    T::Error: Debug,
+    S: event::Store<T::Id, T::Event>,
+{
+    type Error = EventSourcedError<
+        T::Error,
+        <S as event::Streamer<T::Id, T::Event>>::Error,
+        <S as event::Appender<T::Id, T::Event>>::Error,
+    >;
 
     async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
         let events_to_commit = root.take_uncommitted_events();

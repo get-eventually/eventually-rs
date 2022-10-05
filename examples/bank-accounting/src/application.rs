@@ -44,7 +44,7 @@ impl message::Message for OpenBankAccount {
 impl<R> command::Handler<OpenBankAccount> for Service<R>
 where
     R: aggregate::Repository<BankAccount>,
-    R::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
 
@@ -81,7 +81,8 @@ impl message::Message for DepositInBankAccount {
 impl<R> command::Handler<DepositInBankAccount> for Service<R>
 where
     R: aggregate::Repository<BankAccount>,
-    R::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
 
@@ -124,7 +125,8 @@ impl message::Message for SendTransferToBankAccount {
 impl<R> command::Handler<SendTransferToBankAccount> for Service<R>
 where
     R: aggregate::Repository<BankAccount>,
-    R::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
 

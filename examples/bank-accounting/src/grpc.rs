@@ -34,7 +34,8 @@ where
 impl<R> proto::bank_accounting_server::BankAccounting for BankAccountingApi<R>
 where
     R: aggregate::Repository<BankAccount> + 'static,
-    R::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     #[instrument(skip(self))]
     async fn open_bank_account(

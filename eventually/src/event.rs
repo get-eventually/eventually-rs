@@ -70,35 +70,31 @@ pub enum StreamVersionExpected {
 /// Stream is a stream of [Persisted] Domain Events.
 pub type Stream<'a, Id, Evt, Err> = BoxStream<'a, Result<Persisted<Id, Evt>, Err>>;
 
-/// An [Event] Store, used to store Domain Events in Event Streams -- a stream
-/// of Domain Events -- and retrieve them.
-///
-/// Each Event Stream is represented by a unique [`Store::StreamId`].
-#[async_trait]
-pub trait Store: Send + Sync {
-    /// The type used to uniquely identify each Event Stream recorded
-    /// by the Event Store.
-    type StreamId: Send + Sync;
-
-    /// The type containing all Domain Events recorded by the Event Store.
-    /// Typically, this parameter should be an `enum`.
-    type Event: message::Message + Send + Sync;
-
+/// Interface used to stream [Persisted] Domain Events from an Event Store to an application.
+pub trait Streamer<StreamId, Event>: Send + Sync
+where
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
     /// The error type returned by the Store during a [`stream`] call.
-    type StreamError: Send + Sync;
-
-    /// The error type returned by the Store during an [`append`] call.
-    /// It could be a [version::ConflictError], which is why the bound to
-    /// `Into<Option<ConflictError>>` is required.
-    type AppendError: Into<Option<ConflictError>> + Send + Sync;
+    type Error: Send + Sync;
 
     /// Opens an Event Stream, effectively streaming all Domain Events
     /// of an Event Stream back in the application.
-    fn stream(
-        &self,
-        id: &Self::StreamId,
-        select: VersionSelect,
-    ) -> Stream<Self::StreamId, Self::Event, Self::StreamError>;
+    fn stream(&self, id: &StreamId, select: VersionSelect) -> Stream<StreamId, Event, Self::Error>;
+}
+
+#[async_trait]
+/// Interface used to append new Domain Events in an Event Store.
+pub trait Appender<StreamId, Event>: Send + Sync
+where
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
+    /// The error type returned by the Store during an [`append`] call.
+    /// It could be a [version::ConflictError], which is why the bound to
+    /// `Into<Option<ConflictError>>` is required.
+    type Error: Into<Option<ConflictError>> + Send + Sync;
 
     /// Appens new Domain Events to the specified Event Stream.
     ///
@@ -106,8 +102,28 @@ pub trait Store: Send + Sync {
     /// with the specified Domain Events added to it.
     async fn append(
         &self,
-        id: Self::StreamId,
+        id: StreamId,
         version_check: StreamVersionExpected,
-        events: Vec<Envelope<Self::Event>>,
-    ) -> Result<Version, Self::AppendError>;
+        events: Vec<Envelope<Event>>,
+    ) -> Result<Version, Self::Error>;
+}
+
+/// An [Event] Store, used to store Domain Events in Event Streams -- a stream
+/// of Domain Events -- and retrieve them.
+///
+/// Each Event Stream is represented by a unique Stream identifier.
+pub trait Store<StreamId, Event>:
+    Streamer<StreamId, Event> + Appender<StreamId, Event> + Send + Sync
+where
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
+}
+
+impl<T, StreamId, Event> Store<StreamId, Event> for T
+where
+    T: Streamer<StreamId, Event> + Appender<StreamId, Event> + Send + Sync,
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
 }

@@ -29,7 +29,8 @@ use crate::{event, message, version::Version};
 
 mod repository;
 pub use repository::{
-    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Repository,
+    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Getter, Repository,
+    Saver,
 };
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
@@ -390,7 +391,7 @@ mod test {
     use crate::{
         aggregate,
         aggregate::test_user_domain::{User, UserEvent},
-        aggregate::Repository,
+        aggregate::{Getter, Saver},
         event,
         event::store::EventStoreExt,
         version,
