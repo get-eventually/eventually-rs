@@ -29,7 +29,8 @@ use crate::{event, message, version::Version};
 
 mod repository;
 pub use repository::{
-    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Repository,
+    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Getter, Repository,
+    Saver,
 };
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
