@@ -391,7 +391,7 @@ mod test {
     use crate::{
         aggregate,
         aggregate::test_user_domain::{User, UserEvent},
-        aggregate::Repository,
+        aggregate::{Getter, Saver},
         event,
         event::store::EventStoreExt,
         version,

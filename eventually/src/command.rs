@@ -85,12 +85,12 @@ mod test_user_domain {
 
     struct CreateUserHandler<R>(R)
     where
-        R: aggregate::Repository<User>;
+        R: aggregate::Saver<User>;
 
     #[async_trait]
     impl<R> command::Handler<CreateUser> for CreateUserHandler<R>
     where
-        R: aggregate::Repository<User>,
+        R: aggregate::Saver<User>,
         R::Error: std::error::Error + Send + Sync + 'static,
     {
         type Error = anyhow::Error;
@@ -124,7 +124,8 @@ mod test_user_domain {
     impl<R> command::Handler<ChangeUserPassword> for ChangeUserPasswordHandler<R>
     where
         R: aggregate::Repository<User>,
-        R::Error: std::error::Error + Send + Sync + 'static,
+        <R as aggregate::Getter<User>>::Error: std::error::Error + Send + Sync + 'static,
+        <R as aggregate::Saver<User>>::Error: std::error::Error + Send + Sync + 'static,
     {
         type Error = anyhow::Error;
 

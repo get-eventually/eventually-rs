@@ -1,5 +1,5 @@
 use eventually::{
-    aggregate::{Repository, RepositoryGetError},
+    aggregate::{Getter, RepositoryGetError, Saver},
     serde::json::Json,
     version,
 };
