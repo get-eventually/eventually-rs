@@ -70,8 +70,8 @@ to save these Events using an _Event Store_ (the append-only event log).
 
 For more information, [check out the crate documentation](https://docs.rs/eventually).
 
-You can also take a look at [`eventually-app-example`](https://github.com/get-eventually/eventually-app-example),
-showcasing an example event-sourced microservice using HTTP transport layer.
+You can also take a look at the [`bank-accounting`](https://github.com/get-eventually/eventually-rs/tree/main/examples/bank-accounting) example,
+showcasing Event-sourced application for a generic (and simple) Bank Accounting bounded context.
 
 All other questions are more than welcome on our [Gitter chat](https://gitter.im/eventually-rs/community).
 
