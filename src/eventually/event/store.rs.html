@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/event/store.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>store.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../eventually/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/event/store.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>store.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../eventually/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -368,375 +368,375 @@
 <span id="368">368</span>
 <span id="369">369</span>
 <span id="370">370</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections::HashMap</span>,
-    <span class="ident">convert::Infallible</span>,
-    <span class="ident">hash::Hash</span>,
-    <span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>},
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    collections::HashMap,
+    convert::Infallible,
+    hash::Hash,
+    sync::{Arc, RwLock},
 };
 
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">futures::stream</span>::{<span class="ident">iter</span>, <span class="ident">StreamExt</span>};
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::stream::{iter, StreamExt};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">event</span>, <span class="ident">message</span>,
-    <span class="ident">version</span>::{<span class="ident">ConflictError</span>, <span class="ident">Version</span>},
+<span class="kw">use crate</span>::{
+    event, message,
+    version::{ConflictError, Version},
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>InMemoryBackend&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="ident">event_streams</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    event_streams: HashMap&lt;Id, Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="kw">impl</span>&lt;Id, Evt&gt; Default <span class="kw">for </span>InMemoryBackend&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">event_streams</span>: <span class="ident">HashMap::default</span>(),
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            event_streams: HashMap::default(),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>InMemory&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="ident">backend</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">InMemoryBackend</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    backend: Arc&lt;RwLock&lt;InMemoryBackend&lt;Id, Evt&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="kw">impl</span>&lt;Id, Evt&gt; Default <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">backend</span>: <span class="ident">Arc::default</span>(),
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            backend: Arc::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">impl</span>&lt;Id, Evt&gt; event::Streamer&lt;Id, Evt&gt; <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Id: Clone + Eq + Hash + Send + Sync,
+    Evt: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Infallible</span>;
+    <span class="kw">type </span>Error = Infallible;
 
-    <span class="kw">fn</span> <span class="ident">stream</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">Id</span>, <span class="ident">select</span>: <span class="ident">event::VersionSelect</span>) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">backend</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">backend</span>
-            .<span class="ident">read</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;acquire read lock on event store backend&quot;</span>);
+    <span class="kw">fn </span>stream(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>Id, select: event::VersionSelect) -&gt; event::Stream&lt;Id, Evt, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>backend = <span class="self">self
+            </span>.backend
+            .read()
+            .expect(<span class="string">&quot;acquire read lock on event store backend&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">backend</span>
-            .<span class="ident">event_streams</span>
-            .<span class="ident">get</span>(<span class="ident">id</span>)
-            .<span class="ident">cloned</span>()
-            .<span class="ident">unwrap_or_default</span>() <span class="comment">// NOTE: the new Vec is empty, so there will be no memory allocation!</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">filter</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">evt</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">select</span> {
-                <span class="ident">event::VersionSelect::All</span> =&gt; <span class="bool-val">true</span>,
-                <span class="ident">event::VersionSelect::From</span>(<span class="ident">v</span>) =&gt; <span class="ident">evt</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">v</span>,
+        <span class="kw">let </span>events = backend
+            .event_streams
+            .get(id)
+            .cloned()
+            .unwrap_or_default() <span class="comment">// NOTE: the new Vec is empty, so there will be no memory allocation!
+            </span>.into_iter()
+            .filter(<span class="kw">move </span>|evt| <span class="kw">match </span>select {
+                event::VersionSelect::All =&gt; <span class="bool-val">true</span>,
+                event::VersionSelect::From(v) =&gt; evt.version &gt;= v,
             });
 
-        <span class="ident">iter</span>(<span class="ident">events</span>).<span class="ident">map</span>(<span class="prelude-val">Ok</span>).<span class="ident">boxed</span>()
+        iter(events).map(<span class="prelude-val">Ok</span>).boxed()
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl</span>&lt;Id, Evt&gt; event::Appender&lt;Id, Evt&gt; <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Id: Clone + Eq + Hash + Send + Sync,
+    Evt: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ConflictError</span>;
+    <span class="kw">type </span>Error = ConflictError;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append</span>(
+    <span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Id</span>,
-        <span class="ident">version_check</span>: <span class="ident">event::StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">backend</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">backend</span>
-            .<span class="ident">write</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;acquire write lock on event store backend&quot;</span>);
+        id: Id,
+        version_check: event::StreamVersionExpected,
+        events: Vec&lt;event::Envelope&lt;Evt&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>backend = <span class="self">self
+            </span>.backend
+            .write()
+            .expect(<span class="string">&quot;acquire write lock on event store backend&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">last_event_stream_version</span> <span class="op">=</span> <span class="ident">backend</span>
-            .<span class="ident">event_streams</span>
-            .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">events</span><span class="op">|</span> <span class="ident">events</span>.<span class="ident">last</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> <span class="ident">event</span>.<span class="ident">version</span>)
-            .<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let </span>last_event_stream_version = backend
+            .event_streams
+            .get(<span class="kw-2">&amp;</span>id)
+            .and_then(|events| events.last())
+            .map(|event| event.version)
+            .unwrap_or_default();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">event::StreamVersionExpected::MustBe</span>(<span class="ident">expected</span>) <span class="op">=</span> <span class="ident">version_check</span> {
-            <span class="kw">if</span> <span class="ident">last_event_stream_version</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConflictError</span> {
-                    <span class="ident">expected</span>,
-                    <span class="ident">actual</span>: <span class="ident">last_event_stream_version</span>,
+        <span class="kw">if let </span>event::StreamVersionExpected::MustBe(expected) = version_check {
+            <span class="kw">if </span>last_event_stream_version != expected {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ConflictError {
+                    expected,
+                    actual: last_event_stream_version,
                 });
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">persisted_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">events</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">event</span>)<span class="op">|</span> <span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="ident">id</span>.<span class="ident">clone</span>(),
-                <span class="ident">version</span>: <span class="ident">last_event_stream_version</span> <span class="op">+</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">+</span> <span class="number">1</span>,
-                <span class="ident">event</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>persisted_events: Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt; = events
+            .into_iter()
+            .enumerate()
+            .map(|(i, event)| event::Persisted {
+                stream_id: id.clone(),
+                version: last_event_stream_version + (i <span class="kw">as </span>u64) + <span class="number">1</span>,
+                event,
             })
-            .<span class="ident">collect</span>();
+            .collect();
 
-        <span class="kw">let</span> <span class="ident">new_last_event_stream_version</span> <span class="op">=</span> <span class="ident">persisted_events</span>
-            .<span class="ident">last</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">evt</span><span class="op">|</span> <span class="ident">evt</span>.<span class="ident">version</span>)
-            .<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let </span>new_last_event_stream_version = persisted_events
+            .last()
+            .map(|evt| evt.version)
+            .unwrap_or_default();
 
-        <span class="ident">backend</span>
-            .<span class="ident">event_streams</span>
-            .<span class="ident">entry</span>(<span class="ident">id</span>)
-            .<span class="ident">and_modify</span>(<span class="op">|</span><span class="ident">events</span><span class="op">|</span> <span class="ident">events</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">persisted_events</span>))
-            .<span class="ident">or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">persisted_events</span>);
+        backend
+            .event_streams
+            .entry(id)
+            .and_modify(|events| events.append(<span class="kw-2">&amp;mut </span>persisted_events))
+            .or_insert_with(|| persisted_events);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">new_last_event_stream_version</span>)
+        <span class="prelude-val">Ok</span>(new_last_event_stream_version)
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StreamId</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Tracking&lt;T, StreamId, Event&gt;
+<span class="kw">where
+    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
 {
-    <span class="ident">store</span>: <span class="ident">T</span>,
+    store: T,
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span> <span class="comment">// It is a complex type but still readable.</span>
-    <span class="ident">events</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[allow(clippy::type_complexity)] </span><span class="comment">// It is a complex type but still readable.
+    </span>events: Arc&lt;RwLock&lt;Vec&lt;event::Persisted&lt;StreamId, Event&gt;&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">impl</span>&lt;T, StreamId, Event&gt; Tracking&lt;T, StreamId, Event&gt;
+<span class="kw">where
+    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recorded_events</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">events</span>
-            .<span class="ident">read</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
-            .<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;event::Persisted&lt;StreamId, Event&gt;&gt; {
+        <span class="self">self</span>.events
+            .read()
+            .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
+            .clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_recorded_events</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">events</span>
-            .<span class="ident">write</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
-            .<span class="ident">clear</span>();
+    <span class="kw">pub fn </span>reset_recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.events
+            .write()
+            .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
+            .clear();
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">impl</span>&lt;T, StreamId, Event&gt; event::Streamer&lt;StreamId, Event&gt; <span class="kw">for </span>Tracking&lt;T, StreamId, Event&gt;
+<span class="kw">where
+    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>;
+    <span class="kw">type </span>Error = &lt;T <span class="kw">as </span>event::Streamer&lt;StreamId, Event&gt;&gt;::Error;
 
-    <span class="kw">fn</span> <span class="ident">stream</span>(
+    <span class="kw">fn </span>stream(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">StreamId</span>,
-        <span class="ident">select</span>: <span class="ident">event::VersionSelect</span>,
-    ) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">stream</span>(<span class="ident">id</span>, <span class="ident">select</span>)
+        id: <span class="kw-2">&amp;</span>StreamId,
+        select: event::VersionSelect,
+    ) -&gt; event::Stream&lt;StreamId, Event, <span class="self">Self</span>::Error&gt; {
+        <span class="self">self</span>.store.stream(id, select)
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Tracking</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl</span>&lt;T, StreamId, Event&gt; event::Appender&lt;StreamId, Event&gt; <span class="kw">for </span>Tracking&lt;T, StreamId, Event&gt;
+<span class="kw">where
+    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>;
+    <span class="kw">type </span>Error = &lt;T <span class="kw">as </span>event::Appender&lt;StreamId, Event&gt;&gt;::Error;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append</span>(
+    <span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">StreamId</span>,
-        <span class="ident">version_check</span>: <span class="ident">event::StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">new_version</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">store</span>
-            .<span class="ident">append</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">version_check</span>, <span class="ident">events</span>.<span class="ident">clone</span>())
+        id: StreamId,
+        version_check: event::StreamVersionExpected,
+        events: Vec&lt;event::Envelope&lt;Event&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>new_version = <span class="self">self
+            </span>.store
+            .append(id.clone(), version_check, events.clone())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">events_size</span> <span class="op">=</span> <span class="ident">events</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">previous_version</span> <span class="op">=</span> <span class="ident">new_version</span> <span class="op">-</span> (<span class="ident">events_size</span> <span class="kw">as</span> <span class="ident">Version</span>);
+        <span class="kw">let </span>events_size = events.len();
+        <span class="kw">let </span>previous_version = new_version - (events_size <span class="kw">as </span>Version);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">persisted_events</span> <span class="op">=</span> <span class="ident">events</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">event</span>)<span class="op">|</span> <span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="ident">id</span>.<span class="ident">clone</span>(),
-                <span class="ident">version</span>: <span class="ident">previous_version</span> <span class="op">+</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">Version</span>) <span class="op">+</span> <span class="number">1</span>,
-                <span class="ident">event</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>persisted_events = events
+            .into_iter()
+            .enumerate()
+            .map(|(i, event)| event::Persisted {
+                stream_id: id.clone(),
+                version: previous_version + (i <span class="kw">as </span>Version) + <span class="number">1</span>,
+                event,
             })
-            .<span class="ident">collect</span>();
+            .collect();
 
-        <span class="self">self</span>.<span class="ident">events</span>
-            .<span class="ident">write</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
-            .<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">persisted_events</span>);
+        <span class="self">self</span>.events
+            .write()
+            .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
+            .append(<span class="kw-2">&amp;mut </span>persisted_events);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">new_version</span>)
+        <span class="prelude-val">Ok</span>(new_version)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventStoreExt</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>:
-    <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Sized</span>
-<span class="kw">where</span>
-    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">pub trait </span>EventStoreExt&lt;StreamId, Event&gt;:
+    event::Store&lt;StreamId, Event&gt; + Send + Sync + Sized
+<span class="kw">where
+    </span>StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">fn</span> <span class="ident">with_recorded_events_tracking</span>(<span class="self">self</span>) -&gt; <span class="ident">Tracking</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> {
-        <span class="ident">Tracking</span> {
-            <span class="ident">store</span>: <span class="self">self</span>,
-            <span class="ident">events</span>: <span class="ident">Arc::default</span>(),
+    <span class="kw">fn </span>with_recorded_events_tracking(<span class="self">self</span>) -&gt; Tracking&lt;<span class="self">Self</span>, StreamId, Event&gt; {
+        Tracking {
+            store: <span class="self">self</span>,
+            events: Arc::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">EventStoreExt</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">event::Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StreamId</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">impl</span>&lt;T, StreamId, Event&gt; EventStoreExt&lt;StreamId, Event&gt; <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Clone + Send + Sync,
+    Event: message::Message + Clone + Send + Sync,
 {
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::semicolon_if_nothing_returned</span>)]</span> <span class="comment">// False positives :shrugs:</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident">futures::TryStreamExt</span>;
+<span class="attribute">#[allow(clippy::semicolon_if_nothing_returned)] </span><span class="comment">// False positives :shrugs:
+</span><span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span>futures::TryStreamExt;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">event</span>,
-        <span class="ident">event</span>::{<span class="ident">Appender</span>, <span class="ident">Streamer</span>},
-        <span class="ident">message::tests::StringMessage</span>,
-        <span class="ident">version::Version</span>,
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{
+        event,
+        event::{Appender, Streamer},
+        message::tests::StringMessage,
+        version::Version,
     };
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_works</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">StringMessage</span><span class="op">&gt;</span><span class="ident">::default</span>();
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>it_works() {
+        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, StringMessage&gt;::default();
 
-        <span class="kw">let</span> <span class="ident">stream_id</span> <span class="op">=</span> <span class="string">&quot;stream:test&quot;</span>;
-        <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-1&quot;</span>)),
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-2&quot;</span>)),
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-3&quot;</span>)),
+        <span class="kw">let </span>stream_id = <span class="string">&quot;stream:test&quot;</span>;
+        <span class="kw">let </span>events = <span class="macro">vec!</span>[
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-1&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-2&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-3&quot;</span>)),
         ];
 
-        <span class="kw">let</span> <span class="ident">new_event_stream_version</span> <span class="op">=</span> <span class="ident">event_store</span>
-            .<span class="ident">append</span>(
-                <span class="ident">stream_id</span>,
-                <span class="ident">event::StreamVersionExpected::MustBe</span>(<span class="number">0</span>),
-                <span class="ident">events</span>.<span class="ident">clone</span>(),
+        <span class="kw">let </span>new_event_stream_version = event_store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::MustBe(<span class="number">0</span>),
+                events.clone(),
             )
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;append should not fail&quot;</span>);
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;append should not fail&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">expected_version</span> <span class="op">=</span> <span class="ident">events</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">Version</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">expected_version</span>, <span class="ident">new_event_stream_version</span>);
+        <span class="kw">let </span>expected_version = events.len() <span class="kw">as </span>Version;
+        <span class="macro">assert_eq!</span>(expected_version, new_event_stream_version);
 
-        <span class="kw">let</span> <span class="ident">expected_events</span> <span class="op">=</span> <span class="ident">events</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">event</span>)<span class="op">|</span> <span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>,
-                <span class="ident">version</span>: (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">Version</span>) <span class="op">+</span> <span class="number">1</span>,
-                <span class="ident">event</span>,
+        <span class="kw">let </span>expected_events = events
+            .into_iter()
+            .enumerate()
+            .map(|(i, event)| event::Persisted {
+                stream_id,
+                version: (i <span class="kw">as </span>Version) + <span class="number">1</span>,
+                event,
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let</span> <span class="ident">event_stream</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">event_store</span>
-            .<span class="ident">stream</span>(<span class="kw-2">&amp;</span><span class="ident">stream_id</span>, <span class="ident">event::VersionSelect::All</span>)
-            .<span class="ident">try_collect</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;opening an event stream should not fail&quot;</span>);
+        <span class="kw">let </span>event_stream: Vec&lt;<span class="kw">_</span>&gt; = event_store
+            .stream(<span class="kw-2">&amp;</span>stream_id, event::VersionSelect::All)
+            .try_collect()
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;opening an event stream should not fail&quot;</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">expected_events</span>, <span class="ident">event_stream</span>);
+        <span class="macro">assert_eq!</span>(expected_events, event_stream);
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">tracking_store_works</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">StringMessage</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">tracking_event_store</span> <span class="op">=</span> <span class="ident">event_store</span>.<span class="ident">with_recorded_events_tracking</span>();
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>tracking_store_works() {
+        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, StringMessage&gt;::default();
+        <span class="kw">let </span>tracking_event_store = event_store.with_recorded_events_tracking();
 
-        <span class="kw">let</span> <span class="ident">stream_id</span> <span class="op">=</span> <span class="string">&quot;stream:test&quot;</span>;
-        <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-1&quot;</span>)),
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-2&quot;</span>)),
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-3&quot;</span>)),
+        <span class="kw">let </span>stream_id = <span class="string">&quot;stream:test&quot;</span>;
+        <span class="kw">let </span>events = <span class="macro">vec!</span>[
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-1&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-2&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-3&quot;</span>)),
         ];
 
-        <span class="ident">tracking_event_store</span>
-            .<span class="ident">append</span>(
-                <span class="ident">stream_id</span>,
-                <span class="ident">event::StreamVersionExpected::MustBe</span>(<span class="number">0</span>),
-                <span class="ident">events</span>.<span class="ident">clone</span>(),
+        tracking_event_store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::MustBe(<span class="number">0</span>),
+                events.clone(),
             )
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;append should not fail&quot;</span>);
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;append should not fail&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">event_stream</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tracking_event_store</span>
-            .<span class="ident">stream</span>(<span class="kw-2">&amp;</span><span class="ident">stream_id</span>, <span class="ident">event::VersionSelect::All</span>)
-            .<span class="ident">try_collect</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;opening an event stream should not fail&quot;</span>);
+        <span class="kw">let </span>event_stream: Vec&lt;<span class="kw">_</span>&gt; = tracking_event_store
+            .stream(<span class="kw-2">&amp;</span>stream_id, event::VersionSelect::All)
+            .try_collect()
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;opening an event stream should not fail&quot;</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">event_stream</span>, <span class="ident">tracking_event_store</span>.<span class="ident">recorded_events</span>());
+        <span class="macro">assert_eq!</span>(event_stream, tracking_event_store.recorded_events());
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">version_conflict_checks_work_as_expected</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">InMemory</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">StringMessage</span><span class="op">&gt;</span><span class="ident">::default</span>();
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>version_conflict_checks_work_as_expected() {
+        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, StringMessage&gt;::default();
 
-        <span class="kw">let</span> <span class="ident">stream_id</span> <span class="op">=</span> <span class="string">&quot;stream:test&quot;</span>;
-        <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-1&quot;</span>)),
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-2&quot;</span>)),
-            <span class="ident">event::Envelope::from</span>(<span class="ident">StringMessage</span>(<span class="string">&quot;event-3&quot;</span>)),
+        <span class="kw">let </span>stream_id = <span class="string">&quot;stream:test&quot;</span>;
+        <span class="kw">let </span>events = <span class="macro">vec!</span>[
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-1&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-2&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">&quot;event-3&quot;</span>)),
         ];
 
-        <span class="kw">let</span> <span class="ident">append_error</span> <span class="op">=</span> <span class="ident">event_store</span>
-            .<span class="ident">append</span>(
-                <span class="ident">stream_id</span>,
-                <span class="ident">event::StreamVersionExpected::MustBe</span>(<span class="number">3</span>),
-                <span class="ident">events</span>.<span class="ident">clone</span>(),
+        <span class="kw">let </span>append_error = event_store
+            .append(
+                stream_id,
+                event::StreamVersionExpected::MustBe(<span class="number">3</span>),
+                events.clone(),
             )
-            .<span class="kw">await</span>
-            .<span class="ident">expect_err</span>(<span class="string">&quot;the event stream version should be zero&quot;</span>);
+            .<span class="kw">await
+            </span>.expect_err(<span class="string">&quot;the event stream version should be zero&quot;</span>);
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">ConflictError</span> {
-                <span class="ident">expected</span>: <span class="number">3</span>,
-                <span class="ident">actual</span>: <span class="number">0</span>,
+            ConflictError {
+                expected: <span class="number">3</span>,
+                actual: <span class="number">0</span>,
             },
-            <span class="ident">append_error</span>
+            append_error
         );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

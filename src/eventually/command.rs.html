@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/command.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>command.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/command.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>command.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -230,237 +230,237 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Module containing support for Domain [Command]s.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Following the Domain-driven Design definition, a [Command] expresses the</span>
-<span class="doccomment">//! intent of an Actor (e.g. a Customer, a User, a System, etc.) to modify</span>
-<span class="doccomment">//! the state of the system in some way.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! To modify the state of the system through a [Command], you must</span>
-<span class="doccomment">//! implement a Command [Handler] which, in an Event-sourced system,</span>
-<span class="doccomment">//! should make use of an [Aggregate] to evaluate the validity of the Command</span>
-<span class="doccomment">//! submitted, and emit Domain [Event]s as a result (through the Event [Store]).</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Check out the type documentation exported in this module.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Module containing support for Domain [Command]s.
+//!
+//! Following the Domain-driven Design definition, a [Command] expresses the
+//! intent of an Actor (e.g. a Customer, a User, a System, etc.) to modify
+//! the state of the system in some way.
+//!
+//! To modify the state of the system through a [Command], you must
+//! implement a Command [Handler] which, in an Event-sourced system,
+//! should make use of an [Aggregate] to evaluate the validity of the Command
+//! submitted, and emit Domain [Event]s as a result (through the Event [Store]).
+//!
+//! Check out the type documentation exported in this module.
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">test</span>;
+</span><span class="kw">pub mod </span>test;
 
-<span class="kw">use</span> <span class="ident">std::future::Future</span>;
+<span class="kw">use </span>std::future::Future;
 
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
+<span class="kw">use </span>async_trait::async_trait;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::message</span>;
+<span class="kw">use </span><span class="kw">crate</span>::message;
 
-<span class="doccomment">/// A Command represents an intent by an Actor (e.g. a User, or a System)</span>
-<span class="doccomment">/// to mutate the state of the system.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// In an event-sourced system, a Command is represented as a [Message].</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">message::Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+<span class="doccomment">/// A Command represents an intent by an Actor (e.g. a User, or a System)
+/// to mutate the state of the system.
+///
+/// In an event-sourced system, a Command is represented as a [Message].
+</span><span class="kw">pub type </span>Envelope&lt;T&gt; = message::Envelope&lt;T&gt;;
 
-<span class="doccomment">/// A software component that is able to handle [Command]s of a certain type,</span>
-<span class="doccomment">/// and mutate the state as a result of the command handling, or fail.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// In an event-sourced system, the [Command] Handler</span>
-<span class="doccomment">/// should use an [Aggregate][crate::aggregate::Aggregate] to evaluate</span>
-<span class="doccomment">/// a [Command] to ensure business invariants are respected.</span>
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">message::Message</span>,
+<span class="doccomment">/// A software component that is able to handle [Command]s of a certain type,
+/// and mutate the state as a result of the command handling, or fail.
+///
+/// In an event-sourced system, the [Command] Handler
+/// should use an [Aggregate][crate::aggregate::Aggregate] to evaluate
+/// a [Command] to ensure business invariants are respected.
+</span><span class="attribute">#[async_trait]
+</span><span class="kw">pub trait </span>Handler&lt;T&gt;: Send + Sync
+<span class="kw">where
+    </span>T: message::Message,
 {
-    <span class="doccomment">/// The error type returned by the Handler while handling a [Command].</span>
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+    <span class="doccomment">/// The error type returned by the Handler while handling a [Command].
+    </span><span class="kw">type </span>Error: Send + Sync;
 
-    <span class="doccomment">/// Handles a [Command] and returns an error if the handling has failed.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Since [Command]s are solely modifying the state of the system,</span>
-    <span class="doccomment">/// they do not return anything to the caller but the result of the operation</span>
-    <span class="doccomment">/// (expressed by a [Result] type).</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command</span>: <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Handles a [Command] and returns an error if the handling has failed.
+    ///
+    /// Since [Command]s are solely modifying the state of the system,
+    /// they do not return anything to the caller but the result of the operation
+    /// (expressed by a [Result] type).
+    </span><span class="kw">async fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>, command: Envelope&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="prelude-val">Err</span>, <span class="ident">F</span>, <span class="ident">Fut</span><span class="op">&gt;</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="prelude-val">Err</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">F</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Fn</span>(<span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">Fut</span>,
-    <span class="ident">Fut</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-val">Err</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl</span>&lt;T, <span class="prelude-val">Err</span>, F, Fut&gt; Handler&lt;T&gt; <span class="kw">for </span>F
+<span class="kw">where
+    </span>T: message::Message + Send + Sync + <span class="lifetime">&#39;static</span>,
+    <span class="prelude-val">Err</span>: Send + Sync,
+    F: Send + Sync + Fn(Envelope&lt;T&gt;) -&gt; Fut,
+    Fut: Send + Sync + Future&lt;Output = <span class="prelude-ty">Result</span>&lt;(), <span class="prelude-val">Err</span>&gt;&gt;,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="prelude-val">Err</span>;
+    <span class="kw">type </span>Error = <span class="prelude-val">Err</span>;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command</span>: <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>(<span class="ident">command</span>).<span class="kw">await</span>
-    }
+    <span class="kw">async fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>, command: Envelope&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+        <span class="self">self</span>(command).<span class="kw">await
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test_user_domain</span> {
-    <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test_user_domain {
+    <span class="kw">use </span>async_trait::async_trait;
 
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">aggregate</span>,
-        <span class="ident">aggregate::test_user_domain</span>::{<span class="ident">User</span>, <span class="ident">UserEvent</span>},
-        <span class="ident">command</span>, <span class="ident">event</span>, <span class="ident">message</span>,
+    <span class="kw">use crate</span>::{
+        aggregate,
+        aggregate::test_user_domain::{User, UserEvent},
+        command, event, message,
     };
 
-    <span class="kw">struct</span> <span class="ident">CreateUser</span> {
-        <span class="ident">email</span>: <span class="ident">String</span>,
-        <span class="ident">password</span>: <span class="ident">String</span>,
+    <span class="kw">struct </span>CreateUser {
+        email: String,
+        password: String,
     }
 
-    <span class="kw">impl</span> <span class="ident">message::Message</span> <span class="kw">for</span> <span class="ident">CreateUser</span> {
-        <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-            <span class="string">&quot;CreateUser&quot;</span>
-        }
+    <span class="kw">impl </span>message::Message <span class="kw">for </span>CreateUser {
+        <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+            <span class="string">&quot;CreateUser&quot;
+        </span>}
     }
 
-    <span class="kw">struct</span> <span class="ident">CreateUserHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">R</span>)
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>;
+    <span class="kw">struct </span>CreateUserHandler&lt;R&gt;(R)
+    <span class="kw">where
+        </span>R: aggregate::Saver&lt;User&gt;;
 
-    <span class="attribute">#[<span class="ident">async_trait</span>]</span>
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">CreateUser</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CreateUserHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>,
-        <span class="ident">R::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="attribute">#[async_trait]
+    </span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;CreateUser&gt; <span class="kw">for </span>CreateUserHandler&lt;R&gt;
+    <span class="kw">where
+        </span>R: aggregate::Saver&lt;User&gt;,
+        R::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
     {
-        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
+        <span class="kw">type </span>Error = anyhow::Error;
 
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">CreateUser</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">command</span> <span class="op">=</span> <span class="ident">command</span>.<span class="ident">message</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">aggregate::Root</span>::<span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="ident">::create</span>(<span class="ident">command</span>.<span class="ident">email</span>, <span class="ident">command</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">async fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>, command: command::Envelope&lt;CreateUser&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+            <span class="kw">let </span>command = command.message;
+            <span class="kw">let </span><span class="kw-2">mut </span>user = aggregate::Root::&lt;User&gt;::create(command.email, command.password)<span class="question-mark">?</span>;
 
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">user</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="number">0</span>.store(<span class="kw-2">&amp;mut </span>user).<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }
     }
 
-    <span class="kw">struct</span> <span class="ident">ChangeUserPassword</span> {
-        <span class="ident">email</span>: <span class="ident">String</span>,
-        <span class="ident">password</span>: <span class="ident">String</span>,
+    <span class="kw">struct </span>ChangeUserPassword {
+        email: String,
+        password: String,
     }
 
-    <span class="kw">impl</span> <span class="ident">message::Message</span> <span class="kw">for</span> <span class="ident">ChangeUserPassword</span> {
-        <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-            <span class="string">&quot;ChangeUserPassword&quot;</span>
-        }
+    <span class="kw">impl </span>message::Message <span class="kw">for </span>ChangeUserPassword {
+        <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+            <span class="string">&quot;ChangeUserPassword&quot;
+        </span>}
     }
 
-    <span class="kw">struct</span> <span class="ident">ChangeUserPasswordHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">R</span>)
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>;
+    <span class="kw">struct </span>ChangeUserPasswordHandler&lt;R&gt;(R)
+    <span class="kw">where
+        </span>R: aggregate::Repository&lt;User&gt;;
 
-    <span class="attribute">#[<span class="ident">async_trait</span>]</span>
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">ChangeUserPassword</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ChangeUserPasswordHandler</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">aggregate::Getter</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-        <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="attribute">#[async_trait]
+    </span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;ChangeUserPassword&gt; <span class="kw">for </span>ChangeUserPasswordHandler&lt;R&gt;
+    <span class="kw">where
+        </span>R: aggregate::Repository&lt;User&gt;,
+        &lt;R <span class="kw">as </span>aggregate::Getter&lt;User&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+        &lt;R <span class="kw">as </span>aggregate::Saver&lt;User&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
     {
-        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
+        <span class="kw">type </span>Error = anyhow::Error;
 
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(
+        <span class="kw">async fn </span>handle(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
-            <span class="ident">command</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">ChangeUserPassword</span><span class="op">&gt;</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">command</span> <span class="op">=</span> <span class="ident">command</span>.<span class="ident">message</span>;
+            command: command::Envelope&lt;ChangeUserPassword&gt;,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+            <span class="kw">let </span>command = command.message;
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">command</span>.<span class="ident">email</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>user = <span class="self">self</span>.<span class="number">0</span>.get(<span class="kw-2">&amp;</span>command.email).<span class="kw">await</span><span class="question-mark">?</span>;
 
-            <span class="ident">user</span>.<span class="ident">change_password</span>(<span class="ident">command</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+            user.change_password(command.password)<span class="question-mark">?</span>;
 
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">user</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="number">0</span>.store(<span class="kw-2">&amp;mut </span>user).<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_creates_a_new_user_successfully</span>() {
-        <span class="ident">command::test::Scenario</span>
-            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">CreateUser</span> {
-                <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>it_creates_a_new_user_successfully() {
+        command::test::Scenario
+            .when(command::Envelope::from(CreateUser {
+                email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                password: <span class="string">&quot;not-a-secret&quot;</span>.to_owned(),
             }))
-            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
-                    <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+            .then(<span class="macro">vec!</span>[event::Persisted {
+                stream_id: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                version: <span class="number">1</span>,
+                event: event::Envelope::from(UserEvent::WasCreated {
+                    email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                    password: <span class="string">&quot;not-a-secret&quot;</span>.to_owned(),
                 }),
             }])
-            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-                <span class="ident">CreateUserHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            .assert_on(|event_store| {
+                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_fails_to_create_an_user_if_it_still_exists</span>() {
-        <span class="ident">command::test::Scenario</span>
-            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
-                    <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>it_fails_to_create_an_user_if_it_still_exists() {
+        command::test::Scenario
+            .given(<span class="macro">vec!</span>[event::Persisted {
+                stream_id: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                version: <span class="number">1</span>,
+                event: event::Envelope::from(UserEvent::WasCreated {
+                    email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                    password: <span class="string">&quot;not-a-secret&quot;</span>.to_owned(),
                 }),
             }])
-            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">CreateUser</span> {
-                <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+            .when(command::Envelope::from(CreateUser {
+                email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                password: <span class="string">&quot;not-a-secret&quot;</span>.to_owned(),
             }))
-            .<span class="ident">then_fails</span>()
-            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-                <span class="ident">CreateUserHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            .then_fails()
+            .assert_on(|event_store| {
+                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_updates_the_password_of_an_existing_user</span>() {
-        <span class="ident">command::test::Scenario</span>
-            .<span class="ident">given</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">1</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> {
-                    <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                    <span class="ident">password</span>: <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>it_updates_the_password_of_an_existing_user() {
+        command::test::Scenario
+            .given(<span class="macro">vec!</span>[event::Persisted {
+                stream_id: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                version: <span class="number">1</span>,
+                event: event::Envelope::from(UserEvent::WasCreated {
+                    email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                    password: <span class="string">&quot;not-a-secret&quot;</span>.to_owned(),
                 }),
             }])
-            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">ChangeUserPassword</span> {
-                <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
+            .when(command::Envelope::from(ChangeUserPassword {
+                email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                password: <span class="string">&quot;new-password&quot;</span>.to_owned(),
             }))
-            .<span class="ident">then</span>(<span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-                <span class="ident">stream_id</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">version</span>: <span class="number">2</span>,
-                <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
-                    <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
+            .then(<span class="macro">vec!</span>[event::Persisted {
+                stream_id: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                version: <span class="number">2</span>,
+                event: event::Envelope::from(UserEvent::PasswordWasChanged {
+                    password: <span class="string">&quot;new-password&quot;</span>.to_owned(),
                 }),
             }])
-            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-                <span class="ident">ChangeUserPasswordHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            .assert_on(|event_store| {
+                ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_fails_to_update_the_password_if_the_user_does_not_exist</span>() {
-        <span class="ident">command::test::Scenario</span>
-            .<span class="ident">when</span>(<span class="ident">command::Envelope::from</span>(<span class="ident">ChangeUserPassword</span> {
-                <span class="ident">email</span>: <span class="string">&quot;test@test.com&quot;</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">password</span>: <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>it_fails_to_update_the_password_if_the_user_does_not_exist() {
+        command::test::Scenario
+            .when(command::Envelope::from(ChangeUserPassword {
+                email: <span class="string">&quot;test@test.com&quot;</span>.to_owned(),
+                password: <span class="string">&quot;new-password&quot;</span>.to_owned(),
             }))
-            .<span class="ident">then_fails</span>()
-            .<span class="ident">assert_on</span>(<span class="op">|</span><span class="ident">event_store</span><span class="op">|</span> {
-                <span class="ident">ChangeUserPasswordHandler</span>(<span class="ident">aggregate::EventSourcedRepository::from</span>(<span class="ident">event_store</span>))
+            .then_fails()
+            .assert_on(|event_store| {
+                ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

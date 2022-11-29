@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -127,134 +127,134 @@
 <span id="127">127</span>
 <span id="128">128</span>
 <span id="129">129</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Module `event` contains types and abstractions helpful for working</span>
-<span class="doccomment">//! with Domain Events.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Module `event` contains types and abstractions helpful for working
+//! with Domain Events.
 
-<span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
+</span><span class="kw">use </span>std::fmt::Debug;
 
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">futures::stream::BoxStream</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::stream::BoxStream;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">message</span>,
-    <span class="ident">version</span>::{<span class="ident">ConflictError</span>, <span class="ident">Version</span>},
+<span class="kw">use crate</span>::{
+    message,
+    version::{ConflictError, Version},
 };
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">store</span>;
+<span class="kw">pub mod </span>store;
 
-<span class="doccomment">/// An Event is a [Message] carring the information about a Domain Event,</span>
-<span class="doccomment">/// an occurrence in the system lifetime that is relevant for the Domain</span>
-<span class="doccomment">/// that is being implemented.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">message::Envelope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+<span class="doccomment">/// An Event is a [Message] carring the information about a Domain Event,
+/// an occurrence in the system lifetime that is relevant for the Domain
+/// that is being implemented.
+</span><span class="kw">pub type </span>Envelope&lt;T&gt; = message::Envelope&lt;T&gt;;
 
-<span class="doccomment">/// An [Event] that has been persisted to the Event [Store].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="doccomment">/// An [Event] that has been persisted to the Event [Store].
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>Persisted&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="doccomment">/// The id of the Event Stream the persisted Event belongs to.</span>
-    <span class="kw">pub</span> <span class="ident">stream_id</span>: <span class="ident">Id</span>,
+    <span class="doccomment">/// The id of the Event Stream the persisted Event belongs to.
+    </span><span class="kw">pub </span>stream_id: Id,
 
-    <span class="doccomment">/// The version of the Event Stream when this Event has been recorded.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This value is used for optimistic concurrency checks, to avoid</span>
-    <span class="doccomment">/// data races in parallel command evaluations.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Check the [Version] type and module documentation for more info.</span>
-    <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">Version</span>,
+    <span class="doccomment">/// The version of the Event Stream when this Event has been recorded.
+    ///
+    /// This value is used for optimistic concurrency checks, to avoid
+    /// data races in parallel command evaluations.
+    ///
+    /// Check the [Version] type and module documentation for more info.
+    </span><span class="kw">pub </span>version: Version,
 
-    <span class="doccomment">/// The actual Domain Event carried by this envelope.</span>
-    <span class="kw">pub</span> <span class="ident">event</span>: <span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The actual Domain Event carried by this envelope.
+    </span><span class="kw">pub </span>event: Envelope&lt;Evt&gt;,
 }
 
-<span class="doccomment">/// Specifies the slice of the Event Stream to select when calling [`Store::stream`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">VersionSelect</span> {
-    <span class="doccomment">/// Selects all [Events] in the Event [Stream].</span>
-    <span class="ident">All</span>,
+<span class="doccomment">/// Specifies the slice of the Event Stream to select when calling [`Store::stream`].
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>VersionSelect {
+    <span class="doccomment">/// Selects all [Events] in the Event [Stream].
+    </span>All,
 
-    <span class="doccomment">/// Selects all [Events] in the Event [Stream] starting from the [Event]</span>
-    <span class="doccomment">/// with the specified [Version].</span>
-    <span class="ident">From</span>(<span class="ident">Version</span>),
+    <span class="doccomment">/// Selects all [Events] in the Event [Stream] starting from the [Event]
+    /// with the specified [Version].
+    </span>From(Version),
 }
 
-<span class="doccomment">/// Specifies an expectation on the Event [Stream] version targeted</span>
-<span class="doccomment">/// when calling [`Store::append`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This type allows for optimistic concurrency checks, avoiding data races</span>
-<span class="doccomment">/// when modifying the same Event Stream at the same time.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StreamVersionExpected</span> {
-    <span class="doccomment">/// Disables any kind of optimistic concurrency check, instructing the [Store]</span>
-    <span class="doccomment">/// to append the new [Event] no matter the current [Version] of the [Stream].</span>
-    <span class="ident">Any</span>,
+<span class="doccomment">/// Specifies an expectation on the Event [Stream] version targeted
+/// when calling [`Store::append`].
+///
+/// This type allows for optimistic concurrency checks, avoiding data races
+/// when modifying the same Event Stream at the same time.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>StreamVersionExpected {
+    <span class="doccomment">/// Disables any kind of optimistic concurrency check, instructing the [Store]
+    /// to append the new [Event] no matter the current [Version] of the [Stream].
+    </span>Any,
 
-    <span class="doccomment">/// Sets the expectation that the Event [Stream] must be at the specified</span>
-    <span class="doccomment">/// [Version] for the [`Store::append`] call to succeed.</span>
-    <span class="ident">MustBe</span>(<span class="ident">Version</span>),
+    <span class="doccomment">/// Sets the expectation that the Event [Stream] must be at the specified
+    /// [Version] for the [`Store::append`] call to succeed.
+    </span>MustBe(Version),
 }
 
-<span class="doccomment">/// Stream is a stream of [Persisted] Domain Events.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Stream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="prelude-val">Err</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoxStream</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>, <span class="prelude-val">Err</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Stream is a stream of [Persisted] Domain Events.
+</span><span class="kw">pub type </span>Stream&lt;<span class="lifetime">&#39;a</span>, Id, Evt, <span class="prelude-val">Err</span>&gt; = BoxStream&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span>&lt;Persisted&lt;Id, Evt&gt;, <span class="prelude-val">Err</span>&gt;&gt;;
 
-<span class="doccomment">/// Interface used to stream [Persisted] Domain Events from an Event Store to an application.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>
-<span class="kw">where</span>
-    <span class="ident">StreamId</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="doccomment">/// Interface used to stream [Persisted] Domain Events from an Event Store to an application.
+</span><span class="kw">pub trait </span>Streamer&lt;StreamId, Event&gt;: Send + Sync
+<span class="kw">where
+    </span>StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
 {
-    <span class="doccomment">/// The error type returned by the Store during a [`stream`] call.</span>
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+    <span class="doccomment">/// The error type returned by the Store during a [`stream`] call.
+    </span><span class="kw">type </span>Error: Send + Sync;
 
-    <span class="doccomment">/// Opens an Event Stream, effectively streaming all Domain Events</span>
-    <span class="doccomment">/// of an Event Stream back in the application.</span>
-    <span class="kw">fn</span> <span class="ident">stream</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">StreamId</span>, <span class="ident">select</span>: <span class="ident">VersionSelect</span>) -&gt; <span class="ident">Stream</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Opens an Event Stream, effectively streaming all Domain Events
+    /// of an Event Stream back in the application.
+    </span><span class="kw">fn </span>stream(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>StreamId, select: VersionSelect) -&gt; Stream&lt;StreamId, Event, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="doccomment">/// Interface used to append new Domain Events in an Event Store.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>
-<span class="kw">where</span>
-    <span class="ident">StreamId</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="attribute">#[async_trait]
+</span><span class="doccomment">/// Interface used to append new Domain Events in an Event Store.
+</span><span class="kw">pub trait </span>Appender&lt;StreamId, Event&gt;: Send + Sync
+<span class="kw">where
+    </span>StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
 {
-    <span class="doccomment">/// The error type returned by the Store during an [`append`] call.</span>
-    <span class="doccomment">/// It could be a [version::ConflictError], which is why the bound to</span>
-    <span class="doccomment">/// `Into&lt;Option&lt;ConflictError&gt;&gt;` is required.</span>
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConflictError</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+    <span class="doccomment">/// The error type returned by the Store during an [`append`] call.
+    /// It could be a [version::ConflictError], which is why the bound to
+    /// `Into&lt;Option&lt;ConflictError&gt;&gt;` is required.
+    </span><span class="kw">type </span>Error: Into&lt;<span class="prelude-ty">Option</span>&lt;ConflictError&gt;&gt; + Send + Sync;
 
-    <span class="doccomment">/// Appens new Domain Events to the specified Event Stream.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The result of this operation is the new [Version] of the Event Stream</span>
-    <span class="doccomment">/// with the specified Domain Events added to it.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append</span>(
+    <span class="doccomment">/// Appens new Domain Events to the specified Event Stream.
+    ///
+    /// The result of this operation is the new [Version] of the Event Stream
+    /// with the specified Domain Events added to it.
+    </span><span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">StreamId</span>,
-        <span class="ident">version_check</span>: <span class="ident">StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Envelope</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+        id: StreamId,
+        version_check: StreamVersionExpected,
+        events: Vec&lt;Envelope&lt;Event&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="doccomment">/// An [Event] Store, used to store Domain Events in Event Streams -- a stream</span>
-<span class="doccomment">/// of Domain Events -- and retrieve them.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Each Event Stream is represented by a unique Stream identifier.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span>:
-    <span class="ident">Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>
-<span class="kw">where</span>
-    <span class="ident">StreamId</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="doccomment">/// An [Event] Store, used to store Domain Events in Event Streams -- a stream
+/// of Domain Events -- and retrieve them.
+///
+/// Each Event Stream is represented by a unique Stream identifier.
+</span><span class="kw">pub trait </span>Store&lt;StreamId, Event&gt;:
+    Streamer&lt;StreamId, Event&gt; + Appender&lt;StreamId, Event&gt; + Send + Sync
+<span class="kw">where
+    </span>StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
 {
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Streamer</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Appender</span><span class="op">&lt;</span><span class="ident">StreamId</span>, <span class="ident">Event</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">StreamId</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">impl</span>&lt;T, StreamId, Event&gt; Store&lt;StreamId, Event&gt; <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: Streamer&lt;StreamId, Event&gt; + Appender&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
 {
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

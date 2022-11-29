@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/aggregate.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>aggregate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/aggregate.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>aggregate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -511,518 +511,518 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Module containing support for the Aggregate pattern.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ## What is an Aggregate?</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! An [Aggregate] is the most important concept in your domain.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! It represents the entities your business domain is composed of,</span>
-<span class="doccomment">//! and the business logic your domain is exposing.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! For example: in an Order Management bounded-context (e.g. a</span>
-<span class="doccomment">//! microservice), the concepts of Order or Customer are two potential</span>
-<span class="doccomment">//! [Aggregate]s.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Aggregates expose mutations with the concept of **commands**:</span>
-<span class="doccomment">//! from the previous example, an Order might expose some commands such as</span>
-<span class="doccomment">//! _&quot;Add Order Item&quot;_, or _&quot;Remove Order Item&quot;_, or _&quot;Place Order&quot;_</span>
-<span class="doccomment">//! to close the transaction.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! In Event Sourcing, the Aggregate state is modified by the usage of</span>
-<span class="doccomment">//! **Domain Events**, which carry some or all the fields in the state</span>
-<span class="doccomment">//! in a certain logical meaning.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! As such, commands in Event Sourcing will **produce** Domain Events.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Aggregates should provide a way to **fold** Domain Events on the</span>
-<span class="doccomment">//! current value of the state, to produce the next state.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Module containing support for the Aggregate pattern.
+//!
+//! ## What is an Aggregate?
+//!
+//! An [Aggregate] is the most important concept in your domain.
+//!
+//! It represents the entities your business domain is composed of,
+//! and the business logic your domain is exposing.
+//!
+//! For example: in an Order Management bounded-context (e.g. a
+//! microservice), the concepts of Order or Customer are two potential
+//! [Aggregate]s.
+//!
+//! Aggregates expose mutations with the concept of **commands**:
+//! from the previous example, an Order might expose some commands such as
+//! _&quot;Add Order Item&quot;_, or _&quot;Remove Order Item&quot;_, or _&quot;Place Order&quot;_
+//! to close the transaction.
+//!
+//! In Event Sourcing, the Aggregate state is modified by the usage of
+//! **Domain Events**, which carry some or all the fields in the state
+//! in a certain logical meaning.
+//!
+//! As such, commands in Event Sourcing will **produce** Domain Events.
+//!
+//! Aggregates should provide a way to **fold** Domain Events on the
+//! current value of the state, to produce the next state.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">event</span>, <span class="ident">message</span>, <span class="ident">version::Version</span>};
+</span><span class="kw">use crate</span>::{event, message, version::Version};
 
-<span class="kw">mod</span> <span class="ident">repository</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">repository</span>::{
-    <span class="ident">EventSourced</span> <span class="kw">as</span> <span class="ident">EventSourcedRepository</span>, <span class="ident">GetError</span> <span class="kw">as</span> <span class="ident">RepositoryGetError</span>, <span class="ident">Getter</span>, <span class="ident">Repository</span>,
-    <span class="ident">Saver</span>,
+<span class="kw">mod </span>repository;
+<span class="kw">pub use </span>repository::{
+    EventSourced <span class="kw">as </span>EventSourcedRepository, GetError <span class="kw">as </span>RepositoryGetError, Getter, Repository,
+    Saver,
 };
 
-<span class="doccomment">/// An Aggregate represents a Domain Model that, through an Aggregate [Root],</span>
-<span class="doccomment">/// acts as a _transactional boundary_.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Aggregates are also used to enforce Domain invariants</span>
-<span class="doccomment">/// (i.e. certain constraints or rules that are unique to a specific Domain).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Since this is an Event-sourced version of the Aggregate pattern,</span>
-<span class="doccomment">/// any change to the Aggregate state must be represented through</span>
-<span class="doccomment">/// a Domain Event, which is then applied to the current state</span>
-<span class="doccomment">/// using the [`Aggregate::apply`] method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// More on Aggregates can be found here: `&lt;https://www.dddcommunity.org/library/vernon_2011/&gt;`</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Aggregate</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Clone</span> {
-    <span class="doccomment">/// The type used to uniquely identify the Aggregate.</span>
-    <span class="kw">type</span> <span class="ident">Id</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+<span class="doccomment">/// An Aggregate represents a Domain Model that, through an Aggregate [Root],
+/// acts as a _transactional boundary_.
+///
+/// Aggregates are also used to enforce Domain invariants
+/// (i.e. certain constraints or rules that are unique to a specific Domain).
+///
+/// Since this is an Event-sourced version of the Aggregate pattern,
+/// any change to the Aggregate state must be represented through
+/// a Domain Event, which is then applied to the current state
+/// using the [`Aggregate::apply`] method.
+///
+/// More on Aggregates can be found here: `&lt;https://www.dddcommunity.org/library/vernon_2011/&gt;`
+</span><span class="kw">pub trait </span>Aggregate: Sized + Send + Sync + Clone {
+    <span class="doccomment">/// The type used to uniquely identify the Aggregate.
+    </span><span class="kw">type </span>Id: Send + Sync;
 
-    <span class="doccomment">/// The type of Domain Events that interest this Aggregate.</span>
-    <span class="doccomment">/// Usually, this type should be an `enum`.</span>
-    <span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Clone</span>;
+    <span class="doccomment">/// The type of Domain Events that interest this Aggregate.
+    /// Usually, this type should be an `enum`.
+    </span><span class="kw">type </span>Event: message::Message + Send + Sync + Clone;
 
-    <span class="doccomment">/// The error type that can be returned by [`Aggregate::apply`] when</span>
-    <span class="doccomment">/// mutating the Aggregate state.</span>
-    <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+    <span class="doccomment">/// The error type that can be returned by [`Aggregate::apply`] when
+    /// mutating the Aggregate state.
+    </span><span class="kw">type </span>Error: Send + Sync;
 
-    <span class="doccomment">/// A unique name identifier for this Aggregate type.</span>
-    <span class="kw">fn</span> <span class="ident">type_name</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
+    <span class="doccomment">/// A unique name identifier for this Aggregate type.
+    </span><span class="kw">fn </span>type_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
 
-    <span class="doccomment">/// Returns the unique identifier for the Aggregate instance.</span>
-    <span class="kw">fn</span> <span class="ident">aggregate_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Id</span>;
+    <span class="doccomment">/// Returns the unique identifier for the Aggregate instance.
+    </span><span class="kw">fn </span>aggregate_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Id;
 
-    <span class="doccomment">/// Mutates the state of an Aggregate through a Domain Event.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
-    <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">event</span>: <span class="ident"><span class="self">Self</span>::Event</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Mutates the state of an Aggregate through a Domain Event.
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    </span><span class="kw">fn </span>apply(state: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, event: <span class="self">Self</span>::Event) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="doccomment">/// An Aggregate Root represents the Domain Entity object used to</span>
-<span class="doccomment">/// load and save an [Aggregate] from and to a [Repository], and</span>
-<span class="doccomment">/// to perform actions that may result in new Domain Events</span>
-<span class="doccomment">/// to change the state of the Aggregate.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The Aggregate state and list of Domain Events recorded</span>
-<span class="doccomment">/// are handled by the [Root] object itself.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```text</span>
-<span class="doccomment">/// #[derive(Debug, Clone)]</span>
-<span class="doccomment">/// struct MyAggregate {</span>
-<span class="doccomment">///     // Here goes the state of the Aggregate.</span>
-<span class="doccomment">/// };</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[derive(Debug, Clone, PartialEq, Eq)]</span>
-<span class="doccomment">/// enum MyAggregateEvent {</span>
-<span class="doccomment">///     // Here we list the Domain Events for the Aggregate.</span>
-<span class="doccomment">///     EventHasHappened,</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl Aggregate for MyAggregate {</span>
-<span class="doccomment">///     type Id = i64; // Just for the sake of the example.</span>
-<span class="doccomment">///     type Event = MyAggregateEvent;</span>
-<span class="doccomment">///     type Error = (); // Just for the sake of the example. Use a proper error here.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     fn aggregate_id(&amp;self) -&gt; &amp;Self::Id {</span>
-<span class="doccomment">///         todo!()</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     fn apply(this: Option&lt;Self&gt;, event: Self::Event) -&gt; Result&lt;Self, Self::Error&gt; {</span>
-<span class="doccomment">///         todo!()</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // This type is necessary in order to create a new vtable</span>
-<span class="doccomment">/// // for the method implementations in the block below.</span>
-<span class="doccomment">/// #[derive(Debug, Clone)]</span>
-<span class="doccomment">/// struct MyAggregateRoot(Root&lt;MyAggregate&gt;)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// impl MyAggregateRoot {</span>
-<span class="doccomment">///     pub fn do_something() -&gt; Result&lt;MyAggregate, ()&gt; {</span>
-<span class="doccomment">///         // Here, we record a new Domain Event through the Root&lt;MyAggregate&gt; object.</span>
-<span class="doccomment">///         //</span>
-<span class="doccomment">///         // This will record the new Domain Event in a list of events to commit,</span>
-<span class="doccomment">///         // and call the `MyAggregate::apply` method to create the Aggregate state.</span>
-<span class="doccomment">///         Root::&lt;MyAggregate&gt;::record_new(MyAggregateEvent::EventHasHappened)</span>
-<span class="doccomment">///             .map(MyAggregateRoot)</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+<span class="doccomment">/// An Aggregate Root represents the Domain Entity object used to
+/// load and save an [Aggregate] from and to a [Repository], and
+/// to perform actions that may result in new Domain Events
+/// to change the state of the Aggregate.
+///
+/// The Aggregate state and list of Domain Events recorded
+/// are handled by the [Root] object itself.
+///
+/// ```text
+/// #[derive(Debug, Clone)]
+/// struct MyAggregate {
+///     // Here goes the state of the Aggregate.
+/// };
+///
+/// #[derive(Debug, Clone, PartialEq, Eq)]
+/// enum MyAggregateEvent {
+///     // Here we list the Domain Events for the Aggregate.
+///     EventHasHappened,
+/// }
+///
+/// impl Aggregate for MyAggregate {
+///     type Id = i64; // Just for the sake of the example.
+///     type Event = MyAggregateEvent;
+///     type Error = (); // Just for the sake of the example. Use a proper error here.
+///
+///     fn aggregate_id(&amp;self) -&gt; &amp;Self::Id {
+///         todo!()
+///     }
+///
+///     fn apply(this: Option&lt;Self&gt;, event: Self::Event) -&gt; Result&lt;Self, Self::Error&gt; {
+///         todo!()
+///     }
+/// }
+///
+/// // This type is necessary in order to create a new vtable
+/// // for the method implementations in the block below.
+/// #[derive(Debug, Clone)]
+/// struct MyAggregateRoot(Root&lt;MyAggregate&gt;)
+///
+/// impl MyAggregateRoot {
+///     pub fn do_something() -&gt; Result&lt;MyAggregate, ()&gt; {
+///         // Here, we record a new Domain Event through the Root&lt;MyAggregate&gt; object.
+///         //
+///         // This will record the new Domain Event in a list of events to commit,
+///         // and call the `MyAggregate::apply` method to create the Aggregate state.
+///         Root::&lt;MyAggregate&gt;::record_new(MyAggregateEvent::EventHasHappened)
+///             .map(MyAggregateRoot)
+///     }
+/// }
+/// ```
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq)]
+#[must_use]
+</span><span class="kw">pub struct </span>Root&lt;T&gt;
+<span class="kw">where
+    </span>T: Aggregate,
 {
-    <span class="ident">aggregate</span>: <span class="ident">T</span>,
-    <span class="ident">version</span>: <span class="ident">Version</span>,
-    <span class="ident">recorded_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    aggregate: T,
+    version: Version,
+    recorded_events: Vec&lt;event::Envelope&lt;T::Event&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">std::ops::Deref</span> <span class="kw">for</span> <span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+<span class="kw">impl</span>&lt;T&gt; std::ops::Deref <span class="kw">for </span>Root&lt;T&gt;
+<span class="kw">where
+    </span>T: Aggregate,
 {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">T</span>;
+    <span class="kw">type </span>Target = T;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">aggregate</span>
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.aggregate
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Aggregate</span>,
+<span class="kw">impl</span>&lt;T&gt; Root&lt;T&gt;
+<span class="kw">where
+    </span>T: Aggregate,
 {
-    <span class="doccomment">/// Returns the current version for the [Aggregate].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Version</span> {
-        <span class="self">self</span>.<span class="ident">version</span>
+    <span class="doccomment">/// Returns the current version for the [Aggregate].
+    </span><span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Version {
+        <span class="self">self</span>.version
     }
 
-    <span class="doccomment">/// Returns the unique identifier of the [Aggregate].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aggregate_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T::Id</span> {
-        <span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">aggregate_id</span>()
+    <span class="doccomment">/// Returns the unique identifier of the [Aggregate].
+    </span><span class="kw">pub fn </span>aggregate_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T::Id {
+        <span class="self">self</span>.aggregate.aggregate_id()
     }
 
-    <span class="doccomment">/// Maps the [Aggregate] value contained within [Root]</span>
-    <span class="doccomment">/// to a different type, that can be converted through [From] trait.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Useful to convert an [Aggregate] type to a data transfer object to use</span>
-    <span class="doccomment">/// for database storage.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_aggregate_type</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">K</span>
-    <span class="kw">where</span>
-        <span class="ident">K</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Maps the [Aggregate] value contained within [Root]
+    /// to a different type, that can be converted through [From] trait.
+    ///
+    /// Useful to convert an [Aggregate] type to a data transfer object to use
+    /// for database storage.
+    </span><span class="kw">pub fn </span>to_aggregate_type&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; K
+    <span class="kw">where
+        </span>K: From&lt;T&gt;,
     {
-        <span class="ident">K::from</span>(<span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">clone</span>())
+        K::from(<span class="self">self</span>.aggregate.clone())
     }
 
-    <span class="doccomment">/// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]</span>
-    <span class="doccomment">/// and resets the internal list to its default value.</span>
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_uncommitted_events</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">recorded_events</span>)
+    <span class="doccomment">/// Returns the list of uncommitted, recorded Domain [Event]s from the [Root]
+    /// and resets the internal list to its default value.
+    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="kw">pub fn </span>take_uncommitted_events(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;event::Envelope&lt;T::Event&gt;&gt; {
+        std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.recorded_events)
     }
 
-    <span class="doccomment">/// Rehydrates an [Aggregate] Root from its state and version.</span>
-    <span class="doccomment">/// Useful for [Repository] implementations outside the [EventSourcedRepository] one.</span>
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rehydrate_from_state</span>(<span class="ident">version</span>: <span class="ident">Version</span>, <span class="ident">aggregate</span>: <span class="ident">T</span>) -&gt; <span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">Root</span> {
-            <span class="ident">version</span>,
-            <span class="ident">aggregate</span>,
-            <span class="ident">recorded_events</span>: <span class="ident">Vec::default</span>(),
+    <span class="doccomment">/// Rehydrates an [Aggregate] Root from its state and version.
+    /// Useful for [Repository] implementations outside the [EventSourcedRepository] one.
+    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="kw">pub fn </span>rehydrate_from_state(version: Version, aggregate: T) -&gt; Root&lt;T&gt; {
+        Root {
+            version,
+            aggregate,
+            recorded_events: Vec::default(),
         }
     }
 
-    <span class="doccomment">/// Creates a new [Root] instance from a Domain [Event]</span>
-    <span class="doccomment">/// while rehydrating an [Aggregate].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
-    <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">rehydrate_from</span>(<span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">Root</span> {
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">aggregate</span>: <span class="ident">T::apply</span>(<span class="prelude-val">None</span>, <span class="ident">event</span>.<span class="ident">message</span>)<span class="question-mark">?</span>,
-            <span class="ident">recorded_events</span>: <span class="ident">Vec::default</span>(),
+    <span class="doccomment">/// Creates a new [Root] instance from a Domain [Event]
+    /// while rehydrating an [Aggregate].
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>rehydrate_from(event: event::Envelope&lt;T::Event&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Root&lt;T&gt;, T::Error&gt; {
+        <span class="prelude-val">Ok</span>(Root {
+            version: <span class="number">1</span>,
+            aggregate: T::apply(<span class="prelude-val">None</span>, event.message)<span class="question-mark">?</span>,
+            recorded_events: Vec::default(),
         })
     }
 
-    <span class="doccomment">/// Applies a new Domain [Event] to the [Root] while rehydrating</span>
-    <span class="doccomment">/// an [Aggregate].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
-    <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">apply_rehydrated_event</span>(
-        <span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Root</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">T::apply</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">aggregate</span>), <span class="ident">event</span>.<span class="ident">message</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">version</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="doccomment">/// Applies a new Domain [Event] to the [Root] while rehydrating
+    /// an [Aggregate].
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>apply_rehydrated_event(
+        <span class="kw-2">mut </span><span class="self">self</span>,
+        event: event::Envelope&lt;T::Event&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Root&lt;T&gt;, T::Error&gt; {
+        <span class="self">self</span>.aggregate = T::apply(<span class="prelude-val">Some</span>(<span class="self">self</span>.aggregate), event.message)<span class="question-mark">?</span>;
+        <span class="self">self</span>.version += <span class="number">1</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Creates a new [Aggregate] [Root] instance by applying the specified</span>
-    <span class="doccomment">/// Domain Event.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Example of usage:</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// use eventually::{</span>
-    <span class="doccomment">///     event,</span>
-    <span class="doccomment">///     aggregate::Root,</span>
-    <span class="doccomment">///     aggregate,</span>
-    <span class="doccomment">/// };</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let my_aggregate_root = MyAggregateRoot::record_new(</span>
-    <span class="doccomment">///     event::Envelope::from(MyDomainEvent { /* something */ })</span>
-    <span class="doccomment">///  )?;</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
-    <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_new</span>(<span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">Root</span> {
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">aggregate</span>: <span class="ident">T::apply</span>(<span class="prelude-val">None</span>, <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
-            <span class="ident">recorded_events</span>: <span class="macro">vec!</span>[<span class="ident">event</span>],
+    <span class="doccomment">/// Creates a new [Aggregate] [Root] instance by applying the specified
+    /// Domain Event.
+    ///
+    /// Example of usage:
+    /// ```text
+    /// use eventually::{
+    ///     event,
+    ///     aggregate::Root,
+    ///     aggregate,
+    /// };
+    ///
+    /// let my_aggregate_root = MyAggregateRoot::record_new(
+    ///     event::Envelope::from(MyDomainEvent { /* something */ })
+    ///  )?;
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    </span><span class="kw">pub fn </span>record_new(event: event::Envelope&lt;T::Event&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, T::Error&gt; {
+        <span class="prelude-val">Ok</span>(Root {
+            version: <span class="number">1</span>,
+            aggregate: T::apply(<span class="prelude-val">None</span>, event.message.clone())<span class="question-mark">?</span>,
+            recorded_events: <span class="macro">vec!</span>[event],
         })
     }
 
-    <span class="doccomment">/// Records a change to the [Aggregate] [Root], expressed by the specified</span>
-    <span class="doccomment">/// Domain Event.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Example of usage:</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// use eventually::{</span>
-    <span class="doccomment">///     event,</span>
-    <span class="doccomment">///     aggregate::Root,</span>
-    <span class="doccomment">/// };</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// impl MyAggregateRoot {</span>
-    <span class="doccomment">///     pub fn update_name(&amp;mut self, name: String) -&gt; Result&lt;(), MyAggregateError&gt; {</span>
-    <span class="doccomment">///         if name.is_empty() {</span>
-    <span class="doccomment">///             return Err(MyAggregateError::NameIsEmpty);</span>
-    <span class="doccomment">///         }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///         self.record_that(</span>
-    <span class="doccomment">///             event::Envelope::from(MyAggergateEvent::NameWasChanged { name })</span>
-    <span class="doccomment">///         )</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The method can return an error if the event to apply is unexpected</span>
-    <span class="doccomment">/// given the current state of the Aggregate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_that</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">T::Event</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">T::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">aggregate</span> <span class="op">=</span> <span class="ident">T::apply</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">clone</span>()), <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">recorded_events</span>.<span class="ident">push</span>(<span class="ident">event</span>);
-        <span class="self">self</span>.<span class="ident">version</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="doccomment">/// Records a change to the [Aggregate] [Root], expressed by the specified
+    /// Domain Event.
+    ///
+    /// Example of usage:
+    /// ```text
+    /// use eventually::{
+    ///     event,
+    ///     aggregate::Root,
+    /// };
+    ///
+    /// impl MyAggregateRoot {
+    ///     pub fn update_name(&amp;mut self, name: String) -&gt; Result&lt;(), MyAggregateError&gt; {
+    ///         if name.is_empty() {
+    ///             return Err(MyAggregateError::NameIsEmpty);
+    ///         }
+    ///
+    ///         self.record_that(
+    ///             event::Envelope::from(MyAggergateEvent::NameWasChanged { name })
+    ///         )
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    </span><span class="kw">pub fn </span>record_that(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: event::Envelope&lt;T::Event&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), T::Error&gt; {
+        <span class="self">self</span>.aggregate = T::apply(<span class="prelude-val">Some</span>(<span class="self">self</span>.aggregate.clone()), event.message.clone())<span class="question-mark">?</span>;
+        <span class="self">self</span>.recorded_events.push(event);
+        <span class="self">self</span>.version += <span class="number">1</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="comment">// The warnings are happening due to usage of the methods only inside #[cfg(test)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">test_user_domain</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">aggregate</span>, <span class="ident">message</span>};
+<span class="comment">// The warnings are happening due to usage of the methods only inside #[cfg(test)]
+</span><span class="attribute">#[allow(dead_code)]
+#[doc(hidden)]
+#[cfg(test)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>test_user_domain {
+    <span class="kw">use crate</span>::{aggregate, message};
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">User</span> {
-        <span class="ident">email</span>: <span class="ident">String</span>,
-        <span class="ident">password</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Debug, Clone)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>User {
+        email: String,
+        password: String,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">UserEvent</span> {
-        <span class="ident">WasCreated</span> { <span class="ident">email</span>: <span class="ident">String</span>, <span class="ident">password</span>: <span class="ident">String</span> },
-        <span class="ident">PasswordWasChanged</span> { <span class="ident">password</span>: <span class="ident">String</span> },
+    <span class="attribute">#[derive(Debug, Clone, PartialEq, Eq)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>UserEvent {
+        WasCreated { email: String, password: String },
+        PasswordWasChanged { password: String },
     }
 
-    <span class="kw">impl</span> <span class="ident">message::Message</span> <span class="kw">for</span> <span class="ident">UserEvent</span> {
-        <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-            <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">UserEvent::WasCreated</span> { .. } =&gt; <span class="string">&quot;UserWasCreated&quot;</span>,
-                <span class="ident">UserEvent::PasswordWasChanged</span> { .. } =&gt; <span class="string">&quot;UserPasswordWasChanged&quot;</span>,
+    <span class="kw">impl </span>message::Message <span class="kw">for </span>UserEvent {
+        <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+            <span class="kw">match </span><span class="self">self </span>{
+                UserEvent::WasCreated { .. } =&gt; <span class="string">&quot;UserWasCreated&quot;</span>,
+                UserEvent::PasswordWasChanged { .. } =&gt; <span class="string">&quot;UserPasswordWasChanged&quot;</span>,
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">UserError</span> {
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided email was empty&quot;</span>)]</span>
-        <span class="ident">EmptyEmail</span>,
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided password was empty&quot;</span>)]</span>
-        <span class="ident">EmptyPassword</span>,
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;user was not yet created&quot;</span>)]</span>
-        <span class="ident">NotYetCreated</span>,
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;user was already created&quot;</span>)]</span>
-        <span class="ident">AlreadyCreated</span>,
+    <span class="attribute">#[derive(Debug, thiserror::Error)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>UserError {
+        <span class="attribute">#[error(<span class="string">&quot;provided email was empty&quot;</span>)]
+        </span>EmptyEmail,
+        <span class="attribute">#[error(<span class="string">&quot;provided password was empty&quot;</span>)]
+        </span>EmptyPassword,
+        <span class="attribute">#[error(<span class="string">&quot;user was not yet created&quot;</span>)]
+        </span>NotYetCreated,
+        <span class="attribute">#[error(<span class="string">&quot;user was already created&quot;</span>)]
+        </span>AlreadyCreated,
     }
 
-    <span class="kw">impl</span> <span class="ident">aggregate::Aggregate</span> <span class="kw">for</span> <span class="ident">User</span> {
-        <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">String</span>;
-        <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">UserEvent</span>;
-        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UserError</span>;
+    <span class="kw">impl </span>aggregate::Aggregate <span class="kw">for </span>User {
+        <span class="kw">type </span>Id = String;
+        <span class="kw">type </span>Event = UserEvent;
+        <span class="kw">type </span>Error = UserError;
 
-        <span class="kw">fn</span> <span class="ident">type_name</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-            <span class="string">&quot;User&quot;</span>
+        <span class="kw">fn </span>type_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+            <span class="string">&quot;User&quot;
+        </span>}
+
+        <span class="kw">fn </span>aggregate_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Id {
+            <span class="kw-2">&amp;</span><span class="self">self</span>.email
         }
 
-        <span class="kw">fn</span> <span class="ident">aggregate_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Id</span> {
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">email</span>
-        }
-
-        <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">event</span>: <span class="ident"><span class="self">Self</span>::Event</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-            <span class="kw">match</span> <span class="ident">state</span> {
-                <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">event</span> {
-                    <span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> } =&gt; <span class="prelude-val">Ok</span>(<span class="ident">User</span> { <span class="ident">email</span>, <span class="ident">password</span> }),
-                    <span class="ident">UserEvent::PasswordWasChanged</span> { .. } =&gt; <span class="prelude-val">Err</span>(<span class="ident">UserError::NotYetCreated</span>),
+        <span class="kw">fn </span>apply(state: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, event: <span class="self">Self</span>::Event) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+            <span class="kw">match </span>state {
+                <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>event {
+                    UserEvent::WasCreated { email, password } =&gt; <span class="prelude-val">Ok</span>(User { email, password }),
+                    UserEvent::PasswordWasChanged { .. } =&gt; <span class="prelude-val">Err</span>(UserError::NotYetCreated),
                 },
-                <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">state</span>) =&gt; <span class="kw">match</span> <span class="ident">event</span> {
-                    <span class="ident">UserEvent::PasswordWasChanged</span> { <span class="ident">password</span> } =&gt; {
-                        <span class="ident">state</span>.<span class="ident">password</span> <span class="op">=</span> <span class="ident">password</span>;
-                        <span class="prelude-val">Ok</span>(<span class="ident">state</span>)
+                <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>state) =&gt; <span class="kw">match </span>event {
+                    UserEvent::PasswordWasChanged { password } =&gt; {
+                        state.password = password;
+                        <span class="prelude-val">Ok</span>(state)
                     }
-                    <span class="ident">UserEvent::WasCreated</span> { .. } =&gt; <span class="prelude-val">Err</span>(<span class="ident">UserError::AlreadyCreated</span>),
+                    UserEvent::WasCreated { .. } =&gt; <span class="prelude-val">Err</span>(UserError::AlreadyCreated),
                 },
             }
         }
     }
 
-    <span class="kw">impl</span> <span class="ident">aggregate::Root</span><span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span> {
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">email</span>: <span class="ident">String</span>, <span class="ident">password</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">UserError</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">email</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserError::EmptyEmail</span>);
+    <span class="kw">impl </span>aggregate::Root&lt;User&gt; {
+        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create(email: String, password: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, UserError&gt; {
+            <span class="kw">if </span>email.is_empty() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(UserError::EmptyEmail);
             }
 
-            <span class="kw">if</span> <span class="ident">password</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserError::EmptyPassword</span>);
+            <span class="kw">if </span>password.is_empty() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(UserError::EmptyPassword);
             }
 
-            <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::record_new</span>(
-                <span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> }.<span class="ident">into</span>(),
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span>::record_new(
+                UserEvent::WasCreated { email, password }.into(),
             )<span class="question-mark">?</span>)
         }
 
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">change_password</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">password</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UserError</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">password</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">UserError::EmptyPassword</span>);
+        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>change_password(<span class="kw-2">&amp;mut </span><span class="self">self</span>, password: String) -&gt; <span class="prelude-ty">Result</span>&lt;(), UserError&gt; {
+            <span class="kw">if </span>password.is_empty() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(UserError::EmptyPassword);
             }
 
-            <span class="self">self</span>.<span class="ident">record_that</span>(<span class="ident">UserEvent::PasswordWasChanged</span> { <span class="ident">password</span> }.<span class="ident">into</span>())<span class="question-mark">?</span>;
+            <span class="self">self</span>.record_that(UserEvent::PasswordWasChanged { password }.into())<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::semicolon_if_nothing_returned</span>)]</span> <span class="comment">// False positives :shrugs:</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident">std::error::Error</span>;
+<span class="attribute">#[allow(clippy::semicolon_if_nothing_returned)] </span><span class="comment">// False positives :shrugs:
+</span><span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span>std::error::Error;
 
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">aggregate</span>,
-        <span class="ident">aggregate::test_user_domain</span>::{<span class="ident">User</span>, <span class="ident">UserEvent</span>},
-        <span class="ident">aggregate</span>::{<span class="ident">Getter</span>, <span class="ident">Saver</span>},
-        <span class="ident">event</span>,
-        <span class="ident">event::store::EventStoreExt</span>,
-        <span class="ident">version</span>,
+    <span class="kw">use crate</span>::{
+        aggregate,
+        aggregate::test_user_domain::{User, UserEvent},
+        aggregate::{Getter, Saver},
+        event,
+        event::store::EventStoreExt,
+        version,
     };
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">repository_persists_new_aggregate_root</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">event::store::InMemory</span>::<span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">UserEvent</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">tracking_event_store</span> <span class="op">=</span> <span class="ident">event_store</span>.<span class="ident">with_recorded_events_tracking</span>();
-        <span class="kw">let</span> <span class="ident">user_repository</span> <span class="op">=</span>
-            <span class="ident">aggregate::EventSourcedRepository</span>::<span class="op">&lt;</span><span class="ident">User</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">tracking_event_store</span>.<span class="ident">clone</span>());
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>repository_persists_new_aggregate_root() {
+        <span class="kw">let </span>event_store = event::store::InMemory::&lt;String, UserEvent&gt;::default();
+        <span class="kw">let </span>tracking_event_store = event_store.with_recorded_events_tracking();
+        <span class="kw">let </span>user_repository =
+            aggregate::EventSourcedRepository::&lt;User, <span class="kw">_</span>&gt;::from(tracking_event_store.clone());
 
-        <span class="kw">let</span> <span class="ident">email</span> <span class="op">=</span> <span class="string">&quot;test@email.com&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let </span>email = <span class="string">&quot;test@email.com&quot;</span>.to_owned();
+        <span class="kw">let </span>password = <span class="string">&quot;not-a-secret&quot;</span>.to_owned();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">aggregate::Root</span>::<span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="ident">::create</span>(<span class="ident">email</span>.<span class="ident">clone</span>(), <span class="ident">password</span>.<span class="ident">clone</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be created successfully&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>user = aggregate::Root::&lt;User&gt;::create(email.clone(), password.clone())
+            .expect(<span class="string">&quot;user should be created successfully&quot;</span>);
 
-        <span class="ident">user_repository</span>
-            .<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">user</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be stored successfully&quot;</span>);
+        user_repository
+            .store(<span class="kw-2">&amp;mut </span>user)
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;user should be stored successfully&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">expected_events</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="ident">email</span>.<span class="ident">clone</span>(),
-            <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::WasCreated</span> { <span class="ident">email</span>, <span class="ident">password</span> }),
+        <span class="kw">let </span>expected_events = <span class="macro">vec!</span>[event::Persisted {
+            stream_id: email.clone(),
+            version: <span class="number">1</span>,
+            event: event::Envelope::from(UserEvent::WasCreated { email, password }),
         }];
 
-        <span class="macro">assert_eq!</span>(<span class="ident">expected_events</span>, <span class="ident">tracking_event_store</span>.<span class="ident">recorded_events</span>());
+        <span class="macro">assert_eq!</span>(expected_events, tracking_event_store.recorded_events());
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">repository_retrieves_the_aggregate_root_and_stores_new_events</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">event::store::InMemory</span>::<span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">UserEvent</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">tracking_event_store</span> <span class="op">=</span> <span class="ident">event_store</span>.<span class="ident">with_recorded_events_tracking</span>();
-        <span class="kw">let</span> <span class="ident">user_repository</span> <span class="op">=</span>
-            <span class="ident">aggregate::EventSourcedRepository</span>::<span class="op">&lt;</span><span class="ident">User</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">tracking_event_store</span>.<span class="ident">clone</span>());
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>repository_retrieves_the_aggregate_root_and_stores_new_events() {
+        <span class="kw">let </span>event_store = event::store::InMemory::&lt;String, UserEvent&gt;::default();
+        <span class="kw">let </span>tracking_event_store = event_store.with_recorded_events_tracking();
+        <span class="kw">let </span>user_repository =
+            aggregate::EventSourcedRepository::&lt;User, <span class="kw">_</span>&gt;::from(tracking_event_store.clone());
 
-        <span class="kw">let</span> <span class="ident">email</span> <span class="op">=</span> <span class="string">&quot;test@email.com&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let </span>email = <span class="string">&quot;test@email.com&quot;</span>.to_owned();
+        <span class="kw">let </span>password = <span class="string">&quot;not-a-secret&quot;</span>.to_owned();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">aggregate::Root</span>::<span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="ident">::create</span>(<span class="ident">email</span>.<span class="ident">clone</span>(), <span class="ident">password</span>.<span class="ident">clone</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be created successfully&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>user = aggregate::Root::&lt;User&gt;::create(email.clone(), password.clone())
+            .expect(<span class="string">&quot;user should be created successfully&quot;</span>);
 
-        <span class="ident">user_repository</span>
-            .<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">user</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be stored successfully&quot;</span>);
+        user_repository
+            .store(<span class="kw-2">&amp;mut </span>user)
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;user should be stored successfully&quot;</span>);
 
-        <span class="comment">// Reset the event recorded while storing the User for the first time.</span>
-        <span class="ident">tracking_event_store</span>.<span class="ident">reset_recorded_events</span>();
+        <span class="comment">// Reset the event recorded while storing the User for the first time.
+        </span>tracking_event_store.reset_recorded_events();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">user_repository</span>
-            .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">email</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be retrieved from the repository&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>user = user_repository
+            .get(<span class="kw-2">&amp;</span>email)
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;user should be retrieved from the repository&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">new_password</span> <span class="op">=</span> <span class="string">&quot;new-password&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let </span>new_password = <span class="string">&quot;new-password&quot;</span>.to_owned();
 
-        <span class="ident">user</span>.<span class="ident">change_password</span>(<span class="ident">new_password</span>.<span class="ident">clone</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;user password should be changed successfully&quot;</span>);
+        user.change_password(new_password.clone())
+            .expect(<span class="string">&quot;user password should be changed successfully&quot;</span>);
 
-        <span class="ident">user_repository</span>
-            .<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">user</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;new user version should be stored successfully&quot;</span>);
+        user_repository
+            .store(<span class="kw-2">&amp;mut </span>user)
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;new user version should be stored successfully&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">expected_events</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>: <span class="ident">email</span>.<span class="ident">clone</span>(),
-            <span class="ident">version</span>: <span class="number">2</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope::from</span>(<span class="ident">UserEvent::PasswordWasChanged</span> {
-                <span class="ident">password</span>: <span class="ident">new_password</span>,
+        <span class="kw">let </span>expected_events = <span class="macro">vec!</span>[event::Persisted {
+            stream_id: email.clone(),
+            version: <span class="number">2</span>,
+            event: event::Envelope::from(UserEvent::PasswordWasChanged {
+                password: new_password,
             }),
         }];
 
-        <span class="macro">assert_eq!</span>(<span class="ident">expected_events</span>, <span class="ident">tracking_event_store</span>.<span class="ident">recorded_events</span>());
+        <span class="macro">assert_eq!</span>(expected_events, tracking_event_store.recorded_events());
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">repository_returns_conflict_error_from_store_when_data_race_happens</span>() {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">event::store::InMemory</span>::<span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">UserEvent</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">user_repository</span> <span class="op">=</span>
-            <span class="ident">aggregate::EventSourcedRepository</span>::<span class="op">&lt;</span><span class="ident">User</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">event_store</span>.<span class="ident">clone</span>());
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>repository_returns_conflict_error_from_store_when_data_race_happens() {
+        <span class="kw">let </span>event_store = event::store::InMemory::&lt;String, UserEvent&gt;::default();
+        <span class="kw">let </span>user_repository =
+            aggregate::EventSourcedRepository::&lt;User, <span class="kw">_</span>&gt;::from(event_store.clone());
 
-        <span class="kw">let</span> <span class="ident">email</span> <span class="op">=</span> <span class="string">&quot;test@email.com&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="string">&quot;not-a-secret&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let </span>email = <span class="string">&quot;test@email.com&quot;</span>.to_owned();
+        <span class="kw">let </span>password = <span class="string">&quot;not-a-secret&quot;</span>.to_owned();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">aggregate::Root</span>::<span class="op">&lt;</span><span class="ident">User</span><span class="op">&gt;</span><span class="ident">::create</span>(<span class="ident">email</span>.<span class="ident">clone</span>(), <span class="ident">password</span>.<span class="ident">clone</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be created successfully&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>user = aggregate::Root::&lt;User&gt;::create(email.clone(), password.clone())
+            .expect(<span class="string">&quot;user should be created successfully&quot;</span>);
 
-        <span class="comment">// We need to clone the User Aggregate Root instance to get the list</span>
-        <span class="comment">// of uncommitted events from the Root context twice.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cloned_user</span> <span class="op">=</span> <span class="ident">user</span>.<span class="ident">clone</span>();
+        <span class="comment">// We need to clone the User Aggregate Root instance to get the list
+        // of uncommitted events from the Root context twice.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cloned_user = user.clone();
 
-        <span class="comment">// Saving the first User to the Repository.</span>
-        <span class="ident">user_repository</span>
-            .<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">user</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;user should be stored successfully&quot;</span>);
+        <span class="comment">// Saving the first User to the Repository.
+        </span>user_repository
+            .store(<span class="kw-2">&amp;mut </span>user)
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;user should be stored successfully&quot;</span>);
 
-        <span class="comment">// Simulating data race by duplicating the call to the Repository</span>
-        <span class="comment">// with the same UserRoot instance that has already been committeed.</span>
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">user_repository</span>
-            .<span class="ident">store</span>(<span class="kw-2">&amp;mut</span> <span class="ident">cloned_user</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect_err</span>(<span class="string">&quot;the repository should fail on the second store call with the cloned user&quot;</span>);
+        <span class="comment">// Simulating data race by duplicating the call to the Repository
+        // with the same UserRoot instance that has already been committeed.
+        </span><span class="kw">let </span>error = user_repository
+            .store(<span class="kw-2">&amp;mut </span>cloned_user)
+            .<span class="kw">await
+            </span>.expect_err(<span class="string">&quot;the repository should fail on the second store call with the cloned user&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">error</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">error</span>.<span class="ident">into</span>();
+        <span class="kw">let </span>error: Box&lt;<span class="kw">dyn </span>Error&gt; = error.into();
 
-        <span class="comment">// Have no idea how to fix this one...</span>
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::redundant_closure_for_method_calls</span>)]</span>
-        {
-            <span class="macro">assert!</span>(<span class="ident">error</span>
-                .<span class="ident">source</span>()
-                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">src</span><span class="op">|</span> <span class="ident">src</span>.<span class="ident">is</span>::<span class="op">&lt;</span><span class="ident">version::ConflictError</span><span class="op">&gt;</span>()));
+        <span class="comment">// Have no idea how to fix this one...
+        </span><span class="attribute">#[allow(clippy::redundant_closure_for_method_calls)]
+        </span>{
+            <span class="macro">assert!</span>(error
+                .source()
+                .map_or(<span class="bool-val">false</span>, |src| src.is::&lt;version::ConflictError&gt;()));
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

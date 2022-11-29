@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually-postgres/src/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually_postgres/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually_postgres/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually_postgres/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually-postgres/src/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../eventually_postgres/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../eventually_postgres/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../eventually_postgres/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -320,129 +320,129 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">string::ToString</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, string::ToString};
 
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">chrono::Utc</span>;
-<span class="kw">use</span> <span class="ident">eventually</span>::{
-    <span class="ident">event</span>,
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">Metadata</span>},
-    <span class="ident">serde</span>::{<span class="ident">Deserializer</span>, <span class="ident">Serde</span>, <span class="ident">Serializer</span>},
-    <span class="ident">version</span>,
-    <span class="ident">version::Version</span>,
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>chrono::Utc;
+<span class="kw">use </span>eventually::{
+    event,
+    message::{Message, Metadata},
+    serde::{Deserializer, Serde, Serializer},
+    version,
+    version::Version,
 };
-<span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">future::ready</span>, <span class="ident">StreamExt</span>, <span class="ident">TryStreamExt</span>};
-<span class="kw">use</span> <span class="ident">lazy_static::lazy_static</span>;
-<span class="kw">use</span> <span class="ident">regex::Regex</span>;
-<span class="kw">use</span> <span class="ident">sqlx</span>::{
-    <span class="ident">postgres</span>::{<span class="ident">PgDatabaseError</span>, <span class="ident">PgRow</span>},
-    <span class="ident">PgPool</span>, <span class="ident">Postgres</span>, <span class="ident">Row</span>, <span class="ident">Transaction</span>,
+<span class="kw">use </span>futures::{future::ready, StreamExt, TryStreamExt};
+<span class="kw">use </span>lazy_static::lazy_static;
+<span class="kw">use </span>regex::Regex;
+<span class="kw">use </span>sqlx::{
+    postgres::{PgDatabaseError, PgRow},
+    PgPool, Postgres, Row, Transaction,
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StreamError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to convert domain event from its serialization type: {0}&quot;</span>)]</span>
-    <span class="ident">ConvertEvent</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to deserialize event from database: {0}&quot;</span>)]</span>
-    <span class="ident">DeserializeEvent</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to get column &#39;{name}&#39; from result row: {error}&quot;</span>)]</span>
-    <span class="ident">ReadColumn</span> {
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-        <span class="attribute">#[<span class="ident">source</span>]</span>
-        <span class="ident">error</span>: <span class="ident">sqlx::Error</span>,
+<span class="attribute">#[derive(Debug, thiserror::Error)]
+</span><span class="kw">pub enum </span>StreamError {
+    <span class="attribute">#[error(<span class="string">&quot;failed to convert domain event from its serialization type: {0}&quot;</span>)]
+    </span>ConvertEvent(<span class="attribute">#[source] </span>Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
+    <span class="attribute">#[error(<span class="string">&quot;failed to deserialize event from database: {0}&quot;</span>)]
+    </span>DeserializeEvent(<span class="attribute">#[source] </span>Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
+    <span class="attribute">#[error(<span class="string">&quot;failed to get column &#39;{name}&#39; from result row: {error}&quot;</span>)]
+    </span>ReadColumn {
+        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        <span class="attribute">#[source]
+        </span>error: sqlx::Error,
     },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;db returned an error: {0}&quot;</span>)]</span>
-    <span class="ident">Database</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
+    <span class="attribute">#[error(<span class="string">&quot;db returned an error: {0}&quot;</span>)]
+    </span>Database(<span class="attribute">#[source] </span>sqlx::Error),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AppendError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;conflict error detected: {0})&quot;</span>)]</span>
-    <span class="ident">Conflict</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">version::ConflictError</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0})&quot;</span>)]</span>
-    <span class="ident">Concurrency</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">version::ConflictError</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to begin transaction: {0}&quot;</span>)]</span>
-    <span class="ident">BeginTransaction</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to upsert new event stream version: {0}&quot;</span>)]</span>
-    <span class="ident">UpsertEventStream</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to append a new domain event: {0}&quot;</span>)]</span>
-    <span class="ident">AppendEvent</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to commit transaction: {0}&quot;</span>)]</span>
-    <span class="ident">CommitTransaction</span>(<span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">sqlx::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;db returned an error: {0}&quot;</span>)]</span>
-    <span class="ident">Database</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">sqlx::Error</span>),
+<span class="attribute">#[derive(Debug, thiserror::Error)]
+</span><span class="kw">pub enum </span>AppendError {
+    <span class="attribute">#[error(<span class="string">&quot;conflict error detected: {0})&quot;</span>)]
+    </span>Conflict(<span class="attribute">#[source] </span>version::ConflictError),
+    <span class="attribute">#[error(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0})&quot;</span>)]
+    </span>Concurrency(<span class="attribute">#[source] </span>version::ConflictError),
+    <span class="attribute">#[error(<span class="string">&quot;failed to begin transaction: {0}&quot;</span>)]
+    </span>BeginTransaction(<span class="attribute">#[source] </span>sqlx::Error),
+    <span class="attribute">#[error(<span class="string">&quot;failed to upsert new event stream version: {0}&quot;</span>)]
+    </span>UpsertEventStream(<span class="attribute">#[source] </span>sqlx::Error),
+    <span class="attribute">#[error(<span class="string">&quot;failed to append a new domain event: {0}&quot;</span>)]
+    </span>AppendEvent(<span class="attribute">#[source] </span>sqlx::Error),
+    <span class="attribute">#[error(<span class="string">&quot;failed to commit transaction: {0}&quot;</span>)]
+    </span>CommitTransaction(<span class="attribute">#[source] </span>sqlx::Error),
+    <span class="attribute">#[error(<span class="string">&quot;db returned an error: {0}&quot;</span>)]
+    </span>Database(<span class="attribute">#[from] </span>sqlx::Error),
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">AppendError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">version::ConflictError</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">AppendError</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">err</span> {
-            <span class="ident">AppendError::Conflict</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
-            <span class="ident">AppendError::Concurrency</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">v</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+<span class="kw">impl </span>From&lt;AppendError&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;version::ConflictError&gt; {
+    <span class="kw">fn </span>from(err: AppendError) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>err {
+            AppendError::Conflict(v) =&gt; <span class="prelude-val">Some</span>(v),
+            AppendError::Concurrency(v) =&gt; <span class="prelude-val">Some</span>(v),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append_domain_event</span><span class="op">&lt;</span><span class="ident">Evt</span>, <span class="ident">OutEvt</span><span class="op">&gt;</span>(
-    <span class="ident">tx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Transaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
-    <span class="ident">serde</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">Serializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
-    <span class="ident">event_stream_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">event_version</span>: <span class="ident">i32</span>,
-    <span class="ident">new_event_stream_version</span>: <span class="ident">i32</span>,
-    <span class="ident">event</span>: <span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">sqlx::Error</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">Message</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>append_domain_event&lt;Evt, OutEvt&gt;(
+    tx: <span class="kw-2">&amp;mut </span>Transaction&lt;<span class="lifetime">&#39;_</span>, Postgres&gt;,
+    serde: <span class="kw-2">&amp;</span><span class="kw">impl </span>Serializer&lt;OutEvt&gt;,
+    event_stream_id: <span class="kw-2">&amp;</span>str,
+    event_version: i32,
+    new_event_stream_version: i32,
+    event: event::Envelope&lt;Evt&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt;
+<span class="kw">where
+    </span>Evt: Message,
+    OutEvt: From&lt;Evt&gt;,
 {
-    <span class="kw">let</span> <span class="ident">event_type</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">message</span>.<span class="ident">name</span>();
-    <span class="kw">let</span> <span class="ident">out_event</span> <span class="op">=</span> <span class="ident">OutEvt::from</span>(<span class="ident">event</span>.<span class="ident">message</span>);
-    <span class="kw">let</span> <span class="ident">serialized_event</span> <span class="op">=</span> <span class="ident">serde</span>.<span class="ident">serialize</span>(<span class="ident">out_event</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">metadata</span>;
+    <span class="kw">let </span>event_type = event.message.name();
+    <span class="kw">let </span>out_event = OutEvt::from(event.message);
+    <span class="kw">let </span>serialized_event = serde.serialize(out_event);
+    <span class="kw">let </span><span class="kw-2">mut </span>metadata = event.metadata;
 
-    <span class="ident">metadata</span>.<span class="ident">insert</span>(<span class="string">&quot;Recorded-At&quot;</span>.<span class="ident">to_owned</span>(), <span class="ident">Utc::now</span>().<span class="ident">to_rfc3339</span>());
-    <span class="ident">metadata</span>.<span class="ident">insert</span>(
-        <span class="string">&quot;Recorded-With-New-Version&quot;</span>.<span class="ident">to_owned</span>(),
-        <span class="ident">new_event_stream_version</span>.<span class="ident">to_string</span>(),
+    metadata.insert(<span class="string">&quot;Recorded-At&quot;</span>.to_owned(), Utc::now().to_rfc3339());
+    metadata.insert(
+        <span class="string">&quot;Recorded-With-New-Version&quot;</span>.to_owned(),
+        new_event_stream_version.to_string(),
     );
 
-    <span class="ident">sqlx::query</span>(
+    sqlx::query(
             <span class="string">r#&quot;INSERT INTO events (event_stream_id, &quot;type&quot;, &quot;version&quot;, event, metadata) VALUES ($1, $2, $3, $4, $5)&quot;#</span>,
         )
-            .<span class="ident">bind</span>(<span class="ident">event_stream_id</span>)
-            .<span class="ident">bind</span>(<span class="ident">event_type</span>)
-            .<span class="ident">bind</span>(<span class="ident">event_version</span>)
-            .<span class="ident">bind</span>(<span class="ident">serialized_event</span>)
-            .<span class="ident">bind</span>(<span class="ident">sqlx::types::Json</span>(<span class="ident">metadata</span>))
-            .<span class="ident">execute</span>(<span class="ident">tx</span>)
+            .bind(event_stream_id)
+            .bind(event_type)
+            .bind(event_version)
+            .bind(serialized_event)
+            .bind(sqlx::types::Json(metadata))
+            .execute(tx)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append_domain_events</span><span class="op">&lt;</span><span class="ident">Evt</span>, <span class="ident">OutEvt</span><span class="op">&gt;</span>(
-    <span class="ident">tx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Transaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
-    <span class="ident">serde</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">Serializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
-    <span class="ident">event_stream_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">new_version</span>: <span class="ident">i32</span>,
-    <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">sqlx::Error</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">Message</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>append_domain_events&lt;Evt, OutEvt&gt;(
+    tx: <span class="kw-2">&amp;mut </span>Transaction&lt;<span class="lifetime">&#39;_</span>, Postgres&gt;,
+    serde: <span class="kw-2">&amp;</span><span class="kw">impl </span>Serializer&lt;OutEvt&gt;,
+    event_stream_id: <span class="kw-2">&amp;</span>str,
+    new_version: i32,
+    events: Vec&lt;event::Envelope&lt;Evt&gt;&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt;
+<span class="kw">where
+    </span>Evt: Message,
+    OutEvt: From&lt;Evt&gt;,
 {
-    <span class="kw">let</span> <span class="ident">current_event_stream_version</span> <span class="op">=</span> <span class="ident">new_version</span> <span class="op">-</span> (<span class="ident">events</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>);
+    <span class="kw">let </span>current_event_stream_version = new_version - (events.len() <span class="kw">as </span>i32);
 
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">event</span>) <span class="kw">in</span> <span class="ident">events</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">let</span> <span class="ident">event_version</span> <span class="op">=</span> <span class="ident">current_event_stream_version</span> <span class="op">+</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="number">1</span>;
+    <span class="kw">for </span>(i, event) <span class="kw">in </span>events.into_iter().enumerate() {
+        <span class="kw">let </span>event_version = current_event_stream_version + (i <span class="kw">as </span>i32) + <span class="number">1</span>;
 
-        <span class="ident">append_domain_event</span>(
-            <span class="ident">tx</span>,
-            <span class="ident">serde</span>,
-            <span class="ident">event_stream_id</span>,
-            <span class="ident">event_version</span>,
-            <span class="ident">new_version</span>,
-            <span class="ident">event</span>,
+        append_domain_event(
+            tx,
+            serde,
+            event_stream_id,
+            event_version,
+            new_version,
+            event,
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
     }
@@ -450,197 +450,197 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">Evt</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>: <span class="ident">Serde</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">where
+    </span>Id: ToString + Clone,
+    Evt: TryFrom&lt;OutEvt&gt;,
+    OutEvt: From&lt;Evt&gt;,
+    S: Serde&lt;OutEvt&gt;,
 {
-    <span class="ident">pool</span>: <span class="ident">PgPool</span>,
-    <span class="ident">serde</span>: <span class="ident">S</span>,
-    <span class="ident">id_type</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Id</span><span class="op">&gt;</span>,
-    <span class="ident">evt_type</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
-    <span class="ident">out_evt_type</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
+    pool: PgPool,
+    serde: S,
+    id_type: PhantomData&lt;Id&gt;,
+    evt_type: PhantomData&lt;Evt&gt;,
+    out_evt_type: PhantomData&lt;OutEvt&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">Evt</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>: <span class="ident">Serde</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">where
+    </span>Id: ToString + Clone,
+    Evt: TryFrom&lt;OutEvt&gt;,
+    OutEvt: From&lt;Evt&gt;,
+    S: Serde&lt;OutEvt&gt;,
 {
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">pool</span>: <span class="ident">PgPool</span>, <span class="ident">serde</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">sqlx::migrate::MigrateError</span><span class="op">&gt;</span> {
-        <span class="comment">// Make sure the latest migrations are used before using the Store instance.</span>
-        <span class="ident"><span class="kw">crate</span>::MIGRATIONS</span>.<span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="ident">pool</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">pub async fn </span>new(pool: PgPool, serde: S) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, sqlx::migrate::MigrateError&gt; {
+        <span class="comment">// Make sure the latest migrations are used before using the Store instance.
+        </span><span class="kw">crate</span>::MIGRATIONS.run(<span class="kw-2">&amp;</span>pool).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">pool</span>,
-            <span class="ident">serde</span>,
-            <span class="ident">id_type</span>: <span class="ident">PhantomData</span>,
-            <span class="ident">evt_type</span>: <span class="ident">PhantomData</span>,
-            <span class="ident">out_evt_type</span>: <span class="ident">PhantomData</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            pool,
+            serde,
+            id_type: PhantomData,
+            evt_type: PhantomData,
+            out_evt_type: PhantomData,
         })
     }
 }
 
-<span class="kw">fn</span> <span class="ident">try_get_column</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">row</span>: <span class="kw-2">&amp;</span><span class="ident">PgRow</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">StreamError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">T</span>: <span class="ident">sqlx::Type</span><span class="op">&lt;</span><span class="ident">Postgres</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">sqlx::Decode</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Postgres</span><span class="op">&gt;</span>,
+<span class="kw">fn </span>try_get_column&lt;T&gt;(row: <span class="kw-2">&amp;</span>PgRow, name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;T, StreamError&gt;
+<span class="kw">where
+    for</span>&lt;<span class="lifetime">&#39;a</span>&gt; T: sqlx::Type&lt;Postgres&gt; + sqlx::Decode&lt;<span class="lifetime">&#39;a</span>, Postgres&gt;,
 {
-    <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="ident">name</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">StreamError::ReadColumn</span> { <span class="ident">name</span>, <span class="ident">error</span>: <span class="ident">err</span> })
+    row.try_get(name)
+        .map_err(|err| StreamError::ReadColumn { name, error: err })
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Evt</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Message</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="op">&lt;</span><span class="ident">Evt</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">S</span>: <span class="ident">Serde</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">where
+    </span>Id: ToString + Clone + Send + Sync,
+    Evt: TryFrom&lt;OutEvt&gt; + Message + Send + Sync,
+    &lt;Evt <span class="kw">as </span>TryFrom&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+    OutEvt: From&lt;Evt&gt; + Send + Sync,
+    S: Serde&lt;OutEvt&gt; + Send + Sync,
+    &lt;S <span class="kw">as </span>Deserializer&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn</span> <span class="ident">event_row_to_persisted_event</span>(
+    <span class="kw">fn </span>event_row_to_persisted_event(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">stream_id</span>: <span class="ident">Id</span>,
-        <span class="ident">row</span>: <span class="ident">PgRow</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>, <span class="ident">StreamError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">version_column</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">try_get_column</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>, <span class="string">&quot;version&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">event_column</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">try_get_column</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>, <span class="string">&quot;event&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">metadata_column</span>: <span class="ident">sqlx::types::Json</span><span class="op">&lt;</span><span class="ident">Metadata</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">try_get_column</span>(<span class="kw-2">&amp;</span><span class="ident">row</span>, <span class="string">&quot;metadata&quot;</span>)<span class="question-mark">?</span>;
+        stream_id: Id,
+        row: PgRow,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;event::Persisted&lt;Id, Evt&gt;, StreamError&gt; {
+        <span class="kw">let </span>version_column: i32 = try_get_column(<span class="kw-2">&amp;</span>row, <span class="string">&quot;version&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>event_column: Vec&lt;u8&gt; = try_get_column(<span class="kw-2">&amp;</span>row, <span class="string">&quot;event&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>metadata_column: sqlx::types::Json&lt;Metadata&gt; = try_get_column(<span class="kw-2">&amp;</span>row, <span class="string">&quot;metadata&quot;</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">deserialized_event</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">serde</span>
-            .<span class="ident">deserialize</span>(<span class="ident">event_column</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">StreamError::DeserializeEvent</span>(<span class="ident">Box::new</span>(<span class="ident">err</span>)))<span class="question-mark">?</span>;
+        <span class="kw">let </span>deserialized_event = <span class="self">self
+            </span>.serde
+            .deserialize(event_column)
+            .map_err(|err| StreamError::DeserializeEvent(Box::new(err)))<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">converted_event</span> <span class="op">=</span> <span class="ident">Evt::try_from</span>(<span class="ident">deserialized_event</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">StreamError::ConvertEvent</span>(<span class="ident">Box::new</span>(<span class="ident">err</span>)))<span class="question-mark">?</span>;
+        <span class="kw">let </span>converted_event = Evt::try_from(deserialized_event)
+            .map_err(|err| StreamError::ConvertEvent(Box::new(err)))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">event::Persisted</span> {
-            <span class="ident">stream_id</span>,
-            <span class="ident">version</span>: <span class="ident">version_column</span> <span class="kw">as</span> <span class="ident">Version</span>,
-            <span class="ident">event</span>: <span class="ident">event::Envelope</span> {
-                <span class="ident">message</span>: <span class="ident">converted_event</span>,
-                <span class="ident">metadata</span>: <span class="ident">metadata_column</span>.<span class="number">0</span>,
+        <span class="prelude-val">Ok</span>(event::Persisted {
+            stream_id,
+            version: version_column <span class="kw">as </span>Version,
+            event: event::Envelope {
+                message: converted_event,
+                metadata: metadata_column.<span class="number">0</span>,
             },
         })
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">event::Streamer</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Evt</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Message</span> <span class="op">+</span> <span class="ident">std::fmt::Debug</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="op">&lt;</span><span class="ident">Evt</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">S</span>: <span class="ident">Serde</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; event::Streamer&lt;Id, Evt&gt; <span class="kw">for </span>Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">where
+    </span>Id: ToString + Clone + Send + Sync,
+    Evt: TryFrom&lt;OutEvt&gt; + Message + std::fmt::Debug + Send + Sync,
+    &lt;Evt <span class="kw">as </span>TryFrom&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+    OutEvt: From&lt;Evt&gt; + Send + Sync,
+    S: Serde&lt;OutEvt&gt; + Send + Sync,
+    &lt;S <span class="kw">as </span>Deserializer&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">StreamError</span>;
+    <span class="kw">type </span>Error = StreamError;
 
-    <span class="kw">fn</span> <span class="ident">stream</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">Id</span>, <span class="ident">select</span>: <span class="ident">event::VersionSelect</span>) -&gt; <span class="ident">event::Stream</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">from_version</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">select</span> {
-            <span class="ident">event::VersionSelect::All</span> =&gt; <span class="number">0</span>,
-            <span class="ident">event::VersionSelect::From</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span> <span class="kw">as</span> <span class="ident">i32</span>,
+    <span class="kw">fn </span>stream(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>Id, select: event::VersionSelect) -&gt; event::Stream&lt;Id, Evt, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>from_version: i32 = <span class="kw">match </span>select {
+            event::VersionSelect::All =&gt; <span class="number">0</span>,
+            event::VersionSelect::From(v) =&gt; v <span class="kw">as </span>i32,
         };
 
-        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">sqlx::query</span>(
+        <span class="kw">let </span>query = sqlx::query(
             <span class="string">r#&quot;SELECT version, event, metadata
                FROM events
                WHERE event_stream_id = $1 AND version &gt;= $2
                ORDER BY version&quot;#</span>,
         );
 
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">id</span>.<span class="ident">clone</span>();
+        <span class="kw">let </span>id = id.clone();
 
-        <span class="ident">query</span>
-            .<span class="ident">bind</span>(<span class="ident">id</span>.<span class="ident">to_string</span>())
-            .<span class="ident">bind</span>(<span class="ident">from_version</span>)
-            .<span class="ident">fetch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">pool</span>)
-            .<span class="ident">map_err</span>(<span class="ident">StreamError::Database</span>)
-            .<span class="ident">and_then</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">row</span><span class="op">|</span> <span class="ident">ready</span>(<span class="self">self</span>.<span class="ident">event_row_to_persisted_event</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">row</span>)))
-            .<span class="ident">boxed</span>()
+        query
+            .bind(id.to_string())
+            .bind(from_version)
+            .fetch(<span class="kw-2">&amp;</span><span class="self">self</span>.pool)
+            .map_err(StreamError::Database)
+            .and_then(<span class="kw">move </span>|row| ready(<span class="self">self</span>.event_row_to_persisted_event(id.clone(), row)))
+            .boxed()
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">event::Appender</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">OutEvt</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">ToString</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">Evt</span>: <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Message</span> <span class="op">+</span> <span class="ident">std::fmt::Debug</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="op">&lt;</span><span class="ident">Evt</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">OutEvt</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="ident">S</span>: <span class="ident">Serde</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
-    <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="ident">OutEvt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; event::Appender&lt;Id, Evt&gt; <span class="kw">for </span>Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">where
+    </span>Id: ToString + Clone + Send + Sync,
+    Evt: TryFrom&lt;OutEvt&gt; + Message + std::fmt::Debug + Send + Sync,
+    &lt;Evt <span class="kw">as </span>TryFrom&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+    OutEvt: From&lt;Evt&gt; + Send + Sync,
+    S: Serde&lt;OutEvt&gt; + Send + Sync,
+    &lt;S <span class="kw">as </span>Deserializer&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">AppendError</span>;
+    <span class="kw">type </span>Error = AppendError;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">append</span>(
+    <span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Id</span>,
-        <span class="ident">version_check</span>: <span class="ident">event::StreamVersionExpected</span>,
-        <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Envelope</span><span class="op">&lt;</span><span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">pool</span>
-            .<span class="ident">begin</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">AppendError::BeginTransaction</span>)<span class="question-mark">?</span>;
+        id: Id,
+        version_check: event::StreamVersionExpected,
+        events: Vec&lt;event::Envelope&lt;Evt&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self
+            </span>.pool
+            .begin()
+            .<span class="kw">await
+            </span>.map_err(AppendError::BeginTransaction)<span class="question-mark">?</span>;
 
-        <span class="ident">sqlx::query</span>(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
-            .<span class="ident">execute</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>)
+        sqlx::query(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
+            .execute(<span class="kw-2">&amp;mut </span>tx)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">string_id</span> <span class="op">=</span> <span class="ident">id</span>.<span class="ident">to_string</span>();
+        <span class="kw">let </span>string_id = id.to_string();
 
-        <span class="kw">let</span> <span class="ident">new_version</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">version_check</span> {
-            <span class="ident">event::StreamVersionExpected::Any</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">events_len</span> <span class="op">=</span> <span class="ident">events</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>;
+        <span class="kw">let </span>new_version: i32 = <span class="kw">match </span>version_check {
+            event::StreamVersionExpected::Any =&gt; {
+                <span class="kw">let </span>events_len = events.len() <span class="kw">as </span>i32;
 
-                <span class="ident">sqlx::query</span>(<span class="string">&quot;SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)&quot;</span>)
-                    .<span class="ident">bind</span>(<span class="kw-2">&amp;</span><span class="ident">string_id</span>)
-                    .<span class="ident">bind</span>(<span class="ident">events_len</span>)
-                    .<span class="ident">fetch_one</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>)
-                    .<span class="kw">await</span>
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">row</span><span class="op">|</span> <span class="ident">row</span>.<span class="ident">try_get</span>(<span class="number">0</span>))<span class="question-mark">?</span>
-            }
-            <span class="ident">event::StreamVersionExpected::MustBe</span>(<span class="ident">v</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">new_version</span> <span class="op">=</span> <span class="ident">v</span> <span class="op">+</span> (<span class="ident">events</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">Version</span>);
+                sqlx::query(<span class="string">&quot;SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)&quot;</span>)
+                    .bind(<span class="kw-2">&amp;</span>string_id)
+                    .bind(events_len)
+                    .fetch_one(<span class="kw-2">&amp;mut </span>tx)
+                    .<span class="kw">await
+                    </span>.and_then(|row| row.try_get(<span class="number">0</span>))<span class="question-mark">?
+            </span>}
+            event::StreamVersionExpected::MustBe(v) =&gt; {
+                <span class="kw">let </span>new_version = v + (events.len() <span class="kw">as </span>Version);
 
-                <span class="ident">sqlx::query</span>(<span class="string">&quot;CALL upsert_event_stream($1, $2, $3)&quot;</span>)
-                    .<span class="ident">bind</span>(<span class="kw-2">&amp;</span><span class="ident">string_id</span>)
-                    .<span class="ident">bind</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">i32</span>)
-                    .<span class="ident">bind</span>(<span class="ident">new_version</span> <span class="kw">as</span> <span class="ident">i32</span>)
-                    .<span class="ident">execute</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>)
-                    .<span class="kw">await</span>
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident"><span class="kw">crate</span>::check_for_conflict_error</span>(<span class="kw-2">&amp;</span><span class="ident">err</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">err</span>) =&gt; <span class="ident">AppendError::Conflict</span>(<span class="ident">err</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">as_database_error</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">code</span>()) {
-                            <span class="prelude-val">Some</span>(<span class="ident">code</span>) <span class="kw">if</span> <span class="ident">code</span> <span class="op">==</span> <span class="string">&quot;40001&quot;</span> =&gt; {
-                                <span class="ident">AppendError::Concurrency</span>(<span class="ident">version::ConflictError</span> {
-                                    <span class="ident">expected</span>: <span class="ident">v</span>,
-                                    <span class="ident">actual</span>: <span class="ident">new_version</span>,
+                sqlx::query(<span class="string">&quot;CALL upsert_event_stream($1, $2, $3)&quot;</span>)
+                    .bind(<span class="kw-2">&amp;</span>string_id)
+                    .bind(v <span class="kw">as </span>i32)
+                    .bind(new_version <span class="kw">as </span>i32)
+                    .execute(<span class="kw-2">&amp;mut </span>tx)
+                    .<span class="kw">await
+                    </span>.map_err(|err| <span class="kw">match </span><span class="kw">crate</span>::check_for_conflict_error(<span class="kw-2">&amp;</span>err) {
+                        <span class="prelude-val">Some</span>(err) =&gt; AppendError::Conflict(err),
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>err.as_database_error().and_then(|err| err.code()) {
+                            <span class="prelude-val">Some</span>(code) <span class="kw">if </span>code == <span class="string">&quot;40001&quot; </span>=&gt; {
+                                AppendError::Concurrency(version::ConflictError {
+                                    expected: v,
+                                    actual: new_version,
                                 })
                             }
-                            <span class="kw">_</span> =&gt; <span class="ident">AppendError::UpsertEventStream</span>(<span class="ident">err</span>),
+                            <span class="kw">_ </span>=&gt; AppendError::UpsertEventStream(err),
                         },
                     })
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">new_version</span> <span class="kw">as</span> <span class="ident">i32</span>)<span class="question-mark">?</span>
-            }
+                    .map(|<span class="kw">_</span>| new_version <span class="kw">as </span>i32)<span class="question-mark">?
+            </span>}
         };
 
-        <span class="ident">append_domain_events</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">serde</span>, <span class="kw-2">&amp;</span><span class="ident">string_id</span>, <span class="ident">new_version</span>, <span class="ident">events</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">AppendError::AppendEvent</span>)<span class="question-mark">?</span>;
+        append_domain_events(<span class="kw-2">&amp;mut </span>tx, <span class="kw-2">&amp;</span><span class="self">self</span>.serde, <span class="kw-2">&amp;</span>string_id, new_version, events)
+            .<span class="kw">await
+            </span>.map_err(AppendError::AppendEvent)<span class="question-mark">?</span>;
 
-        <span class="ident">tx</span>.<span class="ident">commit</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">AppendError::CommitTransaction</span>)<span class="question-mark">?</span>;
+        tx.commit().<span class="kw">await</span>.map_err(AppendError::CommitTransaction)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">new_version</span> <span class="kw">as</span> <span class="ident">Version</span>)
+        <span class="prelude-val">Ok</span>(new_version <span class="kw">as </span>Version)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually_postgres" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="eventually_postgres" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

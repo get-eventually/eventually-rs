@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/domain.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>domain.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/domain.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>domain.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -283,290 +283,290 @@
 <span id="283">283</span>
 <span id="284">284</span>
 <span id="285">285</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
-<span class="kw">use</span> <span class="ident">eventually::aggregate</span>;
-<span class="kw">use</span> <span class="ident">eventually_macros</span>::{<span class="ident">aggregate_root</span>, <span class="ident">Message</span>};
-<span class="kw">use</span> <span class="ident">rust_decimal::Decimal</span>;
+<span class="kw">use </span>eventually::aggregate;
+<span class="kw">use </span>eventually_macros::{aggregate_root, Message};
+<span class="kw">use </span>rust_decimal::Decimal;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BankAccountRepository</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">aggregate::EventSourcedRepository</span><span class="op">&lt;</span><span class="ident">BankAccount</span>, <span class="ident">S</span><span class="op">&gt;</span>;
+<span class="kw">pub type </span>BankAccountRepository&lt;S&gt; = aggregate::EventSourcedRepository&lt;BankAccount, S&gt;;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TransactionId</span> <span class="op">=</span> <span class="ident">String</span>;
+<span class="kw">pub type </span>TransactionId = String;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Transaction</span> {
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">TransactionId</span>,
-    <span class="kw">pub</span> <span class="ident">beneficiary_account_id</span>: <span class="ident">BankAccountId</span>,
-    <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">Decimal</span>,
+<span class="attribute">#[derive(Debug, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Transaction {
+    <span class="kw">pub </span>id: TransactionId,
+    <span class="kw">pub </span>beneficiary_account_id: BankAccountId,
+    <span class="kw">pub </span>amount: Decimal,
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BankAccountHolderId</span> <span class="op">=</span> <span class="ident">String</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BankAccountId</span> <span class="op">=</span> <span class="ident">String</span>;
+<span class="kw">pub type </span>BankAccountHolderId = String;
+<span class="kw">pub type </span>BankAccountId = String;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Message</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BankAccountEvent</span> {
-    <span class="ident">WasOpened</span> {
-        <span class="ident">id</span>: <span class="ident">BankAccountId</span>,
-        <span class="ident">account_holder_id</span>: <span class="ident">BankAccountHolderId</span>,
-        <span class="ident">initial_balance</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Message)]
+</span><span class="kw">pub enum </span>BankAccountEvent {
+    WasOpened {
+        id: BankAccountId,
+        account_holder_id: BankAccountHolderId,
+        initial_balance: <span class="prelude-ty">Option</span>&lt;Decimal&gt;,
     },
-    <span class="ident">DepositWasRecorded</span> {
-        <span class="ident">amount</span>: <span class="ident">Decimal</span>,
+    DepositWasRecorded {
+        amount: Decimal,
     },
-    <span class="ident">TransferWasSent</span> {
-        <span class="ident">transaction</span>: <span class="ident">Transaction</span>,
-        <span class="ident">message</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    TransferWasSent {
+        transaction: Transaction,
+        message: <span class="prelude-ty">Option</span>&lt;String&gt;,
     },
-    <span class="ident">TransferWasReceived</span> {
-        <span class="ident">transaction</span>: <span class="ident">Transaction</span>,
-        <span class="ident">message</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    TransferWasReceived {
+        transaction: Transaction,
+        message: <span class="prelude-ty">Option</span>&lt;String&gt;,
     },
-    <span class="ident">TransferWasDeclined</span> {
-        <span class="ident">transaction_id</span>: <span class="ident">TransactionId</span>,
-        <span class="ident">reason</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    TransferWasDeclined {
+        transaction_id: TransactionId,
+        reason: <span class="prelude-ty">Option</span>&lt;String&gt;,
     },
-    <span class="ident">TransferWasConfirmed</span> {
-        <span class="ident">transaction_id</span>: <span class="ident">TransactionId</span>,
+    TransferWasConfirmed {
+        transaction_id: TransactionId,
     },
-    <span class="ident">WasClosed</span>,
-    <span class="ident">WasReopened</span> {
-        <span class="ident">reopening_balance</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>,
+    WasClosed,
+    WasReopened {
+        reopening_balance: <span class="prelude-ty">Option</span>&lt;Decimal&gt;,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BankAccountError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bank account has not been opened yet&quot;</span>)]</span>
-    <span class="ident">NotOpenedYet</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bank account has already been opened&quot;</span>)]</span>
-    <span class="ident">AlreadyOpened</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;empty id provided for the new bank account&quot;</span>)]</span>
-    <span class="ident">EmptyAccountId</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;empty account holder id provided for the new bank account&quot;</span>)]</span>
-    <span class="ident">EmptyAccountHolderId</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;a deposit was attempted with negative import&quot;</span>)]</span>
-    <span class="ident">NegativeDepositAttempted</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;no money to deposit has been specified&quot;</span>)]</span>
-    <span class="ident">NoMoneyDeposited</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;transfer could not be sent due to insufficient funds&quot;</span>)]</span>
-    <span class="ident">InsufficientFunds</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;transfer transaction was destined to a different recipient: {0}&quot;</span>)]</span>
-    <span class="ident">WrongTransactionRecipient</span>(<span class="ident">BankAccountId</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the account is closed&quot;</span>)]</span>
-    <span class="ident">Closed</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bank account has already been closed&quot;</span>)]</span>
-    <span class="ident">AlreadyClosed</span>,
+<span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+</span><span class="kw">pub enum </span>BankAccountError {
+    <span class="attribute">#[error(<span class="string">&quot;bank account has not been opened yet&quot;</span>)]
+    </span>NotOpenedYet,
+    <span class="attribute">#[error(<span class="string">&quot;bank account has already been opened&quot;</span>)]
+    </span>AlreadyOpened,
+    <span class="attribute">#[error(<span class="string">&quot;empty id provided for the new bank account&quot;</span>)]
+    </span>EmptyAccountId,
+    <span class="attribute">#[error(<span class="string">&quot;empty account holder id provided for the new bank account&quot;</span>)]
+    </span>EmptyAccountHolderId,
+    <span class="attribute">#[error(<span class="string">&quot;a deposit was attempted with negative import&quot;</span>)]
+    </span>NegativeDepositAttempted,
+    <span class="attribute">#[error(<span class="string">&quot;no money to deposit has been specified&quot;</span>)]
+    </span>NoMoneyDeposited,
+    <span class="attribute">#[error(<span class="string">&quot;transfer could not be sent due to insufficient funds&quot;</span>)]
+    </span>InsufficientFunds,
+    <span class="attribute">#[error(<span class="string">&quot;transfer transaction was destined to a different recipient: {0}&quot;</span>)]
+    </span>WrongTransactionRecipient(BankAccountId),
+    <span class="attribute">#[error(<span class="string">&quot;the account is closed&quot;</span>)]
+    </span>Closed,
+    <span class="attribute">#[error(<span class="string">&quot;bank account has already been closed&quot;</span>)]
+    </span>AlreadyClosed,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BankAccount</span> {
-    <span class="ident">id</span>: <span class="ident">BankAccountId</span>,
-    <span class="ident">current_balance</span>: <span class="ident">Decimal</span>,
-    <span class="ident">pending_transactions</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">TransactionId</span>, <span class="ident">Transaction</span><span class="op">&gt;</span>,
-    <span class="ident">is_closed</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>BankAccount {
+    id: BankAccountId,
+    current_balance: Decimal,
+    pending_transactions: HashMap&lt;TransactionId, Transaction&gt;,
+    is_closed: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">aggregate::Aggregate</span> <span class="kw">for</span> <span class="ident">BankAccount</span> {
-    <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">BankAccountId</span>;
-    <span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">BankAccountEvent</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">BankAccountError</span>;
+<span class="kw">impl </span>aggregate::Aggregate <span class="kw">for </span>BankAccount {
+    <span class="kw">type </span>Id = BankAccountId;
+    <span class="kw">type </span>Event = BankAccountEvent;
+    <span class="kw">type </span>Error = BankAccountError;
 
-    <span class="kw">fn</span> <span class="ident">type_name</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="string">&quot;BankAccount&quot;</span>
+    <span class="kw">fn </span>type_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="string">&quot;BankAccount&quot;
+    </span>}
+
+    <span class="kw">fn </span>aggregate_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Id {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.id
     }
 
-    <span class="kw">fn</span> <span class="ident">aggregate_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Id</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">apply</span>(<span class="ident">state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">event</span>: <span class="ident"><span class="self">Self</span>::Event</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">state</span> {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">event</span> {
-                <span class="ident">BankAccountEvent::WasOpened</span> {
-                    <span class="ident">id</span>,
-                    <span class="ident">initial_balance</span>,
+    <span class="kw">fn </span>apply(state: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, event: <span class="self">Self</span>::Event) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">match </span>state {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>event {
+                BankAccountEvent::WasOpened {
+                    id,
+                    initial_balance,
                     ..
-                } =&gt; <span class="prelude-val">Ok</span>(<span class="ident">BankAccount</span> {
-                    <span class="ident">id</span>,
-                    <span class="ident">current_balance</span>: <span class="ident">initial_balance</span>.<span class="ident">unwrap_or_default</span>(),
-                    <span class="ident">pending_transactions</span>: <span class="ident">HashMap::default</span>(),
-                    <span class="ident">is_closed</span>: <span class="bool-val">false</span>,
+                } =&gt; <span class="prelude-val">Ok</span>(BankAccount {
+                    id,
+                    current_balance: initial_balance.unwrap_or_default(),
+                    pending_transactions: HashMap::default(),
+                    is_closed: <span class="bool-val">false</span>,
                 }),
-                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::NotOpenedYet</span>),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(BankAccountError::NotOpenedYet),
             },
-            <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">account</span>) =&gt; <span class="kw">match</span> <span class="ident">event</span> {
-                <span class="ident">BankAccountEvent::DepositWasRecorded</span> { <span class="ident">amount</span> } =&gt; {
-                    <span class="ident">account</span>.<span class="ident">current_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">amount</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+            <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>account) =&gt; <span class="kw">match </span>event {
+                BankAccountEvent::DepositWasRecorded { amount } =&gt; {
+                    account.current_balance += amount;
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::TransferWasReceived</span> { <span class="ident">transaction</span>, .. } =&gt; {
-                    <span class="ident">account</span>.<span class="ident">current_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">amount</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+                BankAccountEvent::TransferWasReceived { transaction, .. } =&gt; {
+                    account.current_balance += transaction.amount;
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::TransferWasSent</span> { <span class="ident">transaction</span>, .. } =&gt; {
-                    <span class="ident">account</span>.<span class="ident">current_balance</span> <span class="op">-</span><span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">amount</span>;
-                    <span class="ident">account</span>
-                        .<span class="ident">pending_transactions</span>
-                        .<span class="ident">insert</span>(<span class="ident">transaction</span>.<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">transaction</span>);
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+                BankAccountEvent::TransferWasSent { transaction, .. } =&gt; {
+                    account.current_balance -= transaction.amount;
+                    account
+                        .pending_transactions
+                        .insert(transaction.id.clone(), transaction);
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::TransferWasConfirmed</span> { <span class="ident">transaction_id</span> } =&gt; {
-                    <span class="ident">account</span>.<span class="ident">pending_transactions</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">transaction_id</span>);
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+                BankAccountEvent::TransferWasConfirmed { transaction_id } =&gt; {
+                    account.pending_transactions.remove(<span class="kw-2">&amp;</span>transaction_id);
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::TransferWasDeclined</span> { <span class="ident">transaction_id</span>, .. } =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">transaction</span>) <span class="op">=</span> <span class="ident">account</span>.<span class="ident">pending_transactions</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">transaction_id</span>)
+                BankAccountEvent::TransferWasDeclined { transaction_id, .. } =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(transaction) = account.pending_transactions.remove(<span class="kw-2">&amp;</span>transaction_id)
                     {
-                        <span class="ident">account</span>.<span class="ident">current_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">amount</span>;
+                        account.current_balance += transaction.amount;
                     }
 
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::WasClosed</span> =&gt; {
-                    <span class="ident">account</span>.<span class="ident">is_closed</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                    <span class="ident">account</span>.<span class="ident">current_balance</span> <span class="op">=</span> <span class="ident">Decimal::default</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+                BankAccountEvent::WasClosed =&gt; {
+                    account.is_closed = <span class="bool-val">true</span>;
+                    account.current_balance = Decimal::default();
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::WasReopened</span> { <span class="ident">reopening_balance</span> } =&gt; {
-                    <span class="ident">account</span>.<span class="ident">is_closed</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                    <span class="ident">account</span>.<span class="ident">current_balance</span> <span class="op">=</span> <span class="ident">reopening_balance</span>.<span class="ident">unwrap_or_default</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">account</span>)
+                BankAccountEvent::WasReopened { reopening_balance } =&gt; {
+                    account.is_closed = <span class="bool-val">false</span>;
+                    account.current_balance = reopening_balance.unwrap_or_default();
+                    <span class="prelude-val">Ok</span>(account)
                 }
-                <span class="ident">BankAccountEvent::WasOpened</span> { .. } =&gt; <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::AlreadyOpened</span>),
+                BankAccountEvent::WasOpened { .. } =&gt; <span class="prelude-val">Err</span>(BankAccountError::AlreadyOpened),
             },
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">aggregate_root</span>(<span class="ident">BankAccount</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BankAccountRoot</span>;
+<span class="attribute">#[aggregate_root(BankAccount)]
+#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>BankAccountRoot;
 
-<span class="kw">impl</span> <span class="ident">BankAccountRoot</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(
-        <span class="ident">id</span>: <span class="ident">BankAccountId</span>,
-        <span class="ident">account_holder_id</span>: <span class="ident">BankAccountHolderId</span>,
-        <span class="ident">opening_balance</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">id</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::EmptyAccountId</span>);
+<span class="kw">impl </span>BankAccountRoot {
+    <span class="kw">pub fn </span>open(
+        id: BankAccountId,
+        account_holder_id: BankAccountHolderId,
+        opening_balance: <span class="prelude-ty">Option</span>&lt;Decimal&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, BankAccountError&gt; {
+        <span class="kw">if </span>id.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::EmptyAccountId);
         }
 
-        <span class="kw">if</span> <span class="ident">account_holder_id</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::EmptyAccountHolderId</span>);
+        <span class="kw">if </span>account_holder_id.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::EmptyAccountHolderId);
         }
 
-        <span class="ident">aggregate::Root</span>::<span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span><span class="ident">::record_new</span>(
-            <span class="ident">BankAccountEvent::WasOpened</span> {
-                <span class="ident">id</span>,
-                <span class="ident">account_holder_id</span>,
-                <span class="ident">initial_balance</span>: <span class="ident">opening_balance</span>,
+        aggregate::Root::&lt;BankAccount&gt;::record_new(
+            BankAccountEvent::WasOpened {
+                id,
+                account_holder_id,
+                initial_balance: opening_balance,
             }
-            .<span class="ident">into</span>(),
+            .into(),
         )
-        .<span class="ident">map</span>(<span class="self">Self</span>)
+        .map(<span class="self">Self</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deposit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">money</span>: <span class="ident">Decimal</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_closed</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::Closed</span>);
+    <span class="kw">pub fn </span>deposit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, money: Decimal) -&gt; <span class="prelude-ty">Result</span>&lt;(), BankAccountError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_closed {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::Closed);
         }
 
-        <span class="kw">if</span> <span class="ident">money</span>.<span class="ident">is_sign_negative</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::NegativeDepositAttempted</span>);
+        <span class="kw">if </span>money.is_sign_negative() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::NegativeDepositAttempted);
         }
 
-        <span class="kw">if</span> <span class="ident">money</span>.<span class="ident">is_zero</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::NoMoneyDeposited</span>);
+        <span class="kw">if </span>money.is_zero() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::NoMoneyDeposited);
         }
 
-        <span class="self">self</span>.<span class="ident">record_that</span>(<span class="ident">BankAccountEvent::DepositWasRecorded</span> { <span class="ident">amount</span>: <span class="ident">money</span> }.<span class="ident">into</span>())
+        <span class="self">self</span>.record_that(BankAccountEvent::DepositWasRecorded { amount: money }.into())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_transfer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="kw-2">mut</span> <span class="ident">transaction</span>: <span class="ident">Transaction</span>,
-        <span class="ident">message</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_closed</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::Closed</span>);
+    <span class="kw">pub fn </span>send_transfer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">mut </span>transaction: Transaction,
+        message: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BankAccountError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_closed {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::Closed);
         }
 
-        <span class="comment">// NOTE: transaction amounts should be positive, so they can be subtracted</span>
-        <span class="comment">// when applied to a Bank Account.</span>
-        <span class="kw">if</span> <span class="ident">transaction</span>.<span class="ident">amount</span>.<span class="ident">is_sign_negative</span>() {
-            <span class="ident">transaction</span>.<span class="ident">amount</span>.<span class="ident">set_sign_positive</span>(<span class="bool-val">true</span>);
+        <span class="comment">// NOTE: transaction amounts should be positive, so they can be subtracted
+        // when applied to a Bank Account.
+        </span><span class="kw">if </span>transaction.amount.is_sign_negative() {
+            transaction.amount.set_sign_positive(<span class="bool-val">true</span>);
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_balance</span> <span class="op">&lt;</span> <span class="ident">transaction</span>.<span class="ident">amount</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::InsufficientFunds</span>);
+        <span class="kw">if </span><span class="self">self</span>.current_balance &lt; transaction.amount {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::InsufficientFunds);
         }
 
-        <span class="kw">let</span> <span class="ident">transaction_already_pending</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pending_transactions</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">id</span>).<span class="ident">is_some</span>();
-        <span class="kw">if</span> <span class="ident">transaction_already_pending</span> {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+        <span class="kw">let </span>transaction_already_pending = <span class="self">self</span>.pending_transactions.get(<span class="kw-2">&amp;</span>transaction.id).is_some();
+        <span class="kw">if </span>transaction_already_pending {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="self">self</span>.<span class="ident">record_that</span>(
-            <span class="ident">BankAccountEvent::TransferWasSent</span> {
-                <span class="ident">message</span>,
-                <span class="ident">transaction</span>,
+        <span class="self">self</span>.record_that(
+            BankAccountEvent::TransferWasSent {
+                message,
+                transaction,
             }
-            .<span class="ident">into</span>(),
+            .into(),
         )
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">receive_transfer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">transaction</span>: <span class="ident">Transaction</span>,
-        <span class="ident">message</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_closed</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::Closed</span>);
+    <span class="kw">pub fn </span>receive_transfer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        transaction: Transaction,
+        message: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BankAccountError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_closed {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::Closed);
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">beneficiary_account_id</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::WrongTransactionRecipient</span>(
-                <span class="ident">transaction</span>.<span class="ident">beneficiary_account_id</span>,
+        <span class="kw">if </span><span class="self">self</span>.id != transaction.beneficiary_account_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::WrongTransactionRecipient(
+                transaction.beneficiary_account_id,
             ));
         }
 
-        <span class="self">self</span>.<span class="ident">record_that</span>(
-            <span class="ident">BankAccountEvent::TransferWasReceived</span> {
-                <span class="ident">transaction</span>,
-                <span class="ident">message</span>,
+        <span class="self">self</span>.record_that(
+            BankAccountEvent::TransferWasReceived {
+                transaction,
+                message,
             }
-            .<span class="ident">into</span>(),
+            .into(),
         )
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">record_transfer_success</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">transaction_id</span>: <span class="ident">TransactionId</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">is_transaction_recorded</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pending_transactions</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">transaction_id</span>).<span class="ident">is_some</span>();
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_transaction_recorded</span> {
-            <span class="comment">// TODO: return error</span>
-        }
+    <span class="kw">pub fn </span>record_transfer_success(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        transaction_id: TransactionId,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BankAccountError&gt; {
+        <span class="kw">let </span>is_transaction_recorded = <span class="self">self</span>.pending_transactions.get(<span class="kw-2">&amp;</span>transaction_id).is_some();
+        <span class="kw">if </span>!is_transaction_recorded {
+            <span class="comment">// TODO: return error
+        </span>}
 
-        <span class="self">self</span>.<span class="ident">record_that</span>(<span class="ident">BankAccountEvent::TransferWasConfirmed</span> { <span class="ident">transaction_id</span> }.<span class="ident">into</span>())
+        <span class="self">self</span>.record_that(BankAccountEvent::TransferWasConfirmed { transaction_id }.into())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_closed</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::AlreadyClosed</span>);
+    <span class="kw">pub fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), BankAccountError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_closed {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::AlreadyClosed);
         }
 
-        <span class="self">self</span>.<span class="ident">record_that</span>(<span class="ident">BankAccountEvent::WasClosed</span>.<span class="ident">into</span>())
+        <span class="self">self</span>.record_that(BankAccountEvent::WasClosed.into())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reopen</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">reopening_balance</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Decimal</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BankAccountError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_closed</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BankAccountError::AlreadyOpened</span>);
+    <span class="kw">pub fn </span>reopen(<span class="kw-2">&amp;mut </span><span class="self">self</span>, reopening_balance: <span class="prelude-ty">Option</span>&lt;Decimal&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), BankAccountError&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.is_closed {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BankAccountError::AlreadyOpened);
         }
 
-        <span class="self">self</span>.<span class="ident">record_that</span>(<span class="ident">BankAccountEvent::WasReopened</span> { <span class="ident">reopening_balance</span> }.<span class="ident">into</span>())
+        <span class="self">self</span>.record_that(BankAccountEvent::WasReopened { reopening_balance }.into())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bank_accounting" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bank_accounting" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

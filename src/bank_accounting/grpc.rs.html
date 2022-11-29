@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/grpc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>grpc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/grpc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>grpc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../bank_accounting/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -118,125 +118,125 @@
 <span id="118">118</span>
 <span id="119">119</span>
 <span id="120">120</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::error::Error <span class="kw">as </span>StdError;
 
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">eventually</span>::{<span class="ident">aggregate</span>, <span class="ident">command::Handler</span>, <span class="ident">version</span>};
-<span class="kw">use</span> <span class="ident">rust_decimal</span>::{<span class="ident">prelude::FromPrimitive</span>, <span class="ident">Decimal</span>};
-<span class="kw">use</span> <span class="ident">tracing::instrument</span>;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>eventually::{aggregate, command::Handler, version};
+<span class="kw">use </span>rust_decimal::{prelude::FromPrimitive, Decimal};
+<span class="kw">use </span>tracing::instrument;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">application</span>,
-    <span class="ident">domain</span>::{<span class="ident">BankAccount</span>, <span class="ident">BankAccountError</span>},
-    <span class="ident">proto</span>,
+<span class="kw">use crate</span>::{
+    application,
+    domain::{BankAccount, BankAccountError},
+    proto,
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BankAccountingApi</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>BankAccountingApi&lt;R&gt;
+<span class="kw">where
+    </span>R: aggregate::Repository&lt;BankAccount&gt;,
 {
-    <span class="ident">application_service</span>: <span class="ident">application::Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>,
+    application_service: application::Service&lt;R&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">application::Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BankAccountingApi</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;R&gt; From&lt;application::Service&lt;R&gt;&gt; <span class="kw">for </span>BankAccountingApi&lt;R&gt;
+<span class="kw">where
+    </span>R: aggregate::Repository&lt;BankAccount&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">application_service</span>: <span class="ident">application::Service</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">application_service</span>,
+    <span class="kw">fn </span>from(application_service: application::Service&lt;R&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            application_service,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> <span class="ident">proto::bank_accounting_server::BankAccounting</span> <span class="kw">for</span> <span class="ident">BankAccountingApi</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">aggregate::Repository</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">aggregate::Getter</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="op">&lt;</span><span class="ident">R</span> <span class="kw">as</span> <span class="ident">aggregate::Saver</span><span class="op">&lt;</span><span class="ident">BankAccount</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">StdError</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl</span>&lt;R&gt; proto::bank_accounting_server::BankAccounting <span class="kw">for </span>BankAccountingApi&lt;R&gt;
+<span class="kw">where
+    </span>R: aggregate::Repository&lt;BankAccount&gt; + <span class="lifetime">&#39;static</span>,
+    &lt;R <span class="kw">as </span>aggregate::Getter&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
+    &lt;R <span class="kw">as </span>aggregate::Saver&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
 {
-    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>))]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">open_bank_account</span>(
+    <span class="attribute">#[instrument(skip(<span class="self">self</span>))]
+    </span><span class="kw">async fn </span>open_bank_account(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">request</span>: <span class="ident">tonic::Request</span><span class="op">&lt;</span><span class="ident">proto::OpenBankAccountRequest</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">tonic::Response</span><span class="op">&lt;</span><span class="ident">proto::OpenBankAccountResponse</span><span class="op">&gt;</span>, <span class="ident">tonic::Status</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">into_inner</span>();
+        request: tonic::Request&lt;proto::OpenBankAccountRequest&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;tonic::Response&lt;proto::OpenBankAccountResponse&gt;, tonic::Status&gt; {
+        <span class="kw">let </span>request = request.into_inner();
 
-        <span class="self">self</span>.<span class="ident">application_service</span>
-            .<span class="ident">handle</span>(
-                <span class="ident">application::OpenBankAccount</span> {
-                    <span class="ident">bank_account_id</span>: <span class="ident">request</span>.<span class="ident">bank_account_id</span>,
-                    <span class="ident">bank_account_holder_id</span>: <span class="ident">request</span>.<span class="ident">bank_account_holder_id</span>,
-                    <span class="ident">opening_balance</span>: <span class="ident">Decimal::from_f32</span>(<span class="ident">request</span>.<span class="ident">opening_balance</span>),
+        <span class="self">self</span>.application_service
+            .handle(
+                application::OpenBankAccount {
+                    bank_account_id: request.bank_account_id,
+                    bank_account_holder_id: request.bank_account_holder_id,
+                    opening_balance: Decimal::from_f32(request.opening_balance),
                 }
-                .<span class="ident">into</span>(),
+                .into(),
             )
-            .<span class="kw">await</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">tonic::Response::new</span>(<span class="ident">proto::OpenBankAccountResponse</span> {}))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="kw">use</span> <span class="ident">BankAccountError</span>::<span class="kw-2">*</span>;
+            .<span class="kw">await
+            </span>.map(|<span class="kw">_</span>| tonic::Response::new(proto::OpenBankAccountResponse {}))
+            .map_err(|e| {
+                <span class="kw">use </span>BankAccountError::<span class="kw-2">*</span>;
 
-                <span class="kw">let</span> <span class="ident">bank_error</span> <span class="op">=</span> <span class="ident">e</span>
-                    .<span class="ident">source</span>()
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">BankAccountError</span><span class="op">&gt;</span>());
+                <span class="kw">let </span>bank_error = e
+                    .source()
+                    .and_then(|e| e.downcast_ref::&lt;BankAccountError&gt;());
 
-                <span class="kw">let</span> <span class="ident">conflict_error</span> <span class="op">=</span> <span class="ident">e</span>
-                    .<span class="ident">source</span>()
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">version::ConflictError</span><span class="op">&gt;</span>());
+                <span class="kw">let </span>conflict_error = e
+                    .source()
+                    .and_then(|e| e.downcast_ref::&lt;version::ConflictError&gt;());
 
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">EmptyAccountId</span> <span class="op">|</span> <span class="ident">EmptyAccountHolderId</span>) <span class="op">=</span> <span class="ident">bank_error</span> {
-                    <span class="ident">tonic::Status::invalid_argument</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">conflict_error</span>.<span class="ident">is_some</span>() {
-                    <span class="ident">tonic::Status::already_exists</span>(<span class="ident">AlreadyOpened</span>.<span class="ident">to_string</span>())
-                } <span class="kw">else</span> {
-                    <span class="ident">tonic::Status::internal</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(EmptyAccountId | EmptyAccountHolderId) = bank_error {
+                    tonic::Status::invalid_argument(e.to_string())
+                } <span class="kw">else if </span>conflict_error.is_some() {
+                    tonic::Status::already_exists(AlreadyOpened.to_string())
+                } <span class="kw">else </span>{
+                    tonic::Status::internal(e.to_string())
                 }
             })
     }
 
-    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>))]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">deposit_in_bank_account</span>(
+    <span class="attribute">#[instrument(skip(<span class="self">self</span>))]
+    </span><span class="kw">async fn </span>deposit_in_bank_account(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">request</span>: <span class="ident">tonic::Request</span><span class="op">&lt;</span><span class="ident">proto::DepositInBankAccountRequest</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">tonic::Response</span><span class="op">&lt;</span><span class="ident">proto::DepositInBankAccountResponse</span><span class="op">&gt;</span>, <span class="ident">tonic::Status</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">into_inner</span>();
+        request: tonic::Request&lt;proto::DepositInBankAccountRequest&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;tonic::Response&lt;proto::DepositInBankAccountResponse&gt;, tonic::Status&gt; {
+        <span class="kw">let </span>request = request.into_inner();
 
-        <span class="self">self</span>.<span class="ident">application_service</span>
-            .<span class="ident">handle</span>(
-                <span class="ident">application::DepositInBankAccount</span> {
-                    <span class="ident">bank_account_id</span>: <span class="ident">request</span>.<span class="ident">bank_account_id</span>,
-                    <span class="ident">amount</span>: <span class="ident">Decimal::from_f32</span>(<span class="ident">request</span>.<span class="ident">amount</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="ident">tonic::Status::invalid_argument</span>(<span class="string">&quot;amount should be more than 0&quot;</span>)
+        <span class="self">self</span>.application_service
+            .handle(
+                application::DepositInBankAccount {
+                    bank_account_id: request.bank_account_id,
+                    amount: Decimal::from_f32(request.amount).ok_or_else(|| {
+                        tonic::Status::invalid_argument(<span class="string">&quot;amount should be more than 0&quot;</span>)
                     })<span class="question-mark">?</span>,
                 }
-                .<span class="ident">into</span>(),
+                .into(),
             )
-            .<span class="kw">await</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">tonic::Response::new</span>(<span class="ident">proto::DepositInBankAccountResponse</span> {}))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="kw">use</span> <span class="ident">BankAccountError</span>::<span class="kw-2">*</span>;
+            .<span class="kw">await
+            </span>.map(|<span class="kw">_</span>| tonic::Response::new(proto::DepositInBankAccountResponse {}))
+            .map_err(|e| {
+                <span class="kw">use </span>BankAccountError::<span class="kw-2">*</span>;
 
-                <span class="kw">let</span> <span class="ident">bank_error</span> <span class="op">=</span> <span class="ident">e</span>
-                    .<span class="ident">source</span>()
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">BankAccountError</span><span class="op">&gt;</span>());
+                <span class="kw">let </span>bank_error = e
+                    .source()
+                    .and_then(|e| e.downcast_ref::&lt;BankAccountError&gt;());
 
-                <span class="kw">let</span> <span class="ident">conflict_error</span> <span class="op">=</span> <span class="ident">e</span>
-                    .<span class="ident">source</span>()
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">version::ConflictError</span><span class="op">&gt;</span>());
+                <span class="kw">let </span>conflict_error = e
+                    .source()
+                    .and_then(|e| e.downcast_ref::&lt;version::ConflictError&gt;());
 
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Closed</span> <span class="op">|</span> <span class="ident">NegativeDepositAttempted</span>) <span class="op">=</span> <span class="ident">bank_error</span> {
-                    <span class="ident">tonic::Status::failed_precondition</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">NoMoneyDeposited</span>) <span class="op">=</span> <span class="ident">bank_error</span> {
-                    <span class="ident">tonic::Status::invalid_argument</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">conflict_error</span>.<span class="ident">is_some</span>() {
-                    <span class="ident">tonic::Status::failed_precondition</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())
-                } <span class="kw">else</span> {
-                    <span class="ident">tonic::Status::internal</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(Closed | NegativeDepositAttempted) = bank_error {
+                    tonic::Status::failed_precondition(e.to_string())
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(NoMoneyDeposited) = bank_error {
+                    tonic::Status::invalid_argument(e.to_string())
+                } <span class="kw">else if </span>conflict_error.is_some() {
+                    tonic::Status::failed_precondition(e.to_string())
+                } <span class="kw">else </span>{
+                    tonic::Status::internal(e.to_string())
                 }
             })
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bank_accounting" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bank_accounting" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/command/test.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../eventually/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/command/test.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../eventually/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../eventually/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -164,171 +164,171 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Module exposing a test [Scenario] type to write Domain [Command]s</span>
-<span class="doccomment">//! test cases using the [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/).</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Module exposing a test [Scenario] type to write Domain [Command]s
+//! test cases using the [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/).
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt::Debug</span>, <span class="ident">hash::Hash</span>};
+</span><span class="kw">use </span>std::{fmt::Debug, hash::Hash};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command</span>, <span class="ident">event</span>, <span class="ident">event::store::EventStoreExt</span>, <span class="ident">event::Appender</span>, <span class="ident">message</span>};
+<span class="kw">use crate</span>::{command, event, event::store::EventStoreExt, event::Appender, message};
 
-<span class="doccomment">/// A test scenario that can be used to test a [Command] [Handler][command::Handler]</span>
-<span class="doccomment">/// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Scenario</span>;
+<span class="doccomment">/// A test scenario that can be used to test a [Command] [Handler][command::Handler]
+/// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.
+</span><span class="kw">pub struct </span>Scenario;
 
-<span class="kw">impl</span> <span class="ident">Scenario</span> {
-    <span class="doccomment">/// Sets the precondition state of the system for the [Scenario], which</span>
-    <span class="doccomment">/// is expressed by a list of Domain [Event]s in an Event-sourced system.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">given</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioGiven</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="kw">impl </span>Scenario {
+    <span class="doccomment">/// Sets the precondition state of the system for the [Scenario], which
+    /// is expressed by a list of Domain [Event]s in an Event-sourced system.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>given&lt;Id, Evt&gt;(<span class="self">self</span>, events: Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;) -&gt; ScenarioGiven&lt;Id, Evt&gt;
+    <span class="kw">where
+        </span>Evt: message::Message,
     {
-        <span class="ident">ScenarioGiven</span> { <span class="ident">given</span>: <span class="ident">events</span> }
+        ScenarioGiven { given: events }
     }
 
-    <span class="doccomment">/// Specifies the [Command] to test in the [Scenario], in the peculiar case</span>
-    <span class="doccomment">/// of having a clean system.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is a shortcut for:</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// Scenario::given(vec![]).when(...)</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">when</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">command</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioWhen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
-        <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,
+    <span class="doccomment">/// Specifies the [Command] to test in the [Scenario], in the peculiar case
+    /// of having a clean system.
+    ///
+    /// This is a shortcut for:
+    /// ```text
+    /// Scenario::given(vec![]).when(...)
+    /// ```
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>when&lt;Id, Evt, Cmd&gt;(<span class="self">self</span>, command: command::Envelope&lt;Cmd&gt;) -&gt; ScenarioWhen&lt;Id, Evt, Cmd&gt;
+    <span class="kw">where
+        </span>Evt: message::Message,
+        Cmd: message::Message,
     {
-        <span class="ident">ScenarioWhen</span> {
-            <span class="ident">given</span>: <span class="ident">Vec::default</span>(),
-            <span class="ident">when</span>: <span class="ident">command</span>,
+        ScenarioWhen {
+            given: Vec::default(),
+            when: command,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ScenarioGiven</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub struct </span>ScenarioGiven&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="ident">given</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    given: Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span> <span class="ident">ScenarioGiven</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="kw">impl</span>&lt;Id, Evt&gt; ScenarioGiven&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="doccomment">/// Specifies the [Command] to test in the [Scenario].</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">when</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">command</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioWhen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,
+    <span class="doccomment">/// Specifies the [Command] to test in the [Scenario].
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>when&lt;Cmd&gt;(<span class="self">self</span>, command: command::Envelope&lt;Cmd&gt;) -&gt; ScenarioWhen&lt;Id, Evt, Cmd&gt;
+    <span class="kw">where
+        </span>Cmd: message::Message,
     {
-        <span class="ident">ScenarioWhen</span> {
-            <span class="ident">given</span>: <span class="self">self</span>.<span class="ident">given</span>,
-            <span class="ident">when</span>: <span class="ident">command</span>,
+        ScenarioWhen {
+            given: <span class="self">self</span>.given,
+            when: command,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ScenarioWhen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
-    <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub struct </span>ScenarioWhen&lt;Id, Evt, Cmd&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
+    Cmd: message::Message,
 {
-    <span class="ident">given</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">when</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>,
+    given: Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;,
+    when: command::Envelope&lt;Cmd&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span> <span class="ident">ScenarioWhen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
-    <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,
+<span class="kw">impl</span>&lt;Id, Evt, Cmd&gt; ScenarioWhen&lt;Id, Evt, Cmd&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
+    Cmd: message::Message,
 {
-    <span class="doccomment">/// Sets the expectation on the result of the [Scenario] to be positive</span>
-    <span class="doccomment">/// and produce a specified list of Domain [Event]s.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">then</span>(<span class="self">self</span>, <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">ScenarioThen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span> {
-        <span class="ident">ScenarioThen</span> {
-            <span class="ident">given</span>: <span class="self">self</span>.<span class="ident">given</span>,
-            <span class="ident">when</span>: <span class="self">self</span>.<span class="ident">when</span>,
-            <span class="ident">case</span>: <span class="ident">ScenarioThenCase::Produces</span>(<span class="ident">events</span>),
+    <span class="doccomment">/// Sets the expectation on the result of the [Scenario] to be positive
+    /// and produce a specified list of Domain [Event]s.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>then(<span class="self">self</span>, events: Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;) -&gt; ScenarioThen&lt;Id, Evt, Cmd&gt; {
+        ScenarioThen {
+            given: <span class="self">self</span>.given,
+            when: <span class="self">self</span>.when,
+            case: ScenarioThenCase::Produces(events),
         }
     }
 
-    <span class="doccomment">/// Sets the expectation on the result of the [Scenario] to return an error.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">then_fails</span>(<span class="self">self</span>) -&gt; <span class="ident">ScenarioThen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span> {
-        <span class="ident">ScenarioThen</span> {
-            <span class="ident">given</span>: <span class="self">self</span>.<span class="ident">given</span>,
-            <span class="ident">when</span>: <span class="self">self</span>.<span class="ident">when</span>,
-            <span class="ident">case</span>: <span class="ident">ScenarioThenCase::Fails</span>,
+    <span class="doccomment">/// Sets the expectation on the result of the [Scenario] to return an error.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>then_fails(<span class="self">self</span>) -&gt; ScenarioThen&lt;Id, Evt, Cmd&gt; {
+        ScenarioThen {
+            given: <span class="self">self</span>.given,
+            when: <span class="self">self</span>.when,
+            case: ScenarioThenCase::Fails,
         }
     }
 }
 
-<span class="kw">enum</span> <span class="ident">ScenarioThenCase</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
+<span class="kw">enum </span>ScenarioThenCase&lt;Id, Evt&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
 {
-    <span class="ident">Produces</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>),
-    <span class="ident">Fails</span>,
+    Produces(Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;),
+    Fails,
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ScenarioThen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span>,
-    <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub struct </span>ScenarioThen&lt;Id, Evt, Cmd&gt;
+<span class="kw">where
+    </span>Evt: message::Message,
+    Cmd: message::Message,
 {
-    <span class="ident">given</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">event::Persisted</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">when</span>: <span class="ident">command::Envelope</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>,
-    <span class="ident">case</span>: <span class="ident">ScenarioThenCase</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>,
+    given: Vec&lt;event::Persisted&lt;Id, Evt&gt;&gt;,
+    when: command::Envelope&lt;Cmd&gt;,
+    case: ScenarioThenCase&lt;Id, Evt&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span> <span class="ident">ScenarioThen</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span>, <span class="ident">Cmd</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">Id</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Debug</span>,
-    <span class="ident">Evt</span>: <span class="ident">message::Message</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Debug</span>,
-    <span class="ident">Cmd</span>: <span class="ident">message::Message</span>,
+<span class="kw">impl</span>&lt;Id, Evt, Cmd&gt; ScenarioThen&lt;Id, Evt, Cmd&gt;
+<span class="kw">where
+    </span>Id: Clone + Eq + Hash + Send + Sync + Debug,
+    Evt: message::Message + Clone + PartialEq + Send + Sync + Debug,
+    Cmd: message::Message,
 {
-    <span class="doccomment">/// Executes the whole [Scenario] by constructing a Command [Handler]</span>
-    <span class="doccomment">/// with the provided closure function and running the specified assertions.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The method panics if the assertion fails.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">assert_on</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">handler_factory</span>: <span class="ident">F</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">event::store::Tracking</span><span class="op">&lt;</span><span class="ident">event::store::InMemory</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>, <span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span>) -&gt; <span class="ident">H</span>,
-        <span class="ident">H</span>: <span class="ident">command::Handler</span><span class="op">&lt;</span><span class="ident">Cmd</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Executes the whole [Scenario] by constructing a Command [Handler]
+    /// with the provided closure function and running the specified assertions.
+    ///
+    /// # Panics
+    ///
+    /// The method panics if the assertion fails.
+    </span><span class="kw">pub async fn </span>assert_on&lt;F, H&gt;(<span class="self">self</span>, handler_factory: F)
+    <span class="kw">where
+        </span>F: Fn(event::store::Tracking&lt;event::store::InMemory&lt;Id, Evt&gt;, Id, Evt&gt;) -&gt; H,
+        H: command::Handler&lt;Cmd&gt;,
     {
-        <span class="kw">let</span> <span class="ident">event_store</span> <span class="op">=</span> <span class="ident">event::store::InMemory</span>::<span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">Evt</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">tracking_event_store</span> <span class="op">=</span> <span class="ident">event_store</span>.<span class="ident">clone</span>().<span class="ident">with_recorded_events_tracking</span>();
+        <span class="kw">let </span>event_store = event::store::InMemory::&lt;Id, Evt&gt;::default();
+        <span class="kw">let </span>tracking_event_store = event_store.clone().with_recorded_events_tracking();
 
-        <span class="kw">for</span> <span class="ident">event</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">given</span> {
-            <span class="ident">event_store</span>
-                .<span class="ident">append</span>(
-                    <span class="ident">event</span>.<span class="ident">stream_id</span>,
-                    <span class="ident">event::StreamVersionExpected::MustBe</span>(<span class="ident">event</span>.<span class="ident">version</span> <span class="op">-</span> <span class="number">1</span>),
-                    <span class="macro">vec!</span>[<span class="ident">event</span>.<span class="ident">event</span>],
+        <span class="kw">for </span>event <span class="kw">in </span><span class="self">self</span>.given {
+            event_store
+                .append(
+                    event.stream_id,
+                    event::StreamVersionExpected::MustBe(event.version - <span class="number">1</span>),
+                    <span class="macro">vec!</span>[event.event],
                 )
-                .<span class="kw">await</span>
-                .<span class="ident">expect</span>(<span class="string">&quot;domain event in &#39;given&#39; should be inserted in the event store&quot;</span>);
+                .<span class="kw">await
+                </span>.expect(<span class="string">&quot;domain event in &#39;given&#39; should be inserted in the event store&quot;</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">handler_factory</span>(<span class="ident">tracking_event_store</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">handler</span>.<span class="ident">handle</span>(<span class="self">self</span>.<span class="ident">when</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>handler = handler_factory(tracking_event_store.clone());
+        <span class="kw">let </span>result = handler.handle(<span class="self">self</span>.when).<span class="kw">await</span>;
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">case</span> {
-            <span class="ident">ScenarioThenCase::Produces</span>(<span class="ident">events</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">recorded_events</span> <span class="op">=</span> <span class="ident">tracking_event_store</span>.<span class="ident">recorded_events</span>();
-                <span class="macro">assert_eq!</span>(<span class="ident">events</span>, <span class="ident">recorded_events</span>);
+        <span class="kw">match </span><span class="self">self</span>.case {
+            ScenarioThenCase::Produces(events) =&gt; {
+                <span class="kw">let </span>recorded_events = tracking_event_store.recorded_events();
+                <span class="macro">assert_eq!</span>(events, recorded_events);
             }
-            <span class="ident">ScenarioThenCase::Fails</span> =&gt; <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>()),
+            ScenarioThenCase::Fails =&gt; <span class="macro">assert!</span>(result.is_err()),
         };
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="eventually" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
