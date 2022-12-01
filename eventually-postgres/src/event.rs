@@ -10,12 +10,7 @@ use eventually::{
     version::Version,
 };
 use futures::{future::ready, StreamExt, TryStreamExt};
-use lazy_static::lazy_static;
-use regex::Regex;
-use sqlx::{
-    postgres::{PgDatabaseError, PgRow},
-    PgPool, Postgres, Row, Transaction,
-};
+use sqlx::{postgres::PgRow, PgPool, Postgres, Row, Transaction};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StreamError {
@@ -54,8 +49,7 @@ pub enum AppendError {
 impl From<AppendError> for Option<version::ConflictError> {
     fn from(err: AppendError) -> Self {
         match err {
-            AppendError::Conflict(v) => Some(v),
-            AppendError::Concurrency(v) => Some(v),
+            AppendError::Conflict(v) | AppendError::Concurrency(v) => Some(v),
             _ => None,
         }
     }
@@ -184,11 +178,11 @@ where
     fn event_row_to_persisted_event(
         &self,
         stream_id: Id,
-        row: PgRow,
+        row: &PgRow,
     ) -> Result<event::Persisted<Id, Evt>, StreamError> {
-        let version_column: i32 = try_get_column(&row, "version")?;
-        let event_column: Vec<u8> = try_get_column(&row, "event")?;
-        let metadata_column: sqlx::types::Json<Metadata> = try_get_column(&row, "metadata")?;
+        let version_column: i32 = try_get_column(row, "version")?;
+        let event_column: Vec<u8> = try_get_column(row, "event")?;
+        let metadata_column: sqlx::types::Json<Metadata> = try_get_column(row, "metadata")?;
 
         let deserialized_event = self
             .serde
@@ -240,7 +234,7 @@ where
             .bind(from_version)
             .fetch(&self.pool)
             .map_err(StreamError::Database)
-            .and_then(move |row| ready(self.event_row_to_persisted_event(id.clone(), row)))
+            .and_then(move |row| ready(self.event_row_to_persisted_event(id.clone(), &row)))
             .boxed()
     }
 }
