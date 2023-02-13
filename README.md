@@ -18,7 +18,7 @@
     <!-- Testing pipeline -->
     <a href="https://github.com/get-eventually/eventually-rs/actions?query=workflow%3A%22Rust+%28stable%29%22">
         <img alt="GitHub Workflow Status"
-        src="https://img.shields.io/github/workflow/status/eventually-rs/eventually-rs/Rust%20(stable)?style=flat-square">
+        src="https://img.shields.io/github/actions/workflow/status/get-eventually/eventually-rs/ci.yml?branch=main&style=flat-square">
     </a>
     <!-- Codecov -->
     <a href="https://codecov.io/gh/get-eventually/eventually-rs">
