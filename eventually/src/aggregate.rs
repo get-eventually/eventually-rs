@@ -25,12 +25,15 @@
 //! Aggregates should provide a way to **fold** Domain Events on the
 //! current value of the state, to produce the next state.
 
-use crate::{event, message, version::Version};
+use std::{fmt::Debug, marker::PhantomData};
 
-mod repository;
-pub use repository::{
-    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Getter, Repository,
-    Saver,
+use async_trait::async_trait;
+use futures::TryStreamExt;
+
+use crate::{
+    entity::{Entity, GetError, Getter, Identifiable, Named, Saver},
+    event, message,
+    version::Version,
 };
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
@@ -45,10 +48,7 @@ pub use repository::{
 /// using the [`Aggregate::apply`] method.
 ///
 /// More on Aggregates can be found here: `<https://www.dddcommunity.org/library/vernon_2011/>`
-pub trait Aggregate: Sized + Send + Sync + Clone {
-    /// The type used to uniquely identify the Aggregate.
-    type Id: Send + Sync;
-
+pub trait Aggregate: Named + Identifiable + Sized + Clone {
     /// The type of Domain Events that interest this Aggregate.
     /// Usually, this type should be an `enum`.
     type Event: message::Message + Send + Sync + Clone;
@@ -56,12 +56,6 @@ pub trait Aggregate: Sized + Send + Sync + Clone {
     /// The error type that can be returned by [`Aggregate::apply`] when
     /// mutating the Aggregate state.
     type Error: Send + Sync;
-
-    /// A unique name identifier for this Aggregate type.
-    fn type_name() -> &'static str;
-
-    /// Returns the unique identifier for the Aggregate instance.
-    fn aggregate_id(&self) -> &Self::Id;
 
     /// Mutates the state of an Aggregate through a Domain Event.
     ///
@@ -144,20 +138,39 @@ where
     }
 }
 
+impl<T> Named for Root<T>
+where
+    T: Aggregate,
+{
+    fn type_name() -> &'static str {
+        T::type_name()
+    }
+}
+
+impl<T> Identifiable for Root<T>
+where
+    T: Aggregate,
+{
+    type Id = T::Id;
+
+    fn id(&self) -> &Self::Id {
+        self.aggregate.id()
+    }
+}
+
+impl<T> Entity for Root<T>
+where
+    T: Aggregate,
+{
+    fn version(&self) -> Version {
+        self.version
+    }
+}
+
 impl<T> Root<T>
 where
     T: Aggregate,
 {
-    /// Returns the current version for the [Aggregate].
-    pub fn version(&self) -> Version {
-        self.version
-    }
-
-    /// Returns the unique identifier of the [Aggregate].
-    pub fn aggregate_id(&self) -> &T::Id {
-        self.aggregate.aggregate_id()
-    }
-
     /// Maps the [Aggregate] value contained within [Root]
     /// to a different type, that can be converted through [From] trait.
     ///
@@ -286,12 +299,140 @@ where
     }
 }
 
+/// List of possible errors that can be returned by an [`EventSourcedRepository`] method.
+#[derive(Debug, thiserror::Error)]
+pub enum EventSourcedRepositoryError<E, SE, AE> {
+    /// This error is returned by [`EventSourcedRepository::get`] when
+    /// the desired [Aggregate] returns an error while applying a Domain Event
+    /// from the Event [Store][`event::Store`] during the _rehydration_ phase.
+    ///
+    /// This usually implies the Event Stream for the Aggregate
+    /// contains corrupted or unexpected data.
+    #[error("failed to rehydrate aggregate from event stream: {0}")]
+    RehydrateAggregate(#[source] E),
+
+    /// This error is returned by [`EventSourcedRepository::get`] when the
+    /// [Event Store][`event::Store`] used by the Repository returns
+    /// an unexpected error while streaming back the Aggregate's Event Stream.
+    #[error("event store failed while streaming events: {0}")]
+    StreamFromStore(#[source] SE),
+
+    /// This error is returned by [`EventSourcedRepository::save`] when
+    /// the [Event Store][`event::Store`] used by the Repository returns
+    /// an error while saving the uncommitted Domain Events
+    /// to the Aggregate's Event Stream.
+    #[error("event store failed while appending events: {0}")]
+    AppendToStore(#[source] AE),
+}
+
+/// An Event-sourced implementation of the [Repository] interface.
+///
+/// It uses an [Event Store][`event::Store`] instance to stream Domain Events
+/// for a particular Aggregate, and append uncommitted Domain Events
+/// recorded by an Aggregate Root.
+#[derive(Debug, Clone)]
+pub struct EventSourcedRepository<T, S>
+where
+    T: Aggregate,
+    S: event::Store<T::Id, T::Event>,
+{
+    store: S,
+    aggregate: PhantomData<T>,
+}
+
+impl<T, S> From<S> for EventSourcedRepository<T, S>
+where
+    T: Aggregate,
+    S: event::Store<T::Id, T::Event>,
+{
+    fn from(store: S) -> Self {
+        Self {
+            store,
+            aggregate: PhantomData,
+        }
+    }
+}
+
+#[async_trait]
+impl<T, S> Getter<Root<T>> for EventSourcedRepository<T, S>
+where
+    T: Aggregate,
+    T::Id: Clone,
+    T::Error: Debug,
+    S: event::Store<T::Id, T::Event>,
+{
+    type Error = EventSourcedRepositoryError<
+        T::Error,
+        <S as event::Streamer<T::Id, T::Event>>::Error,
+        <S as event::Appender<T::Id, T::Event>>::Error,
+    >;
+
+    async fn get(&self, id: &T::Id) -> Result<Root<T>, GetError<Self::Error>> {
+        let ctx = self
+            .store
+            .stream(id, event::VersionSelect::All)
+            .map_ok(|persisted| persisted.event)
+            .map_err(EventSourcedRepositoryError::StreamFromStore)
+            .try_fold(None, |ctx: Option<Root<T>>, event| async {
+                let new_ctx_result = match ctx {
+                    None => Root::<T>::rehydrate_from(event),
+                    Some(ctx) => ctx.apply_rehydrated_event(event),
+                };
+
+                let new_ctx =
+                    new_ctx_result.map_err(EventSourcedRepositoryError::RehydrateAggregate)?;
+
+                Ok(Some(new_ctx))
+            })
+            .await?;
+
+        ctx.ok_or(GetError::EntityNotFound)
+    }
+}
+
+#[async_trait]
+impl<T, S> Saver<Root<T>> for EventSourcedRepository<T, S>
+where
+    T: Aggregate,
+    T::Id: Clone,
+    T::Error: Debug,
+    S: event::Store<T::Id, T::Event>,
+{
+    type Error = EventSourcedRepositoryError<
+        T::Error,
+        <S as event::Streamer<T::Id, T::Event>>::Error,
+        <S as event::Appender<T::Id, T::Event>>::Error,
+    >;
+
+    async fn save(&self, root: &mut Root<T>) -> Result<(), Self::Error> {
+        let events_to_commit = root.take_uncommitted_events();
+        let aggregate_id = root.id();
+
+        if events_to_commit.is_empty() {
+            return Ok(());
+        }
+
+        let current_event_stream_version = root.version() - (events_to_commit.len() as Version);
+
+        self.store
+            .append(
+                aggregate_id.clone(),
+                event::StreamVersionExpected::MustBe(current_event_stream_version),
+                events_to_commit,
+            )
+            .await
+            .map_err(EventSourcedRepositoryError::AppendToStore)?;
+
+        Ok(())
+    }
+}
+
 // The warnings are happening due to usage of the methods only inside #[cfg(test)]
 #[allow(dead_code)]
 #[doc(hidden)]
 #[cfg(test)]
 pub(crate) mod test_user_domain {
-    use crate::{aggregate, message};
+    use crate::{aggregate, entity, message};
 
     #[derive(Debug, Clone)]
     pub(crate) struct User {
@@ -326,18 +467,23 @@ pub(crate) mod test_user_domain {
         AlreadyCreated,
     }
 
-    impl aggregate::Aggregate for User {
-        type Id = String;
-        type Event = UserEvent;
-        type Error = UserError;
-
+    impl entity::Named for User {
         fn type_name() -> &'static str {
             "User"
         }
+    }
 
-        fn aggregate_id(&self) -> &Self::Id {
+    impl entity::Identifiable for User {
+        type Id = String;
+
+        fn id(&self) -> &Self::Id {
             &self.email
         }
+    }
+
+    impl aggregate::Aggregate for User {
+        type Event = UserEvent;
+        type Error = UserError;
 
         fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
             match state {
@@ -391,7 +537,7 @@ mod test {
     use crate::{
         aggregate,
         aggregate::test_user_domain::{User, UserEvent},
-        aggregate::{Getter, Saver},
+        entity::{Getter, Saver},
         event,
         event::store::EventStoreExt,
         version,
@@ -411,7 +557,7 @@ mod test {
             .expect("user should be created successfully");
 
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
             .expect("user should be stored successfully");
 
@@ -438,7 +584,7 @@ mod test {
             .expect("user should be created successfully");
 
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
             .expect("user should be stored successfully");
 
@@ -456,7 +602,7 @@ mod test {
             .expect("user password should be changed successfully");
 
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
             .expect("new user version should be stored successfully");
 
@@ -489,14 +635,14 @@ mod test {
 
         // Saving the first User to the Repository.
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
             .expect("user should be stored successfully");
 
         // Simulating data race by duplicating the call to the Repository
         // with the same UserRoot instance that has already been committeed.
         let error = user_repository
-            .store(&mut cloned_user)
+            .save(&mut cloned_user)
             .await
             .expect_err("the repository should fail on the second store call with the cloned user");
 

@@ -1,0 +1,16 @@
+[package]
+name = "bank-accounting-v2"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.69"
+async-trait = "0.1.64"
+eventually = { path = "../../eventually", features = ["serde-prost", "tracing"] }
+eventually-macros = { path = "../../eventually-macros" }
+rust_decimal = "1.28.0"
+rusty-money = "0.4.1"
+thiserror = "1.0.38"
+tokio = { version = "1.25.0", features = ["macros", "rt-multi-thread"] }

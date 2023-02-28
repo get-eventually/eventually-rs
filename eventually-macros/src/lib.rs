@@ -82,6 +82,26 @@ pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
     let result = quote! {
         #item
 
+        impl eventually::entity::Identifiable for #item_ident {
+            type Id = <#aggregate_type as eventually::entity::Identifiable>::Id;
+
+            fn id(&self) -> &Self::Id {
+                self.0.id()
+            }
+        }
+
+        impl eventually::entity::Named for #item_ident {
+            fn type_name() -> &'static str {
+                <#aggregate_type>::type_name()
+            }
+        }
+
+        impl eventually::entity::Entity for #item_ident {
+            fn version(&self) -> Version {
+                self.0.version()
+            }
+        }
+
         impl std::ops::Deref for #item_ident {
             type Target = eventually::aggregate::Root<#aggregate_type>;
 

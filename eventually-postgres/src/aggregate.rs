@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use eventually::{
     aggregate,
     aggregate::Aggregate,
+    entity::{self, Entity, Identifiable},
     serde::{Deserializer, Serde, Serializer},
     version,
     version::Version,
@@ -14,7 +15,7 @@ use sqlx::{PgPool, Postgres, Row};
 pub struct Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate,
-    <T as Aggregate>::Id: ToString,
+    <T as Identifiable>::Id: ToString,
     OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
@@ -31,7 +32,7 @@ where
 impl<T, OutT, OutEvt, TSerde, EvtSerde> Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate,
-    <T as Aggregate>::Id: ToString,
+    <T as Identifiable>::Id: ToString,
     OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
@@ -99,7 +100,7 @@ impl From<SaveError> for Option<version::ConflictError> {
 impl<T, OutT, OutEvt, TSerde, EvtSerde> Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + Send + Sync,
-    <T as Aggregate>::Id: ToString,
+    <T as Identifiable>::Id: ToString,
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT> + Send + Sync,
@@ -141,11 +142,11 @@ where
 }
 
 #[async_trait]
-impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Getter<T>
+impl<T, OutT, OutEvt, TSerde, EvtSerde> entity::Getter<aggregate::Root<T>>
     for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
-    <T as Aggregate>::Id: ToString,
+    <T as Identifiable>::Id: ToString,
     <T as TryFrom<OutT>>::Error: std::error::Error + Send + Sync + 'static,
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event> + Send + Sync,
@@ -155,10 +156,7 @@ where
 {
     type Error = GetError;
 
-    async fn get(
-        &self,
-        id: &T::Id,
-    ) -> Result<aggregate::Root<T>, aggregate::RepositoryGetError<Self::Error>> {
+    async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, entity::GetError<Self::Error>> {
         let aggregate_id = id.to_string();
 
         let row = sqlx::query(
@@ -171,8 +169,8 @@ where
         .fetch_one(&self.pool)
         .await
         .map_err(|err| match err {
-            sqlx::Error::RowNotFound => aggregate::RepositoryGetError::AggregateRootNotFound,
-            _ => aggregate::RepositoryGetError::Inner(GetError::FetchAggregateRow(err)),
+            sqlx::Error::RowNotFound => entity::GetError::EntityNotFound,
+            _ => entity::GetError::Other(GetError::FetchAggregateRow(err)),
         })?;
 
         let version: i32 = row.try_get("version").map_err(GetError::Database)?;
@@ -194,11 +192,11 @@ where
 }
 
 #[async_trait]
-impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Saver<T>
+impl<T, OutT, OutEvt, TSerde, EvtSerde> entity::Saver<aggregate::Root<T>>
     for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
-    <T as Aggregate>::Id: ToString,
+    <T as Identifiable>::Id: ToString,
     <T as TryFrom<OutT>>::Error: std::error::Error + Send + Sync + 'static,
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event> + Send + Sync,
@@ -208,7 +206,7 @@ where
 {
     type Error = SaveError;
 
-    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
         let events_to_commit = root.take_uncommitted_events();
 
         if events_to_commit.is_empty() {
@@ -225,7 +223,7 @@ where
             .execute(&mut tx)
             .await?;
 
-        let aggregate_id = root.aggregate_id().to_string();
+        let aggregate_id = root.id().to_string();
         let expected_root_version = root.version() - (events_to_commit.len() as Version);
 
         self.save_aggregate_state(&mut tx, &aggregate_id, expected_root_version, root)
