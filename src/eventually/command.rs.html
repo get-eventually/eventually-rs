@@ -230,6 +230,7 @@
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
 <a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Module containing support for Domain [Command]s.
 //!
 //! Following the Domain-driven Design definition, a [Command] expresses the
@@ -317,12 +318,12 @@
 
     <span class="kw">struct </span>CreateUserHandler&lt;R&gt;(R)
     <span class="kw">where
-        </span>R: aggregate::Saver&lt;User&gt;;
+        </span>R: aggregate::repository::Saver&lt;User&gt;;
 
     <span class="attr">#[async_trait]
     </span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;CreateUser&gt; <span class="kw">for </span>CreateUserHandler&lt;R&gt;
     <span class="kw">where
-        </span>R: aggregate::Saver&lt;User&gt;,
+        </span>R: aggregate::repository::Saver&lt;User&gt;,
         R::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">type </span>Error = anyhow::Error;
@@ -331,7 +332,7 @@
             <span class="kw">let </span>command = command.message;
             <span class="kw">let </span><span class="kw-2">mut </span>user = aggregate::Root::&lt;User&gt;::create(command.email, command.password)<span class="question-mark">?</span>;
 
-            <span class="self">self</span>.<span class="number">0</span>.store(<span class="kw-2">&amp;mut </span>user).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="number">0</span>.save(<span class="kw-2">&amp;mut </span>user).<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }
@@ -356,8 +357,9 @@
     </span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;ChangeUserPassword&gt; <span class="kw">for </span>ChangeUserPasswordHandler&lt;R&gt;
     <span class="kw">where
         </span>R: aggregate::Repository&lt;User&gt;,
-        &lt;R <span class="kw">as </span>aggregate::Getter&lt;User&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
-        &lt;R <span class="kw">as </span>aggregate::Saver&lt;User&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+        &lt;R <span class="kw">as </span>aggregate::repository::Getter&lt;User&gt;&gt;::Error:
+            std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+        &lt;R <span class="kw">as </span>aggregate::repository::Saver&lt;User&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">type </span>Error = anyhow::Error;
 
@@ -371,7 +373,7 @@
 
             user.change_password(command.password)<span class="question-mark">?</span>;
 
-            <span class="self">self</span>.<span class="number">0</span>.store(<span class="kw-2">&amp;mut </span>user).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="number">0</span>.save(<span class="kw-2">&amp;mut </span>user).<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }

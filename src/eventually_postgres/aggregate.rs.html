@@ -389,7 +389,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; aggregate::Getter&lt;T&gt;
+</span><span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; aggregate::repository::Getter&lt;T&gt;
     <span class="kw">for </span>Repository&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt;
 <span class="kw">where
     </span>T: Aggregate + TryFrom&lt;OutT&gt; + Send + Sync,
@@ -406,7 +406,7 @@
     <span class="kw">async fn </span>get(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: <span class="kw-2">&amp;</span>T::Id,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;aggregate::Root&lt;T&gt;, aggregate::RepositoryGetError&lt;<span class="self">Self</span>::Error&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;aggregate::Root&lt;T&gt;, aggregate::repository::GetError&lt;<span class="self">Self</span>::Error&gt;&gt; {
         <span class="kw">let </span>aggregate_id = id.to_string();
 
         <span class="kw">let </span>row = sqlx::query(
@@ -419,8 +419,8 @@
         .fetch_one(<span class="kw-2">&amp;</span><span class="self">self</span>.pool)
         .<span class="kw">await
         </span>.map_err(|err| <span class="kw">match </span>err {
-            sqlx::Error::RowNotFound =&gt; aggregate::RepositoryGetError::AggregateRootNotFound,
-            <span class="kw">_ </span>=&gt; aggregate::RepositoryGetError::Inner(GetError::FetchAggregateRow(err)),
+            sqlx::Error::RowNotFound =&gt; aggregate::repository::GetError::NotFound,
+            <span class="kw">_ </span>=&gt; aggregate::repository::GetError::Inner(GetError::FetchAggregateRow(err)),
         })<span class="question-mark">?</span>;
 
         <span class="kw">let </span>version: i32 = row.try_get(<span class="string">&quot;version&quot;</span>).map_err(GetError::Database)<span class="question-mark">?</span>;
@@ -442,7 +442,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; aggregate::Saver&lt;T&gt;
+</span><span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; aggregate::repository::Saver&lt;T&gt;
     <span class="kw">for </span>Repository&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt;
 <span class="kw">where
     </span>T: Aggregate + TryFrom&lt;OutT&gt; + Send + Sync,
@@ -456,7 +456,7 @@
 {
     <span class="kw">type </span>Error = SaveError;
 
-    <span class="kw">async fn </span>store(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>save(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>events_to_commit = root.take_uncommitted_events();
 
         <span class="kw">if </span>events_to_commit.is_empty() {

@@ -195,7 +195,7 @@
     <span class="doccomment">/// This error is retured by [`Repository::get`] when the
     /// desired Aggregate [Root] could not be found in the data store.
     </span><span class="attr">#[error(<span class="string">&quot;aggregate root was not found&quot;</span>)]
-    </span>AggregateRootNotFound,
+    </span>NotFound,
     <span class="attr">#[error(transparent)]
     </span>Inner(<span class="attr">#[from] </span>I),
 }
@@ -219,8 +219,8 @@
 {
     <span class="kw">type </span>Error: Send + Sync;
 
-    <span class="doccomment">/// Stores a new version of an Aggregate Root instance to the data store.
-    </span><span class="kw">async fn </span>store(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
+    <span class="doccomment">/// Saves a new version of an Aggregate Root instance to the data store.
+    </span><span class="kw">async fn </span>save(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 }
 
 <span class="doccomment">/// A Repository is an object that allows to load and save
@@ -324,7 +324,7 @@
             })
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        ctx.ok_or(GetError::AggregateRootNotFound)
+        ctx.ok_or(GetError::NotFound)
     }
 }
 
@@ -342,7 +342,7 @@
         &lt;S <span class="kw">as </span>event::Appender&lt;T::Id, T::Event&gt;&gt;::Error,
     &gt;;
 
-    <span class="kw">async fn </span>store(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>save(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>events_to_commit = root.take_uncommitted_events();
         <span class="kw">let </span>aggregate_id = root.aggregate_id();
 

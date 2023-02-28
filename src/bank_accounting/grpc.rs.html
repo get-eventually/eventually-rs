@@ -154,8 +154,8 @@
 </span><span class="kw">impl</span>&lt;R&gt; proto::bank_accounting_server::BankAccounting <span class="kw">for </span>BankAccountingApi&lt;R&gt;
 <span class="kw">where
     </span>R: aggregate::Repository&lt;BankAccount&gt; + <span class="lifetime">&#39;static</span>,
-    &lt;R <span class="kw">as </span>aggregate::Getter&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
-    &lt;R <span class="kw">as </span>aggregate::Saver&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
+    &lt;R <span class="kw">as </span>aggregate::repository::Getter&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
+    &lt;R <span class="kw">as </span>aggregate::repository::Saver&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
 {
     <span class="attr">#[instrument(skip(<span class="self">self</span>))]
     </span><span class="kw">async fn </span>open_bank_account(
