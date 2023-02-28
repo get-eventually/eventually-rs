@@ -185,8 +185,9 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
     );
 
     match result {
-        (Ok(_), Err(Some(_))) => (),
-        (Err(Some(_)), Ok(_)) => (),
+        (Ok(_), Err(err)) | (Err(err), Ok(_)) => {
+            assert!(Option::<version::ConflictError>::from(err).is_some())
+        }
         (first, second) => panic!(
             "invalid state detected, first: {:?}, second: {:?}",
             first, second
