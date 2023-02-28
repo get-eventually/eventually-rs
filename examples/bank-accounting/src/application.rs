@@ -44,7 +44,7 @@ impl message::Message for OpenBankAccount {
 impl<R> command::Handler<OpenBankAccount> for Service<R>
 where
     R: aggregate::Repository<BankAccount>,
-    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
 
@@ -57,9 +57,7 @@ where
             command.opening_balance,
         )?;
 
-        self.bank_account_repository
-            .store(&mut bank_account)
-            .await?;
+        self.bank_account_repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -81,8 +79,8 @@ impl message::Message for DepositInBankAccount {
 impl<R> command::Handler<DepositInBankAccount> for Service<R>
 where
     R: aggregate::Repository<BankAccount>,
-    <R as aggregate::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
-    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::repository::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
 
@@ -100,9 +98,7 @@ where
 
         bank_account.deposit(command.amount)?;
 
-        self.bank_account_repository
-            .store(&mut bank_account)
-            .await?;
+        self.bank_account_repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -125,8 +121,8 @@ impl message::Message for SendTransferToBankAccount {
 impl<R> command::Handler<SendTransferToBankAccount> for Service<R>
 where
     R: aggregate::Repository<BankAccount>,
-    <R as aggregate::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
-    <R as aggregate::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::repository::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
+    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
 {
     type Error = anyhow::Error;
 
@@ -144,9 +140,7 @@ where
 
         bank_account.send_transfer(command.transaction, command.message)?;
 
-        self.bank_account_repository
-            .store(&mut bank_account)
-            .await?;
+        self.bank_account_repository.save(&mut bank_account).await?;
 
         Ok(())
     }

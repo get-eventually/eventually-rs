@@ -85,12 +85,12 @@ mod test_user_domain {
 
     struct CreateUserHandler<R>(R)
     where
-        R: aggregate::Saver<User>;
+        R: aggregate::repository::Saver<User>;
 
     #[async_trait]
     impl<R> command::Handler<CreateUser> for CreateUserHandler<R>
     where
-        R: aggregate::Saver<User>,
+        R: aggregate::repository::Saver<User>,
         R::Error: std::error::Error + Send + Sync + 'static,
     {
         type Error = anyhow::Error;
@@ -99,7 +99,7 @@ mod test_user_domain {
             let command = command.message;
             let mut user = aggregate::Root::<User>::create(command.email, command.password)?;
 
-            self.0.store(&mut user).await?;
+            self.0.save(&mut user).await?;
 
             Ok(())
         }
@@ -124,8 +124,9 @@ mod test_user_domain {
     impl<R> command::Handler<ChangeUserPassword> for ChangeUserPasswordHandler<R>
     where
         R: aggregate::Repository<User>,
-        <R as aggregate::Getter<User>>::Error: std::error::Error + Send + Sync + 'static,
-        <R as aggregate::Saver<User>>::Error: std::error::Error + Send + Sync + 'static,
+        <R as aggregate::repository::Getter<User>>::Error:
+            std::error::Error + Send + Sync + 'static,
+        <R as aggregate::repository::Saver<User>>::Error: std::error::Error + Send + Sync + 'static,
     {
         type Error = anyhow::Error;
 
@@ -139,7 +140,7 @@ mod test_user_domain {
 
             user.change_password(command.password)?;
 
-            self.0.store(&mut user).await?;
+            self.0.save(&mut user).await?;
 
             Ok(())
         }

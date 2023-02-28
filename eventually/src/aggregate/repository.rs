@@ -12,7 +12,7 @@ pub enum GetError<I> {
     /// This error is retured by [`Repository::get`] when the
     /// desired Aggregate [Root] could not be found in the data store.
     #[error("aggregate root was not found")]
-    AggregateRootNotFound,
+    NotFound,
     #[error(transparent)]
     Inner(#[from] I),
 }
@@ -36,8 +36,8 @@ where
 {
     type Error: Send + Sync;
 
-    /// Stores a new version of an Aggregate Root instance to the data store.
-    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error>;
+    /// Saves a new version of an Aggregate Root instance to the data store.
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error>;
 }
 
 /// A Repository is an object that allows to load and save
@@ -141,7 +141,7 @@ where
             })
             .await?;
 
-        ctx.ok_or(GetError::AggregateRootNotFound)
+        ctx.ok_or(GetError::NotFound)
     }
 }
 
@@ -159,7 +159,7 @@ where
         <S as event::Appender<T::Id, T::Event>>::Error,
     >;
 
-    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
         let events_to_commit = root.take_uncommitted_events();
         let aggregate_id = root.aggregate_id();
 

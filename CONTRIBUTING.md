@@ -2,14 +2,14 @@
 
 Thank you so much for considering contributing to `eventually`! :tada:
 
-- [Contributing to `eventually`](#contributing-to-eventually)
-  - [What should I know before I get started?](#what-should-i-know-before-i-get-started)
-    - [I want to contribute, but I don't know what can I contribute to...](#i-want-to-contribute-but-i-dont-know-what-can-i-contribute-to)
-  - [Pull Requests](#pull-requests)
-  - [How should my Pull Request look like?](#how-should-my-pull-request-look-like)
-    - [Describe the scope of the PR](#describe-the-scope-of-the-pr)
-    - [Git commit messages](#git-commit-messages)
-    - [Rust styleguide](#rust-styleguide)
+-   [Contributing to `eventually`](#contributing-to-eventually)
+    -   [What should I know before I get started?](#what-should-i-know-before-i-get-started)
+        -   [I want to contribute, but I don't know what can I contribute to...](#i-want-to-contribute-but-i-dont-know-what-can-i-contribute-to)
+    -   [Pull Requests](#pull-requests)
+    -   [How should my Pull Request look like?](#how-should-my-pull-request-look-like)
+        -   [Describe the scope of the PR](#describe-the-scope-of-the-pr)
+        -   [Git commit messages](#git-commit-messages)
+        -   [Rust styleguide](#rust-styleguide)
 
 ## What should I know before I get started?
 
@@ -18,26 +18,21 @@ where all the crates share the same dependencies and lock file.
 (This might be changed in the future)
 
 The workspace has the following crates:
-- [`eventually`]\: the main crate, users should depend solely on this crate
-- [`eventually-app-example`]\: an example application to showcase a (not-so) real-world example of how to use the library
 
-Although `eventually-postgres` and `eventually-redis` are currently in the workspace, they might be moved outside the repository, into their own respective repository inside the organization. (For more info, check out #131 and #132)
+-   [`eventually`]\: the main crate, users should depend solely on this crate
+-   [`eventually-macros`]\: the crate that contains procedural macros to make the development experience nicer for users,
+-   [`eventually-postgres`]\: the crate that contains implementations of abstractions from `eventually` for PostgreSQL databases,
 
 When submitting a PR involving one or more of these crates, please make sure to use the **corresponding label**.
 
 ### I want to contribute, but I don't know what can I contribute to...
 
 If you want to contribute but you have no idea how, or what specific features are
-missing, please check the [_What next?_ tracking issue](https://github.com/get-eventually/eventually-rs/issues/133).
+missing, please check the [issues] page: we usually have some issues that are marked as "good for
+beginners".
 
 Being an open-source project, we are always looking for new contributors, so no matter
 your level of Event Sourcing skills or language mastery, your PRs are always welcome :heart:
-
-If you want to experiment and/or get familiar with the library, you can consider
-trying to write a small application using the crate and send a message to our
-[Gitter chat][gitter] to give visibility: we can add your example project to the
-repository's `README` in order for other users to find it and draw inspiration
-from your experience.
 
 ## Pull Requests
 
@@ -48,11 +43,12 @@ implementation before the code review process. You can also reach out to our [Gi
 features or other technical aspects of the crate.
 
 In order to submit a PR, follow these steps:
+
 1. **Fork** the repository
 2. **Clone** your fork of the repository in your local machine
 3. Add the upstream repository in your local machine copy:
     ```bash
-    git remote add upstream git@github.com:eventually-rs/eventually-rs
+    git remote add upstream git@github.com:get-eventually/eventually-rs
     git fetch upstream
     ```
 4. Create a new branch starting from `upstream/main`:
@@ -98,8 +94,8 @@ Make sure you run `rustfmt` **before committing any changes**, as failing to do 
 
 [workspace]: https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html
 [`eventually`]: ./eventually
-[`eventually-app-example`]: ./eventually-app-example
+[`eventually-macros`]: ./eventually-macros
+[`eventually-postgres`]: ./eventually-postgres
 [issues]: https://github.com/get-eventually/eventually-rs/issues
 [new-issue]: https://github.com/get-eventually/eventually-rs/issues/new
-[gitter]: https://gitter.im/eventually-rs/community
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/

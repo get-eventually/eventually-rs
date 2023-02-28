@@ -27,11 +27,9 @@
 
 use crate::{event, message, version::Version};
 
-mod repository;
-pub use repository::{
-    EventSourced as EventSourcedRepository, GetError as RepositoryGetError, Getter, Repository,
-    Saver,
-};
+pub mod repository;
+
+pub use repository::{EventSourced as EventSourcedRepository, Repository};
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
 /// acts as a _transactional boundary_.
@@ -390,8 +388,8 @@ mod test {
 
     use crate::{
         aggregate,
+        aggregate::repository::{Getter, Saver},
         aggregate::test_user_domain::{User, UserEvent},
-        aggregate::{Getter, Saver},
         event,
         event::store::EventStoreExt,
         version,
@@ -411,9 +409,9 @@ mod test {
             .expect("user should be created successfully");
 
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
-            .expect("user should be stored successfully");
+            .expect("user should be saved successfully");
 
         let expected_events = vec![event::Persisted {
             stream_id: email.clone(),
@@ -438,9 +436,9 @@ mod test {
             .expect("user should be created successfully");
 
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
-            .expect("user should be stored successfully");
+            .expect("user should be saved successfully");
 
         // Reset the event recorded while storing the User for the first time.
         tracking_event_store.reset_recorded_events();
@@ -456,9 +454,9 @@ mod test {
             .expect("user password should be changed successfully");
 
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
-            .expect("new user version should be stored successfully");
+            .expect("new user version should be saved successfully");
 
         let expected_events = vec![event::Persisted {
             stream_id: email.clone(),
@@ -489,16 +487,15 @@ mod test {
 
         // Saving the first User to the Repository.
         user_repository
-            .store(&mut user)
+            .save(&mut user)
             .await
-            .expect("user should be stored successfully");
+            .expect("user should be saved successfully");
 
         // Simulating data race by duplicating the call to the Repository
         // with the same UserRoot instance that has already been committeed.
-        let error = user_repository
-            .store(&mut cloned_user)
-            .await
-            .expect_err("the repository should fail on the second store call with the cloned user");
+        let error = user_repository.save(&mut cloned_user).await.expect_err(
+            "the repository should fail on the second .save() call with the cloned user",
+        );
 
         let error: Box<dyn Error> = error.into();
 

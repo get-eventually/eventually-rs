@@ -141,7 +141,7 @@ where
 }
 
 #[async_trait]
-impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Getter<T>
+impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::repository::Getter<T>
     for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
@@ -158,7 +158,7 @@ where
     async fn get(
         &self,
         id: &T::Id,
-    ) -> Result<aggregate::Root<T>, aggregate::RepositoryGetError<Self::Error>> {
+    ) -> Result<aggregate::Root<T>, aggregate::repository::GetError<Self::Error>> {
         let aggregate_id = id.to_string();
 
         let row = sqlx::query(
@@ -171,8 +171,8 @@ where
         .fetch_one(&self.pool)
         .await
         .map_err(|err| match err {
-            sqlx::Error::RowNotFound => aggregate::RepositoryGetError::AggregateRootNotFound,
-            _ => aggregate::RepositoryGetError::Inner(GetError::FetchAggregateRow(err)),
+            sqlx::Error::RowNotFound => aggregate::repository::GetError::NotFound,
+            _ => aggregate::repository::GetError::Inner(GetError::FetchAggregateRow(err)),
         })?;
 
         let version: i32 = row.try_get("version").map_err(GetError::Database)?;
@@ -194,7 +194,7 @@ where
 }
 
 #[async_trait]
-impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Saver<T>
+impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::repository::Saver<T>
     for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
@@ -208,7 +208,7 @@ where
 {
     type Error = SaveError;
 
-    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
         let events_to_commit = root.take_uncommitted_events();
 
         if events_to_commit.is_empty() {
