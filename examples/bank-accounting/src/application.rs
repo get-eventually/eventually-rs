@@ -57,9 +57,7 @@ where
             command.opening_balance,
         )?;
 
-        self.bank_account_repository
-            .store(&mut bank_account)
-            .await?;
+        self.bank_account_repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -100,9 +98,7 @@ where
 
         bank_account.deposit(command.amount)?;
 
-        self.bank_account_repository
-            .store(&mut bank_account)
-            .await?;
+        self.bank_account_repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -144,9 +140,7 @@ where
 
         bank_account.send_transfer(command.transaction, command.message)?;
 
-        self.bank_account_repository
-            .store(&mut bank_account)
-            .await?;
+        self.bank_account_repository.save(&mut bank_account).await?;
 
         Ok(())
     }

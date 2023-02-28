@@ -208,7 +208,7 @@ where
 {
     type Error = SaveError;
 
-    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
         let events_to_commit = root.take_uncommitted_events();
 
         if events_to_commit.is_empty() {

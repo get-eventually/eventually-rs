@@ -60,9 +60,9 @@ where
 {
     type Error = <Inner as aggregate::Saver<T>>::Error;
 
-    #[instrument(name = "aggregate::Repository.store", ret, err, skip(self))]
-    async fn store(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
-        self.inner.store(root).await
+    #[instrument(name = "aggregate::Repository.save", ret, err, skip(self))]
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+        self.inner.save(root).await
     }
 }
 

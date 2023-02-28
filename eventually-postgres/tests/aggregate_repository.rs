@@ -45,7 +45,7 @@ async fn it_works() {
     root.delete().unwrap();
 
     aggregate_repository
-        .store(&mut root)
+        .save(&mut root)
         .await
         .expect("storing the new aggregate root should be successful");
 
@@ -86,10 +86,10 @@ async fn it_detects_data_races_and_returns_conflict_error() {
 
     let result = futures::join!(
         aggregate_repository
-            .store(&mut root)
+            .save(&mut root)
             .map_err(Option::<version::ConflictError>::from),
         aggregate_repository
-            .store(&mut cloned_root)
+            .save(&mut cloned_root)
             .map_err(Option::<version::ConflictError>::from),
     );
 

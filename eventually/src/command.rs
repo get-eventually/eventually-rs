@@ -99,7 +99,7 @@ mod test_user_domain {
             let command = command.message;
             let mut user = aggregate::Root::<User>::create(command.email, command.password)?;
 
-            self.0.store(&mut user).await?;
+            self.0.save(&mut user).await?;
 
             Ok(())
         }
@@ -139,7 +139,7 @@ mod test_user_domain {
 
             user.change_password(command.password)?;
 
-            self.0.store(&mut user).await?;
+            self.0.save(&mut user).await?;
 
             Ok(())
         }
