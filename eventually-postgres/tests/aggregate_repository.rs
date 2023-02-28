@@ -1,5 +1,5 @@
 use eventually::{
-    aggregate::{Getter, RepositoryGetError, Saver},
+    aggregate::repository::{GetError, Getter, Saver},
     serde::json::Json,
     version,
 };
@@ -31,7 +31,7 @@ async fn it_works() {
         .expect_err("should fail");
 
     match result {
-        RepositoryGetError::AggregateRootNotFound => (),
+        GetError::NotFound => (),
         _ => panic!(
             "unexpected error received, should be 'not found': {:?}",
             result

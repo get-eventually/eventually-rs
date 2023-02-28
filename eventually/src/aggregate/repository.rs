@@ -12,7 +12,7 @@ pub enum GetError<I> {
     /// This error is retured by [`Repository::get`] when the
     /// desired Aggregate [Root] could not be found in the data store.
     #[error("aggregate root was not found")]
-    AggregateRootNotFound,
+    NotFound,
     #[error(transparent)]
     Inner(#[from] I),
 }
@@ -141,7 +141,7 @@ where
             })
             .await?;
 
-        ctx.ok_or(GetError::AggregateRootNotFound)
+        ctx.ok_or(GetError::NotFound)
     }
 }
 
