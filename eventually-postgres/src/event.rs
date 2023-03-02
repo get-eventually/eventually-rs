@@ -35,9 +35,9 @@ pub enum StreamError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppendError {
-    #[error("conflict error detected: {0})")]
+    #[error("conflict error detected: {0}")]
     Conflict(#[source] version::ConflictError),
-    #[error("concurrent update detected, represented as a conflict error: {0})")]
+    #[error("concurrent update detected, represented as a conflict error: {0}")]
     Concurrency(#[source] version::ConflictError),
     #[error("failed to begin transaction: {0}")]
     BeginTransaction(#[source] sqlx::Error),
