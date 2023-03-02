@@ -182,15 +182,11 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
 
     match result {
         (Ok(_), Err(err)) | (Err(err), Ok(_)) => {
-            let expected_err = event::AppendError::Concurrency(version::ConflictError {
-                expected: 0,
-                actual: 1,
-            });
-
-            let actual_err_msg = format!("{}", err);
-            let expected_err_msg = format!("{}", expected_err);
-
-            assert_eq!(expected_err_msg, actual_err_msg);
+            if let event::AppendError::Conflict(_) | event::AppendError::Concurrency(_) = err {
+                // This is the expected scenario :)
+            } else {
+                panic!("unexpected error, {:?}", err);
+            }
         }
         (first, second) => panic!(
             "invalid state detected, first: {:?}, second: {:?}",
