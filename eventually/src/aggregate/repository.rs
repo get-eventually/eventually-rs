@@ -1,3 +1,9 @@
+//! Module containing the definition of a [Repository], to fetch and store
+//! Aggregate Roots from a data store.
+//!
+//! If you are looking for the Event-sourced implementation of an Aggregate Repository,
+//! take a look at [EventSourced].
+
 use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
@@ -13,15 +19,22 @@ pub enum GetError<I> {
     /// desired Aggregate [Root] could not be found in the data store.
     #[error("aggregate root was not found")]
     NotFound,
+
+    /// Error variant returned by [`Repository::get`] when the underlying
+    /// concrete implementation has encountered an error.
     #[error(transparent)]
     Inner(#[from] I),
 }
 
+/// Getter is a [Repository] trait used to get an [aggregate::Root]
+/// instance from a data store.
 #[async_trait]
 pub trait Getter<T>: Send + Sync
 where
     T: Aggregate,
 {
+    /// Error type returned by the concrete implementation of the trait.
+    /// It is returned in [get] using [GetError::Other].
     type Error: Send + Sync;
 
     /// Loads an Aggregate Root instance from the data store,
@@ -29,11 +42,14 @@ where
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError<Self::Error>>;
 }
 
+/// Saver is a [Repository] trait used to save an [aggregate::Root]
+/// instance to a data store.
 #[async_trait]
 pub trait Saver<T>: Send + Sync
 where
     T: Aggregate,
 {
+    /// Error type returned by the concrete implementation of the trait.
     type Error: Send + Sync;
 
     /// Saves a new version of an Aggregate Root instance to the data store.

@@ -168,25 +168,29 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
     .into()];
 
     let result = futures::join!(
-        event_store
-            .append(
-                event_stream_id.clone(),
-                StreamVersionExpected::MustBe(0),
-                expected_events.clone(),
-            )
-            .map_err(Option::<version::ConflictError>::from),
-        event_store
-            .append(
-                event_stream_id.clone(),
-                StreamVersionExpected::MustBe(0),
-                expected_events,
-            )
-            .map_err(Option::<version::ConflictError>::from)
+        event_store.append(
+            event_stream_id.clone(),
+            StreamVersionExpected::MustBe(0),
+            expected_events.clone(),
+        ),
+        event_store.append(
+            event_stream_id.clone(),
+            StreamVersionExpected::MustBe(0),
+            expected_events,
+        )
     );
 
     match result {
         (Ok(_), Err(err)) | (Err(err), Ok(_)) => {
-            assert!(Option::<version::ConflictError>::from(err).is_some())
+            let expected_err = event::AppendError::Concurrency(version::ConflictError {
+                expected: 0,
+                actual: 1,
+            });
+
+            let actual_err_msg = format!("{}", err);
+            let expected_err_msg = format!("{}", expected_err);
+
+            assert_eq!(expected_err_msg, actual_err_msg);
         }
         (first, second) => panic!(
             "invalid state detected, first: {:?}, second: {:?}",

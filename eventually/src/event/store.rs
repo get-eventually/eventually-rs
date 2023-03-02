@@ -1,3 +1,6 @@
+//! Contains implementations of the [event::Store] trait and connected abstractions,
+//! such as the [std::collections::HashMap]'s based [InMemory] Event Store implementation.
+
 use std::{
     collections::HashMap,
     convert::Infallible,
@@ -32,6 +35,8 @@ where
     }
 }
 
+/// In-memory implementation of [event::Store] trait,
+/// backed by a thread-safe [std::collections::HashMap].
 #[derive(Debug, Clone)]
 pub struct InMemory<Id, Evt>
 where
@@ -139,6 +144,11 @@ where
     }
 }
 
+/// Decorator type for an [event::Store] implementation that tracks the list of
+/// recorded Domain Events through it.
+///
+/// Useful for testing purposes, i.e. asserting that Domain Events written throguh
+/// this Event Store instance are the ones expected.
 #[derive(Debug, Clone)]
 pub struct Tracking<T, StreamId, Event>
 where
@@ -158,6 +168,7 @@ where
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
+    /// Returns the list of recoded Domain Events through this decorator so far.
     pub fn recorded_events(&self) -> Vec<event::Persisted<StreamId, Event>> {
         self.events
             .read()
@@ -165,6 +176,7 @@ where
             .clone()
     }
 
+    /// Resets the list of recorded Domain Events through this decorator.
     pub fn reset_recorded_events(&self) {
         self.events
             .write()
@@ -232,12 +244,16 @@ where
     }
 }
 
+/// Extension trait that can be used to pull in supertypes implemented
+/// in this module.
 pub trait EventStoreExt<StreamId, Event>:
     event::Store<StreamId, Event> + Send + Sync + Sized
 where
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
+    /// Returns a [Tracking] instance that decorates the original [event::Store]
+    /// instanca this method has been called on.
     fn with_recorded_events_tracking(self) -> Tracking<Self, StreamId, Event> {
         Tracking {
             store: self,
