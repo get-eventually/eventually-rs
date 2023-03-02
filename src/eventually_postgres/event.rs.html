@@ -357,9 +357,9 @@
 
 <span class="attr">#[derive(Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>AppendError {
-    <span class="attr">#[error(<span class="string">&quot;conflict error detected: {0})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">&quot;conflict error detected: {0}&quot;</span>)]
     </span>Conflict(<span class="attr">#[source] </span>version::ConflictError),
-    <span class="attr">#[error(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0}&quot;</span>)]
     </span>Concurrency(<span class="attr">#[source] </span>version::ConflictError),
     <span class="attr">#[error(<span class="string">&quot;failed to begin transaction: {0}&quot;</span>)]
     </span>BeginTransaction(<span class="attr">#[source] </span>sqlx::Error),
