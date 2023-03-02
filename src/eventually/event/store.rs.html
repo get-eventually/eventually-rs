@@ -368,7 +368,26 @@
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+</pre><pre class="rust"><code><span class="doccomment">//! Contains implementations of the [event::Store] trait and connected abstractions,
+//! such as the [std::collections::HashMap]&#39;s based [InMemory] Event Store implementation.
+
+</span><span class="kw">use </span>std::{
     collections::HashMap,
     convert::Infallible,
     hash::Hash,
@@ -402,7 +421,9 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="doccomment">/// In-memory implementation of [event::Store] trait,
+/// backed by a thread-safe [std::collections::HashMap].
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>InMemory&lt;Id, Evt&gt;
 <span class="kw">where
     </span>Evt: message::Message,
@@ -509,7 +530,12 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="doccomment">/// Decorator type for an [event::Store] implementation that tracks the list of
+/// recorded Domain Events through it.
+///
+/// Useful for testing purposes, i.e. asserting that Domain Events written throguh
+/// this Event Store instance are the ones expected.
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Tracking&lt;T, StreamId, Event&gt;
 <span class="kw">where
     </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
@@ -528,14 +554,16 @@
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">pub fn </span>recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;event::Persisted&lt;StreamId, Event&gt;&gt; {
+    <span class="doccomment">/// Returns the list of recoded Domain Events through this decorator so far.
+    </span><span class="kw">pub fn </span>recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;event::Persisted&lt;StreamId, Event&gt;&gt; {
         <span class="self">self</span>.events
             .read()
             .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
             .clone()
     }
 
-    <span class="kw">pub fn </span>reset_recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="doccomment">/// Resets the list of recorded Domain Events through this decorator.
+    </span><span class="kw">pub fn </span>reset_recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.events
             .write()
             .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
@@ -602,13 +630,17 @@
     }
 }
 
-<span class="kw">pub trait </span>EventStoreExt&lt;StreamId, Event&gt;:
+<span class="doccomment">/// Extension trait that can be used to pull in supertypes implemented
+/// in this module.
+</span><span class="kw">pub trait </span>EventStoreExt&lt;StreamId, Event&gt;:
     event::Store&lt;StreamId, Event&gt; + Send + Sync + Sized
 <span class="kw">where
     </span>StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">fn </span>with_recorded_events_tracking(<span class="self">self</span>) -&gt; Tracking&lt;<span class="self">Self</span>, StreamId, Event&gt; {
+    <span class="doccomment">/// Returns a [Tracking] instance that decorates the original [event::Store]
+    /// instanca this method has been called on.
+    </span><span class="kw">fn </span>with_recorded_events_tracking(<span class="self">self</span>) -&gt; Tracking&lt;<span class="self">Self</span>, StreamId, Event&gt; {
         Tracking {
             store: <span class="self">self</span>,
             events: Arc::default(),
