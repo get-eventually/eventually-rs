@@ -6,4 +6,5 @@ members = [
 
     # Crates as examples
     "examples/bank-accounting",
+    "examples/todo-list-app",
 ]

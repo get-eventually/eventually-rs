@@ -1,0 +1,12 @@
+version: v1
+deps:
+  - buf.build/googleapis/googleapis
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
+    # - COMMENTS
+    - UNARY_RPC
+    - PACKAGE_NO_IMPORT_CYCLE

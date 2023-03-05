@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package todolist.v1;
+
+import "google/protobuf/timestamp.proto";
+import "todolist/v1/todo_list.proto";
+
+service TodoListService {
+  rpc CreateTodoList(CreateTodoListRequest) returns (CreateTodoListResponse);
+  rpc GetTodoList(GetTodoListRequest) returns (GetTodoListResponse);
+  rpc AddTodoItem(AddTodoItemRequest) returns (AddTodoItemResponse);
+  rpc ToggleTodoItem(ToggleTodoItemRequest) returns (ToggleTodoItemResponse);
+  rpc DeleteTodoItem(DeleteTodoItemRequest) returns (DeleteTodoItemResponse);
+}
+
+message CreateTodoListRequest {
+  string title = 1;
+  string owner = 2;
+}
+
+message CreateTodoListResponse {
+  string todo_list_id = 1;
+}
+
+message GetTodoListRequest {
+  string todo_list_id = 1;
+}
+
+message GetTodoListResponse {
+  TodoList todo_list = 1;
+}
+
+message AddTodoItemRequest {
+  string todo_list_id = 1;
+  string description = 2;
+  google.protobuf.Timestamp due_date = 3;
+}
+
+message AddTodoItemResponse {
+  string todo_item_id = 1;
+}
+
+message ToggleTodoItemRequest {
+  string todo_list_id = 1;
+  string todo_item_id = 2;
+}
+
+message ToggleTodoItemResponse {}
+
+message DeleteTodoItemRequest {
+  string todo_list_id = 1;
+  string todo_item_id = 2;
+}
+
+message DeleteTodoItemResponse {}
