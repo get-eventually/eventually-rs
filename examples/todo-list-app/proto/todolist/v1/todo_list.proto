@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package todolist.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message TodoItem {
+  string description = 1;
+  bool completed = 2;
+  google.protobuf.Timestamp due_date = 3;
+  google.protobuf.Timestamp creation_time = 4;
+}
+
+message TodoList {
+  string title = 1;
+  string owner = 2;
+  map<string, TodoItem> items = 3;
+  google.protobuf.Timestamp creation_time = 4;
+}

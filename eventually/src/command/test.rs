@@ -137,6 +137,7 @@ where
     where
         F: Fn(event::store::Tracking<event::store::InMemory<Id, Evt>, Id, Evt>) -> H,
         H: command::Handler<Cmd>,
+        <H as command::Handler<Cmd>>::Error: Debug,
     {
         let event_store = event::store::InMemory::<Id, Evt>::default();
         let tracking_event_store = event_store.clone().with_recorded_events_tracking();
@@ -159,6 +160,7 @@ where
             ScenarioThenCase::Produces(events) => {
                 let recorded_events = tracking_event_store.recorded_events();
                 assert_eq!(events, recorded_events);
+                result.expect("should not be an error");
             }
             ScenarioThenCase::Fails => assert!(result.is_err()),
         };
