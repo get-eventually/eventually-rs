@@ -89,8 +89,7 @@ pub enum SaveError {
 impl From<SaveError> for Option<version::ConflictError> {
     fn from(err: SaveError) -> Self {
         match err {
-            SaveError::Conflict(v) => Some(v),
-            SaveError::Concurrency(v) => Some(v),
+            SaveError::Conflict(v) | SaveError::Concurrency(v) => Some(v),
             _ => None,
         }
     }

@@ -364,9 +364,7 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            Ok(Self::record_new(
-                UserEvent::WasCreated { email, password }.into(),
-            )?)
+            Self::record_new(UserEvent::WasCreated { email, password }.into())
         }
 
         pub(crate) fn change_password(&mut self, password: String) -> Result<(), UserError> {
