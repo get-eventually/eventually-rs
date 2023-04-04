@@ -30,4 +30,4 @@ tracing-subscriber = { version = "0.3.3", features = ["fmt", "std", "registry", 
 [dev-dependencies]
 
 [build-dependencies]
-tonic-build = { version = "0.8.0", features = ["prost"] }
+tonic-build = { version = "0.9.1", features = ["prost"] }
