@@ -1,21 +1,18 @@
-use std::{marker::PhantomData, string::ToString};
+use std::marker::PhantomData;
+use std::string::ToString;
 
 use async_trait::async_trait;
 use chrono::Utc;
-use eventually::{
-    event,
-    message::{Message, Metadata},
-    serde::{Deserializer, Serde, Serializer},
-    version,
-    version::Version,
-};
-use futures::{future::ready, StreamExt, TryStreamExt};
+use eventually::message::{Message, Metadata};
+use eventually::serde::{Deserializer, Serde, Serializer};
+use eventually::version::Version;
+use eventually::{event, version};
+use futures::future::ready;
+use futures::{StreamExt, TryStreamExt};
 use lazy_static::lazy_static;
 use regex::Regex;
-use sqlx::{
-    postgres::{PgDatabaseError, PgRow},
-    PgPool, Postgres, Row, Transaction,
-};
+use sqlx::postgres::{PgDatabaseError, PgRow};
+use sqlx::{PgPool, Postgres, Row, Transaction};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StreamError {
@@ -285,7 +282,7 @@ where
                     .fetch_one(&mut tx)
                     .await
                     .and_then(|row| row.try_get(0))?
-            }
+            },
             event::StreamVersionExpected::MustBe(v) => {
                 let new_version = v + (events.len() as Version);
 
@@ -303,12 +300,12 @@ where
                                     expected: v,
                                     actual: new_version,
                                 })
-                            }
+                            },
                             _ => AppendError::UpsertEventStream(err),
                         },
                     })
                     .map(|_| new_version as i32)?
-            }
+            },
         };
 
         append_domain_events(&mut tx, &self.serde, &string_id, new_version, events)

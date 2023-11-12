@@ -1,15 +1,15 @@
 //! Module containing some extension traits to support code instrumentation
 //! using the `tracing` crate.
 
-use std::{
-    fmt::{Debug, Display},
-    marker::PhantomData,
-};
+use std::fmt::{Debug, Display};
+use std::marker::PhantomData;
 
 use async_trait::async_trait;
 use tracing::instrument;
 
-use crate::{aggregate, aggregate::Aggregate, event, message, version::Version};
+use crate::aggregate::Aggregate;
+use crate::version::Version;
+use crate::{aggregate, event, message};
 
 /// [aggregate::Repository] type wrapper that provides instrumentation
 /// features through the `tracing` crate.

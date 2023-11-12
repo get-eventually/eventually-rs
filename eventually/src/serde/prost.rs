@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use prost::{bytes::Bytes, Message};
+use prost::bytes::Bytes;
+use prost::Message;
 
 use crate::serde::{Deserializer, Serializer};
 

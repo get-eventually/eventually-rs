@@ -66,11 +66,8 @@ where
 mod test_user_domain {
     use async_trait::async_trait;
 
-    use crate::{
-        aggregate,
-        aggregate::test_user_domain::{User, UserEvent},
-        command, event, message,
-    };
+    use crate::aggregate::test_user_domain::{User, UserEvent};
+    use crate::{aggregate, command, event, message};
 
     struct CreateUser {
         email: String,

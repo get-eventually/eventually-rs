@@ -1,8 +1,6 @@
-use eventually::{
-    aggregate::repository::{GetError, Getter, Saver},
-    serde::json::Json,
-    version,
-};
+use eventually::aggregate::repository::{GetError, Getter, Saver};
+use eventually::serde::json::Json;
+use eventually::version;
 use eventually_postgres::aggregate;
 use futures::TryFutureExt;
 use rand::Rng;

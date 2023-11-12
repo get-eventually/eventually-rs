@@ -1,14 +1,12 @@
 use std::time::Duration;
 
 use anyhow::anyhow;
-use eventually::{
-    serde::prost::MessageSerde,
-    tracing::{AggregateRepositoryExt, EventStoreExt},
-};
+use bank_accounting::domain::BankAccountRepository;
+use bank_accounting::{application, grpc, proto};
+use eventually::serde::prost::MessageSerde;
+use eventually::tracing::{AggregateRepositoryExt, EventStoreExt};
 use eventually_postgres::event;
 use tower_http::trace::TraceLayer;
-
-use bank_accounting::{application, domain::BankAccountRepository, grpc, proto};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

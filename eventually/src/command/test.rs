@@ -1,9 +1,12 @@
 //! Module exposing a test [Scenario] type to write Domain [Command]s
 //! test cases using the [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/).
 
-use std::{fmt::Debug, hash::Hash};
+use std::fmt::Debug;
+use std::hash::Hash;
 
-use crate::{command, event, event::store::EventStoreExt, event::Appender, message};
+use crate::event::store::EventStoreExt;
+use crate::event::Appender;
+use crate::{command, event, message};
 
 /// A test scenario that can be used to test a [Command] [Handler][command::Handler]
 /// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.
@@ -159,7 +162,7 @@ where
             ScenarioThenCase::Produces(events) => {
                 let recorded_events = tracking_event_store.recorded_events();
                 assert_eq!(events, recorded_events);
-            }
+            },
             ScenarioThenCase::Fails => assert!(result.is_err()),
         };
     }

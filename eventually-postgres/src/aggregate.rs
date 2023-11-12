@@ -1,13 +1,10 @@
 use std::marker::PhantomData;
 
 use async_trait::async_trait;
-use eventually::{
-    aggregate,
-    aggregate::Aggregate,
-    serde::{Deserializer, Serde, Serializer},
-    version,
-    version::Version,
-};
+use eventually::aggregate::Aggregate;
+use eventually::serde::{Deserializer, Serde, Serializer};
+use eventually::version::Version;
+use eventually::{aggregate, version};
 use sqlx::{PgPool, Postgres, Row};
 
 #[derive(Debug, Clone)]
@@ -131,7 +128,7 @@ where
                             expected: expected_version,
                             actual: root.version(),
                         })
-                    }
+                    },
                     _ => SaveError::SaveAggregateState(err),
                 },
             })?;

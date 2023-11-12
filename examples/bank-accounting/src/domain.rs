@@ -113,22 +113,22 @@ impl aggregate::Aggregate for BankAccount {
                 BankAccountEvent::DepositWasRecorded { amount } => {
                     account.current_balance += amount;
                     Ok(account)
-                }
+                },
                 BankAccountEvent::TransferWasReceived { transaction, .. } => {
                     account.current_balance += transaction.amount;
                     Ok(account)
-                }
+                },
                 BankAccountEvent::TransferWasSent { transaction, .. } => {
                     account.current_balance -= transaction.amount;
                     account
                         .pending_transactions
                         .insert(transaction.id.clone(), transaction);
                     Ok(account)
-                }
+                },
                 BankAccountEvent::TransferWasConfirmed { transaction_id } => {
                     account.pending_transactions.remove(&transaction_id);
                     Ok(account)
-                }
+                },
                 BankAccountEvent::TransferWasDeclined { transaction_id, .. } => {
                     if let Some(transaction) = account.pending_transactions.remove(&transaction_id)
                     {
@@ -136,17 +136,17 @@ impl aggregate::Aggregate for BankAccount {
                     }
 
                     Ok(account)
-                }
+                },
                 BankAccountEvent::WasClosed => {
                     account.is_closed = true;
                     account.current_balance = Decimal::default();
                     Ok(account)
-                }
+                },
                 BankAccountEvent::WasReopened { reopening_balance } => {
                     account.is_closed = false;
                     account.current_balance = reopening_balance.unwrap_or_default();
                     Ok(account)
-                }
+                },
                 BankAccountEvent::WasOpened { .. } => Err(BankAccountError::AlreadyOpened),
             },
         }

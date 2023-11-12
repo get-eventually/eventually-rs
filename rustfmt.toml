@@ -1,0 +1,5 @@
+match_block_trailing_comma = true
+reorder_imports = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Module"
+ignore = ["third_party"]

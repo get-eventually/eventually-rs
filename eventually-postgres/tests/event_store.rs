@@ -1,11 +1,9 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use eventually::{
-    event::{Appender, Persisted, StreamVersionExpected, Streamer, VersionSelect},
-    serde::json::Json,
-    version,
-    version::Version,
-};
+use eventually::event::{Appender, Persisted, StreamVersionExpected, Streamer, VersionSelect};
+use eventually::serde::json::Json;
+use eventually::version;
+use eventually::version::Version;
 use eventually_postgres::event;
 use futures::{TryFutureExt, TryStreamExt};
 use rand::Rng;
@@ -187,7 +185,7 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
             } else {
                 panic!("unexpected error, {:?}", err);
             }
-        }
+        },
         (first, second) => panic!(
             "invalid state detected, first: {:?}, second: {:?}",
             first, second

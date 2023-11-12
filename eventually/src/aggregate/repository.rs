@@ -4,12 +4,15 @@
 //! If you are looking for the Event-sourced implementation of an Aggregate Repository,
 //! take a look at [EventSourced].
 
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
+use std::marker::PhantomData;
 
 use async_trait::async_trait;
 use futures::TryStreamExt;
 
-use crate::{aggregate, aggregate::Aggregate, event, version::Version};
+use crate::aggregate::Aggregate;
+use crate::version::Version;
+use crate::{aggregate, event};
 
 /// Error returned by a call to [`Repository::get`].
 /// This type is used to check whether an Aggregate Root has been found or not.

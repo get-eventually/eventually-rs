@@ -20,11 +20,15 @@
           pkgs = import nixpkgs {
             inherit system overlays;
           };
+
+          nativeBuildInputs = with pkgs; [ rust-bin.nightly.latest.default protobuf3_24 ];
         in
         with pkgs;
         {
-          devShells.default = mkShell {
-            buildInputs = [ rust-bin.stable.latest.default protobuf3_24 ];
+          devShells.default = with pkgs; mkShell {
+            inherit nativeBuildInputs;
+
+            PROTOC = "${protobuf3_24}/bin/protoc";
           };
         }
       );

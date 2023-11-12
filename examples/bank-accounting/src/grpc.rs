@@ -1,15 +1,14 @@
 use std::error::Error as StdError;
 
 use async_trait::async_trait;
-use eventually::{aggregate, command::Handler, version};
-use rust_decimal::{prelude::FromPrimitive, Decimal};
+use eventually::command::Handler;
+use eventually::{aggregate, version};
+use rust_decimal::prelude::FromPrimitive;
+use rust_decimal::Decimal;
 use tracing::instrument;
 
-use crate::{
-    application,
-    domain::{BankAccount, BankAccountError},
-    proto,
-};
+use crate::domain::{BankAccount, BankAccountError};
+use crate::{application, proto};
 
 #[derive(Clone)]
 pub struct BankAccountingApi<R>
