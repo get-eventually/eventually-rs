@@ -34,9 +34,7 @@ async fn main() -> anyhow::Result<()> {
 
     let reflection_svc = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
-        .register_encoded_file_descriptor_set(
-            tonic_health::proto::GRPC_HEALTH_V1_FILE_DESCRIPTOR_SET,
-        )
+        .register_encoded_file_descriptor_set(tonic_health::pb::FILE_DESCRIPTOR_SET)
         .build()
         .map_err(|e| anyhow!("failed to build grpc reflection service: {}", e))?;
 
