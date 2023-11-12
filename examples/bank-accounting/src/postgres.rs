@@ -12,9 +12,8 @@ pub async fn connect() -> anyhow::Result<PgPool> {
         .port(5432)
         .username("postgres")
         .password("password")
-        .ssl_mode(PgSslMode::Disable);
-
-    connect_options.log_statements(LevelFilter::Debug);
+        .ssl_mode(PgSslMode::Disable)
+        .log_statements(LevelFilter::Debug);
 
     Ok(PgPool::connect_with(connect_options).await?)
 }

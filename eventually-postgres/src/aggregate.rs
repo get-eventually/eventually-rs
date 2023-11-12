@@ -118,7 +118,7 @@ where
             .bind(expected_version as i32)
             .bind(root.version() as i32)
             .bind(bytes_state)
-            .execute(tx)
+            .execute(&mut **tx)
             .await
             .map_err(|err| match crate::check_for_conflict_error(&err) {
                 Some(err) => SaveError::Conflict(err),
@@ -160,8 +160,8 @@ where
 
         let row = sqlx::query(
             r#"SELECT version, state
-                       FROM aggregates
-                       WHERE aggregate_id = $1 AND "type" = $2"#,
+               FROM aggregates
+               WHERE aggregate_id = $1 AND "type" = $2"#,
         )
         .bind(&aggregate_id)
         .bind(T::type_name())
@@ -219,7 +219,7 @@ where
             .map_err(SaveError::BeginTransaction)?;
 
         sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE")
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         let aggregate_id = root.aggregate_id().to_string();

@@ -22,11 +22,15 @@
           };
 
           nativeBuildInputs = with pkgs; [ rust-bin.nightly.latest.default protobuf3_24 ];
+
+          buildInputs = with pkgs; [ pkg-config openssl ] ++ lib.optionals stdenv.isDarwin [
+            darwin.apple_sdk.frameworks.SystemConfiguration
+          ];
         in
         with pkgs;
         {
           devShells.default = with pkgs; mkShell {
-            inherit nativeBuildInputs;
+            inherit nativeBuildInputs buildInputs;
 
             PROTOC = "${protobuf3_24}/bin/protoc";
           };

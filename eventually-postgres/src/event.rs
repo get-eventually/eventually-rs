@@ -89,7 +89,7 @@ where
             .bind(event_version)
             .bind(serialized_event)
             .bind(sqlx::types::Json(metadata))
-            .execute(tx)
+            .execute(&mut **tx)
             .await?;
 
     Ok(())
@@ -267,7 +267,7 @@ where
             .map_err(AppendError::BeginTransaction)?;
 
         sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE")
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         let string_id = id.to_string();
@@ -279,7 +279,7 @@ where
                 sqlx::query("SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)")
                     .bind(&string_id)
                     .bind(events_len)
-                    .fetch_one(&mut tx)
+                    .fetch_one(&mut *tx)
                     .await
                     .and_then(|row| row.try_get(0))?
             },
@@ -290,7 +290,7 @@ where
                     .bind(&string_id)
                     .bind(v as i32)
                     .bind(new_version as i32)
-                    .execute(&mut tx)
+                    .execute(&mut *tx)
                     .await
                     .map_err(|err| match crate::check_for_conflict_error(&err) {
                         Some(err) => AppendError::Conflict(err),
