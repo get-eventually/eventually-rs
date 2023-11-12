@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["aggregate",""],["event",""]],"static":[["MIGRATIONS",""]]};
+window.SIDEBAR_ITEMS = {"mod":["aggregate","event"],"static":["MIGRATIONS"]};

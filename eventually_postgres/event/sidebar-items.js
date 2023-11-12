@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["AppendError",""],["StreamError",""]],"struct":[["Store",""]]};
+window.SIDEBAR_ITEMS = {"enum":["AppendError","StreamError"],"struct":["Store"]};

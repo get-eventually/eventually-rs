@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["aggregate","Module containing support for the Aggregate pattern."],["command","Module containing support for Domain [Command]s."],["event","Module `event` contains types and abstractions helpful for working with Domain Events."],["message",""],["serde",""],["tracing","Module containing some extension traits to support code instrumentation using the `tracing` crate."],["version",""]]};
+window.SIDEBAR_ITEMS = {"mod":["aggregate","command","event","message","serde","tracing","version"]};

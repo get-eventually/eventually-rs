@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["InMemory","In-memory implementation of [event::Store] trait, backed by a thread-safe [std::collections::HashMap]."],["Tracking","Decorator type for an [event::Store] implementation that tracks the list of recorded Domain Events through it."]],"trait":[["EventStoreExt","Extension trait that can be used to pull in supertypes implemented in this module."]]};
+window.SIDEBAR_ITEMS = {"struct":["InMemory","Tracking"],"trait":["EventStoreExt"]};

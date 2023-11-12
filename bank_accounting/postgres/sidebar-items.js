@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["connect",""]]};
+window.SIDEBAR_ITEMS = {"fn":["connect"]};

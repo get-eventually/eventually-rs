@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Json",""]]};
+window.SIDEBAR_ITEMS = {"struct":["Json"]};

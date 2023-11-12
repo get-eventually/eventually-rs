@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Event",""]],"struct":[["DepositWasRecorded",""],["TransferWasConfirmed",""],["TransferWasDeclined",""],["TransferWasReceived",""],["TransferWasSent",""],["WasClosed",""],["WasOpened",""],["WasReopened",""]]};
+window.SIDEBAR_ITEMS = {"enum":["Event"],"struct":["DepositWasRecorded","TransferWasConfirmed","TransferWasDeclined","TransferWasReceived","TransferWasSent","WasClosed","WasOpened","WasReopened"]};

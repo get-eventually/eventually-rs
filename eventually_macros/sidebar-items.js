@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"attr":[["aggregate_root","Implements a newtype to use the [eventually::aggregate::Root] instance with user-defined [eventually::aggregate::Aggregate] types."]],"derive":[["Message",""]]};
+window.SIDEBAR_ITEMS = {"attr":["aggregate_root"],"derive":["Message"]};
