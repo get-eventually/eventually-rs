@@ -17,7 +17,6 @@
 <a href="#17" id="17">17</a>
 <a href="#18" id="18">18</a>
 <a href="#19" id="19">19</a>
-<a href="#20" id="20">20</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>sqlx::postgres::{PgConnectOptions, PgSslMode};
 <span class="kw">use </span>sqlx::{ConnectOptions, PgPool};
 <span class="kw">use </span>tracing::log::LevelFilter;
@@ -32,9 +31,8 @@
         .port(<span class="number">5432</span>)
         .username(<span class="string">&quot;postgres&quot;</span>)
         .password(<span class="string">&quot;password&quot;</span>)
-        .ssl_mode(PgSslMode::Disable);
-
-    connect_options.log_statements(LevelFilter::Debug);
+        .ssl_mode(PgSslMode::Disable)
+        .log_statements(LevelFilter::Debug);
 
     <span class="prelude-val">Ok</span>(PgPool::connect_with(connect_options).<span class="kw">await</span><span class="question-mark">?</span>)
 }

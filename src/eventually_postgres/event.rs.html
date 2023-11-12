@@ -408,7 +408,7 @@
             .bind(event_version)
             .bind(serialized_event)
             .bind(sqlx::types::Json(metadata))
-            .execute(tx)
+            .execute(<span class="kw-2">&amp;mut **</span>tx)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
@@ -586,7 +586,7 @@
             </span>.map_err(AppendError::BeginTransaction)<span class="question-mark">?</span>;
 
         sqlx::query(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
-            .execute(<span class="kw-2">&amp;mut </span>tx)
+            .execute(<span class="kw-2">&amp;mut *</span>tx)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>string_id = id.to_string();
@@ -598,7 +598,7 @@
                 sqlx::query(<span class="string">&quot;SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)&quot;</span>)
                     .bind(<span class="kw-2">&amp;</span>string_id)
                     .bind(events_len)
-                    .fetch_one(<span class="kw-2">&amp;mut </span>tx)
+                    .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
                     .<span class="kw">await
                     </span>.and_then(|row| row.try_get(<span class="number">0</span>))<span class="question-mark">?
             </span>},
@@ -609,7 +609,7 @@
                     .bind(<span class="kw-2">&amp;</span>string_id)
                     .bind(v <span class="kw">as </span>i32)
                     .bind(new_version <span class="kw">as </span>i32)
-                    .execute(<span class="kw-2">&amp;mut </span>tx)
+                    .execute(<span class="kw-2">&amp;mut *</span>tx)
                     .<span class="kw">await
                     </span>.map_err(|err| <span class="kw">match </span><span class="kw">crate</span>::check_for_conflict_error(<span class="kw-2">&amp;</span>err) {
                         <span class="prelude-val">Some</span>(err) =&gt; AppendError::Conflict(err),

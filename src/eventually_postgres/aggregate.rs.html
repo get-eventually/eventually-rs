@@ -363,7 +363,7 @@
             .bind(expected_version <span class="kw">as </span>i32)
             .bind(root.version() <span class="kw">as </span>i32)
             .bind(bytes_state)
-            .execute(tx)
+            .execute(<span class="kw-2">&amp;mut **</span>tx)
             .<span class="kw">await
             </span>.map_err(|err| <span class="kw">match </span><span class="kw">crate</span>::check_for_conflict_error(<span class="kw-2">&amp;</span>err) {
                 <span class="prelude-val">Some</span>(err) =&gt; SaveError::Conflict(err),
@@ -405,8 +405,8 @@
 
         <span class="kw">let </span>row = sqlx::query(
             <span class="string">r#&quot;SELECT version, state
-                       FROM aggregates
-                       WHERE aggregate_id = $1 AND &quot;type&quot; = $2&quot;#</span>,
+               FROM aggregates
+               WHERE aggregate_id = $1 AND &quot;type&quot; = $2&quot;#</span>,
         )
         .bind(<span class="kw-2">&amp;</span>aggregate_id)
         .bind(T::type_name())
@@ -464,7 +464,7 @@
             </span>.map_err(SaveError::BeginTransaction)<span class="question-mark">?</span>;
 
         sqlx::query(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
-            .execute(<span class="kw-2">&amp;mut </span>tx)
+            .execute(<span class="kw-2">&amp;mut *</span>tx)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>aggregate_id = root.aggregate_id().to_string();
