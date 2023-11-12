@@ -1,2 +1,0 @@
-tasks:
-  - init: cargo build && cargo build --tests && cargo check --tests

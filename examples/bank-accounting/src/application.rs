@@ -151,10 +151,8 @@ mod test {
     use eventually::{command, event};
     use rust_decimal::Decimal;
 
-    use crate::{
-        application,
-        domain::{BankAccountEvent, BankAccountRepository, Transaction},
-    };
+    use crate::application;
+    use crate::domain::{BankAccountEvent, BankAccountRepository, Transaction};
 
     #[tokio::test]
     async fn open_bank_account_works_when_bank_account_has_just_been_opened_for_the_first_time() {

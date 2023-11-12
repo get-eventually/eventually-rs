@@ -1,20 +1,16 @@
 //! Contains implementations of the [event::Store] trait and connected abstractions,
 //! such as the [std::collections::HashMap]'s based [InMemory] Event Store implementation.
 
-use std::{
-    collections::HashMap,
-    convert::Infallible,
-    hash::Hash,
-    sync::{Arc, RwLock},
-};
+use std::collections::HashMap;
+use std::convert::Infallible;
+use std::hash::Hash;
+use std::sync::{Arc, RwLock};
 
 use async_trait::async_trait;
 use futures::stream::{iter, StreamExt};
 
-use crate::{
-    event, message,
-    version::{ConflictError, Version},
-};
+use crate::version::{ConflictError, Version};
+use crate::{event, message};
 
 #[derive(Debug)]
 struct InMemoryBackend<Id, Evt>
@@ -276,12 +272,10 @@ mod test {
     use futures::TryStreamExt;
 
     use super::*;
-    use crate::{
-        event,
-        event::{Appender, Streamer},
-        message::tests::StringMessage,
-        version::Version,
-    };
+    use crate::event;
+    use crate::event::{Appender, Streamer};
+    use crate::message::tests::StringMessage;
+    use crate::version::Version;
 
     #[tokio::test]
     async fn it_works() {

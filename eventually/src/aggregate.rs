@@ -25,7 +25,8 @@
 //! Aggregates should provide a way to **fold** Domain Events on the
 //! current value of the state, to produce the next state.
 
-use crate::{event, message, version::Version};
+use crate::version::Version;
+use crate::{event, message};
 
 pub mod repository;
 
@@ -347,7 +348,7 @@ pub(crate) mod test_user_domain {
                     UserEvent::PasswordWasChanged { password } => {
                         state.password = password;
                         Ok(state)
-                    }
+                    },
                     UserEvent::WasCreated { .. } => Err(UserError::AlreadyCreated),
                 },
             }
@@ -386,14 +387,10 @@ pub(crate) mod test_user_domain {
 mod test {
     use std::error::Error;
 
-    use crate::{
-        aggregate,
-        aggregate::repository::{Getter, Saver},
-        aggregate::test_user_domain::{User, UserEvent},
-        event,
-        event::store::EventStoreExt,
-        version,
-    };
+    use crate::aggregate::repository::{Getter, Saver};
+    use crate::aggregate::test_user_domain::{User, UserEvent};
+    use crate::event::store::EventStoreExt;
+    use crate::{aggregate, event, version};
 
     #[tokio::test]
     async fn repository_persists_new_aggregate_root() {

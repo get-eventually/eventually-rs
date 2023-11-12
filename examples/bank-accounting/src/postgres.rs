@@ -1,7 +1,5 @@
-use sqlx::{
-    postgres::{PgConnectOptions, PgSslMode},
-    ConnectOptions, PgPool,
-};
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
+use sqlx::{ConnectOptions, PgPool};
 use tracing::log::LevelFilter;
 
 pub async fn connect() -> anyhow::Result<PgPool> {

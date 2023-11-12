@@ -7,10 +7,8 @@ use async_trait::async_trait;
 use futures::stream::BoxStream;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    message,
-    version::{ConflictError, Version},
-};
+use crate::message;
+use crate::version::{ConflictError, Version};
 
 pub mod store;
 

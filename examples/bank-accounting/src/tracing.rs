@@ -1,5 +1,6 @@
 use anyhow::anyhow;
-use tracing_subscriber::{prelude::*, EnvFilter};
+use tracing_subscriber::prelude::*;
+use tracing_subscriber::EnvFilter;
 
 pub fn initialize(service_name: &str) -> anyhow::Result<()> {
     let tracer = opentelemetry_jaeger::new_agent_pipeline()

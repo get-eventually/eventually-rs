@@ -1,9 +1,9 @@
-use rust_decimal::{
-    prelude::{FromPrimitive, ToPrimitive},
-    Decimal,
-};
+use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
+use rust_decimal::Decimal;
 
-use crate::{domain, domain::BankAccountEvent, proto, proto::Event as ProtoBankAccountEvent};
+use crate::domain::BankAccountEvent;
+use crate::proto::Event as ProtoBankAccountEvent;
+use crate::{domain, proto};
 
 impl From<domain::Transaction> for proto::Transaction {
     fn from(tx: domain::Transaction) -> Self {
@@ -32,7 +32,7 @@ impl From<BankAccountEvent> for ProtoBankAccountEvent {
                     proto::event::Event::DepositWasRecorded(proto::event::DepositWasRecorded {
                         amount: amount.to_f32().unwrap(),
                     })
-                }
+                },
                 BankAccountEvent::TransferWasSent {
                     transaction,
                     message,
@@ -51,7 +51,7 @@ impl From<BankAccountEvent> for ProtoBankAccountEvent {
                     proto::event::Event::TransferWasConfimed(proto::event::TransferWasConfirmed {
                         transaction_id,
                     })
-                }
+                },
                 BankAccountEvent::TransferWasDeclined {
                     transaction_id,
                     reason,
@@ -61,12 +61,12 @@ impl From<BankAccountEvent> for ProtoBankAccountEvent {
                 }),
                 BankAccountEvent::WasClosed => {
                     proto::event::Event::WasClosed(proto::event::WasClosed {})
-                }
+                },
                 BankAccountEvent::WasReopened { reopening_balance } => {
                     proto::event::Event::WasReopened(proto::event::WasReopened {
                         reopening_balance: reopening_balance.unwrap_or_default().to_f32().unwrap(),
                     })
-                }
+                },
             }),
         }
     }

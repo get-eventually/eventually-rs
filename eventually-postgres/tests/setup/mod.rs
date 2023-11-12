@@ -1,9 +1,9 @@
-use std::{
-    fmt::{Display, Formatter, Result as FmtResult},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use eventually::{aggregate, aggregate::Aggregate, message::Message};
+use eventually::aggregate;
+use eventually::aggregate::Aggregate;
+use eventually::message::Message;
 use eventually_macros::aggregate_root;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -83,7 +83,7 @@ impl Aggregate for TestAggregate {
             (Some(mut a), TestDomainEvent::WasDeleted { .. }) => {
                 a.is_deleted = true;
                 Ok(a)
-            }
+            },
             (None, TestDomainEvent::WasDeleted { .. }) => Err(TestAggregateError::NotCreatedYet),
         }
     }
