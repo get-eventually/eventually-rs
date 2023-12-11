@@ -270,6 +270,7 @@ where
 #[cfg(test)]
 mod test {
     use futures::TryStreamExt;
+    use lazy_static::lazy_static;
 
     use super::*;
     use crate::event;
@@ -277,41 +278,45 @@ mod test {
     use crate::message::tests::StringMessage;
     use crate::version::Version;
 
-    #[tokio::test]
-    async fn it_works() {
-        let event_store = InMemory::<&'static str, StringMessage>::default();
+    const STREAM_ID: &str = "stream:test";
 
-        let stream_id = "stream:test";
-        let events = vec![
+    lazy_static! {
+        static ref EVENTS: Vec<event::Envelope<StringMessage>> = vec![
             event::Envelope::from(StringMessage("event-1")),
             event::Envelope::from(StringMessage("event-2")),
             event::Envelope::from(StringMessage("event-3")),
         ];
+    }
+
+    #[tokio::test]
+    async fn it_works() {
+        let event_store = InMemory::<&'static str, StringMessage>::default();
 
         let new_event_stream_version = event_store
             .append(
-                stream_id,
+                STREAM_ID,
                 event::StreamVersionExpected::MustBe(0),
-                events.clone(),
+                EVENTS.clone(),
             )
             .await
             .expect("append should not fail");
 
-        let expected_version = events.len() as Version;
+        let expected_version = EVENTS.len() as Version;
         assert_eq!(expected_version, new_event_stream_version);
 
-        let expected_events = events
+        let expected_events = EVENTS
+            .clone()
             .into_iter()
             .enumerate()
             .map(|(i, event)| event::Persisted {
-                stream_id,
+                stream_id: STREAM_ID,
                 version: (i as Version) + 1,
                 event,
             })
             .collect::<Vec<_>>();
 
         let event_stream: Vec<_> = event_store
-            .stream(&stream_id, event::VersionSelect::All)
+            .stream(&STREAM_ID, event::VersionSelect::All)
             .try_collect()
             .await
             .expect("opening an event stream should not fail");
@@ -324,24 +329,17 @@ mod test {
         let event_store = InMemory::<&'static str, StringMessage>::default();
         let tracking_event_store = event_store.with_recorded_events_tracking();
 
-        let stream_id = "stream:test";
-        let events = vec![
-            event::Envelope::from(StringMessage("event-1")),
-            event::Envelope::from(StringMessage("event-2")),
-            event::Envelope::from(StringMessage("event-3")),
-        ];
-
         tracking_event_store
             .append(
-                stream_id,
+                STREAM_ID,
                 event::StreamVersionExpected::MustBe(0),
-                events.clone(),
+                EVENTS.clone(),
             )
             .await
             .expect("append should not fail");
 
         let event_stream: Vec<_> = tracking_event_store
-            .stream(&stream_id, event::VersionSelect::All)
+            .stream(&STREAM_ID, event::VersionSelect::All)
             .try_collect()
             .await
             .expect("opening an event stream should not fail");
@@ -353,18 +351,11 @@ mod test {
     async fn version_conflict_checks_work_as_expected() {
         let event_store = InMemory::<&'static str, StringMessage>::default();
 
-        let stream_id = "stream:test";
-        let events = vec![
-            event::Envelope::from(StringMessage("event-1")),
-            event::Envelope::from(StringMessage("event-2")),
-            event::Envelope::from(StringMessage("event-3")),
-        ];
-
         let append_error = event_store
             .append(
-                stream_id,
+                STREAM_ID,
                 event::StreamVersionExpected::MustBe(3),
-                events.clone(),
+                EVENTS.clone(),
             )
             .await
             .expect_err("the event stream version should be zero");
