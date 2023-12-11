@@ -138,7 +138,7 @@ where
 }
 
 #[async_trait]
-impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::repository::Getter<T>
+impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::Repository<T>
     for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
 where
     T: Aggregate + TryFrom<OutT> + Send + Sync,
@@ -150,12 +150,13 @@ where
     <TSerde as Deserializer<OutT>>::Error: std::error::Error + Send + Sync + 'static,
     EvtSerde: Serializer<OutEvt> + Send + Sync,
 {
-    type Error = GetError;
+    type GetError = GetError;
+    type SaveError = SaveError;
 
     async fn get(
         &self,
         id: &T::Id,
-    ) -> Result<aggregate::Root<T>, aggregate::repository::GetError<Self::Error>> {
+    ) -> Result<aggregate::Root<T>, aggregate::repository::GetError<Self::GetError>> {
         let aggregate_id = id.to_string();
 
         let row = sqlx::query(
@@ -188,24 +189,8 @@ where
             aggregate,
         ))
     }
-}
 
-#[async_trait]
-impl<T, OutT, OutEvt, TSerde, EvtSerde> aggregate::repository::Saver<T>
-    for Repository<T, OutT, OutEvt, TSerde, EvtSerde>
-where
-    T: Aggregate + TryFrom<OutT> + Send + Sync,
-    <T as Aggregate>::Id: ToString,
-    <T as TryFrom<OutT>>::Error: std::error::Error + Send + Sync + 'static,
-    OutT: From<T> + Send + Sync,
-    OutEvt: From<T::Event> + Send + Sync,
-    TSerde: Serde<OutT> + Send + Sync,
-    <TSerde as Deserializer<OutT>>::Error: std::error::Error + Send + Sync + 'static,
-    EvtSerde: Serializer<OutEvt> + Send + Sync,
-{
-    type Error = SaveError;
-
-    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::SaveError> {
         let events_to_commit = root.take_uncommitted_events();
 
         if events_to_commit.is_empty() {

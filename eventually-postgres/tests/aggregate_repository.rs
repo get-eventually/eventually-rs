@@ -1,5 +1,6 @@
-use eventually::aggregate::repository::{GetError, Getter, Saver};
-use eventually::serde::json::Json;
+use eventually::aggregate::repository::GetError;
+use eventually::aggregate::Repository;
+use eventually::serde::json::JsonSerde;
 use eventually::version;
 use eventually_postgres::aggregate;
 use futures::TryFutureExt;

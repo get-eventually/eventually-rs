@@ -73,8 +73,8 @@ where
     T: Aggregate + Debug,
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
-    <Self as aggregate::repository::Getter<T>>::Error: Display,
-    <Self as aggregate::repository::Saver<T>>::Error: Display,
+    <Self as aggregate::Repository<T>>::GetError: Display,
+    <Self as aggregate::Repository<T>>::SaveError: Display,
 {
     /// Returns an instrumented version of the [aggregate::Repository] instance.
     fn with_tracing(self) -> InstrumentedAggregateRepository<T, Self> {
@@ -88,8 +88,8 @@ where
 impl<R, T> AggregateRepositoryExt<T> for R
 where
     R: aggregate::Repository<T>,
-    <R as aggregate::repository::Getter<T>>::Error: Display,
-    <R as aggregate::repository::Saver<T>>::Error: Display,
+    <R as aggregate::Repository<T>>::GetError: Display,
+    <R as aggregate::Repository<T>>::SaveError: Display,
     T: Aggregate + Debug,
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
