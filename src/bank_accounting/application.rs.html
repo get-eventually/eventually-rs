@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/application.rs`."><title>application.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bank_accounting" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/application.rs`."><title>application.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bank_accounting" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -452,28 +452,13 @@
 <a href="#452" id="452">452</a>
 <a href="#453" id="453">453</a>
 <a href="#454" id="454">454</a>
-<a href="#455" id="455">455</a>
-<a href="#456" id="456">456</a>
-<a href="#457" id="457">457</a>
-<a href="#458" id="458">458</a>
-<a href="#459" id="459">459</a>
-<a href="#460" id="460">460</a>
-<a href="#461" id="461">461</a>
-<a href="#462" id="462">462</a>
-<a href="#463" id="463">463</a>
-<a href="#464" id="464">464</a>
-<a href="#465" id="465">465</a>
-<a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a>
-<a href="#468" id="468">468</a>
-<a href="#469" id="469">469</a>
-<a href="#470" id="470">470</a>
-<a href="#471" id="471">471</a>
-<a href="#472" id="472">472</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::error::Error <span class="kw">as </span>StdError;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>eventually::{aggregate, command, message};
+<span class="kw">use </span>eventually::aggregate::repository::AnyRepositoryExt;
+<span class="kw">use </span>eventually::aggregate::{<span class="self">self</span>};
+<span class="kw">use </span>eventually::{command, message};
 <span class="kw">use </span>rust_decimal::Decimal;
 
 <span class="kw">use </span><span class="kw">crate</span>::domain::{
@@ -481,20 +466,19 @@
 };
 
 <span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>Service&lt;R&gt;
-<span class="kw">where
-    </span>R: aggregate::Repository&lt;BankAccount&gt;,
-{
-    bank_account_repository: R,
+</span><span class="kw">pub struct </span>Service {
+    repository: Arc&lt;<span class="kw">dyn </span>aggregate::repository::AnyRepository&lt;BankAccount&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;R&gt; From&lt;R&gt; <span class="kw">for </span>Service&lt;R&gt;
+<span class="kw">impl</span>&lt;R&gt; From&lt;R&gt; <span class="kw">for </span>Service
 <span class="kw">where
-    </span>R: aggregate::Repository&lt;BankAccount&gt;,
+    </span>R: aggregate::Repository&lt;BankAccount&gt; + <span class="lifetime">&#39;static</span>,
+    &lt;R <span class="kw">as </span>aggregate::Repository&lt;BankAccount&gt;&gt;::GetError: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
+    &lt;R <span class="kw">as </span>aggregate::Repository&lt;BankAccount&gt;&gt;::SaveError: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn </span>from(bank_account_repository: R) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(repository: R) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            bank_account_repository,
+            repository: Arc::new(repository.with_any_errors()),
         }
     }
 }
@@ -513,11 +497,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;OpenBankAccount&gt; <span class="kw">for </span>Service&lt;R&gt;
-<span class="kw">where
-    </span>R: aggregate::Repository&lt;BankAccount&gt;,
-    &lt;R <span class="kw">as </span>aggregate::repository::Saver&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
-{
+</span><span class="kw">impl </span>command::Handler&lt;OpenBankAccount&gt; <span class="kw">for </span>Service {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">async fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>, command: command::Envelope&lt;OpenBankAccount&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
@@ -529,7 +509,7 @@
             command.opening_balance,
         )<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.bank_account_repository.save(<span class="kw-2">&amp;mut </span>bank_account).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.repository.save(<span class="kw-2">&amp;mut </span>bank_account).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -548,12 +528,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;DepositInBankAccount&gt; <span class="kw">for </span>Service&lt;R&gt;
-<span class="kw">where
-    </span>R: aggregate::Repository&lt;BankAccount&gt;,
-    &lt;R <span class="kw">as </span>aggregate::repository::Getter&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
-    &lt;R <span class="kw">as </span>aggregate::repository::Saver&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
-{
+</span><span class="kw">impl </span>command::Handler&lt;DepositInBankAccount&gt; <span class="kw">for </span>Service {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">async fn </span>handle(
@@ -562,15 +537,12 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>command = command.message;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>bank_account: BankAccountRoot = <span class="self">self
-            </span>.bank_account_repository
-            .get(<span class="kw-2">&amp;</span>command.bank_account_id)
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>.into();
+        <span class="kw">let </span><span class="kw-2">mut </span>bank_account: BankAccountRoot =
+            <span class="self">self</span>.repository.get(<span class="kw-2">&amp;</span>command.bank_account_id).<span class="kw">await</span><span class="question-mark">?</span>.into();
 
         bank_account.deposit(command.amount)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.bank_account_repository.save(<span class="kw-2">&amp;mut </span>bank_account).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.repository.save(<span class="kw-2">&amp;mut </span>bank_account).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -590,12 +562,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;R&gt; command::Handler&lt;SendTransferToBankAccount&gt; <span class="kw">for </span>Service&lt;R&gt;
-<span class="kw">where
-    </span>R: aggregate::Repository&lt;BankAccount&gt;,
-    &lt;R <span class="kw">as </span>aggregate::repository::Getter&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
-    &lt;R <span class="kw">as </span>aggregate::repository::Saver&lt;BankAccount&gt;&gt;::Error: StdError + Send + Sync + <span class="lifetime">&#39;static</span>,
-{
+</span><span class="kw">impl </span>command::Handler&lt;SendTransferToBankAccount&gt; <span class="kw">for </span>Service {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">async fn </span>handle(
@@ -604,15 +571,12 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>command = command.message;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>bank_account: BankAccountRoot = <span class="self">self
-            </span>.bank_account_repository
-            .get(<span class="kw-2">&amp;</span>command.bank_account_id)
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>.into();
+        <span class="kw">let </span><span class="kw-2">mut </span>bank_account: BankAccountRoot =
+            <span class="self">self</span>.repository.get(<span class="kw-2">&amp;</span>command.bank_account_id).<span class="kw">await</span><span class="question-mark">?</span>.into();
 
         bank_account.send_transfer(command.transaction, command.message)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.bank_account_repository.save(<span class="kw-2">&amp;mut </span>bank_account).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.repository.save(<span class="kw-2">&amp;mut </span>bank_account).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -647,8 +611,8 @@
                 }
                 .into(),
             }])
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -675,8 +639,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -692,8 +656,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -726,8 +690,8 @@
                 </span>}
                 .into(),
             }])
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -753,8 +717,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -780,8 +744,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -814,8 +778,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -836,8 +800,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -880,8 +844,8 @@
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }
@@ -936,8 +900,8 @@
                 }
                 .into(),
             }])
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .<span class="kw">await</span>;
     }

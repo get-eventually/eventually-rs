@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["json","prost"],"trait":["Deserializer","Serde","Serializer"]};
+window.SIDEBAR_ITEMS = {"mod":["json","prost"],"trait":["Serde"]};
