@@ -16,8 +16,8 @@ async fn it_works() {
 
     let aggregate_repository = aggregate::Repository::new(
         pool,
-        Json::<setup::TestAggregate>::default(),
-        Json::<setup::TestDomainEvent>::default(),
+        JsonSerde::<setup::TestAggregate>::default(),
+        JsonSerde::<setup::TestDomainEvent>::default(),
     )
     .await
     .unwrap();
@@ -65,8 +65,8 @@ async fn it_detects_data_races_and_returns_conflict_error() {
 
     let aggregate_repository = aggregate::Repository::new(
         pool,
-        Json::<setup::TestAggregate>::default(),
-        Json::<setup::TestDomainEvent>::default(),
+        JsonSerde::<setup::TestAggregate>::default(),
+        JsonSerde::<setup::TestDomainEvent>::default(),
     )
     .await
     .unwrap();

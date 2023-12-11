@@ -21,8 +21,7 @@ default = []
 tracing = ["dep:tracing"]
 serde-prost = ["dep:prost"]
 serde-json = ["dep:serde_json"]
-serde-protobuf = ["dep:protobuf", "dep:protobuf-json-mapping"]
-full = ["serde-prost", "serde-json", "serde-protobuf", "tracing"]
+full = ["serde-prost", "serde-json", "tracing"]
 
 [dependencies]
 async-trait = "0.1.74"

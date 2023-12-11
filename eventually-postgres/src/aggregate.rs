@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use async_trait::async_trait;
 use eventually::aggregate::Aggregate;
-use eventually::serde::{Deserializer, Serde, Serializer};
+use eventually::serde::Serde;
 use eventually::version::Version;
 use eventually::{aggregate, version};
 use sqlx::{PgPool, Postgres, Row};
@@ -15,7 +15,7 @@ where
     OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
-    EvtSerde: Serializer<OutEvt>,
+    EvtSerde: Serde<OutEvt>,
 {
     pool: PgPool,
     aggregate_serde: TSerde,
@@ -32,7 +32,7 @@ where
     OutT: From<T>,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT>,
-    EvtSerde: Serializer<OutEvt>,
+    EvtSerde: Serde<OutEvt>,
 {
     pub async fn new(
         pool: PgPool,
@@ -100,7 +100,7 @@ where
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event>,
     TSerde: Serde<OutT> + Send + Sync,
-    EvtSerde: Serializer<OutEvt>,
+    EvtSerde: Serde<OutEvt>,
 {
     async fn save_aggregate_state(
         &self,
@@ -147,8 +147,8 @@ where
     OutT: From<T> + Send + Sync,
     OutEvt: From<T::Event> + Send + Sync,
     TSerde: Serde<OutT> + Send + Sync,
-    <TSerde as Deserializer<OutT>>::Error: std::error::Error + Send + Sync + 'static,
-    EvtSerde: Serializer<OutEvt> + Send + Sync,
+    <TSerde as Serde<OutT>>::Error: std::error::Error + Send + Sync + 'static,
+    EvtSerde: Serde<OutEvt> + Send + Sync,
 {
     type GetError = GetError;
     type SaveError = SaveError;
