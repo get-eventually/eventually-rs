@@ -1,7 +1,10 @@
 use std::error::Error as StdError;
+use std::sync::Arc;
 
 use async_trait::async_trait;
-use eventually::{aggregate, command, message};
+use eventually::aggregate::repository::AnyRepositoryExt;
+use eventually::aggregate::{self};
+use eventually::{command, message};
 use rust_decimal::Decimal;
 
 use crate::domain::{
@@ -9,20 +12,19 @@ use crate::domain::{
 };
 
 #[derive(Clone)]
-pub struct Service<R>
-where
-    R: aggregate::Repository<BankAccount>,
-{
-    bank_account_repository: R,
+pub struct Service {
+    repository: Arc<dyn aggregate::repository::AnyRepository<BankAccount>>,
 }
 
-impl<R> From<R> for Service<R>
+impl<R> From<R> for Service
 where
-    R: aggregate::Repository<BankAccount>,
+    R: aggregate::Repository<BankAccount> + 'static,
+    <R as aggregate::Repository<BankAccount>>::GetError: StdError + Send + Sync + 'static,
+    <R as aggregate::Repository<BankAccount>>::SaveError: StdError + Send + Sync + 'static,
 {
-    fn from(bank_account_repository: R) -> Self {
+    fn from(repository: R) -> Self {
         Self {
-            bank_account_repository,
+            repository: Arc::new(repository.with_any_errors()),
         }
     }
 }
@@ -41,11 +43,7 @@ impl message::Message for OpenBankAccount {
 }
 
 #[async_trait]
-impl<R> command::Handler<OpenBankAccount> for Service<R>
-where
-    R: aggregate::Repository<BankAccount>,
-    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
-{
+impl command::Handler<OpenBankAccount> for Service {
     type Error = anyhow::Error;
 
     async fn handle(&self, command: command::Envelope<OpenBankAccount>) -> Result<(), Self::Error> {
@@ -57,7 +55,7 @@ where
             command.opening_balance,
         )?;
 
-        self.bank_account_repository.save(&mut bank_account).await?;
+        self.repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -76,12 +74,7 @@ impl message::Message for DepositInBankAccount {
 }
 
 #[async_trait]
-impl<R> command::Handler<DepositInBankAccount> for Service<R>
-where
-    R: aggregate::Repository<BankAccount>,
-    <R as aggregate::repository::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
-    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
-{
+impl command::Handler<DepositInBankAccount> for Service {
     type Error = anyhow::Error;
 
     async fn handle(
@@ -90,15 +83,12 @@ where
     ) -> Result<(), Self::Error> {
         let command = command.message;
 
-        let mut bank_account: BankAccountRoot = self
-            .bank_account_repository
-            .get(&command.bank_account_id)
-            .await?
-            .into();
+        let mut bank_account: BankAccountRoot =
+            self.repository.get(&command.bank_account_id).await?.into();
 
         bank_account.deposit(command.amount)?;
 
-        self.bank_account_repository.save(&mut bank_account).await?;
+        self.repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -118,12 +108,7 @@ impl message::Message for SendTransferToBankAccount {
 }
 
 #[async_trait]
-impl<R> command::Handler<SendTransferToBankAccount> for Service<R>
-where
-    R: aggregate::Repository<BankAccount>,
-    <R as aggregate::repository::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
-    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
-{
+impl command::Handler<SendTransferToBankAccount> for Service {
     type Error = anyhow::Error;
 
     async fn handle(
@@ -132,15 +117,12 @@ where
     ) -> Result<(), Self::Error> {
         let command = command.message;
 
-        let mut bank_account: BankAccountRoot = self
-            .bank_account_repository
-            .get(&command.bank_account_id)
-            .await?
-            .into();
+        let mut bank_account: BankAccountRoot =
+            self.repository.get(&command.bank_account_id).await?.into();
 
         bank_account.send_transfer(command.transaction, command.message)?;
 
-        self.bank_account_repository.save(&mut bank_account).await?;
+        self.repository.save(&mut bank_account).await?;
 
         Ok(())
     }
@@ -175,8 +157,8 @@ mod test {
                 }
                 .into(),
             }])
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -203,8 +185,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -220,8 +202,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -254,8 +236,8 @@ mod test {
                 }
                 .into(),
             }])
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -281,8 +263,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -308,8 +290,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -342,8 +324,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -364,8 +346,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -408,8 +390,8 @@ mod test {
                 .into(),
             )
             .then_fails()
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }
@@ -464,8 +446,8 @@ mod test {
                 }
                 .into(),
             }])
-            .assert_on(|event_store| application::Service {
-                bank_account_repository: BankAccountRepository::from(event_store),
+            .assert_on(|event_store| {
+                application::Service::from(BankAccountRepository::from(event_store))
             })
             .await;
     }

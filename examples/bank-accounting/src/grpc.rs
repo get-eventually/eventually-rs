@@ -1,28 +1,20 @@
-use std::error::Error as StdError;
-
 use async_trait::async_trait;
 use eventually::command::Handler;
-use eventually::{aggregate, version};
+use eventually::version;
 use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
 use tracing::instrument;
 
-use crate::domain::{BankAccount, BankAccountError};
+use crate::domain::BankAccountError;
 use crate::{application, proto};
 
 #[derive(Clone)]
-pub struct BankAccountingApi<R>
-where
-    R: aggregate::Repository<BankAccount>,
-{
-    application_service: application::Service<R>,
+pub struct BankAccountingApi {
+    application_service: application::Service,
 }
 
-impl<R> From<application::Service<R>> for BankAccountingApi<R>
-where
-    R: aggregate::Repository<BankAccount>,
-{
-    fn from(application_service: application::Service<R>) -> Self {
+impl From<application::Service> for BankAccountingApi {
+    fn from(application_service: application::Service) -> Self {
         Self {
             application_service,
         }
@@ -30,12 +22,7 @@ where
 }
 
 #[async_trait]
-impl<R> proto::bank_accounting_server::BankAccounting for BankAccountingApi<R>
-where
-    R: aggregate::Repository<BankAccount> + 'static,
-    <R as aggregate::repository::Getter<BankAccount>>::Error: StdError + Send + Sync + 'static,
-    <R as aggregate::repository::Saver<BankAccount>>::Error: StdError + Send + Sync + 'static,
-{
+impl proto::bank_accounting_server::BankAccounting for BankAccountingApi {
     #[instrument(skip(self))]
     async fn open_bank_account(
         &self,
@@ -57,17 +44,12 @@ where
             .map_err(|e| {
                 use BankAccountError::*;
 
-                let bank_error = e
-                    .source()
-                    .and_then(|e| e.downcast_ref::<BankAccountError>());
-
-                let conflict_error = e
-                    .source()
-                    .and_then(|e| e.downcast_ref::<version::ConflictError>());
+                let bank_error = as_error::<BankAccountError>(&e);
+                let conflict_error = as_error::<version::ConflictError>(&e);
 
                 if let Some(EmptyAccountId | EmptyAccountHolderId) = bank_error {
                     tonic::Status::invalid_argument(e.to_string())
-                } else if conflict_error.is_some() {
+                } else if let Some(e) = conflict_error {
                     tonic::Status::already_exists(AlreadyOpened.to_string())
                 } else {
                     tonic::Status::internal(e.to_string())
@@ -97,23 +79,25 @@ where
             .map_err(|e| {
                 use BankAccountError::*;
 
-                let bank_error = e
-                    .source()
-                    .and_then(|e| e.downcast_ref::<BankAccountError>());
-
-                let conflict_error = e
-                    .source()
-                    .and_then(|e| e.downcast_ref::<version::ConflictError>());
+                let bank_error = as_error::<BankAccountError>(&e);
+                let conflict_error = as_error::<version::ConflictError>(&e);
 
                 if let Some(Closed | NegativeDepositAttempted) = bank_error {
                     tonic::Status::failed_precondition(e.to_string())
                 } else if let Some(NoMoneyDeposited) = bank_error {
                     tonic::Status::invalid_argument(e.to_string())
-                } else if conflict_error.is_some() {
+                } else if let Some(e) = conflict_error {
                     tonic::Status::failed_precondition(e.to_string())
                 } else {
                     tonic::Status::internal(e.to_string())
                 }
             })
     }
+}
+
+fn as_error<T>(e: &anyhow::Error) -> Option<&T>
+where
+    T: std::error::Error + Send + Sync + 'static,
+{
+    e.source().and_then(move |e| e.downcast_ref::<T>())
 }

@@ -64,10 +64,26 @@ where
 
 #[cfg(test)]
 mod test_user_domain {
+    use std::sync::Arc;
+
     use async_trait::async_trait;
 
+    use crate::aggregate::repository::AnyRepositoryExt;
     use crate::aggregate::test_user_domain::{User, UserEvent};
     use crate::{aggregate, command, event, message};
+
+    struct UserService(Arc<dyn aggregate::repository::AnyRepository<User>>);
+
+    impl<R> From<R> for UserService
+    where
+        R: aggregate::Repository<User> + 'static,
+        <R as aggregate::Repository<User>>::GetError: std::error::Error + Send + Sync + 'static,
+        <R as aggregate::Repository<User>>::SaveError: std::error::Error + Send + Sync + 'static,
+    {
+        fn from(value: R) -> Self {
+            Self(Arc::new(value.with_any_errors()))
+        }
+    }
 
     struct CreateUser {
         email: String,
@@ -80,16 +96,8 @@ mod test_user_domain {
         }
     }
 
-    struct CreateUserHandler<R>(R)
-    where
-        R: aggregate::repository::Saver<User>;
-
     #[async_trait]
-    impl<R> command::Handler<CreateUser> for CreateUserHandler<R>
-    where
-        R: aggregate::repository::Saver<User>,
-        R::Error: std::error::Error + Send + Sync + 'static,
-    {
+    impl command::Handler<CreateUser> for UserService {
         type Error = anyhow::Error;
 
         async fn handle(&self, command: command::Envelope<CreateUser>) -> Result<(), Self::Error> {
@@ -113,18 +121,8 @@ mod test_user_domain {
         }
     }
 
-    struct ChangeUserPasswordHandler<R>(R)
-    where
-        R: aggregate::Repository<User>;
-
     #[async_trait]
-    impl<R> command::Handler<ChangeUserPassword> for ChangeUserPasswordHandler<R>
-    where
-        R: aggregate::Repository<User>,
-        <R as aggregate::repository::Getter<User>>::Error:
-            std::error::Error + Send + Sync + 'static,
-        <R as aggregate::repository::Saver<User>>::Error: std::error::Error + Send + Sync + 'static,
-    {
+    impl command::Handler<ChangeUserPassword> for UserService {
         type Error = anyhow::Error;
 
         async fn handle(
@@ -159,7 +157,7 @@ mod test_user_domain {
                 }),
             }])
             .assert_on(|event_store| {
-                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
+                UserService::from(aggregate::EventSourcedRepository::from(event_store))
             })
             .await;
     }
@@ -181,7 +179,7 @@ mod test_user_domain {
             }))
             .then_fails()
             .assert_on(|event_store| {
-                CreateUserHandler(aggregate::EventSourcedRepository::from(event_store))
+                UserService::from(aggregate::EventSourcedRepository::from(event_store))
             })
             .await;
     }
@@ -209,7 +207,7 @@ mod test_user_domain {
                 }),
             }])
             .assert_on(|event_store| {
-                ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
+                UserService::from(aggregate::EventSourcedRepository::from(event_store))
             })
             .await;
     }
@@ -223,7 +221,7 @@ mod test_user_domain {
             }))
             .then_fails()
             .assert_on(|event_store| {
-                ChangeUserPasswordHandler(aggregate::EventSourcedRepository::from(event_store))
+                UserService::from(aggregate::EventSourcedRepository::from(event_store))
             })
             .await;
     }

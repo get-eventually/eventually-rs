@@ -4,12 +4,11 @@ use std::string::ToString;
 use async_trait::async_trait;
 use chrono::Utc;
 use eventually::message::{Message, Metadata};
-use eventually::serde::{Deserializer, Serde, Serializer};
+use eventually::serde::Serde;
 use eventually::version::Version;
 use eventually::{event, version};
 use futures::future::ready;
 use futures::{StreamExt, TryStreamExt};
-use lazy_static::lazy_static;
 use regex::Regex;
 use sqlx::postgres::{PgDatabaseError, PgRow};
 use sqlx::{PgPool, Postgres, Row, Transaction};
@@ -60,7 +59,7 @@ impl From<AppendError> for Option<version::ConflictError> {
 
 pub(crate) async fn append_domain_event<Evt, OutEvt>(
     tx: &mut Transaction<'_, Postgres>,
-    serde: &impl Serializer<OutEvt>,
+    serde: &impl Serde<OutEvt>,
     event_stream_id: &str,
     event_version: i32,
     new_event_stream_version: i32,
@@ -97,7 +96,7 @@ where
 
 pub(crate) async fn append_domain_events<Evt, OutEvt>(
     tx: &mut Transaction<'_, Postgres>,
-    serde: &impl Serializer<OutEvt>,
+    serde: &impl Serde<OutEvt>,
     event_stream_id: &str,
     new_version: i32,
     events: Vec<event::Envelope<Evt>>,
@@ -176,7 +175,7 @@ where
     <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
     OutEvt: From<Evt> + Send + Sync,
     S: Serde<OutEvt> + Send + Sync,
-    <S as Deserializer<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
 {
     fn event_row_to_persisted_event(
         &self,
@@ -213,7 +212,7 @@ where
     <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
     OutEvt: From<Evt> + Send + Sync,
     S: Serde<OutEvt> + Send + Sync,
-    <S as Deserializer<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
 {
     type Error = StreamError;
 
@@ -250,7 +249,7 @@ where
     <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
     OutEvt: From<Evt> + Send + Sync,
     S: Serde<OutEvt> + Send + Sync,
-    <S as Deserializer<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
 {
     type Error = AppendError;
 

@@ -20,48 +20,36 @@ where
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
     Inner: aggregate::Repository<T>,
-    <Inner as aggregate::repository::Getter<T>>::Error: Display,
-    <Inner as aggregate::repository::Saver<T>>::Error: Display,
+    <Inner as aggregate::Repository<T>>::GetError: Display,
+    <Inner as aggregate::Repository<T>>::SaveError: Display,
 {
     inner: Inner,
     t: PhantomData<T>,
 }
 
 #[async_trait]
-impl<T, Inner> aggregate::repository::Getter<T> for InstrumentedAggregateRepository<T, Inner>
+impl<T, Inner> aggregate::Repository<T> for InstrumentedAggregateRepository<T, Inner>
 where
     T: Aggregate + Debug,
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
     Inner: aggregate::Repository<T>,
-    <Inner as aggregate::repository::Getter<T>>::Error: Display,
-    <Inner as aggregate::repository::Saver<T>>::Error: Display,
+    <Inner as aggregate::Repository<T>>::GetError: Display,
+    <Inner as aggregate::Repository<T>>::SaveError: Display,
 {
-    type Error = <Inner as aggregate::repository::Getter<T>>::Error;
+    type GetError = <Inner as aggregate::Repository<T>>::GetError;
+    type SaveError = <Inner as aggregate::Repository<T>>::SaveError;
 
     #[instrument(name = "aggregate::Repository.get", ret, err, skip(self))]
     async fn get(
         &self,
         id: &T::Id,
-    ) -> Result<aggregate::Root<T>, aggregate::repository::GetError<Self::Error>> {
+    ) -> Result<aggregate::Root<T>, aggregate::repository::GetError<Self::GetError>> {
         self.inner.get(id).await
     }
-}
-
-#[async_trait]
-impl<T, Inner> aggregate::repository::Saver<T> for InstrumentedAggregateRepository<T, Inner>
-where
-    T: Aggregate + Debug,
-    <T as Aggregate>::Id: Debug,
-    <T as Aggregate>::Event: Debug,
-    Inner: aggregate::Repository<T>,
-    <Inner as aggregate::repository::Getter<T>>::Error: Display,
-    <Inner as aggregate::repository::Saver<T>>::Error: Display,
-{
-    type Error = <Inner as aggregate::repository::Saver<T>>::Error;
 
     #[instrument(name = "aggregate::Repository.save", ret, err, skip(self))]
-    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::Error> {
+    async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), Self::SaveError> {
         self.inner.save(root).await
     }
 }
@@ -73,8 +61,8 @@ where
     T: Aggregate + Debug,
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
-    <Self as aggregate::repository::Getter<T>>::Error: Display,
-    <Self as aggregate::repository::Saver<T>>::Error: Display,
+    <Self as aggregate::Repository<T>>::GetError: Display,
+    <Self as aggregate::Repository<T>>::SaveError: Display,
 {
     /// Returns an instrumented version of the [aggregate::Repository] instance.
     fn with_tracing(self) -> InstrumentedAggregateRepository<T, Self> {
@@ -88,8 +76,8 @@ where
 impl<R, T> AggregateRepositoryExt<T> for R
 where
     R: aggregate::Repository<T>,
-    <R as aggregate::repository::Getter<T>>::Error: Display,
-    <R as aggregate::repository::Saver<T>>::Error: Display,
+    <R as aggregate::Repository<T>>::GetError: Display,
+    <R as aggregate::Repository<T>>::SaveError: Display,
     T: Aggregate + Debug,
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
