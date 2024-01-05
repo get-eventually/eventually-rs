@@ -7,6 +7,6 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0.109", features = ["full"] }
+syn = { version = "2.0.48", features = ["full"] }
 quote = "1.0.33"
 eventually = { path = "../eventually" }
