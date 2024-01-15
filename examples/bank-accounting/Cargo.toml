@@ -25,7 +25,7 @@ tonic = { version = "0.10.2", features = ["gzip", "transport"] }
 tonic-health = "0.10.2"
 tonic-reflection = "0.10.2"
 tower = "0.4.13"
-tower-http = { version = "0.4.4", features = ["trace"] }
+tower-http = { version = "0.5.1", features = ["trace"] }
 tracing = "0.1.40"
 tracing-opentelemetry = "0.22.0"
 tracing-subscriber = { version = "0.3.17", features = [
