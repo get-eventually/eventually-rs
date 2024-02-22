@@ -148,7 +148,7 @@ where
             event_store
                 .append(
                     event.stream_id,
-                    event::StreamVersionExpected::MustBe(event.version - 1),
+                    version::Check::MustBe(event.version - 1),
                     vec![event.event],
                 )
                 .await

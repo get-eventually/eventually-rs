@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use tracing::instrument;
 
 use crate::aggregate::Aggregate;
-use crate::version::Version;
+use crate::version::{self, Version};
 use crate::{aggregate, event, message};
 
 /// [aggregate::Repository] type wrapper that provides instrumentation
@@ -134,7 +134,7 @@ where
     async fn append(
         &self,
         id: StreamId,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec<event::Envelope<Event>>,
     ) -> Result<Version, Self::Error> {
         self.store.append(id, version_check, events).await

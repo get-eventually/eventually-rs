@@ -6,6 +6,22 @@
 /// and [crate::event::Store] to implement stream-local ordering to the messages.
 pub type Version = u64;
 
+/// Used to set a specific expectation during an operation
+/// that mutates some sort of resource (e.g. an [Event Stream][crate::event::Stream])
+/// that supports versioning.
+///
+/// It allows for optimistic locking, avoiding data races
+/// when modifying the same resource at the same time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Check {
+    /// Disables any kind of optimistic locking check, allowing
+    /// for any [Version] to be used compared to the new one.
+    Any,
+    /// Expects that the previous [Version] used for the operation
+    /// must have the value specified.
+    MustBe(Version),
+}
+
 /// This error is returned by a function when a version conflict error has
 /// been detected.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]

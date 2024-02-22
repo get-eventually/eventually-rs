@@ -9,8 +9,7 @@ use eventually::version::Version;
 use eventually::{event, version};
 use futures::future::ready;
 use futures::{StreamExt, TryStreamExt};
-use regex::Regex;
-use sqlx::postgres::{PgDatabaseError, PgRow};
+use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Postgres, Row, Transaction};
 
 #[derive(Debug, thiserror::Error)]
@@ -256,7 +255,7 @@ where
     async fn append(
         &self,
         id: Id,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec<event::Envelope<Evt>>,
     ) -> Result<Version, Self::Error> {
         let mut tx = self
@@ -272,7 +271,7 @@ where
         let string_id = id.to_string();
 
         let new_version: i32 = match version_check {
-            event::StreamVersionExpected::Any => {
+            version::Check::Any => {
                 let events_len = events.len() as i32;
 
                 sqlx::query("SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)")
@@ -282,7 +281,7 @@ where
                     .await
                     .and_then(|row| row.try_get(0))?
             },
-            event::StreamVersionExpected::MustBe(v) => {
+            version::Check::MustBe(v) => {
                 let new_version = v + (events.len() as Version);
 
                 sqlx::query("CALL upsert_event_stream($1, $2, $3)")

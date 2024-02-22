@@ -9,7 +9,7 @@ use std::sync::{Arc, RwLock};
 use async_trait::async_trait;
 use futures::stream::{iter, StreamExt};
 
-use crate::version::{ConflictError, Version};
+use crate::version::{self, ConflictError, Version};
 use crate::{event, message};
 
 #[derive(Debug)]
@@ -91,7 +91,7 @@ where
     async fn append(
         &self,
         id: Id,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec<event::Envelope<Evt>>,
     ) -> Result<Version, Self::Error> {
         let mut backend = self
@@ -106,7 +106,7 @@ where
             .map(|event| event.version)
             .unwrap_or_default();
 
-        if let event::StreamVersionExpected::MustBe(expected) = version_check {
+        if let version::Check::MustBe(expected) = version_check {
             if last_event_stream_version != expected {
                 return Err(ConflictError {
                     expected,
@@ -210,7 +210,7 @@ where
     async fn append(
         &self,
         id: StreamId,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec<event::Envelope<Event>>,
     ) -> Result<Version, Self::Error> {
         let new_version = self
@@ -293,11 +293,7 @@ mod test {
         let event_store = InMemory::<&'static str, StringMessage>::default();
 
         let new_event_stream_version = event_store
-            .append(
-                STREAM_ID,
-                event::StreamVersionExpected::MustBe(0),
-                EVENTS.clone(),
-            )
+            .append(STREAM_ID, version::Check::MustBe(0), EVENTS.clone())
             .await
             .expect("append should not fail");
 
@@ -330,11 +326,7 @@ mod test {
         let tracking_event_store = event_store.with_recorded_events_tracking();
 
         tracking_event_store
-            .append(
-                STREAM_ID,
-                event::StreamVersionExpected::MustBe(0),
-                EVENTS.clone(),
-            )
+            .append(STREAM_ID, version::Check::MustBe(0), EVENTS.clone())
             .await
             .expect("append should not fail");
 
@@ -352,11 +344,7 @@ mod test {
         let event_store = InMemory::<&'static str, StringMessage>::default();
 
         let append_error = event_store
-            .append(
-                STREAM_ID,
-                event::StreamVersionExpected::MustBe(3),
-                EVENTS.clone(),
-            )
+            .append(STREAM_ID, version::Check::MustBe(3), EVENTS.clone())
             .await
             .expect_err("the event stream version should be zero");
 

@@ -11,40 +11,11 @@ use futures::TryStreamExt;
 use crate::aggregate::{self, repository, Aggregate, Repository};
 use crate::event;
 use crate::version::Version;
-
-/// List of possible errors that can be returned by [EventSourced::get].
-#[derive(Debug, thiserror::Error)]
-pub enum GetError<R, S> {
-    /// This error is returned by [`EventSourced::get`] when
-    /// the desired [Aggregate] returns an error while applying a Domain Event
-    /// from the Event [Store][`event::Store`] during the _rehydration_ phase.
-    ///
-    /// This usually implies the Event Stream for the Aggregate
-    /// contains corrupted or unexpected data.
-    #[error("failed to rehydrate aggregate from event stream: {0}")]
-    Rehydrate(#[source] R),
-
-    /// This error is returned by [`EventSourced::get`] when the
-    /// [Event Store][`event::Store`] used by the Repository returns
-    /// an unexpected error while streaming back the Aggregate's Event Stream.
-    #[error("event store failed while streaming events: {0}")]
-    Stream(#[source] S),
-}
-
-/// List of possible errors that can be returned by [EventSourced::save].
-#[derive(Debug, thiserror::Error)]
-pub enum SaveError<T> {
-    /// This error is returned by [EventSourced::save] when
-    /// the [event::Store] used by the Repository returns
-    /// an error while saving the uncommitted Domain Events
-    /// to the Aggregate's Event Stream.
-    #[error("event store failed while appending events: {0}")]
-    Append(#[from] T),
-}
+use crate::{event, version};
 
 /// An Event-sourced implementation of the [Repository] interface.
 ///
-/// It uses an [Event Store][`event::Store`] instance to stream Domain Events
+/// It uses an [Event Store][event::Store] instance to stream Domain Events
 /// for a particular Aggregate, and append uncommitted Domain Events
 /// recorded by an Aggregate Root.
 #[derive(Debug, Clone)]
@@ -118,11 +89,10 @@ where
         self.store
             .append(
                 aggregate_id.clone(),
-                event::StreamVersionExpected::MustBe(current_event_stream_version),
+                version::Check::MustBe(current_event_stream_version),
                 events_to_commit,
             )
-            .await
-            .map_err(SaveError::Append)?;
+            .await?;
 
         Ok(())
     }

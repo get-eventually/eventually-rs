@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use eventually::event::{Appender, Persisted, StreamVersionExpected, Streamer, VersionSelect};
+use eventually::event::{Appender, Persisted, Streamer, VersionSelect};
 use eventually::serde::json::JsonSerde;
 use eventually::version;
 use eventually::version::Version;
@@ -49,7 +49,7 @@ async fn append_with_no_version_check_works() {
     let new_event_stream_version = event_store
         .append(
             event_stream_id.clone(),
-            StreamVersionExpected::Any,
+            version::Check::Any,
             expected_events,
         )
         .await
@@ -105,7 +105,7 @@ async fn it_works_with_version_check_for_conflict() {
     let new_event_stream_version = event_store
         .append(
             event_stream_id.clone(),
-            StreamVersionExpected::MustBe(0),
+            version::Check::MustBe(0),
             expected_events,
         )
         .await
@@ -124,11 +124,7 @@ async fn it_works_with_version_check_for_conflict() {
     // Appending twice the with an unexpected Event Stream version should
     // result in a version::ConflictError.
     let error: Option<version::ConflictError> = event_store
-        .append(
-            event_stream_id.clone(),
-            StreamVersionExpected::MustBe(0),
-            vec![],
-        )
+        .append(event_stream_id.clone(), version::Check::MustBe(0), vec![])
         .await
         .expect_err("the event store should have returned a conflict error")
         .into();
@@ -168,12 +164,12 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
     let result = futures::join!(
         event_store.append(
             event_stream_id.clone(),
-            StreamVersionExpected::MustBe(0),
+            version::Check::MustBe(0),
             expected_events.clone(),
         ),
         event_store.append(
             event_stream_id.clone(),
-            StreamVersionExpected::MustBe(0),
+            version::Check::MustBe(0),
             expected_events,
         )
     );

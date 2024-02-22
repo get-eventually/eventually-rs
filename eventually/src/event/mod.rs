@@ -7,12 +7,12 @@ use async_trait::async_trait;
 use futures::stream::BoxStream;
 use serde::{Deserialize, Serialize};
 
-use crate::message;
 use crate::version::{ConflictError, Version};
+use crate::{message, version};
 
 pub mod store;
 
-/// An Event is a [Message] carring the information about a Domain Event,
+/// An Event is a [Message][message::Message] carring the information about a Domain Event,
 /// an occurrence in the system lifetime that is relevant for the Domain
 /// that is being implemented.
 pub type Envelope<T> = message::Envelope<T>;
@@ -47,22 +47,6 @@ pub enum VersionSelect {
     /// Selects all [Events] in the Event [Stream] starting from the [Event]
     /// with the specified [Version].
     From(Version),
-}
-
-/// Specifies an expectation on the Event [Stream] version targeted
-/// when calling [`Store::append`].
-///
-/// This type allows for optimistic concurrency checks, avoiding data races
-/// when modifying the same Event Stream at the same time.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StreamVersionExpected {
-    /// Disables any kind of optimistic concurrency check, instructing the [Store]
-    /// to append the new [Event] no matter the current [Version] of the [Stream].
-    Any,
-
-    /// Sets the expectation that the Event [Stream] must be at the specified
-    /// [Version] for the [`Store::append`] call to succeed.
-    MustBe(Version),
 }
 
 /// Stream is a stream of [Persisted] Domain Events.
@@ -101,12 +85,12 @@ where
     async fn append(
         &self,
         id: StreamId,
-        version_check: StreamVersionExpected,
+        version_check: version::Check,
         events: Vec<Envelope<Event>>,
     ) -> Result<Version, Self::Error>;
 }
 
-/// An [Event] Store, used to store Domain Events in Event Streams -- a stream
+/// An [Event][Envelope] Store, used to store Domain Events in Event Streams -- a stream
 /// of Domain Events -- and retrieve them.
 ///
 /// Each Event Stream is represented by a unique Stream identifier.
