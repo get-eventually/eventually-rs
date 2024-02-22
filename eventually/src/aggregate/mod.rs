@@ -29,7 +29,9 @@ use crate::version::Version;
 use crate::{event, message};
 
 pub mod repository;
+pub mod test;
 
+use futures::TryStreamExt;
 pub use repository::{EventSourced as EventSourcedRepository, Repository};
 
 /// An Aggregate represents a Domain Model that, through an Aggregate [Root],
@@ -176,51 +178,6 @@ where
         std::mem::take(&mut self.recorded_events)
     }
 
-    /// Rehydrates an [Aggregate] Root from its state and version.
-    /// Useful for [Repository] implementations outside the [EventSourcedRepository] one.
-    #[doc(hidden)]
-    pub fn rehydrate_from_state(version: Version, aggregate: T) -> Root<T> {
-        Root {
-            version,
-            aggregate,
-            recorded_events: Vec::default(),
-        }
-    }
-
-    /// Creates a new [Root] instance from a Domain [Event]
-    /// while rehydrating an [Aggregate].
-    ///
-    /// # Errors
-    ///
-    /// The method can return an error if the event to apply is unexpected
-    /// given the current state of the Aggregate.
-    #[doc(hidden)]
-    pub(crate) fn rehydrate_from(event: event::Envelope<T::Event>) -> Result<Root<T>, T::Error> {
-        Ok(Root {
-            version: 1,
-            aggregate: T::apply(None, event.message)?,
-            recorded_events: Vec::default(),
-        })
-    }
-
-    /// Applies a new Domain [Event] to the [Root] while rehydrating
-    /// an [Aggregate].
-    ///
-    /// # Errors
-    ///
-    /// The method can return an error if the event to apply is unexpected
-    /// given the current state of the Aggregate.
-    #[doc(hidden)]
-    pub(crate) fn apply_rehydrated_event(
-        mut self,
-        event: event::Envelope<T::Event>,
-    ) -> Result<Root<T>, T::Error> {
-        self.aggregate = T::apply(Some(self.aggregate), event.message)?;
-        self.version += 1;
-
-        Ok(self)
-    }
-
     /// Creates a new [Aggregate] [Root] instance by applying the specified
     /// Domain Event.
     ///
@@ -282,6 +239,106 @@ where
         self.version += 1;
 
         Ok(())
+    }
+}
+
+/// List of possible errors that can be returned by [Root::rehydrate_async].
+#[derive(Debug, thiserror::Error)]
+pub enum RehydrateError<T, I> {
+    /// Error returned during rehydration when the [Aggregate Root][Root]
+    /// is applying a Domain Event using [Aggregate::apply].
+    ///
+    /// This usually implies the Event Stream for the [Aggregate]
+    /// contains corrupted or unexpected data.
+    #[error("failed to apply domain event while rehydrating aggregate: {0}")]
+    Domain(#[source] T),
+
+    /// This error is returned by [Root::rehydrate_async] when the underlying
+    /// [futures::TryStream] has returned an error.
+    #[error("failed to rehydrate aggregate from event stream: {0}")]
+    Inner(#[source] I),
+}
+
+impl<T> Root<T>
+where
+    T: Aggregate,
+{
+    /// Rehydrates an [Aggregate] Root from its state and version.
+    /// Useful for [Repository] implementations outside the [EventSourcedRepository] one.
+    #[doc(hidden)]
+    pub fn rehydrate_from_state(version: Version, aggregate: T) -> Root<T> {
+        Root {
+            version,
+            aggregate,
+            recorded_events: Vec::default(),
+        }
+    }
+
+    /// Rehydrates an [Aggregate Root][Root] from a stream of Domain Events.
+    #[doc(hidden)]
+    pub(crate) fn rehydrate(
+        mut stream: impl Iterator<Item = event::Envelope<T::Event>>,
+    ) -> Result<Option<Root<T>>, T::Error> {
+        stream.try_fold(None, |ctx: Option<Root<T>>, event| {
+            let new_ctx_result = match ctx {
+                None => Root::<T>::rehydrate_from(event),
+                Some(ctx) => ctx.apply_rehydrated_event(event),
+            };
+
+            Ok(Some(new_ctx_result?))
+        })
+    }
+
+    /// Rehydrates an [Aggregate Root][Root] from a stream of Domain Events.
+    #[doc(hidden)]
+    pub(crate) async fn rehydrate_async<Err>(
+        stream: impl futures::TryStream<Ok = event::Envelope<T::Event>, Error = Err>,
+    ) -> Result<Option<Root<T>>, RehydrateError<T::Error, Err>> {
+        stream
+            .map_err(RehydrateError::Inner)
+            .try_fold(None, |ctx: Option<Root<T>>, event| async {
+                let new_ctx_result = match ctx {
+                    None => Root::<T>::rehydrate_from(event),
+                    Some(ctx) => ctx.apply_rehydrated_event(event),
+                };
+
+                Ok(Some(new_ctx_result.map_err(RehydrateError::Domain)?))
+            })
+            .await
+    }
+
+    /// Creates a new [Root] instance from a Domain [Event]
+    /// while rehydrating an [Aggregate].
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    #[doc(hidden)]
+    pub(crate) fn rehydrate_from(event: event::Envelope<T::Event>) -> Result<Root<T>, T::Error> {
+        Ok(Root {
+            version: 1,
+            aggregate: T::apply(None, event.message)?,
+            recorded_events: Vec::default(),
+        })
+    }
+
+    /// Applies a new Domain [Event] to the [Root] while rehydrating
+    /// an [Aggregate].
+    ///
+    /// # Errors
+    ///
+    /// The method can return an error if the event to apply is unexpected
+    /// given the current state of the Aggregate.
+    #[doc(hidden)]
+    pub(crate) fn apply_rehydrated_event(
+        mut self,
+        event: event::Envelope<T::Event>,
+    ) -> Result<Root<T>, T::Error> {
+        self.aggregate = T::apply(Some(self.aggregate), event.message)?;
+        self.version += 1;
+
+        Ok(self)
     }
 }
 
@@ -384,7 +441,7 @@ pub(crate) mod test_user_domain {
 
 #[allow(clippy::semicolon_if_nothing_returned)] // False positives :shrugs:
 #[cfg(test)]
-mod test {
+mod tests {
     use std::error::Error;
 
     use crate::aggregate::test_user_domain::{User, UserEvent};
