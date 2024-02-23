@@ -103,7 +103,8 @@ where
     T::Id: Clone,
     T::Error: std::error::Error + Send + Sync + 'static,
     S: event::Store<T::Id, T::Event>,
-    <S as event::Streamer<T::Id, T::Event>>::Error: std::error::Error + Send + Sync + 'static,
+    <S as event::store::Streamer<T::Id, T::Event>>::Error:
+        std::error::Error + Send + Sync + 'static,
 {
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError> {
         let stream = self
@@ -126,7 +127,6 @@ where
     T: Aggregate,
     T::Id: Clone,
     S: event::Store<T::Id, T::Event>,
-    <S as event::Appender<T::Id, T::Event>>::Error: std::error::Error + Send + Sync + 'static,
 {
     async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), SaveError> {
         let events_to_commit = root.take_uncommitted_events();
@@ -146,8 +146,10 @@ where
                 events_to_commit,
             )
             .await
-            .map_err(anyhow::Error::from)
-            .map_err(SaveError::Internal)?; // FIXME(ar3s3ru): map conflict error.
+            .map_err(|err| match err {
+                event::store::AppendError::Conflict(err) => SaveError::Conflict(err),
+                event::store::AppendError::Internal(err) => SaveError::Internal(err),
+            })?;
 
         Ok(())
     }

@@ -4,8 +4,7 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use crate::event::store::EventStoreExt;
-use crate::event::Appender;
+use crate::event::store::{Appender, EventStoreExt};
 use crate::{command, event, message, version};
 
 /// A test scenario that can be used to test a [Command][command::Envelope] [Handler][command::Handler]

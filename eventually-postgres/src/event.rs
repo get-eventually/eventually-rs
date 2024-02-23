@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 use std::string::ToString;
 
+use anyhow::anyhow;
 use async_trait::async_trait;
 use chrono::Utc;
 use eventually::message::{Message, Metadata};
@@ -26,34 +27,6 @@ pub enum StreamError {
     },
     #[error("db returned an error: {0}")]
     Database(#[source] sqlx::Error),
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum AppendError {
-    #[error("conflict error detected: {0}")]
-    Conflict(#[source] version::ConflictError),
-    #[error("concurrent update detected, represented as a conflict error: {0}")]
-    Concurrency(#[source] version::ConflictError),
-    #[error("failed to begin transaction: {0}")]
-    BeginTransaction(#[source] sqlx::Error),
-    #[error("failed to upsert new event stream version: {0}")]
-    UpsertEventStream(#[source] sqlx::Error),
-    #[error("failed to append a new domain event: {0}")]
-    AppendEvent(#[source] sqlx::Error),
-    #[error("failed to commit transaction: {0}")]
-    CommitTransaction(#[source] sqlx::Error),
-    #[error("db returned an error: {0}")]
-    Database(#[from] sqlx::Error),
-}
-
-impl From<AppendError> for Option<version::ConflictError> {
-    fn from(err: AppendError) -> Self {
-        match err {
-            AppendError::Conflict(v) => Some(v),
-            AppendError::Concurrency(v) => Some(v),
-            _ => None,
-        }
-    }
 }
 
 pub(crate) async fn append_domain_event<Evt, OutEvt>(
@@ -204,7 +177,7 @@ where
     }
 }
 
-impl<Id, Evt, OutEvt, S> event::Streamer<Id, Evt> for Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, OutEvt, S> event::store::Streamer<Id, Evt> for Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone + Send + Sync,
     Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
@@ -241,7 +214,7 @@ where
 }
 
 #[async_trait]
-impl<Id, Evt, OutEvt, S> event::Appender<Id, Evt> for Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, OutEvt, S> event::store::Appender<Id, Evt> for Store<Id, Evt, OutEvt, S>
 where
     Id: ToString + Clone + Send + Sync,
     Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
@@ -250,23 +223,22 @@ where
     S: Serde<OutEvt> + Send + Sync,
     <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
 {
-    type Error = AppendError;
-
     async fn append(
         &self,
         id: Id,
         version_check: version::Check,
         events: Vec<event::Envelope<Evt>>,
-    ) -> Result<Version, Self::Error> {
+    ) -> Result<Version, event::store::AppendError> {
         let mut tx = self
             .pool
             .begin()
             .await
-            .map_err(AppendError::BeginTransaction)?;
+            .map_err(|err| anyhow!("failed to begin transaction: {}", err))?;
 
         sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE")
             .execute(&mut *tx)
-            .await?;
+            .await
+            .map_err(|err| anyhow!("failed to begin transaction: {}", err))?;
 
         let string_id = id.to_string();
 
@@ -279,7 +251,8 @@ where
                     .bind(events_len)
                     .fetch_one(&mut *tx)
                     .await
-                    .and_then(|row| row.try_get(0))?
+                    .and_then(|row| row.try_get(0))
+                    .map_err(|err| anyhow!("failed to upsert new event stream version: {}", err))?
             },
             version::Check::MustBe(v) => {
                 let new_version = v + (events.len() as Version);
@@ -291,15 +264,18 @@ where
                     .execute(&mut *tx)
                     .await
                     .map_err(|err| match crate::check_for_conflict_error(&err) {
-                        Some(err) => AppendError::Conflict(err),
+                        Some(err) => event::store::AppendError::Conflict(err),
                         None => match err.as_database_error().and_then(|err| err.code()) {
                             Some(code) if code == "40001" => {
-                                AppendError::Concurrency(version::ConflictError {
+                                event::store::AppendError::Conflict(version::ConflictError {
                                     expected: v,
                                     actual: new_version,
                                 })
                             },
-                            _ => AppendError::UpsertEventStream(err),
+                            _ => event::store::AppendError::Internal(anyhow!(
+                                "failed to upsert new event stream version: {}",
+                                err
+                            )),
                         },
                     })
                     .map(|_| new_version as i32)?
@@ -308,9 +284,11 @@ where
 
         append_domain_events(&mut tx, &self.serde, &string_id, new_version, events)
             .await
-            .map_err(AppendError::AppendEvent)?;
+            .map_err(|err| anyhow!("failed to append new domain events: {}", err))?;
 
-        tx.commit().await.map_err(AppendError::CommitTransaction)?;
+        tx.commit()
+            .await
+            .map_err(|err| anyhow!("failed to commit transaction: {}", err))?;
 
         Ok(new_version as Version)
     }

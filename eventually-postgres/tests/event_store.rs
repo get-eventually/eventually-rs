@@ -1,6 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use eventually::event::{Appender, Persisted, Streamer, VersionSelect};
+use eventually::event::store::{self, AppendError, Appender, Streamer};
+use eventually::event::{Persisted, VersionSelect};
 use eventually::serde::json::JsonSerde;
 use eventually::version;
 use eventually::version::Version;
@@ -123,19 +124,22 @@ async fn it_works_with_version_check_for_conflict() {
 
     // Appending twice the with an unexpected Event Stream version should
     // result in a version::ConflictError.
-    let error: Option<version::ConflictError> = event_store
+    let error = event_store
         .append(event_stream_id.clone(), version::Check::MustBe(0), vec![])
         .await
-        .expect_err("the event store should have returned a conflict error")
-        .into();
+        .expect_err("the event store should have returned a conflict error");
 
-    assert_eq!(
-        error,
-        Some(version::ConflictError {
-            expected: 0,
-            actual: new_event_stream_version,
-        })
-    );
+    if let AppendError::Conflict(err) = error {
+        return assert_eq!(
+            err,
+            version::ConflictError {
+                expected: 0,
+                actual: new_event_stream_version,
+            }
+        );
+    }
+
+    panic!("unexpected error received: {}", error);
 }
 
 #[tokio::test]
@@ -175,12 +179,9 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
     );
 
     match result {
-        (Ok(_), Err(err)) | (Err(err), Ok(_)) => {
-            if let event::AppendError::Conflict(_) | event::AppendError::Concurrency(_) = err {
-                // This is the expected scenario :)
-            } else {
-                panic!("unexpected error, {:?}", err);
-            }
+        (Ok(_), Err(store::AppendError::Conflict(_)))
+        | (Err(store::AppendError::Conflict(_)), Ok(_)) => {
+            // This is the expected scenario :)
         },
         (first, second) => panic!(
             "invalid state detected, first: {:?}, second: {:?}",

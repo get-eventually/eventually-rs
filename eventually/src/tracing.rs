@@ -1,7 +1,7 @@
 //! Module containing some extension traits to support code instrumentation
 //! using the `tracing` crate.
 
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use async_trait::async_trait;
@@ -88,7 +88,6 @@ where
 pub struct InstrumentedEventStore<T, StreamId, Event>
 where
     T: event::Store<StreamId, Event> + Send + Sync,
-    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
@@ -97,15 +96,14 @@ where
     event: PhantomData<Event>,
 }
 
-impl<T, StreamId, Event> event::Streamer<StreamId, Event>
+impl<T, StreamId, Event> event::store::Streamer<StreamId, Event>
     for InstrumentedEventStore<T, StreamId, Event>
 where
     T: event::Store<StreamId, Event> + Send + Sync,
-    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
-    type Error = <T as event::Streamer<StreamId, Event>>::Error;
+    type Error = <T as event::store::Streamer<StreamId, Event>>::Error;
 
     #[instrument(name = "event::Store.stream", skip(self))]
     fn stream(
@@ -118,23 +116,20 @@ where
 }
 
 #[async_trait]
-impl<T, StreamId, Event> event::Appender<StreamId, Event>
+impl<T, StreamId, Event> event::store::Appender<StreamId, Event>
     for InstrumentedEventStore<T, StreamId, Event>
 where
     T: event::Store<StreamId, Event> + Send + Sync,
-    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
-    type Error = <T as event::Appender<StreamId, Event>>::Error;
-
     #[instrument(name = "event::Store.append", ret, err, skip(self))]
     async fn append(
         &self,
         id: StreamId,
         version_check: version::Check,
         events: Vec<event::Envelope<Event>>,
-    ) -> Result<Version, Self::Error> {
+    ) -> Result<Version, event::store::AppendError> {
         self.store.append(id, version_check, events).await
     }
 }
@@ -143,7 +138,6 @@ where
 /// instrumentation features through the `tracing` crate.
 pub trait EventStoreExt<StreamId, Event>: event::Store<StreamId, Event> + Sized
 where
-    <Self as event::Appender<StreamId, Event>>::Error: Display,
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
@@ -160,7 +154,6 @@ where
 impl<T, StreamId, Event> EventStoreExt<StreamId, Event> for T
 where
     T: event::Store<StreamId, Event> + Send + Sync,
-    <T as event::Appender<StreamId, Event>>::Error: Display + Send + Sync,
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
