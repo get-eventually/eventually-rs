@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use anyhow::anyhow;
-use bank_accounting::domain::BankAccountRepository;
+use bank_accounting::domain::{BankAccountEvent, BankAccountRepository};
 use bank_accounting::{application, grpc, proto};
-use eventually::serde::prost::MessageSerde;
+use eventually::serde;
 use eventually::tracing::{AggregateRepositoryExt, EventStoreExt};
 use eventually_postgres::event;
 use tower_http::trace::TraceLayer;
@@ -14,7 +14,10 @@ async fn main() -> anyhow::Result<()> {
 
     let pool = bank_accounting::postgres::connect().await?;
 
-    let bank_account_event_serde = MessageSerde::<proto::Event>::default();
+    let bank_account_event_serde = serde::Convert::<BankAccountEvent, proto::Event, _>::new(
+        serde::Protobuf::<proto::Event>::default(),
+    );
+
     let bank_account_event_store = event::Store::new(pool, bank_account_event_serde)
         .await?
         .with_tracing();

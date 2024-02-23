@@ -1,6 +1,11 @@
+//! `eventually-postgres` contains different implementations of traits
+//! from the [eventually] crate that are specific for PostgreSQL databases.
+//!
+//! Check out the [aggregate::Repository] and [event::Store] implementations
+//! to know more.
+
 #![deny(unsafe_code, unused_qualifications, trivial_casts)]
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
+#![deny(clippy::all, clippy::pedantic, clippy::cargo)]
 #![warn(missing_docs)]
 
 pub mod aggregate;

@@ -5,9 +5,8 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use chrono::Utc;
 use eventually::message::{Message, Metadata};
-use eventually::serde::Serde;
 use eventually::version::Version;
-use eventually::{event, version};
+use eventually::{event, serde, version};
 use futures::future::ready;
 use futures::{StreamExt, TryStreamExt};
 use sqlx::postgres::PgRow;
@@ -15,10 +14,8 @@ use sqlx::{PgPool, Postgres, Row, Transaction};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StreamError {
-    #[error("failed to convert domain event from its serialization type: {0}")]
-    ConvertEvent(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
     #[error("failed to deserialize event from database: {0}")]
-    DeserializeEvent(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
+    DeserializeEvent(#[source] anyhow::Error),
     #[error("failed to get column '{name}' from result row: {error}")]
     ReadColumn {
         name: &'static str,
@@ -29,22 +26,22 @@ pub enum StreamError {
     Database(#[source] sqlx::Error),
 }
 
-pub(crate) async fn append_domain_event<Evt, OutEvt>(
+pub(crate) async fn append_domain_event<Evt>(
     tx: &mut Transaction<'_, Postgres>,
-    serde: &impl Serde<OutEvt>,
+    serde: &impl serde::Serializer<Evt>,
     event_stream_id: &str,
     event_version: i32,
     new_event_stream_version: i32,
     event: event::Envelope<Evt>,
-) -> Result<(), sqlx::Error>
+) -> anyhow::Result<()>
 where
     Evt: Message,
-    OutEvt: From<Evt>,
 {
     let event_type = event.message.name();
-    let out_event = OutEvt::from(event.message);
-    let serialized_event = serde.serialize(out_event);
     let mut metadata = event.metadata;
+    let serialized_event = serde
+        .serialize(event.message)
+        .map_err(|err| anyhow!("failed to serialize event message: {}", err))?;
 
     metadata.insert("Recorded-At".to_owned(), Utc::now().to_rfc3339());
     metadata.insert(
@@ -66,16 +63,15 @@ where
     Ok(())
 }
 
-pub(crate) async fn append_domain_events<Evt, OutEvt>(
+pub(crate) async fn append_domain_events<Evt>(
     tx: &mut Transaction<'_, Postgres>,
-    serde: &impl Serde<OutEvt>,
+    serde: &impl serde::Serializer<Evt>,
     event_stream_id: &str,
     new_version: i32,
     events: Vec<event::Envelope<Evt>>,
-) -> Result<(), sqlx::Error>
+) -> anyhow::Result<()>
 where
     Evt: Message,
-    OutEvt: From<Evt>,
 {
     let current_event_stream_version = new_version - (events.len() as i32);
 
@@ -97,28 +93,23 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct Store<Id, Evt, OutEvt, S>
+pub struct Store<Id, Evt, Serde>
 where
     Id: ToString + Clone,
-    Evt: TryFrom<OutEvt>,
-    OutEvt: From<Evt>,
-    S: Serde<OutEvt>,
+    Serde: serde::Serde<Evt>,
 {
     pool: PgPool,
-    serde: S,
+    serde: Serde,
     id_type: PhantomData<Id>,
     evt_type: PhantomData<Evt>,
-    out_evt_type: PhantomData<OutEvt>,
 }
 
-impl<Id, Evt, OutEvt, S> Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, Serde> Store<Id, Evt, Serde>
 where
     Id: ToString + Clone,
-    Evt: TryFrom<OutEvt>,
-    OutEvt: From<Evt>,
-    S: Serde<OutEvt>,
+    Serde: serde::Serde<Evt>,
 {
-    pub async fn new(pool: PgPool, serde: S) -> Result<Self, sqlx::migrate::MigrateError> {
+    pub async fn new(pool: PgPool, serde: Serde) -> Result<Self, sqlx::migrate::MigrateError> {
         // Make sure the latest migrations are used before using the Store instance.
         crate::MIGRATIONS.run(&pool).await?;
 
@@ -127,7 +118,6 @@ where
             serde,
             id_type: PhantomData,
             evt_type: PhantomData,
-            out_evt_type: PhantomData,
         })
     }
 }
@@ -140,14 +130,11 @@ where
         .map_err(|err| StreamError::ReadColumn { name, error: err })
 }
 
-impl<Id, Evt, OutEvt, S> Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, Serde> Store<Id, Evt, Serde>
 where
     Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom<OutEvt> + Message + Send + Sync,
-    <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
-    OutEvt: From<Evt> + Send + Sync,
-    S: Serde<OutEvt> + Send + Sync,
-    <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    Evt: Message + Send + Sync,
+    Serde: serde::Serde<Evt> + Send + Sync,
 {
     fn event_row_to_persisted_event(
         &self,
@@ -160,31 +147,25 @@ where
 
         let deserialized_event = self
             .serde
-            .deserialize(event_column)
-            .map_err(|err| StreamError::DeserializeEvent(Box::new(err)))?;
-
-        let converted_event = Evt::try_from(deserialized_event)
-            .map_err(|err| StreamError::ConvertEvent(Box::new(err)))?;
+            .deserialize(&event_column)
+            .map_err(StreamError::DeserializeEvent)?;
 
         Ok(event::Persisted {
             stream_id,
             version: version_column as Version,
             event: event::Envelope {
-                message: converted_event,
+                message: deserialized_event,
                 metadata: metadata_column.0,
             },
         })
     }
 }
 
-impl<Id, Evt, OutEvt, S> event::store::Streamer<Id, Evt> for Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, Serde> event::store::Streamer<Id, Evt> for Store<Id, Evt, Serde>
 where
     Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
-    <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
-    OutEvt: From<Evt> + Send + Sync,
-    S: Serde<OutEvt> + Send + Sync,
-    <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    Evt: Message + Send + Sync,
+    Serde: serde::Serde<Evt> + Send + Sync,
 {
     type Error = StreamError;
 
@@ -214,14 +195,11 @@ where
 }
 
 #[async_trait]
-impl<Id, Evt, OutEvt, S> event::store::Appender<Id, Evt> for Store<Id, Evt, OutEvt, S>
+impl<Id, Evt, Serde> event::store::Appender<Id, Evt> for Store<Id, Evt, Serde>
 where
     Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom<OutEvt> + Message + std::fmt::Debug + Send + Sync,
-    <Evt as TryFrom<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
-    OutEvt: From<Evt> + Send + Sync,
-    S: Serde<OutEvt> + Send + Sync,
-    <S as Serde<OutEvt>>::Error: std::error::Error + Send + Sync + 'static,
+    Evt: Message + Send + Sync,
+    Serde: serde::Serde<Evt> + Send + Sync,
 {
     async fn append(
         &self,

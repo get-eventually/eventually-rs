@@ -2,9 +2,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use eventually::event::store::{self, AppendError, Appender, Streamer};
 use eventually::event::{Persisted, VersionSelect};
-use eventually::serde::json::JsonSerde;
-use eventually::version;
 use eventually::version::Version;
+use eventually::{serde, version};
 use eventually_postgres::event;
 use futures::TryStreamExt;
 use rand::Rng;
@@ -17,7 +16,7 @@ async fn append_with_no_version_check_works() {
         .await
         .expect("connection to the database should work");
 
-    let event_store = event::Store::new(pool, JsonSerde::<setup::TestDomainEvent>::default())
+    let event_store = event::Store::new(pool, serde::Json::<setup::TestDomainEvent>::default())
         .await
         .unwrap();
 
@@ -73,7 +72,7 @@ async fn it_works_with_version_check_for_conflict() {
         .await
         .expect("connection to the database should work");
 
-    let event_store = event::Store::new(pool, JsonSerde::<setup::TestDomainEvent>::default())
+    let event_store = event::Store::new(pool, serde::Json::<setup::TestDomainEvent>::default())
         .await
         .unwrap();
 
@@ -148,7 +147,7 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
         .await
         .expect("connection to the database should work");
 
-    let event_store = event::Store::new(pool, JsonSerde::<setup::TestDomainEvent>::default())
+    let event_store = event::Store::new(pool, serde::Json::<setup::TestDomainEvent>::default())
         .await
         .unwrap();
 

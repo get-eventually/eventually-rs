@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use eventually::aggregate;
-use eventually_macros::{aggregate_root, Message};
+use eventually::message::Message;
+use eventually_macros::aggregate_root;
 use rust_decimal::Decimal;
 
 pub type BankAccountRepository<S> = aggregate::EventSourcedRepository<BankAccount, S>;
@@ -18,7 +19,7 @@ pub struct Transaction {
 pub type BankAccountHolderId = String;
 pub type BankAccountId = String;
 
-#[derive(Debug, Clone, PartialEq, Eq, Message)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BankAccountEvent {
     WasOpened {
         id: BankAccountId,
@@ -47,6 +48,21 @@ pub enum BankAccountEvent {
     WasReopened {
         reopening_balance: Option<Decimal>,
     },
+}
+
+impl Message for BankAccountEvent {
+    fn name(&self) -> &'static str {
+        match self {
+            BankAccountEvent::WasOpened { .. } => "BankAccountWasOpened",
+            BankAccountEvent::DepositWasRecorded { .. } => "BankAccountDepositWasRecorded",
+            BankAccountEvent::TransferWasSent { .. } => "BankAccountTransferWasSent",
+            BankAccountEvent::TransferWasReceived { .. } => "BankAccountTransferWasReceived",
+            BankAccountEvent::TransferWasDeclined { .. } => "BankAccountTransferWasDeclined",
+            BankAccountEvent::TransferWasConfirmed { .. } => "BankAccountTransferWasConfirmed",
+            BankAccountEvent::WasClosed { .. } => "BankAccountWasClosed",
+            BankAccountEvent::WasReopened { .. } => "BankAccountWasReopened",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
