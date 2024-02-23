@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AnyError","AnyRepositoryImpl"],"trait":["AnyRepository","AnyRepositoryExt"]};

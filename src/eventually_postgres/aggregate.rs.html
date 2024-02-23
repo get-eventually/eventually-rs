@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually-postgres/src/aggregate.rs`."><title>aggregate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eventually_postgres" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../eventually_postgres/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually-postgres/src/aggregate.rs`."><title>aggregate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eventually_postgres" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -210,63 +211,52 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
+</pre></div><pre class="rust"><code><span class="doccomment">//! This module contains the implementation of the [`eventually::aggregate::Repository`] trait,
+//! to work specifically with `PostgreSQL` databases.
+//!
+//! Check out the [Repository] type for more information.
 
+</span><span class="kw">use </span>std::marker::PhantomData;
+
+<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>eventually::aggregate::Aggregate;
-<span class="kw">use </span>eventually::serde::Serde;
 <span class="kw">use </span>eventually::version::Version;
-<span class="kw">use </span>eventually::{aggregate, version};
+<span class="kw">use </span>eventually::{aggregate, serde, version};
 <span class="kw">use </span>sqlx::{PgPool, Postgres, Row};
 
-<span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>Repository&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt;
+<span class="doccomment">/// Implements the [`eventually::aggregate::Repository`] trait for
+/// `PostgreSQL` databases.
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Repository&lt;T, Serde, EvtSerde&gt;
 <span class="kw">where
     </span>T: Aggregate,
     &lt;T <span class="kw">as </span>Aggregate&gt;::Id: ToString,
-    OutT: From&lt;T&gt;,
-    OutEvt: From&lt;T::Event&gt;,
-    TSerde: Serde&lt;OutT&gt;,
-    EvtSerde: Serde&lt;OutEvt&gt;,
+    Serde: serde::Serde&lt;T&gt;,
+    EvtSerde: serde::Serde&lt;T::Event&gt;,
 {
     pool: PgPool,
-    aggregate_serde: TSerde,
+    aggregate_serde: Serde,
     event_serde: EvtSerde,
     t: PhantomData&lt;T&gt;,
-    out_t: PhantomData&lt;OutT&gt;,
-    out_evt: PhantomData&lt;OutEvt&gt;,
 }
 
-<span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; Repository&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt;
+<span class="kw">impl</span>&lt;T, Serde, EvtSerde&gt; Repository&lt;T, Serde, EvtSerde&gt;
 <span class="kw">where
     </span>T: Aggregate,
     &lt;T <span class="kw">as </span>Aggregate&gt;::Id: ToString,
-    OutT: From&lt;T&gt;,
-    OutEvt: From&lt;T::Event&gt;,
-    TSerde: Serde&lt;OutT&gt;,
-    EvtSerde: Serde&lt;OutEvt&gt;,
+    Serde: serde::Serde&lt;T&gt;,
+    EvtSerde: serde::Serde&lt;T::Event&gt;,
 {
-    <span class="kw">pub async fn </span>new(
+    <span class="doccomment">/// Runs the latest migrations necessary for the implementation to work,
+    /// then returns a new [`Repository`] instance.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if the migrations fail to run.
+    </span><span class="kw">pub async fn </span>new(
         pool: PgPool,
-        aggregate_serde: TSerde,
+        aggregate_serde: Serde,
         event_serde: EvtSerde,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, sqlx::migrate::MigrateError&gt; {
         <span class="comment">// Make sure the latest migrations are used before using the Repository instance.
@@ -277,72 +267,32 @@
             aggregate_serde,
             event_serde,
             t: PhantomData,
-            out_t: PhantomData,
-            out_evt: PhantomData,
         })
     }
 }
 
-<span class="attr">#[derive(Debug, thiserror::Error)]
-</span><span class="kw">pub enum </span>GetError {
-    <span class="attr">#[error(<span class="string">&quot;failed to fetch the aggregate state row: {0}&quot;</span>)]
-    </span>FetchAggregateRow(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;failed to deserialize the aggregate state from the database row: {0}&quot;</span>)]
-    </span>DeserializeAggregate(<span class="attr">#[source] </span>Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
-    <span class="attr">#[error(<span class="string">&quot;failed to convert the aggregate state into its domain type: {0}&quot;</span>)]
-    </span>ConvertAggregate(<span class="attr">#[source] </span>Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
-    <span class="attr">#[error(<span class="string">&quot;database returned an error: {0}&quot;</span>)]
-    </span>Database(<span class="attr">#[from] </span>sqlx::Error),
-}
-
-<span class="attr">#[derive(Debug, thiserror::Error)]
-</span><span class="kw">pub enum </span>SaveError {
-    <span class="attr">#[error(<span class="string">&quot;failed to begin a new transaction: {0}&quot;</span>)]
-    </span>BeginTransaction(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;conflict error detected: {0})&quot;</span>)]
-    </span>Conflict(<span class="attr">#[source] </span>version::ConflictError),
-    <span class="attr">#[error(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0})&quot;</span>)]
-    </span>Concurrency(<span class="attr">#[source] </span>version::ConflictError),
-    <span class="attr">#[error(<span class="string">&quot;failed to save the new aggregate state: {0}&quot;</span>)]
-    </span>SaveAggregateState(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;failed to append a new domain event: {0}&quot;</span>)]
-    </span>AppendEvent(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;failed to commit transaction: {0}&quot;</span>)]
-    </span>CommitTransaction(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;database returned an error: {0}&quot;</span>)]
-    </span>Database(<span class="attr">#[from] </span>sqlx::Error),
-}
-
-<span class="kw">impl </span>From&lt;SaveError&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;version::ConflictError&gt; {
-    <span class="kw">fn </span>from(err: SaveError) -&gt; <span class="self">Self </span>{
-        <span class="kw">match </span>err {
-            SaveError::Conflict(v) =&gt; <span class="prelude-val">Some</span>(v),
-            SaveError::Concurrency(v) =&gt; <span class="prelude-val">Some</span>(v),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        }
-    }
-}
-
-<span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; Repository&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt;
+<span class="kw">impl</span>&lt;T, Serde, EvtSerde&gt; Repository&lt;T, Serde, EvtSerde&gt;
 <span class="kw">where
     </span>T: Aggregate + Send + Sync,
     &lt;T <span class="kw">as </span>Aggregate&gt;::Id: ToString,
-    OutT: From&lt;T&gt; + Send + Sync,
-    OutEvt: From&lt;T::Event&gt;,
-    TSerde: Serde&lt;OutT&gt; + Send + Sync,
-    EvtSerde: Serde&lt;OutEvt&gt;,
+    Serde: serde::Serde&lt;T&gt; + Send + Sync,
+    EvtSerde: serde::Serde&lt;T::Event&gt; + Send + Sync,
 {
     <span class="kw">async fn </span>save_aggregate_state(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        tx: <span class="kw-2">&amp;mut </span>sqlx::Transaction&lt;<span class="lifetime">&#39;_</span>, Postgres&gt;,
+        tx: <span class="kw-2">&amp;mut </span>sqlx::Transaction&lt;<span class="lifetime">'_</span>, Postgres&gt;,
         aggregate_id: <span class="kw-2">&amp;</span>str,
         expected_version: Version,
         root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), SaveError&gt; {
-        <span class="kw">let </span>out_state = root.to_aggregate_type::&lt;OutT&gt;();
-        <span class="kw">let </span>bytes_state = <span class="self">self</span>.aggregate_serde.serialize(out_state);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), aggregate::repository::SaveError&gt; {
+        <span class="kw">let </span>out_state = root.to_aggregate_type::&lt;T&gt;();
+        <span class="kw">let </span>bytes_state = <span class="self">self
+            </span>.aggregate_serde
+            .serialize(out_state)
+            .map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to serialize aggregate root state: {}"</span>, err))<span class="question-mark">?</span>;
 
-        sqlx::query(<span class="string">&quot;CALL upsert_aggregate($1, $2, $3, $4, $5)&quot;</span>)
+        <span class="attr">#[allow(clippy::cast_possible_truncation)]
+        </span>sqlx::query(<span class="string">"CALL upsert_aggregate($1, $2, $3, $4, $5)"</span>)
             .bind(aggregate_id)
             .bind(T::type_name())
             .bind(expected_version <span class="kw">as </span>i32)
@@ -351,15 +301,17 @@
             .execute(<span class="kw-2">&amp;mut **</span>tx)
             .<span class="kw">await
             </span>.map_err(|err| <span class="kw">match </span><span class="kw">crate</span>::check_for_conflict_error(<span class="kw-2">&amp;</span>err) {
-                <span class="prelude-val">Some</span>(err) =&gt; SaveError::Conflict(err),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>err.as_database_error().and_then(|err| err.code()) {
-                    <span class="prelude-val">Some</span>(code) <span class="kw">if </span>code == <span class="string">&quot;40001&quot; </span>=&gt; {
-                        SaveError::Concurrency(version::ConflictError {
-                            expected: expected_version,
-                            actual: root.version(),
-                        })
-                    },
-                    <span class="kw">_ </span>=&gt; SaveError::SaveAggregateState(err),
+                <span class="prelude-val">Some</span>(err) =&gt; aggregate::repository::SaveError::Conflict(err),
+                <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>err
+                    .as_database_error()
+                    .and_then(sqlx::error::DatabaseError::code)
+                {
+                    <span class="prelude-val">Some</span>(code) <span class="kw">if </span>code == <span class="string">"40001" </span>=&gt; version::ConflictError {
+                        expected: expected_version,
+                        actual: root.version(),
+                    }
+                    .into(),
+                    <span class="kw">_ </span>=&gt; <span class="macro">anyhow!</span>(<span class="string">"failed to save aggregate state: {}"</span>, err).into(),
                 },
             })<span class="question-mark">?</span>;
 
@@ -368,31 +320,20 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt; aggregate::Repository&lt;T&gt;
-    <span class="kw">for </span>Repository&lt;T, OutT, OutEvt, TSerde, EvtSerde&gt;
+</span><span class="kw">impl</span>&lt;T, Serde, EvtSerde&gt; aggregate::repository::Getter&lt;T&gt; <span class="kw">for </span>Repository&lt;T, Serde, EvtSerde&gt;
 <span class="kw">where
-    </span>T: Aggregate + TryFrom&lt;OutT&gt; + Send + Sync,
+    </span>T: Aggregate + Send + Sync,
     &lt;T <span class="kw">as </span>Aggregate&gt;::Id: ToString,
-    &lt;T <span class="kw">as </span>TryFrom&lt;OutT&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
-    OutT: From&lt;T&gt; + Send + Sync,
-    OutEvt: From&lt;T::Event&gt; + Send + Sync,
-    TSerde: Serde&lt;OutT&gt; + Send + Sync,
-    &lt;TSerde <span class="kw">as </span>Serde&lt;OutT&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
-    EvtSerde: Serde&lt;OutEvt&gt; + Send + Sync,
+    Serde: serde::Serde&lt;T&gt; + Send + Sync,
+    EvtSerde: serde::Serde&lt;T::Event&gt; + Send + Sync,
 {
-    <span class="kw">type </span>GetError = GetError;
-    <span class="kw">type </span>SaveError = SaveError;
-
-    <span class="kw">async fn </span>get(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: <span class="kw-2">&amp;</span>T::Id,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;aggregate::Root&lt;T&gt;, aggregate::repository::GetError&lt;<span class="self">Self</span>::GetError&gt;&gt; {
+    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>T::Id) -&gt; <span class="prelude-ty">Result</span>&lt;aggregate::Root&lt;T&gt;, aggregate::repository::GetError&gt; {
         <span class="kw">let </span>aggregate_id = id.to_string();
 
         <span class="kw">let </span>row = sqlx::query(
-            <span class="string">r#&quot;SELECT version, state
+            <span class="string">r#"SELECT version, state
                FROM aggregates
-               WHERE aggregate_id = $1 AND &quot;type&quot; = $2&quot;#</span>,
+               WHERE aggregate_id = $1 AND "type" = $2"#</span>,
         )
         .bind(<span class="kw-2">&amp;</span>aggregate_id)
         .bind(T::type_name())
@@ -400,27 +341,47 @@
         .<span class="kw">await
         </span>.map_err(|err| <span class="kw">match </span>err {
             sqlx::Error::RowNotFound =&gt; aggregate::repository::GetError::NotFound,
-            <span class="kw">_ </span>=&gt; aggregate::repository::GetError::Inner(GetError::FetchAggregateRow(err)),
+            <span class="kw">_ </span>=&gt; <span class="macro">anyhow!</span>(<span class="string">"failed to fetch the aggregate state row: {}"</span>, err).into(),
         })<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>version: i32 = row.try_get(<span class="string">&quot;version&quot;</span>).map_err(GetError::Database)<span class="question-mark">?</span>;
-        <span class="kw">let </span>bytes_state: Vec&lt;u8&gt; = row.try_get(<span class="string">&quot;state&quot;</span>).map_err(GetError::Database)<span class="question-mark">?</span>;
+        <span class="kw">let </span>version: i32 = row
+            .try_get(<span class="string">"version"</span>)
+            .map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to get 'version' column from row: {}"</span>, err))<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>bytes_state: Vec&lt;u8&gt; = row
+            .try_get(<span class="string">"state"</span>)
+            .map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to get 'state' column from row: {}"</span>, err))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>aggregate: T = <span class="self">self
             </span>.aggregate_serde
-            .deserialize(bytes_state)
-            .map_err(|err| GetError::DeserializeAggregate(Box::new(err)))
-            .and_then(|out_t| {
-                T::try_from(out_t).map_err(|err| GetError::ConvertAggregate(Box::new(err)))
+            .deserialize(<span class="kw-2">&amp;</span>bytes_state)
+            .map_err(|err| {
+                <span class="macro">anyhow!</span>(
+                    <span class="string">"failed to deserialize the aggregate state from the database row: {}"</span>,
+                    err
+                )
             })<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(aggregate::Root::rehydrate_from_state(
+        <span class="attr">#[allow(clippy::cast_sign_loss)]
+        </span><span class="prelude-val">Ok</span>(aggregate::Root::rehydrate_from_state(
             version <span class="kw">as </span>Version,
             aggregate,
         ))
     }
+}
 
-    <span class="kw">async fn </span>save(<span class="kw-2">&amp;</span><span class="self">self</span>, root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::SaveError&gt; {
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;T, Serde, EvtSerde&gt; aggregate::repository::Saver&lt;T&gt; <span class="kw">for </span>Repository&lt;T, Serde, EvtSerde&gt;
+<span class="kw">where
+    </span>T: Aggregate + Send + Sync,
+    &lt;T <span class="kw">as </span>Aggregate&gt;::Id: ToString,
+    Serde: serde::Serde&lt;T&gt; + Send + Sync,
+    EvtSerde: serde::Serde&lt;T::Event&gt; + Send + Sync,
+{
+    <span class="kw">async fn </span>save(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        root: <span class="kw-2">&amp;mut </span>aggregate::Root&lt;T&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), aggregate::repository::SaveError&gt; {
         <span class="kw">let </span>events_to_commit = root.take_uncommitted_events();
 
         <span class="kw">if </span>events_to_commit.is_empty() {
@@ -431,11 +392,12 @@
             </span>.pool
             .begin()
             .<span class="kw">await
-            </span>.map_err(SaveError::BeginTransaction)<span class="question-mark">?</span>;
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to begin transaction: {}"</span>, err))<span class="question-mark">?</span>;
 
-        sqlx::query(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
+        sqlx::query(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE"</span>)
             .execute(<span class="kw-2">&amp;mut *</span>tx)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+            .<span class="kw">await
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to begin transaction: {}"</span>, err))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>aggregate_id = root.aggregate_id().to_string();
         <span class="kw">let </span>expected_root_version = root.version() - (events_to_commit.len() <span class="kw">as </span>Version);
@@ -443,7 +405,8 @@
         <span class="self">self</span>.save_aggregate_state(<span class="kw-2">&amp;mut </span>tx, <span class="kw-2">&amp;</span>aggregate_id, expected_root_version, root)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">crate</span>::event::append_domain_events(
+        <span class="attr">#[allow(clippy::cast_possible_truncation)]
+        </span><span class="kw">crate</span>::event::append_domain_events(
             <span class="kw-2">&amp;mut </span>tx,
             <span class="kw-2">&amp;</span><span class="self">self</span>.event_serde,
             <span class="kw-2">&amp;</span>aggregate_id,
@@ -451,9 +414,11 @@
             events_to_commit,
         )
         .<span class="kw">await
-        </span>.map_err(SaveError::AppendEvent)<span class="question-mark">?</span>;
+        </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to append aggregate root domain events: {}"</span>, err))<span class="question-mark">?</span>;
 
-        tx.commit().<span class="kw">await</span>.map_err(SaveError::CommitTransaction)<span class="question-mark">?</span>;
+        tx.commit()
+            .<span class="kw">await
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to commit transaction: {}"</span>, err))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

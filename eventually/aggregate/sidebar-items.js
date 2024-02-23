@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["repository"],"struct":["Root"],"trait":["Aggregate"]};
+window.SIDEBAR_ITEMS = {"enum":["RehydrateError"],"mod":["repository","test"],"struct":["Root"],"trait":["Aggregate"]};

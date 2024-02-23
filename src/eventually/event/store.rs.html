@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/event/store.rs`."><title>store.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eventually" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../eventually/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually/src/event/store.rs`."><title>store.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eventually" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -369,8 +370,74 @@
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
 <a href="#371" id="371">371</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Contains implementations of the [event::Store] trait and connected abstractions,
-//! such as the [std::collections::HashMap]&#39;s based [InMemory] Event Store implementation.
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Contains implementations of the [`event::Store`] trait and connected abstractions,
+//! such as the [`std::collections::HashMap`]'s based [`InMemory`] Event Store implementation.
 
 </span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::convert::Infallible;
@@ -380,8 +447,77 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::stream::{iter, StreamExt};
 
-<span class="kw">use </span><span class="kw">crate</span>::version::{ConflictError, Version};
-<span class="kw">use crate</span>::{event, message};
+<span class="kw">use crate</span>::{event, message, version};
+
+<span class="doccomment">/// Interface used to stream [Persisted][event::Persisted] Domain Events
+/// from an Event Store to an application.
+</span><span class="kw">pub trait </span>Streamer&lt;StreamId, Event&gt;: Send + Sync
+<span class="kw">where
+    </span>StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
+    <span class="doccomment">/// The error type returned by the Store during a [`stream`] call.
+    </span><span class="kw">type </span>Error: Send + Sync;
+
+    <span class="doccomment">/// Opens an Event Stream, effectively streaming all Domain Events
+    /// of an Event Stream back in the application.
+    </span><span class="kw">fn </span>stream(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: <span class="kw-2">&amp;</span>StreamId,
+        select: event::VersionSelect,
+    ) -&gt; event::Stream&lt;StreamId, Event, <span class="self">Self</span>::Error&gt;;
+}
+
+<span class="doccomment">/// All possible error types returned by [`Appender::append`].
+</span><span class="attr">#[derive(Debug, thiserror::Error)]
+</span><span class="kw">pub enum </span>AppendError {
+    <span class="doccomment">/// Error returned when [Appender::append] encounters a conflict error
+    /// while appending the new Domain Events.
+    </span><span class="attr">#[error(<span class="string">"failed to append new domain events: {0}"</span>)]
+    </span>Conflict(<span class="attr">#[from] </span>version::ConflictError),
+    <span class="doccomment">/// Error returned when the [Appender] implementation has encountered an error.
+    </span><span class="attr">#[error(<span class="string">"failed to append new domain events, an error occurred: {0}"</span>)]
+    </span>Internal(<span class="attr">#[from] </span>anyhow::Error),
+}
+
+<span class="attr">#[async_trait]
+</span><span class="doccomment">/// Interface used to append new Domain Events in an Event Store.
+</span><span class="kw">pub trait </span>Appender&lt;StreamId, Event&gt;: Send + Sync
+<span class="kw">where
+    </span>StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
+    <span class="doccomment">/// Appens new Domain Events to the specified Event Stream.
+    ///
+    /// The result of this operation is the new [Version][version::Version]
+    /// of the Event Stream with the specified Domain Events added to it.
+    </span><span class="kw">async fn </span>append(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: StreamId,
+        version_check: version::Check,
+        events: Vec&lt;event::Envelope&lt;Event&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;version::Version, AppendError&gt;;
+}
+
+<span class="doccomment">/// An [Event][event::Envelope] Store, used to store Domain Events in Event Streams -- a stream
+/// of Domain Events -- and retrieve them.
+///
+/// Each Event Stream is represented by a unique Stream identifier.
+</span><span class="kw">pub trait </span>Store&lt;StreamId, Event&gt;:
+    Streamer&lt;StreamId, Event&gt; + Appender&lt;StreamId, Event&gt; + Send + Sync
+<span class="kw">where
+    </span>StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
+}
+
+<span class="kw">impl</span>&lt;T, StreamId, Event&gt; Store&lt;StreamId, Event&gt; <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: Streamer&lt;StreamId, Event&gt; + Appender&lt;StreamId, Event&gt; + Send + Sync,
+    StreamId: Send + Sync,
+    Event: message::Message + Send + Sync,
+{
+}
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>InMemoryBackend&lt;Id, Evt&gt;
@@ -402,8 +538,8 @@
     }
 }
 
-<span class="doccomment">/// In-memory implementation of [event::Store] trait,
-/// backed by a thread-safe [std::collections::HashMap].
+<span class="doccomment">/// In-memory implementation of [`event::Store`] trait,
+/// backed by a thread-safe [`std::collections::HashMap`].
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>InMemory&lt;Id, Evt&gt;
 <span class="kw">where
@@ -423,7 +559,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Id, Evt&gt; event::Streamer&lt;Id, Evt&gt; <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
+<span class="kw">impl</span>&lt;Id, Evt&gt; Streamer&lt;Id, Evt&gt; <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
 <span class="kw">where
     </span>Id: Clone + Eq + Hash + Send + Sync,
     Evt: message::Message + Clone + Send + Sync,
@@ -434,7 +570,7 @@
         <span class="kw">let </span>backend = <span class="self">self
             </span>.backend
             .read()
-            .expect(<span class="string">&quot;acquire read lock on event store backend&quot;</span>);
+            .expect(<span class="string">"acquire read lock on event store backend"</span>);
 
         <span class="kw">let </span>events = backend
             .event_streams
@@ -452,23 +588,21 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Id, Evt&gt; event::Appender&lt;Id, Evt&gt; <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
+</span><span class="kw">impl</span>&lt;Id, Evt&gt; Appender&lt;Id, Evt&gt; <span class="kw">for </span>InMemory&lt;Id, Evt&gt;
 <span class="kw">where
     </span>Id: Clone + Eq + Hash + Send + Sync,
     Evt: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type </span>Error = ConflictError;
-
     <span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: Id,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec&lt;event::Envelope&lt;Evt&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;version::Version, AppendError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>backend = <span class="self">self
             </span>.backend
             .write()
-            .expect(<span class="string">&quot;acquire write lock on event store backend&quot;</span>);
+            .expect(<span class="string">"acquire write lock on event store backend"</span>);
 
         <span class="kw">let </span>last_event_stream_version = backend
             .event_streams
@@ -477,12 +611,12 @@
             .map(|event| event.version)
             .unwrap_or_default();
 
-        <span class="kw">if let </span>event::StreamVersionExpected::MustBe(expected) = version_check {
+        <span class="kw">if let </span>version::Check::MustBe(expected) = version_check {
             <span class="kw">if </span>last_event_stream_version != expected {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(ConflictError {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(AppendError::Conflict(version::ConflictError {
                     expected,
                     actual: last_event_stream_version,
-                });
+                }));
             }
         }
 
@@ -511,7 +645,7 @@
     }
 }
 
-<span class="doccomment">/// Decorator type for an [event::Store] implementation that tracks the list of
+<span class="doccomment">/// Decorator type for an [`event::Store`] implementation that tracks the list of
 /// recorded Domain Events through it.
 ///
 /// Useful for testing purposes, i.e. asserting that Domain Events written throguh
@@ -519,7 +653,7 @@
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Tracking&lt;T, StreamId, Event&gt;
 <span class="kw">where
-    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    </span>T: Store&lt;StreamId, Event&gt; + Send + Sync,
     StreamId: Send + Sync,
     Event: message::Message + Send + Sync,
 {
@@ -531,34 +665,44 @@
 
 <span class="kw">impl</span>&lt;T, StreamId, Event&gt; Tracking&lt;T, StreamId, Event&gt;
 <span class="kw">where
-    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    </span>T: Store&lt;StreamId, Event&gt; + Send + Sync,
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
     <span class="doccomment">/// Returns the list of recoded Domain Events through this decorator so far.
+    ///
+    /// # Panics
+    ///
+    /// Since the internal data is thread-safe through an [`RwLock`], this method
+    /// could potentially panic while attempting to get a read-only lock on the data recorded.
     </span><span class="kw">pub fn </span>recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;event::Persisted&lt;StreamId, Event&gt;&gt; {
         <span class="self">self</span>.events
             .read()
-            .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
+            .expect(<span class="string">"acquire lock on recorded events list"</span>)
             .clone()
     }
 
     <span class="doccomment">/// Resets the list of recorded Domain Events through this decorator.
+    ///
+    /// # Panics
+    ///
+    /// Since the internal data is thread-safe through an [`RwLock`], this method
+    /// could potentially panic while attempting to get a read-write lock to empty the internal store.
     </span><span class="kw">pub fn </span>reset_recorded_events(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.events
             .write()
-            .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
+            .expect(<span class="string">"acquire lock on recorded events list"</span>)
             .clear();
     }
 }
 
-<span class="kw">impl</span>&lt;T, StreamId, Event&gt; event::Streamer&lt;StreamId, Event&gt; <span class="kw">for </span>Tracking&lt;T, StreamId, Event&gt;
+<span class="kw">impl</span>&lt;T, StreamId, Event&gt; Streamer&lt;StreamId, Event&gt; <span class="kw">for </span>Tracking&lt;T, StreamId, Event&gt;
 <span class="kw">where
-    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    </span>T: Store&lt;StreamId, Event&gt; + Send + Sync,
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type </span>Error = &lt;T <span class="kw">as </span>event::Streamer&lt;StreamId, Event&gt;&gt;::Error;
+    <span class="kw">type </span>Error = &lt;T <span class="kw">as </span>Streamer&lt;StreamId, Event&gt;&gt;::Error;
 
     <span class="kw">fn </span>stream(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -570,41 +714,39 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;T, StreamId, Event&gt; event::Appender&lt;StreamId, Event&gt; <span class="kw">for </span>Tracking&lt;T, StreamId, Event&gt;
+</span><span class="kw">impl</span>&lt;T, StreamId, Event&gt; Appender&lt;StreamId, Event&gt; <span class="kw">for </span>Tracking&lt;T, StreamId, Event&gt;
 <span class="kw">where
-    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    </span>T: Store&lt;StreamId, Event&gt; + Send + Sync,
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
-    <span class="kw">type </span>Error = &lt;T <span class="kw">as </span>event::Appender&lt;StreamId, Event&gt;&gt;::Error;
-
     <span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: StreamId,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec&lt;event::Envelope&lt;Event&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;version::Version, AppendError&gt; {
         <span class="kw">let </span>new_version = <span class="self">self
             </span>.store
             .append(id.clone(), version_check, events.clone())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>events_size = events.len();
-        <span class="kw">let </span>previous_version = new_version - (events_size <span class="kw">as </span>Version);
+        <span class="kw">let </span>previous_version = new_version - (events_size <span class="kw">as </span>version::Version);
 
         <span class="kw">let </span><span class="kw-2">mut </span>persisted_events = events
             .into_iter()
             .enumerate()
             .map(|(i, event)| event::Persisted {
                 stream_id: id.clone(),
-                version: previous_version + (i <span class="kw">as </span>Version) + <span class="number">1</span>,
+                version: previous_version + (i <span class="kw">as </span>version::Version) + <span class="number">1</span>,
                 event,
             })
             .collect();
 
         <span class="self">self</span>.events
             .write()
-            .expect(<span class="string">&quot;acquire lock on recorded events list&quot;</span>)
+            .expect(<span class="string">"acquire lock on recorded events list"</span>)
             .append(<span class="kw-2">&amp;mut </span>persisted_events);
 
         <span class="prelude-val">Ok</span>(new_version)
@@ -613,13 +755,12 @@
 
 <span class="doccomment">/// Extension trait that can be used to pull in supertypes implemented
 /// in this module.
-</span><span class="kw">pub trait </span>EventStoreExt&lt;StreamId, Event&gt;:
-    event::Store&lt;StreamId, Event&gt; + Send + Sync + Sized
+</span><span class="kw">pub trait </span>EventStoreExt&lt;StreamId, Event&gt;: Store&lt;StreamId, Event&gt; + Send + Sync + Sized
 <span class="kw">where
     </span>StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
-    <span class="doccomment">/// Returns a [Tracking] instance that decorates the original [event::Store]
+    <span class="doccomment">/// Returns a [`Tracking`] instance that decorates the original [`event::Store`]
     /// instanca this method has been called on.
     </span><span class="kw">fn </span>with_recorded_events_tracking(<span class="self">self</span>) -&gt; Tracking&lt;<span class="self">Self</span>, StreamId, Event&gt; {
         Tracking {
@@ -631,7 +772,7 @@
 
 <span class="kw">impl</span>&lt;T, StreamId, Event&gt; EventStoreExt&lt;StreamId, Event&gt; <span class="kw">for </span>T
 <span class="kw">where
-    </span>T: event::Store&lt;StreamId, Event&gt; + Send + Sync,
+    </span>T: Store&lt;StreamId, Event&gt; + Send + Sync,
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
@@ -645,32 +786,28 @@
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::event;
-    <span class="kw">use </span><span class="kw">crate</span>::event::{Appender, Streamer};
+    <span class="kw">use </span><span class="kw">crate</span>::event::store::{Appender, Streamer};
     <span class="kw">use </span><span class="kw">crate</span>::message::tests::StringMessage;
     <span class="kw">use </span><span class="kw">crate</span>::version::Version;
 
-    <span class="kw">const </span>STREAM_ID: <span class="kw-2">&amp;</span>str = <span class="string">&quot;stream:test&quot;</span>;
+    <span class="kw">const </span>STREAM_ID: <span class="kw-2">&amp;</span>str = <span class="string">"stream:test"</span>;
 
     <span class="macro">lazy_static! </span>{
         <span class="kw">static </span><span class="kw-2">ref </span>EVENTS: Vec&lt;event::Envelope&lt;StringMessage&gt;&gt; = <span class="macro">vec!</span>[
-            event::Envelope::from(StringMessage(<span class="string">&quot;event-1&quot;</span>)),
-            event::Envelope::from(StringMessage(<span class="string">&quot;event-2&quot;</span>)),
-            event::Envelope::from(StringMessage(<span class="string">&quot;event-3&quot;</span>)),
+            event::Envelope::from(StringMessage(<span class="string">"event-1"</span>)),
+            event::Envelope::from(StringMessage(<span class="string">"event-2"</span>)),
+            event::Envelope::from(StringMessage(<span class="string">"event-3"</span>)),
         ];
     }
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>it_works() {
-        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, StringMessage&gt;::default();
+        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, StringMessage&gt;::default();
 
         <span class="kw">let </span>new_event_stream_version = event_store
-            .append(
-                STREAM_ID,
-                event::StreamVersionExpected::MustBe(<span class="number">0</span>),
-                EVENTS.clone(),
-            )
+            .append(STREAM_ID, version::Check::MustBe(<span class="number">0</span>), EVENTS.clone())
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;append should not fail&quot;</span>);
+            </span>.expect(<span class="string">"append should not fail"</span>);
 
         <span class="kw">let </span>expected_version = EVENTS.len() <span class="kw">as </span>Version;
         <span class="macro">assert_eq!</span>(expected_version, new_event_stream_version);
@@ -690,54 +827,50 @@
             .stream(<span class="kw-2">&amp;</span>STREAM_ID, event::VersionSelect::All)
             .try_collect()
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;opening an event stream should not fail&quot;</span>);
+            </span>.expect(<span class="string">"opening an event stream should not fail"</span>);
 
         <span class="macro">assert_eq!</span>(expected_events, event_stream);
     }
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>tracking_store_works() {
-        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, StringMessage&gt;::default();
+        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, StringMessage&gt;::default();
         <span class="kw">let </span>tracking_event_store = event_store.with_recorded_events_tracking();
 
         tracking_event_store
-            .append(
-                STREAM_ID,
-                event::StreamVersionExpected::MustBe(<span class="number">0</span>),
-                EVENTS.clone(),
-            )
+            .append(STREAM_ID, version::Check::MustBe(<span class="number">0</span>), EVENTS.clone())
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;append should not fail&quot;</span>);
+            </span>.expect(<span class="string">"append should not fail"</span>);
 
         <span class="kw">let </span>event_stream: Vec&lt;<span class="kw">_</span>&gt; = tracking_event_store
             .stream(<span class="kw-2">&amp;</span>STREAM_ID, event::VersionSelect::All)
             .try_collect()
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;opening an event stream should not fail&quot;</span>);
+            </span>.expect(<span class="string">"opening an event stream should not fail"</span>);
 
         <span class="macro">assert_eq!</span>(event_stream, tracking_event_store.recorded_events());
     }
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>version_conflict_checks_work_as_expected() {
-        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, StringMessage&gt;::default();
+        <span class="kw">let </span>event_store = InMemory::&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, StringMessage&gt;::default();
 
         <span class="kw">let </span>append_error = event_store
-            .append(
-                STREAM_ID,
-                event::StreamVersionExpected::MustBe(<span class="number">3</span>),
-                EVENTS.clone(),
-            )
+            .append(STREAM_ID, version::Check::MustBe(<span class="number">3</span>), EVENTS.clone())
             .<span class="kw">await
-            </span>.expect_err(<span class="string">&quot;the event stream version should be zero&quot;</span>);
+            </span>.expect_err(<span class="string">"the event stream version should be zero"</span>);
 
-        <span class="macro">assert_eq!</span>(
-            ConflictError {
-                expected: <span class="number">3</span>,
-                actual: <span class="number">0</span>,
-            },
-            append_error
-        );
+        <span class="kw">if let </span>AppendError::Conflict(err) = append_error {
+            <span class="kw">return </span><span class="macro">assert_eq!</span>(
+                version::ConflictError {
+                    expected: <span class="number">3</span>,
+                    actual: <span class="number">0</span>,
+                },
+                err
+            );
+        }
+
+        <span class="macro">panic!</span>(<span class="string">"expected conflict error, received: {append_error}"</span>)
     }
 }
 </code></pre></div></section></main></body></html>

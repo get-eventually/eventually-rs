@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["GetError"],"mod":["any","event_sourced"],"trait":["Repository"]};
+window.SIDEBAR_ITEMS = {"enum":["GetError","SaveError"],"struct":["EventSourced"],"trait":["Getter","Repository","Saver"]};

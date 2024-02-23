@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually-postgres/src/event.rs`."><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eventually_postgres" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../eventually_postgres/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `eventually-postgres/src/event.rs`."><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eventually_postgres" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -287,119 +288,59 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::string::ToString;
 
+<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>eventually::message::{Message, Metadata};
-<span class="kw">use </span>eventually::serde::Serde;
 <span class="kw">use </span>eventually::version::Version;
-<span class="kw">use </span>eventually::{event, version};
+<span class="kw">use </span>eventually::{event, serde, version};
 <span class="kw">use </span>futures::future::ready;
 <span class="kw">use </span>futures::{StreamExt, TryStreamExt};
-<span class="kw">use </span>regex::Regex;
-<span class="kw">use </span>sqlx::postgres::{PgDatabaseError, PgRow};
+<span class="kw">use </span>sqlx::postgres::PgRow;
 <span class="kw">use </span>sqlx::{PgPool, Postgres, Row, Transaction};
 
 <span class="attr">#[derive(Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>StreamError {
-    <span class="attr">#[error(<span class="string">&quot;failed to convert domain event from its serialization type: {0}&quot;</span>)]
-    </span>ConvertEvent(<span class="attr">#[source] </span>Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
-    <span class="attr">#[error(<span class="string">&quot;failed to deserialize event from database: {0}&quot;</span>)]
-    </span>DeserializeEvent(<span class="attr">#[source] </span>Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
-    <span class="attr">#[error(<span class="string">&quot;failed to get column &#39;{name}&#39; from result row: {error}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"failed to deserialize event from database: {0}"</span>)]
+    </span>DeserializeEvent(<span class="attr">#[source] </span>anyhow::Error),
+    <span class="attr">#[error(<span class="string">"failed to get column '{name}' from result row: {error}"</span>)]
     </span>ReadColumn {
-        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         <span class="attr">#[source]
         </span>error: sqlx::Error,
     },
-    <span class="attr">#[error(<span class="string">&quot;db returned an error: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"db returned an error: {0}"</span>)]
     </span>Database(<span class="attr">#[source] </span>sqlx::Error),
 }
 
-<span class="attr">#[derive(Debug, thiserror::Error)]
-</span><span class="kw">pub enum </span>AppendError {
-    <span class="attr">#[error(<span class="string">&quot;conflict error detected: {0}&quot;</span>)]
-    </span>Conflict(<span class="attr">#[source] </span>version::ConflictError),
-    <span class="attr">#[error(<span class="string">&quot;concurrent update detected, represented as a conflict error: {0}&quot;</span>)]
-    </span>Concurrency(<span class="attr">#[source] </span>version::ConflictError),
-    <span class="attr">#[error(<span class="string">&quot;failed to begin transaction: {0}&quot;</span>)]
-    </span>BeginTransaction(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;failed to upsert new event stream version: {0}&quot;</span>)]
-    </span>UpsertEventStream(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;failed to append a new domain event: {0}&quot;</span>)]
-    </span>AppendEvent(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;failed to commit transaction: {0}&quot;</span>)]
-    </span>CommitTransaction(<span class="attr">#[source] </span>sqlx::Error),
-    <span class="attr">#[error(<span class="string">&quot;db returned an error: {0}&quot;</span>)]
-    </span>Database(<span class="attr">#[from] </span>sqlx::Error),
-}
-
-<span class="kw">impl </span>From&lt;AppendError&gt; <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;version::ConflictError&gt; {
-    <span class="kw">fn </span>from(err: AppendError) -&gt; <span class="self">Self </span>{
-        <span class="kw">match </span>err {
-            AppendError::Conflict(v) =&gt; <span class="prelude-val">Some</span>(v),
-            AppendError::Concurrency(v) =&gt; <span class="prelude-val">Some</span>(v),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        }
-    }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>append_domain_event&lt;Evt, OutEvt&gt;(
-    tx: <span class="kw-2">&amp;mut </span>Transaction&lt;<span class="lifetime">&#39;_</span>, Postgres&gt;,
-    serde: <span class="kw-2">&amp;</span><span class="kw">impl </span>Serde&lt;OutEvt&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>append_domain_event&lt;Evt&gt;(
+    tx: <span class="kw-2">&amp;mut </span>Transaction&lt;<span class="lifetime">'_</span>, Postgres&gt;,
+    serde: <span class="kw-2">&amp;</span><span class="kw">impl </span>serde::Serializer&lt;Evt&gt;,
     event_stream_id: <span class="kw-2">&amp;</span>str,
     event_version: i32,
     new_event_stream_version: i32,
     event: event::Envelope&lt;Evt&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt;
+) -&gt; anyhow::Result&lt;()&gt;
 <span class="kw">where
     </span>Evt: Message,
-    OutEvt: From&lt;Evt&gt;,
 {
     <span class="kw">let </span>event_type = event.message.name();
-    <span class="kw">let </span>out_event = OutEvt::from(event.message);
-    <span class="kw">let </span>serialized_event = serde.serialize(out_event);
     <span class="kw">let </span><span class="kw-2">mut </span>metadata = event.metadata;
+    <span class="kw">let </span>serialized_event = serde
+        .serialize(event.message)
+        .map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to serialize event message: {}"</span>, err))<span class="question-mark">?</span>;
 
-    metadata.insert(<span class="string">&quot;Recorded-At&quot;</span>.to_owned(), Utc::now().to_rfc3339());
+    metadata.insert(<span class="string">"Recorded-At"</span>.to_owned(), Utc::now().to_rfc3339());
     metadata.insert(
-        <span class="string">&quot;Recorded-With-New-Version&quot;</span>.to_owned(),
+        <span class="string">"Recorded-With-New-Version"</span>.to_owned(),
         new_event_stream_version.to_string(),
     );
 
     sqlx::query(
-            <span class="string">r#&quot;INSERT INTO events (event_stream_id, &quot;type&quot;, &quot;version&quot;, event, metadata) VALUES ($1, $2, $3, $4, $5)&quot;#</span>,
+            <span class="string">r#"INSERT INTO events (event_stream_id, "type", "version", event, metadata) VALUES ($1, $2, $3, $4, $5)"#</span>,
         )
             .bind(event_stream_id)
             .bind(event_type)
@@ -412,21 +353,22 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>append_domain_events&lt;Evt, OutEvt&gt;(
-    tx: <span class="kw-2">&amp;mut </span>Transaction&lt;<span class="lifetime">&#39;_</span>, Postgres&gt;,
-    serde: <span class="kw-2">&amp;</span><span class="kw">impl </span>Serde&lt;OutEvt&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>append_domain_events&lt;Evt&gt;(
+    tx: <span class="kw-2">&amp;mut </span>Transaction&lt;<span class="lifetime">'_</span>, Postgres&gt;,
+    serde: <span class="kw-2">&amp;</span><span class="kw">impl </span>serde::Serializer&lt;Evt&gt;,
     event_stream_id: <span class="kw-2">&amp;</span>str,
     new_version: i32,
     events: Vec&lt;event::Envelope&lt;Evt&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), sqlx::Error&gt;
+) -&gt; anyhow::Result&lt;()&gt;
 <span class="kw">where
     </span>Evt: Message,
-    OutEvt: From&lt;Evt&gt;,
 {
-    <span class="kw">let </span>current_event_stream_version = new_version - (events.len() <span class="kw">as </span>i32);
+    <span class="attr">#[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    </span><span class="kw">let </span>current_event_stream_version = new_version - (events.len() <span class="kw">as </span>i32);
 
     <span class="kw">for </span>(i, event) <span class="kw">in </span>events.into_iter().enumerate() {
-        <span class="kw">let </span>event_version = current_event_stream_version + (i <span class="kw">as </span>i32) + <span class="number">1</span>;
+        <span class="attr">#[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+        </span><span class="kw">let </span>event_version = current_event_stream_version + (i <span class="kw">as </span>i32) + <span class="number">1</span>;
 
         append_domain_event(
             tx,
@@ -443,28 +385,29 @@
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>Store&lt;Id, Evt, OutEvt, S&gt;
+</span><span class="kw">pub struct </span>Store&lt;Id, Evt, Serde&gt;
 <span class="kw">where
     </span>Id: ToString + Clone,
-    Evt: TryFrom&lt;OutEvt&gt;,
-    OutEvt: From&lt;Evt&gt;,
-    S: Serde&lt;OutEvt&gt;,
+    Serde: serde::Serde&lt;Evt&gt;,
 {
     pool: PgPool,
-    serde: S,
+    serde: Serde,
     id_type: PhantomData&lt;Id&gt;,
     evt_type: PhantomData&lt;Evt&gt;,
-    out_evt_type: PhantomData&lt;OutEvt&gt;,
 }
 
-<span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">impl</span>&lt;Id, Evt, Serde&gt; Store&lt;Id, Evt, Serde&gt;
 <span class="kw">where
     </span>Id: ToString + Clone,
-    Evt: TryFrom&lt;OutEvt&gt;,
-    OutEvt: From&lt;Evt&gt;,
-    S: Serde&lt;OutEvt&gt;,
+    Serde: serde::Serde&lt;Evt&gt;,
 {
-    <span class="kw">pub async fn </span>new(pool: PgPool, serde: S) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, sqlx::migrate::MigrateError&gt; {
+    <span class="doccomment">/// Runs the latest migrations necessary for the implementation to work,
+    /// then returns a new [`Store`] instance.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if the migrations fail to run.
+    </span><span class="kw">pub async fn </span>new(pool: PgPool, serde: Serde) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, sqlx::migrate::MigrateError&gt; {
         <span class="comment">// Make sure the latest migrations are used before using the Store instance.
         </span><span class="kw">crate</span>::MIGRATIONS.run(<span class="kw-2">&amp;</span>pool).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -473,78 +416,70 @@
             serde,
             id_type: PhantomData,
             evt_type: PhantomData,
-            out_evt_type: PhantomData,
         })
     }
 }
 
-<span class="kw">fn </span>try_get_column&lt;T&gt;(row: <span class="kw-2">&amp;</span>PgRow, name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;T, StreamError&gt;
+<span class="kw">fn </span>try_get_column&lt;T&gt;(row: <span class="kw-2">&amp;</span>PgRow, name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;T, StreamError&gt;
 <span class="kw">where
-    for</span>&lt;<span class="lifetime">&#39;a</span>&gt; T: sqlx::Type&lt;Postgres&gt; + sqlx::Decode&lt;<span class="lifetime">&#39;a</span>, Postgres&gt;,
+    for</span>&lt;<span class="lifetime">'a</span>&gt; T: sqlx::Type&lt;Postgres&gt; + sqlx::Decode&lt;<span class="lifetime">'a</span>, Postgres&gt;,
 {
     row.try_get(name)
         .map_err(|err| StreamError::ReadColumn { name, error: err })
 }
 
-<span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">impl</span>&lt;Id, Evt, Serde&gt; Store&lt;Id, Evt, Serde&gt;
 <span class="kw">where
     </span>Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom&lt;OutEvt&gt; + Message + Send + Sync,
-    &lt;Evt <span class="kw">as </span>TryFrom&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
-    OutEvt: From&lt;Evt&gt; + Send + Sync,
-    S: Serde&lt;OutEvt&gt; + Send + Sync,
-    &lt;S <span class="kw">as </span>Serde&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+    Evt: Message + Send + Sync,
+    Serde: serde::Serde&lt;Evt&gt; + Send + Sync,
 {
     <span class="kw">fn </span>event_row_to_persisted_event(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         stream_id: Id,
-        row: PgRow,
+        row: <span class="kw-2">&amp;</span>PgRow,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;event::Persisted&lt;Id, Evt&gt;, StreamError&gt; {
-        <span class="kw">let </span>version_column: i32 = try_get_column(<span class="kw-2">&amp;</span>row, <span class="string">&quot;version&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>event_column: Vec&lt;u8&gt; = try_get_column(<span class="kw-2">&amp;</span>row, <span class="string">&quot;event&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>metadata_column: sqlx::types::Json&lt;Metadata&gt; = try_get_column(<span class="kw-2">&amp;</span>row, <span class="string">&quot;metadata&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>version_column: i32 = try_get_column(row, <span class="string">"version"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>event_column: Vec&lt;u8&gt; = try_get_column(row, <span class="string">"event"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>metadata_column: sqlx::types::Json&lt;Metadata&gt; = try_get_column(row, <span class="string">"metadata"</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>deserialized_event = <span class="self">self
             </span>.serde
-            .deserialize(event_column)
-            .map_err(|err| StreamError::DeserializeEvent(Box::new(err)))<span class="question-mark">?</span>;
+            .deserialize(<span class="kw-2">&amp;</span>event_column)
+            .map_err(StreamError::DeserializeEvent)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>converted_event = Evt::try_from(deserialized_event)
-            .map_err(|err| StreamError::ConvertEvent(Box::new(err)))<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(event::Persisted {
+        <span class="attr">#[allow(clippy::cast_sign_loss)]
+        </span><span class="prelude-val">Ok</span>(event::Persisted {
             stream_id,
             version: version_column <span class="kw">as </span>Version,
             event: event::Envelope {
-                message: converted_event,
+                message: deserialized_event,
                 metadata: metadata_column.<span class="number">0</span>,
             },
         })
     }
 }
 
-<span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; event::Streamer&lt;Id, Evt&gt; <span class="kw">for </span>Store&lt;Id, Evt, OutEvt, S&gt;
+<span class="kw">impl</span>&lt;Id, Evt, Serde&gt; event::store::Streamer&lt;Id, Evt&gt; <span class="kw">for </span>Store&lt;Id, Evt, Serde&gt;
 <span class="kw">where
     </span>Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom&lt;OutEvt&gt; + Message + std::fmt::Debug + Send + Sync,
-    &lt;Evt <span class="kw">as </span>TryFrom&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
-    OutEvt: From&lt;Evt&gt; + Send + Sync,
-    S: Serde&lt;OutEvt&gt; + Send + Sync,
-    &lt;S <span class="kw">as </span>Serde&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+    Evt: Message + Send + Sync,
+    Serde: serde::Serde&lt;Evt&gt; + Send + Sync,
 {
     <span class="kw">type </span>Error = StreamError;
 
     <span class="kw">fn </span>stream(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>Id, select: event::VersionSelect) -&gt; event::Stream&lt;Id, Evt, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span>from_version: i32 = <span class="kw">match </span>select {
+        <span class="attr">#[allow(clippy::cast_possible_truncation)]
+        </span><span class="kw">let </span>from_version: i32 = <span class="kw">match </span>select {
             event::VersionSelect::All =&gt; <span class="number">0</span>,
             event::VersionSelect::From(v) =&gt; v <span class="kw">as </span>i32,
         };
 
         <span class="kw">let </span>query = sqlx::query(
-            <span class="string">r#&quot;SELECT version, event, metadata
+            <span class="string">r"SELECT version, event, metadata
                FROM events
                WHERE event_stream_id = $1 AND version &gt;= $2
-               ORDER BY version&quot;#</span>,
+               ORDER BY version"</span>,
         );
 
         <span class="kw">let </span>id = id.clone();
@@ -554,71 +489,76 @@
             .bind(from_version)
             .fetch(<span class="kw-2">&amp;</span><span class="self">self</span>.pool)
             .map_err(StreamError::Database)
-            .and_then(<span class="kw">move </span>|row| ready(<span class="self">self</span>.event_row_to_persisted_event(id.clone(), row)))
+            .and_then(<span class="kw">move </span>|row| ready(<span class="self">self</span>.event_row_to_persisted_event(id.clone(), <span class="kw-2">&amp;</span>row)))
             .boxed()
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Id, Evt, OutEvt, S&gt; event::Appender&lt;Id, Evt&gt; <span class="kw">for </span>Store&lt;Id, Evt, OutEvt, S&gt;
+</span><span class="kw">impl</span>&lt;Id, Evt, Serde&gt; event::store::Appender&lt;Id, Evt&gt; <span class="kw">for </span>Store&lt;Id, Evt, Serde&gt;
 <span class="kw">where
     </span>Id: ToString + Clone + Send + Sync,
-    Evt: TryFrom&lt;OutEvt&gt; + Message + std::fmt::Debug + Send + Sync,
-    &lt;Evt <span class="kw">as </span>TryFrom&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
-    OutEvt: From&lt;Evt&gt; + Send + Sync,
-    S: Serde&lt;OutEvt&gt; + Send + Sync,
-    &lt;S <span class="kw">as </span>Serde&lt;OutEvt&gt;&gt;::Error: std::error::Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+    Evt: Message + Send + Sync,
+    Serde: serde::Serde&lt;Evt&gt; + Send + Sync,
 {
-    <span class="kw">type </span>Error = AppendError;
-
     <span class="kw">async fn </span>append(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: Id,
-        version_check: event::StreamVersionExpected,
+        version_check: version::Check,
         events: Vec&lt;event::Envelope&lt;Evt&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, <span class="self">Self</span>::Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Version, event::store::AppendError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self
             </span>.pool
             .begin()
             .<span class="kw">await
-            </span>.map_err(AppendError::BeginTransaction)<span class="question-mark">?</span>;
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to begin transaction: {}"</span>, err))<span class="question-mark">?</span>;
 
-        sqlx::query(<span class="string">&quot;SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE&quot;</span>)
+        sqlx::query(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE DEFERRABLE"</span>)
             .execute(<span class="kw-2">&amp;mut *</span>tx)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+            .<span class="kw">await
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to begin transaction: {}"</span>, err))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>string_id = id.to_string();
 
         <span class="kw">let </span>new_version: i32 = <span class="kw">match </span>version_check {
-            event::StreamVersionExpected::Any =&gt; {
-                <span class="kw">let </span>events_len = events.len() <span class="kw">as </span>i32;
+            version::Check::Any =&gt; {
+                <span class="attr">#[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+                </span><span class="kw">let </span>events_len = events.len() <span class="kw">as </span>i32;
 
-                sqlx::query(<span class="string">&quot;SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)&quot;</span>)
+                sqlx::query(<span class="string">"SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)"</span>)
                     .bind(<span class="kw-2">&amp;</span>string_id)
                     .bind(events_len)
                     .fetch_one(<span class="kw-2">&amp;mut *</span>tx)
                     .<span class="kw">await
-                    </span>.and_then(|row| row.try_get(<span class="number">0</span>))<span class="question-mark">?
+                    </span>.and_then(|row| row.try_get(<span class="number">0</span>))
+                    .map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to upsert new event stream version: {}"</span>, err))<span class="question-mark">?
             </span>},
-            event::StreamVersionExpected::MustBe(v) =&gt; {
+            version::Check::MustBe(v) =&gt; {
                 <span class="kw">let </span>new_version = v + (events.len() <span class="kw">as </span>Version);
 
-                sqlx::query(<span class="string">&quot;CALL upsert_event_stream($1, $2, $3)&quot;</span>)
+                <span class="attr">#[allow(clippy::cast_possible_truncation)]
+                </span>sqlx::query(<span class="string">"CALL upsert_event_stream($1, $2, $3)"</span>)
                     .bind(<span class="kw-2">&amp;</span>string_id)
                     .bind(v <span class="kw">as </span>i32)
                     .bind(new_version <span class="kw">as </span>i32)
                     .execute(<span class="kw-2">&amp;mut *</span>tx)
                     .<span class="kw">await
                     </span>.map_err(|err| <span class="kw">match </span><span class="kw">crate</span>::check_for_conflict_error(<span class="kw-2">&amp;</span>err) {
-                        <span class="prelude-val">Some</span>(err) =&gt; AppendError::Conflict(err),
-                        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>err.as_database_error().and_then(|err| err.code()) {
-                            <span class="prelude-val">Some</span>(code) <span class="kw">if </span>code == <span class="string">&quot;40001&quot; </span>=&gt; {
-                                AppendError::Concurrency(version::ConflictError {
+                        <span class="prelude-val">Some</span>(err) =&gt; event::store::AppendError::Conflict(err),
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>err
+                            .as_database_error()
+                            .and_then(sqlx::error::DatabaseError::code)
+                        {
+                            <span class="prelude-val">Some</span>(code) <span class="kw">if </span>code == <span class="string">"40001" </span>=&gt; {
+                                event::store::AppendError::Conflict(version::ConflictError {
                                     expected: v,
                                     actual: new_version,
                                 })
                             },
-                            <span class="kw">_ </span>=&gt; AppendError::UpsertEventStream(err),
+                            <span class="kw">_ </span>=&gt; event::store::AppendError::Internal(<span class="macro">anyhow!</span>(
+                                <span class="string">"failed to upsert new event stream version: {}"</span>,
+                                err
+                            )),
                         },
                     })
                     .map(|<span class="kw">_</span>| new_version <span class="kw">as </span>i32)<span class="question-mark">?
@@ -627,11 +567,14 @@
 
         append_domain_events(<span class="kw-2">&amp;mut </span>tx, <span class="kw-2">&amp;</span><span class="self">self</span>.serde, <span class="kw-2">&amp;</span>string_id, new_version, events)
             .<span class="kw">await
-            </span>.map_err(AppendError::AppendEvent)<span class="question-mark">?</span>;
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to append new domain events: {}"</span>, err))<span class="question-mark">?</span>;
 
-        tx.commit().<span class="kw">await</span>.map_err(AppendError::CommitTransaction)<span class="question-mark">?</span>;
+        tx.commit()
+            .<span class="kw">await
+            </span>.map_err(|err| <span class="macro">anyhow!</span>(<span class="string">"failed to commit transaction: {}"</span>, err))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(new_version <span class="kw">as </span>Version)
+        <span class="attr">#[allow(clippy::cast_sign_loss)]
+        </span><span class="prelude-val">Ok</span>(new_version <span class="kw">as </span>Version)
     }
 }
 </code></pre></div></section></main></body></html>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ConflictError"],"type":["Version"]};
+window.SIDEBAR_ITEMS = {"enum":["Check"],"struct":["ConflictError"],"type":["Version"]};

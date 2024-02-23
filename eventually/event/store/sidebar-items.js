@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["InMemory","Tracking"],"trait":["EventStoreExt"]};
+window.SIDEBAR_ITEMS = {"enum":["AppendError"],"struct":["InMemory","Tracking"],"trait":["Appender","EventStoreExt","Store","Streamer"]};

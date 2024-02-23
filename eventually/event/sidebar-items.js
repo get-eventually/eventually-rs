@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["StreamVersionExpected","VersionSelect"],"mod":["store"],"struct":["Persisted"],"trait":["Appender","Store","Streamer"],"type":["Envelope","Stream"]};
+window.SIDEBAR_ITEMS = {"enum":["VersionSelect"],"mod":["store"],"struct":["Persisted"],"type":["Envelope","Stream"]};

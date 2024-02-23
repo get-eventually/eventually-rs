@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"attr":["aggregate_root"],"derive":["Message"]};
+window.SIDEBAR_ITEMS = {"attr":["aggregate_root"]};

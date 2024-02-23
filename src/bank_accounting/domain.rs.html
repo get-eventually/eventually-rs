@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/domain.rs`."><title>domain.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bank_accounting" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../bank_accounting/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples/bank-accounting/src/domain.rs`."><title>domain.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bank_accounting" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -283,10 +284,27 @@
 <a href="#283" id="283">283</a>
 <a href="#284" id="284">284</a>
 <a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>eventually::aggregate;
-<span class="kw">use </span>eventually_macros::{aggregate_root, Message};
+<span class="kw">use </span>eventually::message::Message;
+<span class="kw">use </span>eventually_macros::aggregate_root;
 <span class="kw">use </span>rust_decimal::Decimal;
 
 <span class="kw">pub type </span>BankAccountRepository&lt;S&gt; = aggregate::EventSourcedRepository&lt;BankAccount, S&gt;;
@@ -303,7 +321,7 @@
 <span class="kw">pub type </span>BankAccountHolderId = String;
 <span class="kw">pub type </span>BankAccountId = String;
 
-<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Message)]
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>BankAccountEvent {
     WasOpened {
         id: BankAccountId,
@@ -334,27 +352,42 @@
     },
 }
 
+<span class="kw">impl </span>Message <span class="kw">for </span>BankAccountEvent {
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="kw">match </span><span class="self">self </span>{
+            BankAccountEvent::WasOpened { .. } =&gt; <span class="string">"BankAccountWasOpened"</span>,
+            BankAccountEvent::DepositWasRecorded { .. } =&gt; <span class="string">"BankAccountDepositWasRecorded"</span>,
+            BankAccountEvent::TransferWasSent { .. } =&gt; <span class="string">"BankAccountTransferWasSent"</span>,
+            BankAccountEvent::TransferWasReceived { .. } =&gt; <span class="string">"BankAccountTransferWasReceived"</span>,
+            BankAccountEvent::TransferWasDeclined { .. } =&gt; <span class="string">"BankAccountTransferWasDeclined"</span>,
+            BankAccountEvent::TransferWasConfirmed { .. } =&gt; <span class="string">"BankAccountTransferWasConfirmed"</span>,
+            BankAccountEvent::WasClosed { .. } =&gt; <span class="string">"BankAccountWasClosed"</span>,
+            BankAccountEvent::WasReopened { .. } =&gt; <span class="string">"BankAccountWasReopened"</span>,
+        }
+    }
+}
+
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 </span><span class="kw">pub enum </span>BankAccountError {
-    <span class="attr">#[error(<span class="string">&quot;bank account has not been opened yet&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"bank account has not been opened yet"</span>)]
     </span>NotOpenedYet,
-    <span class="attr">#[error(<span class="string">&quot;bank account has already been opened&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"bank account has already been opened"</span>)]
     </span>AlreadyOpened,
-    <span class="attr">#[error(<span class="string">&quot;empty id provided for the new bank account&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"empty id provided for the new bank account"</span>)]
     </span>EmptyAccountId,
-    <span class="attr">#[error(<span class="string">&quot;empty account holder id provided for the new bank account&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"empty account holder id provided for the new bank account"</span>)]
     </span>EmptyAccountHolderId,
-    <span class="attr">#[error(<span class="string">&quot;a deposit was attempted with negative import&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"a deposit was attempted with negative import"</span>)]
     </span>NegativeDepositAttempted,
-    <span class="attr">#[error(<span class="string">&quot;no money to deposit has been specified&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"no money to deposit has been specified"</span>)]
     </span>NoMoneyDeposited,
-    <span class="attr">#[error(<span class="string">&quot;transfer could not be sent due to insufficient funds&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"transfer could not be sent due to insufficient funds"</span>)]
     </span>InsufficientFunds,
-    <span class="attr">#[error(<span class="string">&quot;transfer transaction was destined to a different recipient: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"transfer transaction was destined to a different recipient: {0}"</span>)]
     </span>WrongTransactionRecipient(BankAccountId),
-    <span class="attr">#[error(<span class="string">&quot;the account is closed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"the account is closed"</span>)]
     </span>Closed,
-    <span class="attr">#[error(<span class="string">&quot;bank account has already been closed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"bank account has already been closed"</span>)]
     </span>AlreadyClosed,
 }
 
@@ -371,8 +404,8 @@
     <span class="kw">type </span>Event = BankAccountEvent;
     <span class="kw">type </span>Error = BankAccountError;
 
-    <span class="kw">fn </span>type_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
-        <span class="string">&quot;BankAccount&quot;
+    <span class="kw">fn </span>type_name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"BankAccount"
     </span>}
 
     <span class="kw">fn </span>aggregate_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Id {
