@@ -1,12 +1,11 @@
 use std::time::Duration;
 
 use anyhow::anyhow;
-use bank_accounting::domain::BankAccountRepository;
+use bank_accounting::domain::{BankAccountEvent, BankAccountRepository};
 use bank_accounting::{application, grpc, proto};
-use eventually::serde::prost::MessageSerde;
+use eventually::serde;
 use eventually::tracing::{AggregateRepositoryExt, EventStoreExt};
 use eventually_postgres::event;
-use tower_http::trace::TraceLayer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -14,7 +13,10 @@ async fn main() -> anyhow::Result<()> {
 
     let pool = bank_accounting::postgres::connect().await?;
 
-    let bank_account_event_serde = MessageSerde::<proto::Event>::default();
+    let bank_account_event_serde = serde::Convert::<BankAccountEvent, proto::Event, _>::new(
+        serde::Protobuf::<proto::Event>::default(),
+    );
+
     let bank_account_event_store = event::Store::new(pool, bank_account_event_serde)
         .await?
         .with_tracing();
@@ -43,11 +45,11 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let layer = tower::ServiceBuilder::new()
-        .layer(TraceLayer::new_for_grpc())
         .timeout(Duration::from_secs(5))
         .into_inner();
 
     tonic::transport::Server::builder()
+        .trace_fn(|r| tracing::info_span!("server", uri = r.uri().to_string()))
         .layer(layer)
         .add_service(health_svc)
         .add_service(reflection_svc)

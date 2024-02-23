@@ -1,55 +1,21 @@
-//! Module containing useful macros for the [eventually] crate.
+//! `eventually-macros` contains useful macros that provides
+//! different implementations of traits and functionalities from [eventually].
 
-#![deny(unsafe_code, unused_qualifications, trivial_casts)]
-#![warn(missing_docs)]
-#![deny(clippy::all)]
-#![warn(clippy::pedantic)]
+#![deny(unsafe_code, unused_qualifications, trivial_casts, missing_docs)]
+#![deny(clippy::all, clippy::pedantic, clippy::cargo)]
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, Fields, ItemEnum, ItemStruct, Meta, NestedMeta, Path};
+use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta, Path};
 
-#[proc_macro_derive(Message)]
-pub fn derive_message(input: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(input as ItemEnum);
-    let item_name = item.ident;
-    let event_prefix = item_name
-        .to_string()
-        .strip_suffix("Event")
-        .unwrap()
-        .to_owned();
-
-    let match_cases = item.variants.iter().fold(quote! {}, |acc, variant| {
-        let event_type = &variant.ident;
-        let event_name = format!("{}{}", event_prefix, event_type);
-
-        quote! {
-            #acc
-            #item_name::#event_type { .. } => #event_name,
-        }
-    });
-
-    let result = quote! {
-        impl eventually::message::Message for #item_name {
-            fn name(&self) -> &'static str {
-                match self {
-                    #match_cases
-                }
-            }
-        }
-    };
-
-    result.into()
-}
-
-/// Implements a newtype to use the [eventually::aggregate::Root] instance with
-/// user-defined [eventually::aggregate::Aggregate] types.
+/// Implements a newtype to use the [`eventually::aggregate::Root`] instance with
+/// user-defined [`eventually::aggregate::Aggregate`] types.
 ///
 /// # Context
 ///
-/// The eventually API uses `aggregate::Root<T>` to manage the versioning and
-/// list of events to commit for an `Aggregate` instance. Domain commands
-/// are to be implemented on the `aggregate::Root<T>` instance, as it gives
+/// The eventually API uses [`aggregate::Root`][eventually::aggregate::Root]
+/// to manage the versioning and list of events to commit for an `Aggregate` instance.
+/// Domain commands are to be implemented on the `aggregate::Root<T>` instance, as it gives
 /// access to use `Root<T>.record_that` or `Root<T>.record_new` to record Domain Events.
 ///
 /// However, it's not possible to use `impl aggregate::Root<MyAggregateType>` (`MyAggregateType`
@@ -58,7 +24,11 @@ pub fn derive_message(input: TokenStream) -> TokenStream {
 ///
 /// This attribute macro makes the implementation of a newtype easy, as it Implements
 /// conversion traits from and to `aggregate::Root<T>` and implements automatic deref
-/// through [std::ops::Deref] and [std::ops::DerefMut].
+/// through [`std::ops::Deref`] and [`std::ops::DerefMut`].
+///
+/// # Panics
+///
+/// This method will panic if the Aggregate Root type is not provided as a macro parameter.
 #[proc_macro_attribute]
 pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as AttributeArgs);

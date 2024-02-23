@@ -49,7 +49,7 @@ impl proto::bank_accounting_server::BankAccounting for BankAccountingApi {
 
                 if let Some(EmptyAccountId | EmptyAccountHolderId) = bank_error {
                     tonic::Status::invalid_argument(e.to_string())
-                } else if let Some(e) = conflict_error {
+                } else if conflict_error.is_some() {
                     tonic::Status::already_exists(AlreadyOpened.to_string())
                 } else {
                     tonic::Status::internal(e.to_string())

@@ -1,20 +1,19 @@
-//! Module exposing a test [Scenario] type to write Domain [Command]s
+//! Module exposing a test [Scenario] type to write Domain [Command][command::Envelope]s
 //! test cases using the [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/).
 
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use crate::event::store::EventStoreExt;
-use crate::event::Appender;
-use crate::{command, event, message};
+use crate::event::store::{Appender, EventStoreExt};
+use crate::{command, event, message, version};
 
-/// A test scenario that can be used to test a [Command] [Handler][command::Handler]
+/// A test scenario that can be used to test a [Command][command::Envelope] [Handler][command::Handler]
 /// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.
 pub struct Scenario;
 
 impl Scenario {
     /// Sets the precondition state of the system for the [Scenario], which
-    /// is expressed by a list of Domain [Event]s in an Event-sourced system.
+    /// is expressed by a list of Domain [Event][event::Envelope]s in an Event-sourced system.
     #[must_use]
     pub fn given<Id, Evt>(self, events: Vec<event::Persisted<Id, Evt>>) -> ScenarioGiven<Id, Evt>
     where
@@ -23,7 +22,7 @@ impl Scenario {
         ScenarioGiven { given: events }
     }
 
-    /// Specifies the [Command] to test in the [Scenario], in the peculiar case
+    /// Specifies the [Command][command::Envelope] to test in the [Scenario], in the peculiar case
     /// of having a clean system.
     ///
     /// This is a shortcut for:
@@ -55,7 +54,7 @@ impl<Id, Evt> ScenarioGiven<Id, Evt>
 where
     Evt: message::Message,
 {
-    /// Specifies the [Command] to test in the [Scenario].
+    /// Specifies the [Command][command::Envelope] to test in the [Scenario].
     #[must_use]
     pub fn when<Cmd>(self, command: command::Envelope<Cmd>) -> ScenarioWhen<Id, Evt, Cmd>
     where
@@ -130,7 +129,7 @@ where
     Evt: message::Message + Clone + PartialEq + Send + Sync + Debug,
     Cmd: message::Message,
 {
-    /// Executes the whole [Scenario] by constructing a Command [Handler]
+    /// Executes the whole [Scenario] by constructing a Command [Handler][command::Handler]
     /// with the provided closure function and running the specified assertions.
     ///
     /// # Panics
@@ -148,7 +147,7 @@ where
             event_store
                 .append(
                     event.stream_id,
-                    event::StreamVersionExpected::MustBe(event.version - 1),
+                    version::Check::MustBe(event.version - 1),
                     vec![event.event],
                 )
                 .await

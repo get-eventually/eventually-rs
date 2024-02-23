@@ -1,9 +1,6 @@
-use eventually::aggregate::repository::GetError;
-use eventually::aggregate::Repository;
-use eventually::serde::json::JsonSerde;
-use eventually::version;
+use eventually::aggregate::repository::{self, GetError, Getter, Saver};
+use eventually::serde;
 use eventually_postgres::aggregate;
-use futures::TryFutureExt;
 use rand::Rng;
 
 mod setup;
@@ -16,8 +13,8 @@ async fn it_works() {
 
     let aggregate_repository = aggregate::Repository::new(
         pool,
-        JsonSerde::<setup::TestAggregate>::default(),
-        JsonSerde::<setup::TestDomainEvent>::default(),
+        serde::Json::<setup::TestAggregate>::default(),
+        serde::Json::<setup::TestDomainEvent>::default(),
     )
     .await
     .unwrap();
@@ -65,8 +62,8 @@ async fn it_detects_data_races_and_returns_conflict_error() {
 
     let aggregate_repository = aggregate::Repository::new(
         pool,
-        JsonSerde::<setup::TestAggregate>::default(),
-        JsonSerde::<setup::TestDomainEvent>::default(),
+        serde::Json::<setup::TestAggregate>::default(),
+        serde::Json::<setup::TestDomainEvent>::default(),
     )
     .await
     .unwrap();
@@ -84,17 +81,13 @@ async fn it_detects_data_races_and_returns_conflict_error() {
     let mut cloned_root = root.clone();
 
     let result = futures::join!(
-        aggregate_repository
-            .save(&mut root)
-            .map_err(Option::<version::ConflictError>::from),
-        aggregate_repository
-            .save(&mut cloned_root)
-            .map_err(Option::<version::ConflictError>::from),
+        aggregate_repository.save(&mut root),
+        aggregate_repository.save(&mut cloned_root),
     );
 
     match result {
-        (Ok(()), Err(Some(_))) => (),
-        (Err(Some(_)), Ok(())) => (),
+        (Ok(()), Err(repository::SaveError::Conflict(_))) => (),
+        (Err(repository::SaveError::Conflict(_)), Ok(())) => (),
         (first, second) => panic!(
             "invalid state detected, first: {:?}, second: {:?}",
             first, second

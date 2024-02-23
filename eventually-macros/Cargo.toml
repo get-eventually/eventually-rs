@@ -1,12 +1,25 @@
 [package]
 name = "eventually-macros"
+description = "Macros for eventually crate"
 version = "0.1.0"
 edition = "2021"
+authors = ["Danilo Cianfrone <danilocianfr@gmail.com>"]
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/get-eventually/eventually-rs"
+
+categories = [
+    "rust-patterns",
+    "web-programming",
+    "asynchronous",
+    "data-structures",
+]
+keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [lib]
 proc-macro = true
 
 [dependencies]
 syn = { version = "1.0.109", features = ["full"] }
-quote = "1.0.33"
+quote = "1.0.35"
 eventually = { path = "../eventually" }
