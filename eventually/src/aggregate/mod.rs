@@ -242,7 +242,7 @@ where
     }
 }
 
-/// List of possible errors that can be returned by [Root::rehydrate_async].
+/// List of possible errors that can be returned by [`Root::rehydrate_async`].
 #[derive(Debug, thiserror::Error)]
 pub enum RehydrateError<T, I> {
     /// Error returned during rehydration when the [Aggregate Root][Root]
@@ -422,9 +422,7 @@ pub(crate) mod test_user_domain {
                 return Err(UserError::EmptyPassword);
             }
 
-            Ok(Self::record_new(
-                UserEvent::WasCreated { email, password }.into(),
-            )?)
+            Self::record_new(UserEvent::WasCreated { email, password }.into())
         }
 
         pub(crate) fn change_password(&mut self, password: String) -> Result<(), UserError> {

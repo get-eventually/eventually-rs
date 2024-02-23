@@ -93,8 +93,8 @@ pub(crate) mod tests {
             .with_metadata("hello_world".into(), "test".into())
             .with_metadata("test_number".into(), 1.to_string());
 
-        println!("Message: {:?}", message);
-        println!("New message: {:?}", new_message);
+        println!("Message: {message:?}");
+        println!("New message: {new_message:?}");
 
         // Metadata does not affect equality of message.
         assert_eq!(message, new_message);

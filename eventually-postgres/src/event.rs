@@ -73,9 +73,11 @@ pub(crate) async fn append_domain_events<Evt>(
 where
     Evt: Message,
 {
+    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     let current_event_stream_version = new_version - (events.len() as i32);
 
     for (i, event) in events.into_iter().enumerate() {
+        #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
         let event_version = current_event_stream_version + (i as i32) + 1;
 
         append_domain_event(
@@ -109,6 +111,12 @@ where
     Id: ToString + Clone,
     Serde: serde::Serde<Evt>,
 {
+    /// Runs the latest migrations necessary for the implementation to work,
+    /// then returns a new [`Store`] instance.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if the migrations fail to run.
     pub async fn new(pool: PgPool, serde: Serde) -> Result<Self, sqlx::migrate::MigrateError> {
         // Make sure the latest migrations are used before using the Store instance.
         crate::MIGRATIONS.run(&pool).await?;
@@ -139,17 +147,18 @@ where
     fn event_row_to_persisted_event(
         &self,
         stream_id: Id,
-        row: PgRow,
+        row: &PgRow,
     ) -> Result<event::Persisted<Id, Evt>, StreamError> {
-        let version_column: i32 = try_get_column(&row, "version")?;
-        let event_column: Vec<u8> = try_get_column(&row, "event")?;
-        let metadata_column: sqlx::types::Json<Metadata> = try_get_column(&row, "metadata")?;
+        let version_column: i32 = try_get_column(row, "version")?;
+        let event_column: Vec<u8> = try_get_column(row, "event")?;
+        let metadata_column: sqlx::types::Json<Metadata> = try_get_column(row, "metadata")?;
 
         let deserialized_event = self
             .serde
             .deserialize(&event_column)
             .map_err(StreamError::DeserializeEvent)?;
 
+        #[allow(clippy::cast_sign_loss)]
         Ok(event::Persisted {
             stream_id,
             version: version_column as Version,
@@ -170,16 +179,17 @@ where
     type Error = StreamError;
 
     fn stream(&self, id: &Id, select: event::VersionSelect) -> event::Stream<Id, Evt, Self::Error> {
+        #[allow(clippy::cast_possible_truncation)]
         let from_version: i32 = match select {
             event::VersionSelect::All => 0,
             event::VersionSelect::From(v) => v as i32,
         };
 
         let query = sqlx::query(
-            r#"SELECT version, event, metadata
+            r"SELECT version, event, metadata
                FROM events
                WHERE event_stream_id = $1 AND version >= $2
-               ORDER BY version"#,
+               ORDER BY version",
         );
 
         let id = id.clone();
@@ -189,7 +199,7 @@ where
             .bind(from_version)
             .fetch(&self.pool)
             .map_err(StreamError::Database)
-            .and_then(move |row| ready(self.event_row_to_persisted_event(id.clone(), row)))
+            .and_then(move |row| ready(self.event_row_to_persisted_event(id.clone(), &row)))
             .boxed()
     }
 }
@@ -222,6 +232,7 @@ where
 
         let new_version: i32 = match version_check {
             version::Check::Any => {
+                #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
                 let events_len = events.len() as i32;
 
                 sqlx::query("SELECT * FROM upsert_event_stream_with_no_version_check($1, $2)")
@@ -235,6 +246,7 @@ where
             version::Check::MustBe(v) => {
                 let new_version = v + (events.len() as Version);
 
+                #[allow(clippy::cast_possible_truncation)]
                 sqlx::query("CALL upsert_event_stream($1, $2, $3)")
                     .bind(&string_id)
                     .bind(v as i32)
@@ -243,7 +255,10 @@ where
                     .await
                     .map_err(|err| match crate::check_for_conflict_error(&err) {
                         Some(err) => event::store::AppendError::Conflict(err),
-                        None => match err.as_database_error().and_then(|err| err.code()) {
+                        None => match err
+                            .as_database_error()
+                            .and_then(sqlx::error::DatabaseError::code)
+                        {
                             Some(code) if code == "40001" => {
                                 event::store::AppendError::Conflict(version::ConflictError {
                                     expected: v,
@@ -268,6 +283,7 @@ where
             .await
             .map_err(|err| anyhow!("failed to commit transaction: {}", err))?;
 
+        #[allow(clippy::cast_sign_loss)]
         Ok(new_version as Version)
     }
 }

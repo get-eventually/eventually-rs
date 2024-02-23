@@ -1,5 +1,5 @@
-//! Contains implementations of the [event::Store] trait and connected abstractions,
-//! such as the [std::collections::HashMap]'s based [InMemory] Event Store implementation.
+//! Contains implementations of the [`event::Store`] trait and connected abstractions,
+//! such as the [`std::collections::HashMap`]'s based [`InMemory`] Event Store implementation.
 
 use std::collections::HashMap;
 use std::convert::Infallible;
@@ -30,7 +30,7 @@ where
     ) -> event::Stream<StreamId, Event, Self::Error>;
 }
 
-/// All possible error types returned by [Appender::append].
+/// All possible error types returned by [`Appender::append`].
 #[derive(Debug, thiserror::Error)]
 pub enum AppendError {
     /// Error returned when [Appender::append] encounters a conflict error
@@ -100,8 +100,8 @@ where
     }
 }
 
-/// In-memory implementation of [event::Store] trait,
-/// backed by a thread-safe [std::collections::HashMap].
+/// In-memory implementation of [`event::Store`] trait,
+/// backed by a thread-safe [`std::collections::HashMap`].
 #[derive(Debug, Clone)]
 pub struct InMemory<Id, Evt>
 where
@@ -207,7 +207,7 @@ where
     }
 }
 
-/// Decorator type for an [event::Store] implementation that tracks the list of
+/// Decorator type for an [`event::Store`] implementation that tracks the list of
 /// recorded Domain Events through it.
 ///
 /// Useful for testing purposes, i.e. asserting that Domain Events written throguh
@@ -232,6 +232,11 @@ where
     Event: message::Message + Clone + Send + Sync,
 {
     /// Returns the list of recoded Domain Events through this decorator so far.
+    ///
+    /// # Panics
+    ///
+    /// Since the internal data is thread-safe through an [`RwLock`], this method
+    /// could potentially panic while attempting to get a read-only lock on the data recorded.
     pub fn recorded_events(&self) -> Vec<event::Persisted<StreamId, Event>> {
         self.events
             .read()
@@ -240,6 +245,11 @@ where
     }
 
     /// Resets the list of recorded Domain Events through this decorator.
+    ///
+    /// # Panics
+    ///
+    /// Since the internal data is thread-safe through an [`RwLock`], this method
+    /// could potentially panic while attempting to get a read-write lock to empty the internal store.
     pub fn reset_recorded_events(&self) {
         self.events
             .write()
@@ -312,7 +322,7 @@ where
     StreamId: Clone + Send + Sync,
     Event: message::Message + Clone + Send + Sync,
 {
-    /// Returns a [Tracking] instance that decorates the original [event::Store]
+    /// Returns a [`Tracking`] instance that decorates the original [`event::Store`]
     /// instanca this method has been called on.
     fn with_recorded_events_tracking(self) -> Tracking<Self, StreamId, Event> {
         Tracking {
@@ -422,6 +432,6 @@ mod test {
             );
         }
 
-        panic!("expected conflict error, received: {}", append_error)
+        panic!("expected conflict error, received: {append_error}")
     }
 }

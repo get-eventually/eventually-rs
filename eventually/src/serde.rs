@@ -15,6 +15,11 @@ use serde::{Deserialize, Serialize};
 /// into a specific wire format as a byte array.
 pub trait Serializer<T>: Send + Sync {
     /// Serializes the given value into the protocol supported by this implementation.
+    ///
+    /// # Errors
+    ///
+    /// An error ([`anyhow::Error`]) is returned in case the serialization could not
+    /// succeed as expected.
     fn serialize(&self, value: T) -> anyhow::Result<Vec<u8>>;
 }
 
@@ -23,6 +28,11 @@ pub trait Serializer<T>: Send + Sync {
 pub trait Deserializer<T>: Send + Sync {
     /// Deserializes the given value from a message encoded in the wire format
     /// supported by this implementation.
+    ///
+    /// # Errors
+    ///
+    /// An error ([`anyhow::Error`]) is returned in case the deserialization could not
+    /// succeed as expected.
     fn deserialize(&self, data: &[u8]) -> anyhow::Result<T>;
 }
 
@@ -89,9 +99,8 @@ where
     fn deserialize(&self, data: &[u8]) -> anyhow::Result<In> {
         let inn = self.serde.deserialize(data)?;
 
-        Ok(inn
-            .try_into()
-            .map_err(|err| anyhow!("failed to convert type values: {}", err))?)
+        inn.try_into()
+            .map_err(|err| anyhow!("failed to convert type values: {}", err))
     }
 }
 
@@ -140,7 +149,7 @@ where
 }
 
 /// Implements the [Serde] trait  which serializes and deserializes
-/// the message using Protobuf format through the [prost::Message] trait.
+/// the message using Protobuf format through the [`prost::Message`] trait.
 #[cfg(feature = "serde-prost")]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Protobuf<T>(PhantomData<T>)
@@ -170,7 +179,8 @@ where
     }
 }
 
-/// Implementation of [Serde] traits that uses ProtoJson as wire protocol.
+/// Implementation of [Serde] traits that uses [ProtoJson](https://protobuf.dev/programming-guides/proto3/#json)
+/// as wire protocol.
 #[cfg(feature = "serde-prost")]
 #[cfg(feature = "serde-json")]
 #[derive(Clone, Copy)]
@@ -187,7 +197,7 @@ where
     for<'de> T: Deserialize<'de>,
 {
     fn default() -> Self {
-        Self(Default::default())
+        Self(PhantomData)
     }
 }
 

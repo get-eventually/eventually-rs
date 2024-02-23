@@ -8,12 +8,12 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta, Path};
 
-/// Implements a newtype to use the [eventually::aggregate::Root] instance with
-/// user-defined [eventually::aggregate::Aggregate] types.
+/// Implements a newtype to use the [`eventually::aggregate::Root`] instance with
+/// user-defined [`eventually::aggregate::Aggregate`] types.
 ///
 /// # Context
 ///
-/// The eventually API uses [aggregate::Root][eventually::aggregate::Root]
+/// The eventually API uses [`aggregate::Root`][eventually::aggregate::Root]
 /// to manage the versioning and list of events to commit for an `Aggregate` instance.
 /// Domain commands are to be implemented on the `aggregate::Root<T>` instance, as it gives
 /// access to use `Root<T>.record_that` or `Root<T>.record_new` to record Domain Events.
@@ -24,7 +24,11 @@ use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta
 ///
 /// This attribute macro makes the implementation of a newtype easy, as it Implements
 /// conversion traits from and to `aggregate::Root<T>` and implements automatic deref
-/// through [std::ops::Deref] and [std::ops::DerefMut].
+/// through [`std::ops::Deref`] and [`std::ops::DerefMut`].
+///
+/// # Panics
+///
+/// This method will panic if the Aggregate Root type is not provided as a macro parameter.
 #[proc_macro_attribute]
 pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as AttributeArgs);

@@ -1,7 +1,7 @@
 //! `eventually-postgres` contains different implementations of traits
-//! from the [eventually] crate that are specific for PostgreSQL databases.
+//! from the [eventually] crate that are specific for `PostgreSQL` databases.
 //!
-//! Check out the [aggregate::Repository] and [event::Store] implementations
+//! Check out the [`aggregate::Repository`] and [`event::Store`] implementations
 //! to know more.
 
 #![deny(unsafe_code, unused_qualifications, trivial_casts)]
@@ -11,7 +11,7 @@
 pub mod aggregate;
 pub mod event;
 
-pub static MIGRATIONS: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
+pub(crate) static MIGRATIONS: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
 use eventually::version::{ConflictError, Version};
 use lazy_static::lazy_static;
@@ -19,7 +19,7 @@ use regex::Regex;
 
 lazy_static! {
     static ref CONFLICT_ERROR_REGEX: Regex =
-        Regex::new(r#"version check failed, expected: (?P<expected>\d), got: (?P<got>\d)"#)
+        Regex::new(r"version check failed, expected: (?P<expected>\d), got: (?P<got>\d)")
             .expect("regex compiles successfully");
 }
 
@@ -32,7 +32,10 @@ pub(crate) fn check_for_conflict_error(err: &sqlx::Error) -> Option<ConflictErro
             .parse::<i32>()
             .expect("field should be a valid integer");
 
-        v as Version
+        #[allow(clippy::cast_sign_loss)]
+        {
+            v as Version
+        }
     }
 
     if let sqlx::Error::Database(ref pg_err) = err {

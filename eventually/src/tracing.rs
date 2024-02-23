@@ -11,7 +11,7 @@ use crate::aggregate::Aggregate;
 use crate::version::{self, Version};
 use crate::{aggregate, event, message};
 
-/// [aggregate::Repository] type wrapper that provides instrumentation
+/// [`aggregate::Repository`] type wrapper that provides instrumentation
 /// features through the `tracing` crate.
 #[derive(Debug, Clone)]
 pub struct InstrumentedAggregateRepository<T, Inner>
@@ -56,7 +56,7 @@ where
     }
 }
 
-/// Extension trait for any [aggregate::Repository] type to provide
+/// Extension trait for any [`aggregate::Repository`] type to provide
 /// instrumentation features through the `tracing` crate.
 pub trait AggregateRepositoryExt<T>: aggregate::Repository<T> + Sized
 where
@@ -64,7 +64,7 @@ where
     <T as Aggregate>::Id: Debug,
     <T as Aggregate>::Event: Debug,
 {
-    /// Returns an instrumented version of the [aggregate::Repository] instance.
+    /// Returns an instrumented version of the [`aggregate::Repository`] instance.
     fn with_tracing(self) -> InstrumentedAggregateRepository<T, Self> {
         InstrumentedAggregateRepository {
             inner: self,
@@ -82,7 +82,7 @@ where
 {
 }
 
-/// [event::Store] type wrapper that provides instrumentation
+/// [`event::Store`] type wrapper that provides instrumentation
 /// features through the `tracing` crate.
 #[derive(Debug, Clone)]
 pub struct InstrumentedEventStore<T, StreamId, Event>
@@ -134,14 +134,14 @@ where
     }
 }
 
-/// Extension trait for any [event::Store] type to provide
+/// Extension trait for any [`event::Store`] type to provide
 /// instrumentation features through the `tracing` crate.
 pub trait EventStoreExt<StreamId, Event>: event::Store<StreamId, Event> + Sized
 where
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
-    /// Returns an instrumented version of the [event::Store] instance.
+    /// Returns an instrumented version of the [`event::Store`] instance.
     fn with_tracing(self) -> InstrumentedEventStore<Self, StreamId, Event> {
         InstrumentedEventStore {
             store: self,

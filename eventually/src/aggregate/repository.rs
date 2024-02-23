@@ -2,7 +2,7 @@
 //! Aggregate Roots from a data store.
 //!
 //! If you are looking for the Event-sourced implementation of an Aggregate Repository,
-//! take a look at [EventSourced].
+//! take a look at [`EventSourced`].
 
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -13,7 +13,7 @@ use futures::TryStreamExt;
 use crate::aggregate::Aggregate;
 use crate::{aggregate, event, version};
 
-/// All possible errors returned by [Getter::get].
+/// All possible errors returned by [`Getter::get`].
 #[derive(Debug, thiserror::Error)]
 pub enum GetError {
     /// Error returned when the [Aggregate Root][aggregate::Root] could not be found in the data store.
@@ -36,7 +36,7 @@ where
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError>;
 }
 
-/// All possible errors returned by [Saver::save].
+/// All possible errors returned by [`Saver::save`].
 #[derive(Debug, thiserror::Error)]
 pub enum SaveError {
     /// Error returned when [Saver::save] encounters a conflict error while saving the new Aggregate Root.

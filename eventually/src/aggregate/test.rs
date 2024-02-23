@@ -80,7 +80,14 @@ where
     ///
     /// Use this branch when testing actions/mutations that modify the state
     /// of an [Aggregate Root][Root] that already exists, by specifying its
-    /// current state using [Scenario::given].
+    /// current state using [`Scenario::given`].
+    ///
+    /// # Panics
+    ///
+    /// Please note: as this method expects that an [Aggregate Root][Root] instance
+    /// is available when executing the domain method, it will panic if a `Root` instance
+    /// could not be obtained by rehydrating the [`Aggregate`] state through the events
+    /// provided in [`Scenario::given`].
     #[must_use]
     pub fn when<R, F, Err>(self, f: F) -> ScenarioWhen<T, R, impl Fn() -> Result<R, Err>, Err>
     where

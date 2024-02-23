@@ -2,8 +2,8 @@
 
 /// A version used for Optimistic Locking.
 ///
-/// Used by the [crate::aggregate::Root] to avoid concurrency issues,
-/// and [crate::event::Store] to implement stream-local ordering to the messages.
+/// Used by the [`aggregate::Root`][crate::aggregate::Root] to avoid concurrency issues,
+/// and [`event::Store`][crate::event::Store] to implement stream-local ordering to the messages.
 pub type Version = u64;
 
 /// Used to set a specific expectation during an operation

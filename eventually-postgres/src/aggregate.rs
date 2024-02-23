@@ -1,5 +1,5 @@
-//! This module contains the implementation of the [eventually::aggregate::Repository] trait,
-//! to work specifically with PostgreSQL databases.
+//! This module contains the implementation of the [`eventually::aggregate::Repository`] trait,
+//! to work specifically with `PostgreSQL` databases.
 //!
 //! Check out the [Repository] type for more information.
 
@@ -12,8 +12,8 @@ use eventually::version::Version;
 use eventually::{aggregate, serde, version};
 use sqlx::{PgPool, Postgres, Row};
 
-/// Implements the [eventually::aggregate::Repository] trait for
-/// PostgreSQL databases.
+/// Implements the [`eventually::aggregate::Repository`] trait for
+/// `PostgreSQL` databases.
 #[derive(Debug, Clone)]
 pub struct Repository<T, Serde, EvtSerde>
 where
@@ -35,6 +35,12 @@ where
     Serde: serde::Serde<T>,
     EvtSerde: serde::Serde<T::Event>,
 {
+    /// Runs the latest migrations necessary for the implementation to work,
+    /// then returns a new [`Repository`] instance.
+    ///
+    /// # Errors
+    ///
+    /// An error is returned if the migrations fail to run.
     pub async fn new(
         pool: PgPool,
         aggregate_serde: Serde,
@@ -72,6 +78,7 @@ where
             .serialize(out_state)
             .map_err(|err| anyhow!("failed to serialize aggregate root state: {}", err))?;
 
+        #[allow(clippy::cast_possible_truncation)]
         sqlx::query("CALL upsert_aggregate($1, $2, $3, $4, $5)")
             .bind(aggregate_id)
             .bind(T::type_name())
@@ -82,7 +89,10 @@ where
             .await
             .map_err(|err| match crate::check_for_conflict_error(&err) {
                 Some(err) => aggregate::repository::SaveError::Conflict(err),
-                None => match err.as_database_error().and_then(|err| err.code()) {
+                None => match err
+                    .as_database_error()
+                    .and_then(sqlx::error::DatabaseError::code)
+                {
                     Some(code) if code == "40001" => version::ConflictError {
                         expected: expected_version,
                         actual: root.version(),
@@ -139,6 +149,7 @@ where
                 )
             })?;
 
+        #[allow(clippy::cast_sign_loss)]
         Ok(aggregate::Root::rehydrate_from_state(
             version as Version,
             aggregate,
@@ -181,6 +192,7 @@ where
         self.save_aggregate_state(&mut tx, &aggregate_id, expected_root_version, root)
             .await?;
 
+        #[allow(clippy::cast_possible_truncation)]
         crate::event::append_domain_events(
             &mut tx,
             &self.event_serde,
