@@ -6,8 +6,8 @@ readme = "README.md"
 publish = false
 
 [dependencies]
-anyhow = "1.0.75"
-async-trait = "0.1.74"
+anyhow = "1.0.80"
+async-trait = "0.1.77"
 eventually = { path = "../../eventually", features = [
     "serde-prost",
     "tracing",
@@ -16,19 +16,18 @@ eventually-macros = { path = "../../eventually-macros" }
 eventually-postgres = { path = "../../eventually-postgres" }
 opentelemetry = "0.21.0"
 opentelemetry-jaeger = "0.20.0"
-prost = "0.12.1"
-rust_decimal = "1.32.0"
-sqlx = { version = "0.7.2", features = ["runtime-tokio-rustls", "postgres"] }
-thiserror = "1.0.50"
-tokio = { version = "1.34.0", features = ["macros", "rt-multi-thread"] }
-tonic = { version = "0.10.2", features = ["gzip", "transport"] }
-tonic-health = "0.10.2"
-tonic-reflection = "0.10.2"
+prost = "0.12.3"
+rust_decimal = "1.34.3"
+sqlx = { version = "0.7.3", features = ["runtime-tokio-rustls", "postgres"] }
+thiserror = "1.0.57"
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
+tonic = { version = "0.11.0", features = ["gzip", "transport"] }
+tonic-health = "0.11.0"
+tonic-reflection = "0.11.0"
 tower = "0.4.13"
-tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = "0.1.40"
 tracing-opentelemetry = "0.22.0"
-tracing-subscriber = { version = "0.3.17", features = [
+tracing-subscriber = { version = "0.3.18", features = [
     "fmt",
     "std",
     "registry",
@@ -38,4 +37,4 @@ tracing-subscriber = { version = "0.3.17", features = [
 [dev-dependencies]
 
 [build-dependencies]
-tonic-build = { version = "0.10.2", features = ["prost"] }
+tonic-build = { version = "0.11.0", features = ["prost"] }

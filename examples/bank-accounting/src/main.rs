@@ -6,7 +6,6 @@ use bank_accounting::{application, grpc, proto};
 use eventually::serde;
 use eventually::tracing::{AggregateRepositoryExt, EventStoreExt};
 use eventually_postgres::event;
-use tower_http::trace::TraceLayer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -46,11 +45,11 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let layer = tower::ServiceBuilder::new()
-        .layer(TraceLayer::new_for_grpc())
         .timeout(Duration::from_secs(5))
         .into_inner();
 
     tonic::transport::Server::builder()
+        .trace_fn(|r| tracing::info_span!("server", uri = r.uri().to_string()))
         .layer(layer)
         .add_service(health_svc)
         .add_service(reflection_svc)

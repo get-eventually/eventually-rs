@@ -8,5 +8,5 @@ proc-macro = true
 
 [dependencies]
 syn = { version = "1.0.109", features = ["full"] }
-quote = "1.0.33"
+quote = "1.0.35"
 eventually = { path = "../eventually" }
