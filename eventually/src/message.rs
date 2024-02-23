@@ -1,19 +1,37 @@
+//! This module contains the definition of a [Message] type, which
+//! can be used to describe some sort of domain value such as a [Domain Event][crate::event::Envelope],
+//! a [Domain Command][crate::command::Envelope], and so on.
+
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+/// Represents a piece of domain data that occurs in the system.
+///
+/// Each Message has a specific name to it, which should ideally be
+/// unique within the domain you're operating in. Example: a Domain Event
+/// that represents when an Order was created can have a `name()`: `"OrderWasCreated"`.
 pub trait Message {
+    /// Returns the domain name of the [Message].
     fn name(&self) -> &'static str;
 }
 
+/// Optional metadata to attach to an [Envelope] to provide additional context
+/// to the [Message] carried out.
 pub type Metadata = HashMap<String, String>;
 
+/// Represents a [Message] packaged for persistance and/or processing by other
+/// parts of the system.
+///
+/// It carries both the actual message (i.e. a payload) and some optional [Metadata].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Envelope<T>
 where
     T: Message,
 {
+    /// The message payload.
     pub message: T,
+    /// Optional metadata to provide additional context to the message.
     pub metadata: Metadata,
 }
 
@@ -21,12 +39,10 @@ impl<T> Envelope<T>
 where
     T: Message,
 {
+    /// Adds a new entry in the [Envelope]'s [Metadata].
     #[must_use]
-    pub fn and_metadata<F>(mut self, f: F) -> Self
-    where
-        F: Fn(&mut Metadata),
-    {
-        f(&mut self.metadata);
+    pub fn with_metadata(mut self, key: String, value: String) -> Self {
+        self.metadata.insert(key, value);
         self
     }
 }
@@ -72,10 +88,10 @@ pub(crate) mod tests {
             metadata: Metadata::default(),
         };
 
-        let new_message = message.clone().and_metadata(|m| {
-            m.insert("hello_world".to_owned(), "test".to_owned());
-            m.insert("test_number".to_owned(), 1.to_string());
-        });
+        let new_message = message
+            .clone()
+            .with_metadata("hello_world".into(), "test".into())
+            .with_metadata("test_number".into(), 1.to_string());
 
         println!("Message: {:?}", message);
         println!("New message: {:?}", new_message);

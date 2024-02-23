@@ -24,12 +24,15 @@ pub enum GetError {
     Internal(#[from] anyhow::Error),
 }
 
+/// Trait used to implement read access to a data store from which
+/// to load an [aggregate::Root] instance, given its id.
 #[async_trait]
 pub trait Getter<T>: Send + Sync
 where
     T: Aggregate,
 {
-    /// Loads an Aggregate Root instance from the data store, referenced by its unique identifier.
+    /// Loads an [aggregate::Root] instance from the data store,
+    /// referenced by its unique identifier.
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, GetError>;
 }
 
@@ -44,12 +47,14 @@ pub enum SaveError {
     Internal(#[from] anyhow::Error),
 }
 
+/// Trait used to implement write access to a data store, which can be used
+/// to save the latest state of an [aggregate::Root] instance.
 #[async_trait]
 pub trait Saver<T>: Send + Sync
 where
     T: Aggregate,
 {
-    /// Saves a new version of an Aggregate Root instance to the data store.
+    /// Saves a new version of an [aggregate::Root] instance to the data store.
     async fn save(&self, root: &mut aggregate::Root<T>) -> Result<(), SaveError>;
 }
 
