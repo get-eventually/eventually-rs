@@ -33,6 +33,7 @@ where
     <T as Aggregate>::Event: Debug,
     Inner: aggregate::Repository<T>,
 {
+    #[allow(clippy::blocks_in_conditions)] // NOTE(ar3s3ru): seems to be a false positive.
     #[instrument(name = "aggregate::repository::Getter.get", ret, err, skip(self))]
     async fn get(&self, id: &T::Id) -> Result<aggregate::Root<T>, aggregate::repository::GetError> {
         self.inner.get(id).await
@@ -47,6 +48,7 @@ where
     <T as Aggregate>::Event: Debug,
     Inner: aggregate::Repository<T>,
 {
+    #[allow(clippy::blocks_in_conditions)] // NOTE(ar3s3ru): seems to be a false positive.
     #[instrument(name = "aggregate::repository::Saver.save", ret, err, skip(self))]
     async fn save(
         &self,
@@ -123,6 +125,7 @@ where
     StreamId: Debug + Send + Sync,
     Event: message::Message + Debug + Send + Sync,
 {
+    #[allow(clippy::blocks_in_conditions)] // NOTE(ar3s3ru): seems to be a false positive.
     #[instrument(name = "event::Store.append", ret, err, skip(self))]
     async fn append(
         &self,
