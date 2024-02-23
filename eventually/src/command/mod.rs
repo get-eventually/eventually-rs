@@ -68,20 +68,17 @@ mod test_user_domain {
 
     use async_trait::async_trait;
 
-    use crate::aggregate::repository::AnyRepositoryExt;
     use crate::aggregate::test_user_domain::{User, UserEvent};
     use crate::{aggregate, command, event, message};
 
-    struct UserService(Arc<dyn aggregate::repository::AnyRepository<User>>);
+    struct UserService(Arc<dyn aggregate::Repository<User>>);
 
     impl<R> From<R> for UserService
     where
         R: aggregate::Repository<User> + 'static,
-        <R as aggregate::Repository<User>>::GetError: std::error::Error + Send + Sync + 'static,
-        <R as aggregate::Repository<User>>::SaveError: std::error::Error + Send + Sync + 'static,
     {
-        fn from(value: R) -> Self {
-            Self(Arc::new(value.with_any_errors()))
+        fn from(repository: R) -> Self {
+            Self(Arc::new(repository))
         }
     }
 

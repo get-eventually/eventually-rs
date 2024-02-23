@@ -444,8 +444,8 @@ pub(crate) mod test_user_domain {
 mod tests {
     use std::error::Error;
 
+    use crate::aggregate::repository::{Getter, Saver};
     use crate::aggregate::test_user_domain::{User, UserEvent};
-    use crate::aggregate::Repository;
     use crate::event::store::EventStoreExt;
     use crate::{aggregate, event, version};
 
