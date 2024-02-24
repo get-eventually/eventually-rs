@@ -213,18 +213,6 @@
 <a href="#212" id="212">212</a>
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module provides traits and implementations for serialization and
 //! deserialization, allowing you to convert Rust data structures to and from
 //! different formats like JSON, Protobuf, etc.
@@ -272,7 +260,7 @@
 <span class="doccomment">/// Implements the [Serde] trait to translate between two different types,
 /// and using the specified [Serde] for serialization and deserialization
 /// using the new `Out` type.
-</span><span class="attr">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>Convert&lt;In, Out, S&gt;
 <span class="kw">where
     </span>In: Send + Sync,
@@ -410,23 +398,11 @@
 /// as wire protocol.
 </span><span class="attr">#[cfg(feature = <span class="string">"serde-prost"</span>)]
 #[cfg(feature = <span class="string">"serde-json"</span>)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 </span><span class="kw">pub struct </span>ProtoJson&lt;T&gt;(PhantomData&lt;T&gt;)
 <span class="kw">where
     </span>T: prost::Message + Serialize + Default,
     <span class="kw">for</span>&lt;<span class="lifetime">'de</span>&gt; T: Deserialize&lt;<span class="lifetime">'de</span>&gt;;
-
-<span class="attr">#[cfg(feature = <span class="string">"serde-prost"</span>)]
-#[cfg(feature = <span class="string">"serde-json"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>ProtoJson&lt;T&gt;
-<span class="kw">where
-    </span>T: prost::Message + Serialize + Default,
-    <span class="kw">for</span>&lt;<span class="lifetime">'de</span>&gt; T: Deserialize&lt;<span class="lifetime">'de</span>&gt;,
-{
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(PhantomData)
-    }
-}
 
 <span class="attr">#[cfg(feature = <span class="string">"serde-prost"</span>)]
 #[cfg(feature = <span class="string">"serde-json"</span>)]
