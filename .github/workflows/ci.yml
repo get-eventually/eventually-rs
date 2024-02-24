@@ -97,6 +97,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Preload nix-develop shell
         run: nix develop .#${{ matrix.toolchain }} --verbose -c echo "nix-develop shell loaded!"
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
       - name: Run 'cargo test'
         run: nix develop .#${{ matrix.toolchain }} --verbose -c cargo test --workspace --all-features
         env:
