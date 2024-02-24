@@ -45,7 +45,7 @@ impl<S, T> Serde<T> for S where S: Serializer<T> + Deserializer<T> {}
 /// Implements the [Serde] trait to translate between two different types,
 /// and using the specified [Serde] for serialization and deserialization
 /// using the new `Out` type.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Convert<In, Out, S>
 where
     In: Send + Sync,
@@ -183,23 +183,11 @@ where
 /// as wire protocol.
 #[cfg(feature = "serde-prost")]
 #[cfg(feature = "serde-json")]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct ProtoJson<T>(PhantomData<T>)
 where
     T: prost::Message + Serialize + Default,
     for<'de> T: Deserialize<'de>;
-
-#[cfg(feature = "serde-prost")]
-#[cfg(feature = "serde-json")]
-impl<T> Default for ProtoJson<T>
-where
-    T: prost::Message + Serialize + Default,
-    for<'de> T: Deserialize<'de>,
-{
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
 
 #[cfg(feature = "serde-prost")]
 #[cfg(feature = "serde-json")]
