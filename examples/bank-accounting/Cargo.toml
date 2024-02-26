@@ -15,7 +15,7 @@ eventually = { path = "../../eventually", features = [
 eventually-macros = { path = "../../eventually-macros" }
 eventually-postgres = { path = "../../eventually-postgres" }
 opentelemetry = "0.21.0"
-opentelemetry-jaeger = "0.20.0"
+opentelemetry-jaeger = "0.21.0"
 prost = "0.12.3"
 rust_decimal = "1.34.3"
 sqlx = { version = "0.7.3", features = ["runtime-tokio-rustls", "postgres"] }
