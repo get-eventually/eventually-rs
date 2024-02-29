@@ -9,7 +9,7 @@ pub mod aggregate;
 pub mod command;
 pub mod event;
 pub mod message;
-// pub mod query;
+pub mod query;
 pub mod serde;
 #[cfg(feature = "tracing")]
 pub mod tracing;

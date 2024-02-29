@@ -11,7 +11,7 @@ use crate::event;
 
 /// A test scenario that can be used to test an [Aggregate] and [Aggregate Root][Root]
 /// using a [given-then-when canvas](https://www.agilealliance.org/glossary/gwt/) approach.
-#[derive(Default, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Scenario<T>(PhantomData<T>)
 where
     T: Aggregate,
@@ -26,6 +26,12 @@ where
     T::Event: Debug + PartialEq,
     T::Error: Debug,
 {
+    /// Creates a new [Scenario] instance.
+    #[must_use]
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+
     /// Specifies the precondition for the test [Scenario].
     ///
     /// In other words, it can be used to specify all the Domain [Event][event::Envelope]s
@@ -54,6 +60,18 @@ where
             err_marker: PhantomData,
             root_marker: PhantomData,
         }
+    }
+}
+
+impl<T> Default for Scenario<T>
+where
+    T: Aggregate,
+    T::Id: Clone,
+    T::Event: Debug + PartialEq,
+    T::Error: Debug,
+{
+    fn default() -> Self {
+        Self::new()
     }
 }
 
