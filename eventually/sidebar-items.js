@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["aggregate","command","event","message","serde","tracing","version"]};
+window.SIDEBAR_ITEMS = {"mod":["aggregate","command","event","message","query","serde","tracing","version"]};
