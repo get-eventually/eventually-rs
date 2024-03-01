@@ -11,7 +11,7 @@ jobs:
     continue-on-error: ${{ matrix.required }}
     strategy:
       matrix:
-        build: [stable, nightly]
+        build: [stable, nightly, msrv]
         include:
           - build: stable
             required: true
@@ -19,6 +19,9 @@ jobs:
           - build: nightly
             required: false
             toolchain: nightly
+          - build: msrv
+            required: true
+            toolchain: "1.60.0"
 
     services:
       postgres:
@@ -47,7 +50,6 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
           override: true
-          components: rustfmt
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
