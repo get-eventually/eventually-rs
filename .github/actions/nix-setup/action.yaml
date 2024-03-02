@@ -1,0 +1,20 @@
+---
+name: Setup Nix and direnv
+description: |
+  Sets up the Nix package manager and direnv to use the same packages
+  vendored through Nix for local development.
+inputs:
+  github_token:
+    description: 'Github Access Token'
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install Nix package manager
+      uses: cachix/install-nix-action@v22
+      with:
+        github_access_token: ${{ inputs.github_token }}
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+    - name: Set up Nix cache
+      uses: DeterminateSystems/magic-nix-cache-action@v2
