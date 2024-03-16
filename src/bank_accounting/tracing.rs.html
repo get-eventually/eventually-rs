@@ -22,15 +22,33 @@
 <a href="#21" id="21">21</a>
 <a href="#22" id="22">22</a>
 <a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>opentelemetry::KeyValue;
+<span class="kw">use </span>opentelemetry_sdk::{trace, Resource};
 <span class="kw">use </span>tracing_subscriber::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>tracing_subscriber::EnvFilter;
 
-<span class="kw">pub fn </span>initialize(service_name: <span class="kw-2">&amp;</span>str) -&gt; anyhow::Result&lt;()&gt; {
-    <span class="kw">let </span>tracer = opentelemetry_jaeger::new_agent_pipeline()
-        .with_service_name(service_name)
-        .install_simple()
-        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"failed to initialize jaeger tracer: {}"</span>, e))<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>initialize(service_name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let </span>tracer = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(opentelemetry_otlp::new_exporter().tonic())
+        .with_trace_config(
+            opentelemetry_sdk::trace::config()
+                .with_sampler(trace::Sampler::AlwaysOn)
+                .with_id_generator(trace::RandomIdGenerator::default())
+                .with_resource(Resource::new([KeyValue::new(<span class="string">"service.name"</span>, service_name)])),
+        )
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"failed to initialize OTLP tracer: {}"</span>, e))<span class="question-mark">?</span>;
 
     <span class="kw">let </span>filter_layer = EnvFilter::try_from_default_env()
         .or_else(|<span class="kw">_</span>| EnvFilter::try_new(<span class="string">"info"</span>))
