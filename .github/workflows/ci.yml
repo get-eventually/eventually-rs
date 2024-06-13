@@ -59,6 +59,51 @@ jobs:
         env:
           DATABASE_URL: postgres://eventually:password@localhost:5432/eventually?sslmode=disable
 
+  nix-test:
+    name: Test [Nix]
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.required }}
+    strategy:
+      matrix:
+        build: [stable, nightly]
+        include:
+          - build: stable
+            required: true
+            toolchain: stable
+          - build: nightly
+            required: false
+            toolchain: nightly
+
+    services:
+      postgres:
+        env:
+          POSTGRES_USER: eventually
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: eventually
+        image: postgres:latest
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Set up Nix system
+        uses: ./.github/actions/nix-setup
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Preload nix-develop shell
+        run: nix develop .#${{ matrix.toolchain }} --verbose -c echo "nix-develop shell loaded!"
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+      - name: Run 'cargo test'
+        run: nix develop .#${{ matrix.toolchain }} --verbose -c cargo test --workspace --all-features
+        env:
+          DATABASE_URL: postgres://eventually:password@localhost:5432/eventually?sslmode=disable
+
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest

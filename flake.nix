@@ -19,20 +19,55 @@
 
           pkgs = import nixpkgs {
             inherit system overlays;
+            config.allowBroken = true;
           };
 
-          nativeBuildInputs = with pkgs; [ rust-bin.nightly.latest.default protobuf3_24 ];
+          nativeBuildInputs = with pkgs; [ protobuf3_24 ];
 
           buildInputs = with pkgs; [ pkg-config openssl ] ++ lib.optionals stdenv.isDarwin [
             darwin.apple_sdk.frameworks.SystemConfiguration
           ];
+
+          packages = with pkgs; [
+            cargo-llvm-cov
+          ];
+
+          defaultShell = with pkgs; mkShell {
+            inherit buildInputs packages;
+
+            nativeBuildInputs = with pkgs; nativeBuildInputs ++ [
+              rust-bin.nightly.latest.default
+            ];
+
+            PROTOC = "${protobuf3_24}/bin/protoc";
+          };
         in
         with pkgs;
         {
-          devShells.default = with pkgs; mkShell {
-            inherit nativeBuildInputs buildInputs;
+          devShells = rec {
+            default = nightly;
 
-            PROTOC = "${protobuf3_24}/bin/protoc";
+            nightly = with pkgs; mkShell {
+              inherit buildInputs packages;
+
+              nativeBuildInputs = with pkgs; nativeBuildInputs ++ [
+                rust-bin.nightly.latest.default
+              ];
+
+              PROTOC = "${protobuf3_24}/bin/protoc";
+            };
+
+            stable = with pkgs; mkShell {
+              name = "stable";
+
+              inherit buildInputs packages;
+
+              nativeBuildInputs = with pkgs; nativeBuildInputs ++ [
+                rust-bin.stable.latest.default
+              ];
+
+              PROTOC = "${protobuf3_24}/bin/protoc";
+            };
           };
         }
       );
