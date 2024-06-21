@@ -20,6 +20,6 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0.109", features = ["full"] }
+syn = { version = "2.0.67", features = ["full"] }
 quote = "1.0.35"
 eventually = { path = "../eventually" }
