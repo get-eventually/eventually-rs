@@ -7,4 +7,5 @@ members = [
 
     # Crates as examples
     "examples/bank-accounting",
+    "examples/light-switch",
 ]
