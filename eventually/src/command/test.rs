@@ -163,6 +163,6 @@ where
                 assert_eq!(events, recorded_events);
             },
             ScenarioThenCase::Fails => assert!(result.is_err()),
-        };
+        }
     }
 }

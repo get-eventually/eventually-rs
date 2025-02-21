@@ -246,15 +246,15 @@ where
 #[derive(Debug, thiserror::Error)]
 pub enum RehydrateError<T, I> {
     /// Error returned during rehydration when the [Aggregate Root][Root]
-    /// is applying a Domain Event using [Aggregate::apply].
+    /// is applying a Domain Event using [`Aggregate::apply`].
     ///
     /// This usually implies the Event Stream for the [Aggregate]
     /// contains corrupted or unexpected data.
     #[error("failed to apply domain event while rehydrating aggregate: {0}")]
     Domain(#[source] T),
 
-    /// This error is returned by [Root::rehydrate_async] when the underlying
-    /// [futures::TryStream] has returned an error.
+    /// This error is returned by [`Root::rehydrate_async`] when the underlying
+    /// [`futures::TryStream`] has returned an error.
     #[error("failed to rehydrate aggregate from event stream: {0}")]
     Inner(#[source] I),
 }

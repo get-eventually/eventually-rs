@@ -33,7 +33,7 @@ where
 /// All possible error types returned by [`Appender::append`].
 #[derive(Debug, thiserror::Error)]
 pub enum AppendError {
-    /// Error returned when [Appender::append] encounters a conflict error
+    /// Error returned when [`Appender::append`] encounters a conflict error
     /// while appending the new Domain Events.
     #[error("failed to append new domain events: {0}")]
     Conflict(#[from] version::ConflictError),
