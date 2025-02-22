@@ -13,4 +13,3 @@ thiserror = { version = "2.0.11" }
 anyhow = "1.0.95"
 async-trait = "0.1.86"
 eventually = { features = ["serde-json"], path="../../eventually" }
-eventually-macros = { path="../../eventually-macros" }

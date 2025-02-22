@@ -1,5 +1,4 @@
 use eventually::{aggregate, message};
-use eventually_macros::aggregate_root;
 
 pub type LightswitchId = String;
 
@@ -104,9 +103,31 @@ impl aggregate::Aggregate for Lightswitch {
     }
 }
 
-#[aggregate_root(Lightswitch)]
+// root
 #[derive(Debug, Clone)]
-pub struct LightswitchRoot;
+pub struct LightswitchRoot(aggregate::Root<Lightswitch>);
+
+impl From<eventually::aggregate::Root<Lightswitch>> for LightswitchRoot {
+    fn from(root: eventually::aggregate::Root<Lightswitch>) -> Self {
+        Self(root)
+    }
+}
+impl From<LightswitchRoot> for eventually::aggregate::Root<Lightswitch> {
+    fn from(value: LightswitchRoot) -> Self {
+        value.0
+    }
+}
+impl std::ops::Deref for LightswitchRoot {
+    type Target = eventually::aggregate::Root<Lightswitch>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl std::ops::DerefMut for LightswitchRoot {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl LightswitchRoot {
     pub fn install(id: LightswitchId) -> Result<Self, LightswitchError> {
