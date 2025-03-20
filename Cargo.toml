@@ -1,10 +1,3 @@
 [workspace]
 resolver = "2"
-members = [
-    "eventually",
-    "eventually-macros",
-    "eventually-postgres",
-
-    # Crates as examples
-    "examples/bank-accounting",
-]
+members = ["eventually", "eventually-macros", "eventually-postgres"]

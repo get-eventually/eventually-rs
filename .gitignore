@@ -2,5 +2,4 @@
 **/*.rs.bk
 Cargo.lock
 lcov.info
-
 .direnv
