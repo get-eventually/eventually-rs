@@ -13,15 +13,15 @@ pub mod event;
 
 pub(crate) static MIGRATIONS: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
+use std::sync::LazyLock;
+
 use eventually::version::{ConflictError, Version};
-use lazy_static::lazy_static;
 use regex::Regex;
 
-lazy_static! {
-    static ref CONFLICT_ERROR_REGEX: Regex =
-        Regex::new(r"version check failed, expected: (?P<expected>\d), got: (?P<got>\d)")
-            .expect("regex compiles successfully");
-}
+static CONFLICT_ERROR_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"version check failed, expected: (?P<expected>\d), got: (?P<got>\d)")
+        .expect("regex compiles successfully")
+});
 
 pub(crate) fn check_for_conflict_error(err: &sqlx::Error) -> Option<ConflictError> {
     fn capture_to_version(captures: &regex::Captures, name: &'static str) -> Version {

@@ -59,7 +59,7 @@ impl Message for BankAccountEvent {
             BankAccountEvent::TransferWasReceived { .. } => "BankAccountTransferWasReceived",
             BankAccountEvent::TransferWasDeclined { .. } => "BankAccountTransferWasDeclined",
             BankAccountEvent::TransferWasConfirmed { .. } => "BankAccountTransferWasConfirmed",
-            BankAccountEvent::WasClosed { .. } => "BankAccountWasClosed",
+            BankAccountEvent::WasClosed => "BankAccountWasClosed",
             BankAccountEvent::WasReopened { .. } => "BankAccountWasReopened",
         }
     }
@@ -233,7 +233,7 @@ impl BankAccountRoot {
             return Err(BankAccountError::InsufficientFunds);
         }
 
-        let transaction_already_pending = self.pending_transactions.get(&transaction.id).is_some();
+        let transaction_already_pending = self.pending_transactions.contains_key(&transaction.id);
         if transaction_already_pending {
             return Ok(());
         }
@@ -275,7 +275,7 @@ impl BankAccountRoot {
         &mut self,
         transaction_id: TransactionId,
     ) -> Result<(), BankAccountError> {
-        let is_transaction_recorded = self.pending_transactions.get(&transaction_id).is_some();
+        let is_transaction_recorded = self.pending_transactions.contains_key(&transaction_id);
         if !is_transaction_recorded {
             // TODO: return error
         }
