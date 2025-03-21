@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Convert","Json"],"trait":["Deserializer","Serde","Serializer"]};
+window.SIDEBAR_ITEMS = {"struct":["Convert","Json","ProtoJson","Protobuf"],"trait":["Deserializer","Serde","Serializer"]};

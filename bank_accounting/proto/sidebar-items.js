@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FILE_DESCRIPTOR_SET"],"mod":["bank_accounting_server","event"],"struct":["DepositInBankAccountRequest","DepositInBankAccountResponse","Event","OpenBankAccountRequest","OpenBankAccountResponse","Transaction"]};

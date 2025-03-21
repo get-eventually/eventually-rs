@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["application","domain","grpc","postgres","proto","serde","tracing"]};
