@@ -39,7 +39,7 @@ where
 /// All possible errors returned by [`Saver::save`].
 #[derive(Debug, thiserror::Error)]
 pub enum SaveError {
-    /// Error returned when [Saver::save] encounters a conflict error while saving the new Aggregate Root.
+    /// Error returned when [`Saver::save`] encounters a conflict error while saving the new Aggregate Root.
     #[error("failed to save aggregate root: {0}")]
     Conflict(#[from] version::ConflictError),
     /// Error returned when the [Saver] implementation has encountered an error.

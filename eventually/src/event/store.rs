@@ -33,7 +33,7 @@ where
 /// All possible error types returned by [`Appender::append`].
 #[derive(Debug, thiserror::Error)]
 pub enum AppendError {
-    /// Error returned when [Appender::append] encounters a conflict error
+    /// Error returned when [`Appender::append`] encounters a conflict error
     /// while appending the new Domain Events.
     #[error("failed to append new domain events: {0}")]
     Conflict(#[from] version::ConflictError),
@@ -343,8 +343,9 @@ where
 #[allow(clippy::semicolon_if_nothing_returned)] // False positives :shrugs:
 #[cfg(test)]
 mod test {
+    use std::sync::LazyLock;
+
     use futures::TryStreamExt;
-    use lazy_static::lazy_static;
 
     use super::*;
     use crate::event;
@@ -354,13 +355,13 @@ mod test {
 
     const STREAM_ID: &str = "stream:test";
 
-    lazy_static! {
-        static ref EVENTS: Vec<event::Envelope<StringMessage>> = vec![
+    static EVENTS: LazyLock<Vec<event::Envelope<StringMessage>>> = LazyLock::new(|| {
+        vec![
             event::Envelope::from(StringMessage("event-1")),
             event::Envelope::from(StringMessage("event-2")),
             event::Envelope::from(StringMessage("event-3")),
-        ];
-    }
+        ]
+    });
 
     #[tokio::test]
     async fn it_works() {
