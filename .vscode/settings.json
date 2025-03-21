@@ -1,4 +1,13 @@
 {
   "rust-analyzer.cargo.features": "all",
-  "rust-analyzer.check.command": "clippy"
+  "rust-analyzer.check.command": "clippy",
+  "nix.serverPath": "nil",
+  "nix.enableLanguageServer": true,
+  "nix.serverSettings": {
+    "nil": {
+      "formatting": {
+        "command": ["nixpkgs-fmt"]
+      }
+    }
+  },
 }
