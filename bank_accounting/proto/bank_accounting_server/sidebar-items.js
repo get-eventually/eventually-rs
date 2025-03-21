@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["BankAccountingServer"],"trait":["BankAccounting"]};
