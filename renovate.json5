@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:allNonMajor",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "branchPrefix": "chore/renovate-",
+  "rebaseWhen": "behind-base-branch",
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "recreateWhen": "always",
+    "rebaseStalePrs": true
+  },
+  "packageRules": [
+    // Group all Github Actions updates in a single PR.
+    {
+      "matchManagers": ["github-actions"]
+    }
+  ]
+}

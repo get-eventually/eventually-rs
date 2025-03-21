@@ -12,4 +12,3 @@ trim_trailing_whitespace = true
 
 [*.{json, md, yaml, yml, proto}]
 indent_size = 2
-
