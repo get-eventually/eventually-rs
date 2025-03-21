@@ -37,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
     let reflection_svc = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
         .register_encoded_file_descriptor_set(tonic_health::pb::FILE_DESCRIPTOR_SET)
-        .build()
+        .build_v1()
         .map_err(|e| anyhow!("failed to build grpc reflection service: {}", e))?;
 
     let bank_accounting_svc = proto::bank_accounting_server::BankAccountingServer::new(

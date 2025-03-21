@@ -8,7 +8,7 @@ fn main() {
         .file_descriptor_set_path(out_dir.join("bankaccouting_descriptor.bin"))
         .build_server(true)
         .build_client(false)
-        .compile(
+        .compile_protos(
             &["proto/bank_accounting.proto", "proto/bank_account.proto"],
             &["proto"],
         )

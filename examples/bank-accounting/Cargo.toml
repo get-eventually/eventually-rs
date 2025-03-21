@@ -17,14 +17,14 @@ eventually-postgres = { path = "../../eventually-postgres" }
 opentelemetry = "0.21.0"
 opentelemetry-otlp = "0.14.0"
 opentelemetry_sdk = { version = "0.21.2", features = ["rt-tokio"] }
-prost = "0.12.3"
+prost = "0.13.5"
 rust_decimal = "1.34.3"
-sqlx = { version = "0.7.3", features = ["runtime-tokio-rustls", "postgres"] }
+sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres"] }
 thiserror = "2.0.12"
 tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
-tonic = { version = "0.11.0", features = ["gzip", "transport"] }
-tonic-health = "0.11.0"
-tonic-reflection = "0.11.0"
+tonic = { version = "0.12.3", features = ["gzip", "transport"] }
+tonic-health = "0.12.3"
+tonic-reflection = "0.12.3"
 tower = "0.4.13"
 tracing = "0.1.40"
 tracing-opentelemetry = "0.22.0"
@@ -38,4 +38,4 @@ tracing-subscriber = { version = "0.3.18", features = [
 [dev-dependencies]
 
 [build-dependencies]
-tonic-build = { version = "0.11.0", features = ["prost"] }
+tonic-build = { version = "0.12.3", features = ["prost"] }
