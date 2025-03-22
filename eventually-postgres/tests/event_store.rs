@@ -20,7 +20,7 @@ async fn append_with_no_version_check_works() {
         .await
         .unwrap();
 
-    let id = rand::thread_rng().gen::<i64>();
+    let id = rand::rng().random::<i64>();
     let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {
@@ -76,7 +76,7 @@ async fn it_works_with_version_check_for_conflict() {
         .await
         .unwrap();
 
-    let id = rand::thread_rng().gen::<i64>();
+    let id = rand::rng().random::<i64>();
     let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {
@@ -151,7 +151,7 @@ async fn it_handles_concurrent_writes_to_the_same_stream() {
         .await
         .unwrap();
 
-    let id = rand::thread_rng().gen::<i64>();
+    let id = rand::rng().random::<i64>();
     let event_stream_id = format!("test-event-stream-{}", id);
 
     let expected_events = vec![setup::TestDomainEvent::WasCreated {

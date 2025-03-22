@@ -1,5 +1,4 @@
 allowed-duplicate-crates = [
-    "syn",
     "thiserror",
     "thiserror-impl",
     # These are all coming from eventually-postgres, quite likely sqlx...
