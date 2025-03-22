@@ -413,7 +413,7 @@
 
     <span class="kw">fn </span>apply(state: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;, event: <span class="self">Self</span>::Event) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
         <span class="kw">match </span>state {
-            <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>event {
+            Option::None =&gt; <span class="kw">match </span>event {
                 BankAccountEvent::WasOpened {
                     id,
                     initial_balance,

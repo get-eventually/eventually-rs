@@ -77,11 +77,7 @@
 <a href="#76" id="76">76</a>
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a></pre></div><pre class="rust"><code><span class="doccomment">//! `eventually-macros` contains useful macros that provides
+<a href="#79" id="79">79</a></pre></div><pre class="rust"><code><span class="doccomment">//! `eventually-macros` contains useful macros that provides
 //! different implementations of traits and functionalities from [eventually].
 
 </span><span class="attr">#![deny(unsafe_code, unused_qualifications, trivial_casts, missing_docs)]
@@ -89,7 +85,8 @@
 
 </span><span class="kw">use </span>proc_macro::TokenStream;
 <span class="kw">use </span>quote::quote;
-<span class="kw">use </span>syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta, Path};
+<span class="kw">use </span>syn::punctuated::Punctuated;
+<span class="kw">use </span>syn::{parse_macro_input, Fields, ItemStruct, Token, Type};
 
 <span class="doccomment">/// Implements a newtype to use the [`eventually::aggregate::Root`] instance with
 /// user-defined [`eventually::aggregate::Aggregate`] types.
@@ -105,7 +102,7 @@
 /// being an example of user-defined `Aggregate` type) outside the `eventually` crate (E0116).
 /// Therefore, a newtype that uses `aggregate::Root&lt;T&gt;` is required.
 ///
-/// This attribute macro makes the implementation of a newtype easy, as it Implements
+/// This attribute macro makes the implementation of a newtype easy, as it implements
 /// conversion traits from and to `aggregate::Root&lt;T&gt;` and implements automatic deref
 /// through [`std::ops::Deref`] and [`std::ops::DerefMut`].
 ///
@@ -114,19 +111,14 @@
 /// This method will panic if the Aggregate Root type is not provided as a macro parameter.
 </span><span class="attr">#[proc_macro_attribute]
 </span><span class="kw">pub fn </span>aggregate_root(args: TokenStream, item: TokenStream) -&gt; TokenStream {
-    <span class="kw">let </span>args = <span class="macro">parse_macro_input!</span>(args <span class="kw">as </span>AttributeArgs);
     <span class="kw">let </span><span class="kw-2">mut </span>item = <span class="macro">parse_macro_input!</span>(item <span class="kw">as </span>ItemStruct);
     <span class="kw">let </span>item_ident = item.ident.clone();
 
-    <span class="kw">let </span>aggregate_type = args
-        .first()
-        .and_then(|meta| <span class="kw">match </span>meta {
-            NestedMeta::Meta(Meta::Path(Path { segments, .. })) =&gt; <span class="prelude-val">Some</span>(segments),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        })
-        .and_then(|segments| segments.first())
-        .map(|segment| segment.ident.clone())
-        .expect(<span class="string">"the aggregate root type must be provided as macro parameter"</span>);
+    <span class="kw">let </span>aggregate_type: Type =
+        <span class="macro">parse_macro_input!</span>(args with Punctuated::&lt;Type, <span class="macro">Token!</span>[,]&gt;::parse_terminated)
+            .into_iter()
+            .next()
+            .expect(<span class="string">"the aggregate root type must be provided as macro parameter"</span>);
 
     item.fields = Fields::Unnamed(
         syn::parse2(<span class="macro">quote!</span> { (eventually::aggregate::Root&lt;#aggregate_type&gt;) }).unwrap(),
