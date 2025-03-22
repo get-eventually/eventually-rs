@@ -1,6 +1,15 @@
 {
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
   "files.associations": {
     "*.json5": "jsonc",
+  },
+  "[json][jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.indentSize": "tabSize",
+  },
+  "[rust]": {
+    "editor.tabSize": 4,
   },
   "rust-analyzer.cargo.features": "all",
   "rust-analyzer.check.command": "clippy",
@@ -9,7 +18,9 @@
   "nix.serverSettings": {
     "nil": {
       "formatting": {
-        "command": ["nixpkgs-fmt"]
+        "command": [
+          "nixpkgs-fmt"
+        ]
       }
     }
   },
