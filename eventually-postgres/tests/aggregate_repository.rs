@@ -19,7 +19,7 @@ async fn it_works() {
     .await
     .unwrap();
 
-    let aggregate_id = setup::TestAggregateId(rand::thread_rng().gen::<i64>());
+    let aggregate_id = setup::TestAggregateId(rand::rng().random::<i64>());
 
     let result = aggregate_repository
         .get(&aggregate_id)
@@ -68,7 +68,7 @@ async fn it_detects_data_races_and_returns_conflict_error() {
     .await
     .unwrap();
 
-    let aggregate_id = setup::TestAggregateId(rand::thread_rng().gen::<i64>());
+    let aggregate_id = setup::TestAggregateId(rand::rng().random::<i64>());
 
     let mut root = setup::TestAggregateRoot::create(aggregate_id, "John Dee".to_owned())
         .expect("aggregate root should be created");

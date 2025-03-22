@@ -112,7 +112,7 @@ impl aggregate::Aggregate for BankAccount {
 
     fn apply(state: Option<Self>, event: Self::Event) -> Result<Self, Self::Error> {
         match state {
-            None => match event {
+            Option::None => match event {
                 BankAccountEvent::WasOpened {
                     id,
                     initial_balance,

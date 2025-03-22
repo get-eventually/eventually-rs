@@ -6,7 +6,8 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta, Path};
+use syn::punctuated::Punctuated;
+use syn::{parse_macro_input, Fields, ItemStruct, Token, Type};
 
 /// Implements a newtype to use the [`eventually::aggregate::Root`] instance with
 /// user-defined [`eventually::aggregate::Aggregate`] types.
@@ -22,7 +23,7 @@ use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta
 /// being an example of user-defined `Aggregate` type) outside the `eventually` crate (E0116).
 /// Therefore, a newtype that uses `aggregate::Root<T>` is required.
 ///
-/// This attribute macro makes the implementation of a newtype easy, as it Implements
+/// This attribute macro makes the implementation of a newtype easy, as it implements
 /// conversion traits from and to `aggregate::Root<T>` and implements automatic deref
 /// through [`std::ops::Deref`] and [`std::ops::DerefMut`].
 ///
@@ -31,19 +32,14 @@ use syn::{parse_macro_input, AttributeArgs, Fields, ItemStruct, Meta, NestedMeta
 /// This method will panic if the Aggregate Root type is not provided as a macro parameter.
 #[proc_macro_attribute]
 pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(args as AttributeArgs);
     let mut item = parse_macro_input!(item as ItemStruct);
     let item_ident = item.ident.clone();
 
-    let aggregate_type = args
-        .first()
-        .and_then(|meta| match meta {
-            NestedMeta::Meta(Meta::Path(Path { segments, .. })) => Some(segments),
-            _ => None,
-        })
-        .and_then(|segments| segments.first())
-        .map(|segment| segment.ident.clone())
-        .expect("the aggregate root type must be provided as macro parameter");
+    let aggregate_type: Type =
+        parse_macro_input!(args with Punctuated::<Type, Token![,]>::parse_terminated)
+            .into_iter()
+            .next()
+            .expect("the aggregate root type must be provided as macro parameter");
 
     item.fields = Fields::Unnamed(
         syn::parse2(quote! { (eventually::aggregate::Root<#aggregate_type>) }).unwrap(),
