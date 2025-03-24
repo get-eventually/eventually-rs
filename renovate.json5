@@ -20,11 +20,6 @@
       "matchManagers": [
         "github-actions"
       ]
-    },
-    {
-      "matchManagers": [
-        "nix"
-      ]
     }
   ]
 }

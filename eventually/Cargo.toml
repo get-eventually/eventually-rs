@@ -24,7 +24,7 @@ serde-json = ["dep:serde_json"]
 full = ["serde-prost", "serde-json", "tracing"]
 
 [dependencies]
-anyhow = "1.0.80"
+anyhow = "1.0.97"
 async-trait = "0.1.77"
 futures = "0.3.30"
 thiserror = "2.0.12"

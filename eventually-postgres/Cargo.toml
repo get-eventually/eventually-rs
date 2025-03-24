@@ -12,7 +12,7 @@ categories = ["web-programming", "asynchronous"]
 keywords = ["postgres", "postgresql", "database", "ddd", "event-sourcing"]
 
 [dependencies]
-anyhow = "1.0.80"
+anyhow = "1.0.97"
 async-trait = "0.1.77"
 chrono = "0.4.34"
 eventually = { path = "../eventually", version = "0.5.0", features = [

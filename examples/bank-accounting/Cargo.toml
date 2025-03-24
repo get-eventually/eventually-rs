@@ -6,7 +6,7 @@ readme = "README.md"
 publish = false
 
 [dependencies]
-anyhow = "1.0.80"
+anyhow = "1.0.97"
 async-trait = "0.1.77"
 eventually = { path = "../../eventually", features = [
     "serde-prost",
