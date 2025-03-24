@@ -6,4 +6,5 @@ members = [
     "eventually-postgres",
     # Examples
     "examples/bank-accounting",
+    "examples/light-switch",
 ]
