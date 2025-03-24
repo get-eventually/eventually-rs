@@ -16,7 +16,7 @@ eventually-macros = { path = "../../eventually-macros" }
 eventually-postgres = { path = "../../eventually-postgres" }
 opentelemetry = "0.21.0"
 opentelemetry-otlp = "0.14.0"
-opentelemetry_sdk = { version = "0.21.2", features = ["rt-tokio"] }
+opentelemetry_sdk = { version = "0.29.0", features = ["rt-tokio"] }
 prost = "0.13.5"
 rust_decimal = "1.34.3"
 sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres"] }
