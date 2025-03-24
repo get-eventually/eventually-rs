@@ -15,7 +15,7 @@ pub(crate) static MIGRATIONS: sqlx::migrate::Migrator = sqlx::migrate!("./migrat
 
 use std::sync::LazyLock;
 
-use eventually::version::{ConflictError, Version};
+use eventually_core::version::{ConflictError, Version};
 use regex::Regex;
 
 static CONFLICT_ERROR_REGEX: LazyLock<Regex> = LazyLock::new(|| {

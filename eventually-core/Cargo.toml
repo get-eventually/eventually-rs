@@ -1,5 +1,5 @@
 [package]
-name = "eventually"
+name = "eventually-core"
 description = "Eventually is a minimalistic crate that exposes a few building blocks to build Event-sourced applications in Rust."
 version = "0.5.0"
 edition = "2021"
@@ -18,14 +18,22 @@ keywords = ["architecture", "ddd", "event-sourcing", "cqrs", "es"]
 
 [features]
 default = []
-tracing = ["eventually-core/tracing"]
-serde-prost = ["eventually-core/serde-prost"]
-serde-json = ["eventually-core/serde-json"]
+tracing = ["dep:tracing"]
+serde-prost = ["dep:prost"]
+serde-json = ["dep:serde_json"]
 full = ["serde-prost", "serde-json", "tracing"]
-macros = ["dep:eventually-macros"]
-postgres = ["dep:eventually-postgres"]
 
 [dependencies]
-eventually-core = { path = "../eventually-core", version = "0.5.0" }
-eventually-macros = { path = "../eventually-macros", version = "0.1.0", optional = true }
-eventually-postgres = { path = "../eventually-postgres", version = "0.5.0", optional = true }
+anyhow = "1.0.97"
+async-trait = "0.1.77"
+futures = "0.3.30"
+thiserror = "2.0.12"
+prost = { version = "0.13.5", optional = true }
+serde_json = { version = "1.0.114", optional = true }
+serde = { version = "1.0.197", features = ["derive"] }
+tracing = { version = "0.1.40", features = ["async-await"], optional = true }
+
+[dev-dependencies]
+lazy_static = "1.4.0"
+serde_json = "1.0.114"
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }

@@ -7,9 +7,9 @@ use std::marker::PhantomData;
 
 use anyhow::anyhow;
 use async_trait::async_trait;
-use eventually::aggregate::Aggregate;
-use eventually::version::Version;
-use eventually::{aggregate, serde, version};
+use eventually_core::aggregate::Aggregate;
+use eventually_core::version::Version;
+use eventually_core::{aggregate, serde, version};
 use sqlx::{PgPool, Postgres, Row};
 
 /// Implements the [`eventually::aggregate::Repository`] trait for

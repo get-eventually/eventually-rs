@@ -1,5 +1,5 @@
-use eventually::aggregate::repository::{self, GetError, Getter, Saver};
-use eventually::serde;
+use eventually_core::aggregate::repository::{self, GetError, Getter, Saver};
+use eventually_core::serde;
 use eventually_postgres::aggregate;
 use rand::Rng;
 use testcontainers_modules::postgres::Postgres;

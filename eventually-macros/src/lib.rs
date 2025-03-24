@@ -42,14 +42,14 @@ pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
             .expect("the aggregate root type must be provided as macro parameter");
 
     item.fields = Fields::Unnamed(
-        syn::parse2(quote! { (eventually::aggregate::Root<#aggregate_type>) }).unwrap(),
+        syn::parse2(quote! { (__eventually_crate::aggregate::Root<#aggregate_type>) }).unwrap(),
     );
 
     let result = quote! {
         #item
 
         impl std::ops::Deref for #item_ident {
-            type Target = eventually::aggregate::Root<#aggregate_type>;
+            type Target = __eventually_crate::aggregate::Root<#aggregate_type>;
 
             fn deref(&self) -> &Self::Target {
                 &self.0
@@ -62,13 +62,13 @@ pub fn aggregate_root(args: TokenStream, item: TokenStream) -> TokenStream {
             }
         }
 
-        impl From<eventually::aggregate::Root<#aggregate_type>> for #item_ident {
-            fn from(root: eventually::aggregate::Root<#aggregate_type>) -> Self {
+        impl From<__eventually_crate::aggregate::Root<#aggregate_type>> for #item_ident {
+            fn from(root: __eventually_crate::aggregate::Root<#aggregate_type>) -> Self {
                 Self(root)
             }
         }
 
-        impl From<#item_ident> for eventually::aggregate::Root<#aggregate_type> {
+        impl From<#item_ident> for __eventually_crate::aggregate::Root<#aggregate_type> {
             fn from(value: #item_ident) -> Self {
                 value.0
             }

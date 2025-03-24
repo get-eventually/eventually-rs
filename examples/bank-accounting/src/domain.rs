@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use eventually::aggregate;
 use eventually::message::Message;
-use eventually_macros::aggregate_root;
+use eventually::{aggregate, aggregate_root};
 use rust_decimal::Decimal;
 
 pub type BankAccountRepository<S> = aggregate::EventSourcedRepository<BankAccount, S>;

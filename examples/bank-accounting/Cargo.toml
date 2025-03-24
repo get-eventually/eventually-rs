@@ -11,6 +11,7 @@ async-trait = "0.1.77"
 eventually = { path = "../../eventually", features = [
     "serde-prost",
     "tracing",
+    "macros",
 ] }
 eventually-macros = { path = "../../eventually-macros" }
 eventually-postgres = { path = "../../eventually-postgres" }

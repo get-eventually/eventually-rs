@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use eventually::aggregate;
-use eventually::aggregate::Aggregate;
-use eventually::message::Message;
+use eventually_core::aggregate;
+use eventually_core::aggregate::Aggregate;
+use eventually_core::message::Message;
 use eventually_macros::aggregate_root;
 use serde::{Deserialize, Serialize};
 

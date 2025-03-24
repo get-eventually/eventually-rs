@@ -22,4 +22,4 @@ proc-macro = true
 [dependencies]
 syn = { version = "2.0.100", features = ["full"] }
 quote = "1.0.40"
-eventually = { path = "../eventually" }
+eventually-core = { path = "../eventually-core" }

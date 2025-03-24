@@ -5,8 +5,12 @@
 #![deny(unsafe_code, unused_qualifications, trivial_casts, missing_docs)]
 #![deny(clippy::all, clippy::pedantic, clippy::cargo)]
 
+pub mod aggregate;
+pub mod command;
+pub mod event;
+pub mod message;
+pub mod query;
+pub mod serde;
 #[cfg(feature = "tracing")]
-pub use eventually_core::tracing;
-pub use eventually_core::{aggregate, command, event, message, query, serde, version};
-#[cfg(feature = "macros")]
-pub use eventually_macros::*;
+pub mod tracing;
+pub mod version;

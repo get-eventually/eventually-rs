@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "eventually",
+    "eventually-core",
     "eventually-macros",
     "eventually-postgres",
     # Examples

@@ -1,9 +1,9 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use eventually::event::store::{self, AppendError, Appender, Streamer};
-use eventually::event::{Persisted, VersionSelect};
-use eventually::version::Version;
-use eventually::{serde, version};
+use eventually_core::event::store::{self, AppendError, Appender, Streamer};
+use eventually_core::event::{Persisted, VersionSelect};
+use eventually_core::version::Version;
+use eventually_core::{serde, version};
 use eventually_postgres::event;
 use futures::TryStreamExt;
 use rand::Rng;
