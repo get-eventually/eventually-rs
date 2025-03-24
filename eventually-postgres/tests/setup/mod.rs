@@ -6,13 +6,6 @@ use eventually::aggregate::Aggregate;
 use eventually::message::Message;
 use eventually_macros::aggregate_root;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
-
-pub async fn connect_to_database() -> Result<PgPool, sqlx::Error> {
-    let url = std::env::var("DATABASE_URL").expect("the env var DATABASE_URL is required");
-
-    sqlx::PgPool::connect(&url).await
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TestAggregateId(pub i64);

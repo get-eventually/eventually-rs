@@ -2,14 +2,29 @@ use eventually::aggregate::repository::{self, GetError, Getter, Saver};
 use eventually::serde;
 use eventually_postgres::aggregate;
 use rand::Rng;
+use testcontainers_modules::postgres::Postgres;
+use testcontainers_modules::testcontainers::runners::AsyncRunner;
 
 mod setup;
 
 #[tokio::test]
 async fn it_works() {
-    let pool = setup::connect_to_database()
+    let container = Postgres::default()
+        .start()
         .await
-        .expect("connection to the database should work");
+        .expect("the postgres container should start");
+
+    let (host, port) = futures::try_join!(container.get_host(), container.get_host_port_ipv4(5432))
+        .expect("the postgres container should have both a host and a port exposed");
+
+    println!("postgres container is running at {host}:{port}");
+
+    let pool = sqlx::PgPool::connect(&format!(
+        "postgres://postgres:postgres@{}:{}/postgres",
+        host, port,
+    ))
+    .await
+    .expect("should be able to create a connection with the database");
 
     let aggregate_repository = aggregate::Repository::new(
         pool,
@@ -56,9 +71,22 @@ async fn it_works() {
 
 #[tokio::test]
 async fn it_detects_data_races_and_returns_conflict_error() {
-    let pool = setup::connect_to_database()
+    let container = Postgres::default()
+        .start()
         .await
-        .expect("connection to the database should work");
+        .expect("the postgres container should start");
+
+    let (host, port) = futures::try_join!(container.get_host(), container.get_host_port_ipv4(5432))
+        .expect("the postgres container should have both a host and a port exposed");
+
+    println!("postgres container is running at {host}:{port}");
+
+    let pool = sqlx::PgPool::connect(&format!(
+        "postgres://postgres:postgres@{}:{}/postgres",
+        host, port,
+    ))
+    .await
+    .expect("should be able to create a connection with the database");
 
     let aggregate_repository = aggregate::Repository::new(
         pool,

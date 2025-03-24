@@ -20,20 +20,6 @@ jobs:
             required: false
             toolchain: nightly
 
-    services:
-      postgres:
-        env:
-          POSTGRES_USER: eventually
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: eventually
-        image: postgres:latest
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
