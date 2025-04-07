@@ -1,0 +1,15 @@
+[package]
+name = "light_switch"
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+publish = false
+
+[dependencies]
+serde_json = { version = "1.0.114", optional = true }
+serde = { version = "1.0.197", features = ["derive"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
+thiserror = { version = "2.0.12" }
+anyhow = "1.0.97"
+async-trait = "0.1.77"
+eventually = { features = ["serde-json"], path="../../eventually" }
