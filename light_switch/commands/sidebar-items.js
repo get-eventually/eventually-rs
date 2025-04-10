@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["install_light_switch","turn_light_switch_off","turn_light_switch_on"]};

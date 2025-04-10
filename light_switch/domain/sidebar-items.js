@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LightSwitchError","LightSwitchEvent","LightSwitchState"],"struct":["Installed","LightSwitch","LightSwitchRoot","SwitchedOff","SwitchedOn"],"type":["LightSwitchId"]};
