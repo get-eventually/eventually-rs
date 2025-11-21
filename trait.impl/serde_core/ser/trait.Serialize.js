@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["eventually",[["impl&lt;Id, Evt&gt; <a class=\"trait\" href=\"https://docs.rs/serde_core/1.0.228/serde_core/ser/trait.Serialize.html\" title=\"trait serde_core::ser::Serialize\">Serialize</a> for <a class=\"struct\" href=\"eventually/event/struct.Persisted.html\" title=\"struct eventually::event::Persisted\">Persisted</a>&lt;Id, Evt&gt;<div class=\"where\">where\n    Evt: <a class=\"trait\" href=\"eventually/message/trait.Message.html\" title=\"trait eventually::message::Message\">Message</a> + <a class=\"trait\" href=\"https://docs.rs/serde_core/1.0.228/serde_core/ser/trait.Serialize.html\" title=\"trait serde_core::ser::Serialize\">Serialize</a>,\n    Id: <a class=\"trait\" href=\"https://docs.rs/serde_core/1.0.228/serde_core/ser/trait.Serialize.html\" title=\"trait serde_core::ser::Serialize\">Serialize</a>,</div>"],["impl&lt;T&gt; <a class=\"trait\" href=\"https://docs.rs/serde_core/1.0.228/serde_core/ser/trait.Serialize.html\" title=\"trait serde_core::ser::Serialize\">Serialize</a> for <a class=\"struct\" href=\"eventually/message/struct.Envelope.html\" title=\"struct eventually::message::Envelope\">Envelope</a>&lt;T&gt;<div class=\"where\">where\n    T: <a class=\"trait\" href=\"eventually/message/trait.Message.html\" title=\"trait eventually::message::Message\">Message</a> + <a class=\"trait\" href=\"https://docs.rs/serde_core/1.0.228/serde_core/ser/trait.Serialize.html\" title=\"trait serde_core::ser::Serialize\">Serialize</a>,</div>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1471]}

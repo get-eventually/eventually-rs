@@ -1,1 +1,0 @@
-searchState.loadedDescShard("eventually_macros", 0, "<code>eventually-macros</code> contains useful macros that provides …\nImplements a newtype to use the <code>eventually::aggregate::Root</code>…")
