@@ -20,7 +20,7 @@ eventually = { path = "../eventually", version = "0.5.0", features = [
 ] }
 futures = "0.3.31"
 regex = "1.11.1"
-sqlx = { version = "0.8.3", features = [
+sqlx = { version = "0.9.0", features = [
     "runtime-tokio-rustls",
     "postgres",
     "migrate",
@@ -34,5 +34,5 @@ eventually = { path = "../eventually", version = "0.5.0", features = [
 ] }
 eventually-macros = { path = "../eventually-macros", version = "0.1.0" }
 serde = { version = "1.0.219", features = ["derive"] }
-rand = "0.9.0"
-testcontainers-modules = { version = "0.11.6", features = ["postgres"] }
+rand = "0.10.0"
+testcontainers-modules = { version = "0.15.0", features = ["postgres"] }
